@@ -451,7 +451,7 @@ def test__plot_parameter_tables_reuses_only_identical_rendered_inputs(
         ],
     )
 
-    def save_figure(_data, _config, output_file):
+    def save_figure(_data, _config, output_file, *, context=None):
         Path(output_file).with_suffix(".png").touch()
 
     render = mocker.patch.object(plot_tables, "_plot_data", side_effect=save_figure)

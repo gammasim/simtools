@@ -407,7 +407,7 @@ class ReadParameters:
             image_output_file = outpath / figure_stem
             if not image_output_file.with_suffix(".png").exists():
                 plot_tables._plot_data(  # pylint: disable=protected-access
-                    plot_data, plot_config, image_output_file
+                    plot_data, plot_config, image_output_file, context=self.context
                 )
 
         return plot_names

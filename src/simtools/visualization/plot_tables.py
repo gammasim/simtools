@@ -36,12 +36,14 @@ def plot(config, output_file, data_path=None, model_reader=None, *, context=None
     """
     context = context or RunContext.from_environment()
     data = read_table_data(config, data_path, model_reader=model_reader, context=context)
-    return _plot_data(data, config, output_file)
+    return _plot_data(data, config, output_file, context=context)
 
 
-def _plot_data(data, config, output_file):
+def _plot_data(data, config, output_file, *, context=None):
     """Render pre-read table data with the configured table-plot renderer."""
-    visualize.save_figure(visualize.plot_1d(data, **config), output_file, close=True)
+    visualize.save_figure(
+        visualize.plot_1d(data, **config), output_file, close=True, context=context
+    )
     return output_file
 
 
