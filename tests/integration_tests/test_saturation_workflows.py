@@ -7,10 +7,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 from astropy.table import Table
+from simtools.testing.validate_output import validate_application_output
 
 from simtools.runners.simtools_runner import prepare_workflow
 from simtools.simtel.pulse_response import ADC_SUM, INTENSITY, PEAK, RESPONSE, WIDTH
-from simtools.testing.validate_output import validate_application_output
 
 MODEL_PATH = "simulation_models_path"
 CONFIG_FILE = "config_file"

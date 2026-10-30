@@ -56,7 +56,10 @@ def measure_waveform(samples, dt_ns, width_fraction=0.95, threshold_adc=None):
 
 def _pulse_width(wave, peak_index, threshold, dt_ns):
     """Interpolate crossings around the main above-threshold component."""
-    if wave[peak_index] <= 0 or wave[peak_index] < threshold:
+    peak = wave[peak_index]
+    if peak <= 0:
+        return 0.0, False
+    if peak < threshold:
         return 0.0, False
     left = right = peak_index
     while left > 0 and wave[left - 1] >= threshold:

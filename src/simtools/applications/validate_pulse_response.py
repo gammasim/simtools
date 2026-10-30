@@ -56,7 +56,7 @@ def main():
     table, waves = template_responses(
         model, args[ILLUMINATION], args[WIDTH_FRACTION], args.get(THRESHOLD_ADC)
     )
-    write_response(table, waves, context.io_handler.get_output_directory(), "pulse_response")
+    write_response(table, waves, context.paths.get_output_directory(), "pulse_response")
 
 
 if __name__ == "__main__":

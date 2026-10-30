@@ -55,7 +55,6 @@ _ARGUMENTS = (
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(*_ARGUMENTS, cli.TELESCOPE, *cli.OUTPUT_PATH_ARGUMENTS),
-    initialize_model_reader=False,
 )
 
 
@@ -73,7 +72,7 @@ def main():
         args.get(THRESHOLD_ADC),
         args.get(PEDESTAL),
     )
-    write_response(table, waves, context.io_handler.get_output_directory(), "flasher_response")
+    write_response(table, waves, context.paths.get_output_directory(), "flasher_response")
 
 
 if __name__ == "__main__":
