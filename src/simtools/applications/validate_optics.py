@@ -101,13 +101,17 @@ APPLICATION = ApplicationDefinition.for_module(
 )
 
 
-def main():
-    """See CLI description."""
-    app_context = APPLICATION.start()
+def _run_validation(app_context):
+    """Run the validation selected with the ``type`` argument."""
     if app_context.args["type"] == "cumulative_psf":
         validate_cumulative_psf(app_context)
     else:
         validate_optics(app_context)
+
+
+def main():
+    """See CLI description."""
+    _run_validation(APPLICATION.start())
 
 
 if __name__ == "__main__":

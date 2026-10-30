@@ -4,13 +4,36 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
+import pytest
+
 import simtools.applications.docs_produce_reports as app
 
 
+class _Recorder:
+    """Fake report class recording the method calls made by the application."""
+
+    calls = []
+
+    def __init__(self, *args, **kwargs):
+        self.args = args
+
+    def __getattr__(self, name):
+        def _call(*_, **__):
+            _Recorder.calls.append(name)
+
+        return _call
+
+
+@pytest.fixture(name="recorder")
+def recorder_fixture(monkeypatch):
+    _Recorder.calls = []
+    monkeypatch.setattr(app, "ReportGenerator", _Recorder)
+    monkeypatch.setattr(app, "ReadParameters", _Recorder)
+    return _Recorder
+
+
 def _context(**args):
-    paths = Mock()
-    paths.get_output_directory.return_value = Path("reports")
-    return SimpleNamespace(args=args, paths=paths, model_reader=Mock(), logger=Mock())
+    return SimpleNamespace(args=args, model_reader=Mock(), logger=Mock())
 
 
 def test_parser_lists_report_types():
@@ -24,37 +47,47 @@ def test_parser_lists_report_types():
     ]
 
 
-def test_main_dispatches_calibration_report(mocker):
-    application = mocker.patch("simtools.applications.docs_produce_reports.APPLICATION")
-    application.start.return_value = _context(report="calibration", model_version="6.0.2")
-    generator = mocker.patch("simtools.applications.docs_produce_reports.ReportGenerator")
+@pytest.mark.parametrize(
+    ("producer", "args", "expected"),
+    [
+        (
+            app._produce_array_element_reports,
+            {"model_version": "6.0.2", "site": "North", "telescope": "LSTN-01"},
+            "produce_array_element_report",
+        ),
+        (
+            app._produce_array_element_reports,
+            {"all_telescopes": True},
+            "auto_generate_array_element_reports",
+        ),
+        (
+            app._produce_calibration_reports,
+            {"model_version": "6.0.2"},
+            "auto_generate_calibration_reports",
+        ),
+        (
+            app._produce_calibration_reports,
+            {"all_model_versions": True},
+            "auto_generate_calibration_reports",
+        ),
+        (
+            app._produce_model_parameter_reports,
+            {"site": "North", "telescope": "LSTN-01"},
+            "produce_model_parameter_reports",
+        ),
+        (
+            app._produce_model_parameter_reports,
+            {"all_sites": True},
+            "auto_generate_parameter_reports",
+        ),
+        (
+            app._produce_simulation_configuration_reports,
+            {"simulation_software": "corsika"},
+            "auto_generate_simulation_configuration_reports",
+        ),
+    ],
+)
+def test_report_producers_call_matching_report_method(recorder, producer, args, expected):
+    producer(_context(**args), Path("reports"))
 
-    app.main()
-
-    generator.return_value.auto_generate_calibration_reports.assert_called_once_with()
-
-
-def test_main_dispatches_single_array_element_report(mocker):
-    application = mocker.patch("simtools.applications.docs_produce_reports.APPLICATION")
-    application.start.return_value = _context(
-        report="array_element", model_version="6.0.2", site="North", telescope="LSTN-01"
-    )
-    read = mocker.patch("simtools.applications.docs_produce_reports.ReadParameters")
-    generator = mocker.patch("simtools.applications.docs_produce_reports.ReportGenerator")
-
-    app.main()
-
-    read.return_value.produce_array_element_report.assert_called_once_with()
-    generator.assert_not_called()
-
-
-def test_main_dispatches_simulation_configuration_report(mocker):
-    application = mocker.patch("simtools.applications.docs_produce_reports.APPLICATION")
-    application.start.return_value = _context(
-        report="simulation_configuration", simulation_software="corsika"
-    )
-    generator = mocker.patch("simtools.applications.docs_produce_reports.ReportGenerator")
-
-    app.main()
-
-    generator.return_value.auto_generate_simulation_configuration_reports.assert_called_once_with()
+    assert recorder.calls == [expected]
