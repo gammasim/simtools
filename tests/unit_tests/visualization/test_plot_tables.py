@@ -10,7 +10,7 @@ from astropy import units as u
 from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_GENERATED
-from simtools.reporting import docs_read_parameters
+from simtools.reporting import docs_parameter_plots
 from simtools.visualization import plot_tables
 
 PLOT_INTERSECTION_PROTON_CURVE = (
@@ -484,13 +484,13 @@ def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(run_co
     data = {"Mirror": [(300.0, 0.91), (400.0, 0.87)]}
     context_dpi_120 = run_context.replace(args={"figure_dpi": 120})
 
-    initial_key = docs_read_parameters._get_figure_cache_key(plot_config, data, context_dpi_120)
+    initial_key = docs_parameter_plots._get_figure_cache_key(plot_config, data, context_dpi_120)
     same_render_from_another_version = {
         **plot_config,
         "tables": [{**plot_config["tables"][0], "model_version": "8.0.0"}],
     }
     assert (
-        docs_read_parameters._get_figure_cache_key(
+        docs_parameter_plots._get_figure_cache_key(
             same_render_from_another_version, data, context_dpi_120
         )
         == initial_key
@@ -498,18 +498,18 @@ def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(run_co
 
     changed_data = {"Mirror": [(300.0, 0.91), (400.0, 0.86)]}
     assert (
-        docs_read_parameters._get_figure_cache_key(plot_config, changed_data, context_dpi_120)
+        docs_parameter_plots._get_figure_cache_key(plot_config, changed_data, context_dpi_120)
         != initial_key
     )
     changed_config = {**plot_config, "xtitle": "Wavelength [angstrom]"}
     assert (
-        docs_read_parameters._get_figure_cache_key(changed_config, data, context_dpi_120)
+        docs_parameter_plots._get_figure_cache_key(changed_config, data, context_dpi_120)
         != initial_key
     )
 
     context_dpi_240 = run_context.replace(args={"figure_dpi": 240})
     assert (
-        docs_read_parameters._get_figure_cache_key(plot_config, data, context_dpi_240)
+        docs_parameter_plots._get_figure_cache_key(plot_config, data, context_dpi_240)
         != initial_key
     )
 

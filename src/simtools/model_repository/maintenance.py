@@ -1,15 +1,7 @@
 """Utilities for managing the simulation models repository.
 
-Simulation model parameters and production tables are managed through
-a gitlab repository ('simulation_models'). This module provides service
-functions to interact with and verify the repository.
-
-Main functionalities are:
-
-- validation of production tables against model parameters
-- generation of new production tables and model parameters based on
-  updates defined in a configuration file
-
+Verify production tables against model parameters, and generate new production
+tables and model parameters from the changes defined in ``info.yml``.
 """
 
 import logging
@@ -37,29 +29,29 @@ _WORKFLOW_ASSET_TIMEOUT_SECONDS = 30
 
 def get_production_directory(simulation_models_path, model_version=None):
     """
-    Get the production directory for a specific model version.
+    Get the production directory for a model version.
 
     Parameters
     ----------
     simulation_models_path : str
         Path to the simulation models repository.
     model_version : str, optional
-        Specific model version to get the production directory for.
+        Model version. If None, the productions root directory is returned.
 
     Returns
     -------
     Path
-        Path to the production directory.
+        Production directory.
     """
-    if model_version:
-        return Path(simulation_models_path) / "simulation-models/productions" / str(model_version)
-    return Path(simulation_models_path) / "simulation-models/productions"
+    base = Path(simulation_models_path) / "simulation-models/productions"
+    return base / str(model_version) if model_version else base
 
 
 def initialize_production(
     simulation_models_path, model_version, base_model_version, update_type=_PATCH_UPDATE
 ):
-    """Create an initial production info file based on an existing model version.
+    """
+    Create an initial production info file based on an existing model version.
 
     Parameters
     ----------
@@ -117,29 +109,9 @@ def initialize_production(
     ascii_handler.write_data_to_file(info, target_directory / _INFO_FILE_NAME)
 
 
-def get_model_parameter_directory(simulation_models_path):
-    """
-    Get the model parameters directory.
-
-    Parameters
-    ----------
-    simulation_models_path : str
-        Path to the simulation models repository.
-
-    Returns
-    -------
-    Path
-        Path to the model parameters directory.
-    """
-    return Path(simulation_models_path) / "simulation-models/model_parameters"
-
-
 def verify_simulation_model_production_tables(simulation_models_path):
     """
-    Verify the simulation model production tables in the specified path.
-
-    Checks that all model parameters defined in the production tables are
-    present in the simulation models repository.
+    Verify that all model parameters referenced by the production tables exist.
 
     Parameters
     ----------
@@ -151,9 +123,7 @@ def verify_simulation_model_production_tables(simulation_models_path):
     bool
         True if all parameters found, False if any missing.
     """
-    productions_path = get_production_directory(simulation_models_path)
-    production_files = list(productions_path.rglob("*.json"))
-
+    production_files = list(get_production_directory(simulation_models_path).rglob("*.json"))
     _logger.info(
         f"Verifying {len(production_files)} simulation model production "
         f"tables in {simulation_models_path}"
@@ -161,7 +131,6 @@ def verify_simulation_model_production_tables(simulation_models_path):
 
     missing_files = []
     total_checked = 0
-
     for production_file in production_files:
         file_missing, file_checked = _verify_model_parameters_for_production(
             simulation_models_path, production_file
@@ -170,7 +139,6 @@ def verify_simulation_model_production_tables(simulation_models_path):
         total_checked += file_checked
 
     _logger.info(f"Checked {total_checked} parameters, {len(missing_files)} missing")
-
     if missing_files:
         for missing_file in missing_files:
             _logger.error(f"Missing: {missing_file}")
@@ -181,27 +149,11 @@ def verify_simulation_model_production_tables(simulation_models_path):
 
 
 def _verify_model_parameters_for_production(simulation_models_path, production_file):
-    """
-    Verify that model parameters defined in the production tables exist.
-
-    Parameters
-    ----------
-    simulation_models_path : str
-        Path to the simulation models repository.
-    production_file : Path
-        Path to the production file.
-
-    Returns
-    -------
-    tuple
-        (missing_files_list, total_checked_count)
-    """
+    """Return (missing_files, total_checked_count) for one production table."""
     production_table = ascii_handler.collect_data_from_file(production_file)
     missing_files = []
     total_checked = 0
-
-    parameters = production_table.get("parameters", {})
-    for array_element, par_dict in parameters.items():
+    for array_element, par_dict in production_table.get("parameters", {}).items():
         if isinstance(par_dict, dict):
             for param_name, param_version in par_dict.items():
                 total_checked += 1
@@ -210,7 +162,6 @@ def _verify_model_parameters_for_production(simulation_models_path, production_f
                 )
                 if parameter_file and not parameter_file.exists():
                     missing_files.append(str(parameter_file))
-
     return missing_files, total_checked
 
 
@@ -220,16 +171,14 @@ def get_model_parameter_file_path(
     """
     Get the file path for a model parameter.
 
-    Use the instrument scope of the parameter. Null-instrument parameters are
-    stored below the explicit ``global`` scope.
+    Null-instrument parameters are stored below the explicit ``global`` scope.
 
     Parameters
     ----------
     simulation_models_path : str
         Path to the simulation models repository.
     array_element : str
-        Name of the array element (e.g., 'telescope'), or ``None`` for a
-        global parameter.
+        Name of the array element (e.g., 'telescope'), or ``None`` for a global parameter.
     parameter_name : str
         Name of the parameter.
     parameter_version : str
@@ -242,7 +191,8 @@ def get_model_parameter_file_path(
     """
     instrument = _get_model_parameter_scope(array_element, parameter_name)
     return (
-        get_model_parameter_directory(simulation_models_path)
+        Path(simulation_models_path)
+        / "simulation-models/model_parameters"
         / instrument
         / parameter_name
         / f"{parameter_name}-{parameter_version}.json"
@@ -264,13 +214,9 @@ def generate_new_production(
     """
     Generate a new production definition (production tables and model parameters).
 
-    The following steps are performed:
-
-    - copy of production tables from an existing base model version
-    - update production tables with changes defined in a configuration file (expected
-      to be called 'info.yml' in the target production directory)
-    - generate new model parameter entries for changed parameters
-    - allows for full or patch updates
+    Production tables are copied from the base model version and updated with the
+    changes in 'info.yml' (full or patch update). New model parameter entries are
+    generated for the changed parameters.
 
     Parameters
     ----------
@@ -280,8 +226,8 @@ def generate_new_production(
         Path to the simulation models repository.
     setting_workflows_git_tag: str, optional
         Branch or tag used to download parameters from the simulation workflow repository.
-        If provided, this value overrides ``setting_workflows_git_tag`` from ``info.yml``.
-        If None, the value from ``info.yml`` is used, with ``"main"`` as fallback.
+        Overrides ``setting_workflows_git_tag`` from ``info.yml`` if given; defaults to
+        ``"main"`` if neither is set.
     context : RunContext, optional
         Run configuration and model reader used to write model parameters.
     """
@@ -295,7 +241,6 @@ def generate_new_production(
     changes, base_model_version = _get_changes_to_production(
         modification_dict, simulation_models_path, update_type
     )
-    model_parameter_changes = modification_dict.get("changes", {})
 
     _apply_changes_to_production_tables(
         changes,
@@ -304,9 +249,8 @@ def generate_new_production(
         update_type,
         simulation_models_path,
     )
-
     _apply_changes_to_model_parameters(
-        model_parameter_changes,
+        modification_dict.get("changes", {}),
         simulation_models_path,
         setting_workflows_git_tag,
         setting_workflows_git_repository,
@@ -314,51 +258,15 @@ def generate_new_production(
     )
 
 
-def _get_production_table_key(table_name):
-    """
-    Get the production table key for a given table name.
-
-    CORSIKA configuration uses 'global' to indicate parameters that are
-    site-wide and independent of specific telescope designs.
-
-    Parameters
-    ----------
-    table_name : str
-        Table name (e.g., 'configuration_corsika', 'LSTN-01').
-
-    Returns
-    -------
-    str
-        Production table key to use in parameter dictionaries.
-    """
-    return "global" if table_name == "configuration_corsika" else table_name
-
-
 def _apply_changes_to_production_tables(
     changes, base_model_version, model_version, update_type, simulation_models_path
 ):
-    """
-    Apply changes to or generate new production tables and write them to target directory.
-
-    Parameters
-    ----------
-    changes: dict
-        Changes to be applied.
-    base_model_version: str
-        Base model version (source directory for production tables).
-    model_version: str
-        Model version of the new production tables.
-    update_type: str
-        Update type (e.g., 'full_update' or 'patch_update').
-    simulation_models_path: Path
-        Path to the simulation models repository.
-    """
+    """Apply changes to (or create) production tables and write them to the target directory."""
     source = get_production_directory(simulation_models_path, base_model_version)
     target = get_production_directory(simulation_models_path, model_version)
     _logger.info(f"Production tables {update_type} from {source} to {target}")
     target.mkdir(parents=True, exist_ok=True)
 
-    # load existing tables from source
     tables = {}
     for file_path in Path(source).rglob("*.json"):
         data = ascii_handler.collect_data_from_file(file_path)
@@ -366,19 +274,14 @@ def _apply_changes_to_production_tables(
             raise TypeError(f"Unsupported data type {type(data)} in {file_path}")
         tables[data["production_table_name"]] = data
 
-    # placeholder for new tables
     for table_name in changes:
         tables.setdefault(table_name, {})
-
     tables.setdefault("configuration_sim_telarray", {})
 
     for table_name, data in tables.items():
         if table_name == "configuration_sim_telarray":
             has_changes = _apply_changes_to_sim_telarray_production_table(
-                data,
-                changes,
-                model_version,
-                update_type == "patch_update",
+                data, changes, model_version, update_type == "patch_update"
             )
             should_write = update_type != "patch_update" or has_changes
         else:
@@ -396,61 +299,27 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
     """
     Apply changes to a single production table.
 
-    Parameters
-    ----------
-    table_name: str
-        Name of the production table.
-    data: dict
-        Data to be updated.
-    changes: dict
-        Changes to be applied.
-    model_version: str
-        Model version of the new production tables.
-    patch_update: bool
-        True if patch update (modify only changed parameters), False for full update.
-
-    Returns
-    -------
-    bool
-        True if data was modified and should be written to disk (patch updates);
-        always True for full updates.
+    Returns True if the table should be written (always for full updates).
     """
     data["model_version"] = model_version
-    if table_name in changes:
-        production_key = _get_production_table_key(table_name)
-        table_parameters = (
-            {} if patch_update else data.get("parameters", {}).get(production_key, {})
-        )
-        parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
-        if patch_update and not parameters.get(production_key) and not deprecated:
-            return False
-        data["parameters"] = parameters
-        if deprecated and patch_update:
-            data["deprecated_parameters"] = deprecated
-    elif patch_update:
-        return False
+    if table_name not in changes:
+        return not patch_update
 
+    production_key = "global" if table_name == "configuration_corsika" else table_name
+    table_parameters = {} if patch_update else data.get("parameters", {}).get(production_key, {})
+    parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
+    if patch_update and not parameters.get(production_key) and not deprecated:
+        return False
+    data["parameters"] = parameters
+    if deprecated and patch_update:
+        data["deprecated_parameters"] = deprecated
     return True
 
 
 def _get_changes_dict(model_version, simulation_models_path):
-    """
-    Load the changes dictionary from 'info.yml' files in production directories.
-
-    Parameters
-    ----------
-    model_version: str
-        Model version of the new production tables.
-    simulation_models_path: Path
-        Path to the simulation models directory.
-
-    Returns
-    -------
-    dict
-        Changes dictionary.
-    """
+    """Load the changes dictionary from the 'info.yml' of a production directory."""
     return ascii_handler.collect_data_from_file(
-        get_production_directory(simulation_models_path, model_version) / "info.yml"
+        get_production_directory(simulation_models_path, model_version) / _INFO_FILE_NAME
     )
 
 
@@ -460,22 +329,8 @@ def _get_changes_to_production(
     """
     Prepare changes applied to production tables.
 
-    For full updates, this includes the combination of changes to be applied
-    for all model versions in the history, starting from the base version.
-
-    Parameters
-    ----------
-    modification_dict: dict
-        Modifications dictionary.
-    simulation_models_path: Path
-        Path to the simulation models directory.
-    update_type: str
-        Update mode.
-
-    Returns
-    -------
-    dict, str
-        Changes dictionary and base model version.
+    For full updates, the changes of all versions in the history are combined,
+    starting from the base version. Returns (changes, base_model_version).
     """
     model_version_history = modification_dict.get(_MODEL_VERSION_HISTORY, [])
 
@@ -513,114 +368,94 @@ def _update_two_levels_in_changes_dict(d, u):
     return d
 
 
-def _apply_sim_telarray_changes_for_telescope(telescope_params, params):
-    """Apply configuration_sim_telarray changes for one telescope."""
+def _apply_global_sim_telarray_changes(global_params, sim_telarray):
+    """Apply global configuration_sim_telarray changes; returns (has_changes, deprecated)."""
     has_changes = False
     deprecated = []
-
-    for param_name, param_data in params.items():
-        if (
-            catalog.get_collection_name_from_parameter_name(param_name)
-            != "configuration_sim_telarray"
-        ):
+    for name, data in sim_telarray:
+        if not catalog.is_global_sim_telarray_parameter(name):
             continue
-
         has_changes = True
-        if param_data.get("deprecated", False):
-            if telescope_params is not None:
-                telescope_params.pop(param_name, None)
-            deprecated.append(param_name)
-            continue
+        if data.get("deprecated", False):
+            global_params.pop(name, None)
+            deprecated.append(name)
+        else:
+            global_params[name] = data["version"]
+    return has_changes, deprecated
 
+
+def _apply_telescope_sim_telarray_changes(parameters, telescope, sim_telarray):
+    """Apply telescope sim_telarray changes; returns (has_changes, deprecated)."""
+    has_changes = False
+    deprecated = []
+    telescope_params = parameters.get(telescope)
+    for name, data in sim_telarray:
+        if catalog.is_global_sim_telarray_parameter(name):
+            continue
+        has_changes = True
+        if data.get("deprecated", False):
+            if telescope_params is not None:
+                telescope_params.pop(name, None)
+            deprecated.append(name)
+            continue
         if telescope_params is None:
             telescope_params = {}
-        telescope_params[param_name] = param_data["version"]
-
-    return telescope_params, deprecated, has_changes
-
-
-def _apply_global_sim_telarray_changes(global_params, params):
-    """Apply global-scope sim_telarray changes found under one telescope key."""
-    deprecated = []
-    has_changes = False
-    for param_name, param_data in params.items():
-        if catalog.get_collection_name_from_parameter_name(
-            param_name
-        ) != "configuration_sim_telarray" or not catalog.is_global_sim_telarray_parameter(
-            param_name
-        ):
-            continue
-        has_changes = True
-        if param_data.get("deprecated", False):
-            global_params.pop(param_name, None)
-            deprecated.append(param_name)
-        else:
-            global_params[param_name] = param_data["version"]
-    return deprecated, has_changes
+        telescope_params[name] = data["version"]
+    if telescope_params is not None:
+        parameters[telescope] = telescope_params
+    return has_changes, deprecated
 
 
-def _remove_global_sim_telarray_parameters(parameters):
-    """Remove migrated global parameters from non-global production scopes."""
+def _apply_sim_telarray_changes_for_scope(parameters, global_params, telescope, params):
+    """
+    Apply configuration_sim_telarray changes for one scope.
+
+    Global parameters go to ``global_params``; the others to ``parameters[telescope]``.
+    Returns (has_changes, global_deprecated, deprecated).
+    """
+    sim_telarray = [
+        (name, data)
+        for name, data in params.items()
+        if catalog.get_collection_name_from_parameter_name(name) == "configuration_sim_telarray"
+    ]
+    global_changed, global_deprecated = _apply_global_sim_telarray_changes(
+        global_params, sim_telarray
+    )
+    telescope_changed, deprecated = _apply_telescope_sim_telarray_changes(
+        parameters, telescope, sim_telarray
+    )
+    return global_changed or telescope_changed, global_deprecated, deprecated
+
+
+def _remove_migrated_global_parameters(parameters):
+    """Remove migrated global parameters from all non-global scopes."""
     for scope, scope_parameters in parameters.items():
         if scope != "global" and isinstance(scope_parameters, dict):
             for parameter_name in catalog.SIM_TELARRAY_GLOBAL_PARAMETERS:
                 scope_parameters.pop(parameter_name, None)
 
 
-def _apply_sim_telarray_changes_for_scope(parameters, global_params, telescope, params):
-    """Apply global and telescope-scoped sim_telarray changes for one scope."""
-    global_deprecated, global_has_changes = _apply_global_sim_telarray_changes(
-        global_params, params
-    )
-    telescope_params = {
-        param_name: param_data
-        for param_name, param_data in params.items()
-        if not catalog.is_global_sim_telarray_parameter(param_name)
-    }
-    telescope_params, deprecated, telescope_has_changes = _apply_sim_telarray_changes_for_telescope(
-        parameters.get(telescope), telescope_params
-    )
-    if telescope_params is not None:
-        parameters[telescope] = telescope_params
-    return (
-        global_has_changes or telescope_has_changes,
-        global_deprecated,
-        deprecated,
-    )
+def _record_deprecated_parameters(data, names, patch_update):
+    """Record deprecated parameter names in the production table for patch updates."""
+    if names and patch_update:
+        data.setdefault("deprecated_parameters", []).extend(names)
 
 
 def _apply_changes_to_sim_telarray_production_table(data, changes, model_version, patch_update):
     """
     Apply configuration_sim_telarray parameter changes to the production table.
 
-    The configuration_sim_telarray production table stores process-wide
-    parameters under ``global`` and telescope-dependent parameters by design.
-
-    Parameters
-    ----------
-    data : dict
-        Production table data to update in place.
-    changes : dict
-        Full changes dictionary. Only parameters in the configuration_sim_telarray
-        collection are applied.
-    model_version : str
-        Model version of the new production tables.
-    patch_update : bool
-        True if patch update (only changed parameters), False for full update.
-
-    Returns
-    -------
-    bool
-        True if at least one configuration_sim_telarray parameter was found.
+    Process-wide parameters are stored under ``global``; telescope-dependent ones by design.
+    Returns True if at least one configuration_sim_telarray parameter was found.
     """
     data["model_version"] = model_version
-
     has_changes = False
     parameters = data.get("parameters", {})
 
-    _remove_global_sim_telarray_parameters(parameters)
-    global_params = parameters.setdefault("global", {})
+    # migrated global parameters are removed from non-global scopes
+    _remove_migrated_global_parameters(parameters)
 
+    global_params = parameters.setdefault("global", {})
     global_deprecated = []
     for telescope, params in changes.items():
         if not isinstance(params, dict):
@@ -630,10 +465,8 @@ def _apply_changes_to_sim_telarray_production_table(data, changes, model_version
         )
         has_changes = has_changes or changes_found
         global_deprecated.extend(global_changes)
-        if telescope_changes and patch_update:
-            data.setdefault("deprecated_parameters", []).extend(telescope_changes)
-    if global_deprecated and patch_update:
-        data.setdefault("deprecated_parameters", []).extend(global_deprecated)
+        _record_deprecated_parameters(data, telescope_changes, patch_update)
+    _record_deprecated_parameters(data, global_deprecated, patch_update)
     if not global_params:
         parameters.pop("global", None)
     data["parameters"] = parameters
@@ -642,29 +475,13 @@ def _apply_changes_to_sim_telarray_production_table(data, changes, model_version
 
 def _update_parameters_dict(table_parameters, changes, table_name):
     """
-    Create a new parameters dictionary for the production tables.
+    Create the parameters dictionary for one production table.
 
-    Include only changes relevant to the specific telescope.
-    Do not include parameters if 'deprecated' flag is set to True.
-    Parameters belonging to the configuration_sim_telarray collection are
-    skipped here and handled separately.
-
-    Parameters
-    ----------
-    table_parameters: dict
-        Parameters for the specific table.
-    changes: dict
-        The changes to be applied, containing table and parameter information.
-    table_name: str
-        The name of the production table to filter parameters for.
-
-    Returns
-    -------
-    dict, list
-        Dictionary containing only the new/changed parameters for the specified table.
-        List of deprecated parameters.
+    Only changes relevant to the table are included; deprecated parameters are
+    removed and listed. configuration_sim_telarray parameters are skipped (handled
+    separately). Returns (parameters_dict, deprecated_parameter_names).
     """
-    new_table_name = _get_production_table_key(table_name)
+    new_table_name = "global" if table_name == "configuration_corsika" else table_name
     new_params = {new_table_name: table_parameters}
     deprecated_params = []
 
@@ -683,22 +500,32 @@ def _update_parameters_dict(table_parameters, changes, table_name):
     return new_params, deprecated_params
 
 
-def _apply_model_parameter_change(
+def _raise_with_entry_details(exc, telescope, param, param_data):
+    """Re-raise an info.yml processing error with the offending entry details."""
+    if isinstance(param_data, dict):
+        entry_details = ", ".join(f"{key}={value!r}" for key, value in param_data.items())
+    else:
+        entry_details = f"param_data={param_data!r}"
+    raise type(exc)(
+        f"Failed to process info.yml entry '{telescope} -> {param}' ({entry_details}): {exc}"
+    ) from exc
+
+
+def _apply_model_parameter_entry(
     telescope,
     param,
     param_data,
     simulation_models_path,
     setting_workflows_git_tag,
     setting_workflows_git_repository,
-    context=None,
+    context,
 ):
-    """Apply one model parameter change."""
+    """Create or download one model parameter entry from an info.yml change."""
     if param_data.get("activity_id") is not None and param_data.get("value") is not None:
         raise ValueError(
             f"Both activity_id and value are set for '{telescope} - {param}'. "
             "Provide only one source for model parameter content."
         )
-
     if param_data.get("activity_id") is not None:
         _download_model_parameter_from_workflow(
             telescope,
@@ -714,40 +541,6 @@ def _apply_model_parameter_change(
         )
 
 
-def _format_model_parameter_entry(param_data):
-    """Format model parameter data for an error message."""
-    if isinstance(param_data, dict):
-        return ", ".join(f"{key}={value!r}" for key, value in param_data.items())
-    return f"param_data={param_data!r}"
-
-
-def _process_model_parameter_change(
-    telescope,
-    param,
-    param_data,
-    simulation_models_path,
-    setting_workflows_git_tag,
-    setting_workflows_git_repository,
-    context=None,
-):
-    """Apply one model parameter change and add context to failures."""
-    try:
-        _apply_model_parameter_change(
-            telescope,
-            param,
-            param_data,
-            simulation_models_path,
-            setting_workflows_git_tag,
-            setting_workflows_git_repository,
-            context=context,
-        )
-    except (KeyError, TypeError, ValueError, AttributeError) as exc:
-        entry_details = _format_model_parameter_entry(param_data)
-        raise type(exc)(
-            f"Failed to process info.yml entry '{telescope} -> {param}' ({entry_details}): {exc}"
-        ) from exc
-
-
 def _apply_changes_to_model_parameters(
     changes,
     simulation_models_path,
@@ -758,17 +551,6 @@ def _apply_changes_to_model_parameters(
     """
     Apply changes to model parameters by creating new parameter entries.
 
-    Parameters
-    ----------
-    changes: dict
-        The changes to be applied.
-    simulation_models_path: Path
-        Path to the simulation models directory.
-    setting_workflows_git_tag: str
-        Branch or tag used to download parameters from simulation workflow repository.
-    setting_workflows_git_repository: str
-        Repository URL used to download parameters from simulation workflow repository.
-
     Raises
     ------
     ValueError
@@ -776,15 +558,18 @@ def _apply_changes_to_model_parameters(
     """
     for telescope, parameters in changes.items():
         for param, param_data in parameters.items():
-            _process_model_parameter_change(
-                telescope,
-                param,
-                param_data,
-                simulation_models_path,
-                setting_workflows_git_tag,
-                setting_workflows_git_repository,
-                context=context,
-            )
+            try:
+                _apply_model_parameter_entry(
+                    telescope,
+                    param,
+                    param_data,
+                    simulation_models_path,
+                    setting_workflows_git_tag,
+                    setting_workflows_git_repository,
+                    context,
+                )
+            except (KeyError, TypeError, ValueError, AttributeError) as exc:
+                _raise_with_entry_details(exc, telescope, param, param_data)
 
 
 def _download_model_parameter_from_workflow(
@@ -796,22 +581,7 @@ def _download_model_parameter_from_workflow(
     setting_workflows_git_repository=DEFAULT_SIMULATION_WORKFLOWS,
 ):
     """
-    Download model parameter entry from simulation workflow repository.
-
-    Parameters
-    ----------
-    telescope: str
-        Name of the telescope.
-    param: str
-        Name of the parameter.
-    param_data: dict
-        Dictionary containing the parameter data including version and activity_id.
-    simulation_models_path: Path
-        Path to the simulation models directory.
-    setting_workflows_git_tag: str
-        Branch or tag used to download parameters from simulation workflow repository.
-    setting_workflows_git_repository: str
-        Repository URL used to download parameters from simulation workflow repository.
+    Download a model parameter entry from the simulation workflow repository.
 
     Raises
     ------
@@ -832,9 +602,8 @@ def _download_model_parameter_from_workflow(
         _logger.info(
             "Model parameter file already exists for requested version: '%s'.", target_file
         )
-        existing_data = ascii_handler.collect_data_from_file(target_file)
         _copy_model_parameter_asset_from_workflow(
-            existing_data,
+            ascii_handler.collect_data_from_file(target_file),
             target_file,
             source_file,
             setting_workflows_git_repository,
@@ -843,7 +612,6 @@ def _download_model_parameter_from_workflow(
         return
 
     _logger.info(f"Downloading model parameter '{telescope} - {param}' from '{source_file}'.")
-
     downloaded_data = ascii_handler.collect_data_from_git(
         file_name=source_file,
         git_repository=setting_workflows_git_repository,
@@ -917,21 +685,10 @@ def _create_new_model_parameter_entry(
     telescope, param, param_data, simulation_models_path, context=None
 ):
     """
-    Create new model parameter entry in the model parameters directory.
+    Create a new model parameter entry in the model parameters directory.
 
-    If a model parameter files exists, copy latest version and update the fields.
-    Otherwise generate new file using the model parameter schema.
-
-    Parameters
-    ----------
-    telescope: str
-        Name of the telescope.
-    param: str
-        Name of the parameter.
-    param_data: dict
-        Dictionary containing the parameter data including version and value.
-    simulation_models_path: Path
-        Path to the simulation models directory.
+    If a model parameter file exists, the latest version is used as template and
+    the fields are updated. Otherwise, a new file is generated from the schema.
     """
     target_scope = _get_model_parameter_scope(telescope, param)
     param_dir = get_model_parameter_file_path(
@@ -1016,52 +773,32 @@ def _normalize_units_for_comparison(unit):
 
 def _get_latest_model_parameter_file(directory, parameter, max_version):
     """
-    Get the latest model parameter JSON file for a parameter in the given directory.
+    Get the latest model parameter JSON file with version <= ``max_version``.
 
-    Assume files are named in the format 'parameter-version.json'.
-
-    Parameters
-    ----------
-    directory: str
-        Path to the directory containing parameter JSON files.
-    parameter: str
-        Name of the parameter to find.
-    max_version: str
-        Maximum version to consider (inclusive). Files with versions greater than
-        this will be excluded.
-
-    Returns
-    -------
-    str
-        Path to the latest JSON file for the parameter with version <= max_version.
+    Files are named 'parameter-version.json'.
 
     Raises
     ------
     FileNotFoundError
-        If no files for the parameter are found in the directory.
+        If no matching files are found in the directory.
     """
-    directory_path = Path(directory)
-    files = list(directory_path.glob(f"{parameter}-*.json"))
+    files = list(Path(directory).glob(f"{parameter}-*.json"))
     if not files:
         raise FileNotFoundError(
             f"No JSON files found for parameter '{parameter}' in directory '{directory}'."
         )
 
-    def extract_version(path: Path):
-        # version is part after first '-'
+    def extract_version(path):
         return parse_version(path.stem.split("-", 1)[1])
 
     max_ver = parse_version(max_version)
     filtered_files = [f for f in files if extract_version(f) <= max_ver]
-
     if not filtered_files:
         raise FileNotFoundError(
             f"No JSON files found for parameter '{parameter}' with version <= {max_version} "
             f"in directory '{directory}'."
         )
-
-    latest_file = max(filtered_files, key=extract_version)
-    return str(latest_file)
+    return str(max(filtered_files, key=extract_version))
 
 
 def _check_for_major_version_jump(json_data, param_data, param, telescope):

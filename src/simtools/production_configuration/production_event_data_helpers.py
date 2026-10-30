@@ -4,10 +4,8 @@ from collections import Counter, defaultdict
 
 import numpy as np
 
-from simtools.layout.array_layout_utils import (
-    get_array_elements_from_model_repository,
-    resolve_array_layout_name,
-)
+from simtools.layout.array_layout_sources import get_array_elements_from_model_repository
+from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.utils import names
 from simtools.utils.names import normalize_array_element_identifier_container
