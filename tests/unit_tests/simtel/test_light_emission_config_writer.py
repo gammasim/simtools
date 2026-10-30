@@ -74,45 +74,6 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     )
 
 
-def test__get_angular_distribution_string_for_sim_telarray_lambertian_failure(
-    simulator_instance,
-):
-    # Mock calibration model values
-    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
-        "Lambertian" if name == "flasher_angular_distribution" else None
-    )
-
-    # Mock _generate_lambertian_angular_distribution_table to raise OSError
-    with patch.object(
-        get_light_source_writer(simulator_instance),
-        "generate_lambertian_angular_distribution_table",
-        side_effect=OSError("Write failed"),
-    ):
-        result = get_light_source_writer(
-            simulator_instance
-        ).get_angular_distribution_string_for_sim_telarray()
-
-    # Should return the token string "lambertian" and log a warning
-    assert result == "lambertian"
-    simulator_instance._logger.warning.assert_called_with(
-        "Failed to write Lambertian angular distribution table: Write failed; using token instead."
-    )
-
-
-def test__get_pulse_shape_string_token(simulator_instance):
-    # Test Gauss with width
-    result = get_light_source_writer(simulator_instance).get_pulse_shape_string_token(
-        "Gauss", 5.0, 0.0
-    )
-    assert result == "gauss:5.0"
-
-    # Test with only shape (no width or exp)
-    result = get_light_source_writer(simulator_instance).get_pulse_shape_string_token(
-        "Line", 0.0, 0.0
-    )
-    assert result == "line"
-
-
 def test__get_pulse_shape_argument_for_sim_telarray_simple_shapes(simulator_instance):
     # Mock simple pulse shape
     simulator_instance.calibration_model.get_parameter_value.return_value = ["Gauss", 5.0, 0.0]

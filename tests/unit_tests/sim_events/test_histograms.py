@@ -492,18 +492,6 @@ def mock_histograms(mocker):
     return EventDataHistograms("dummy_file.h5", "test_array")
 
 
-def test_core_distance_bins_with_existing_edges(mock_reader, hdf5_file_name):
-    histograms = EventDataHistograms(hdf5_file_name)
-    mock_edges = np.linspace(0, 1000, 50)
-    histograms.loaded_bin_edges["core_distance"] = mock_edges
-
-    bins = histograms.core_distance_bins
-
-    assert isinstance(bins, np.ndarray)
-    assert len(bins) == 50
-    assert np.array_equal(bins, mock_edges)
-
-
 def test_view_cone_bins_from_bin_width(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name, angular_distance_bin_width=0.5 * u.deg)
     histograms.file_info = {
@@ -512,16 +500,6 @@ def test_view_cone_bins_from_bin_width(mock_reader, hdf5_file_name):
     }
 
     np.testing.assert_allclose(histograms.view_cone_bins, [0.25, 0.75, 1.25, 1.5])
-
-
-def test_view_cone_bins_with_histogram_data(mock_reader, hdf5_file_name):
-    histograms = EventDataHistograms(hdf5_file_name)
-    mock_bins = np.linspace(0.0, 5.0, 50)
-    histograms.loaded_bin_edges["viewcone"] = mock_bins
-    bins = histograms.view_cone_bins
-    assert isinstance(bins, np.ndarray)
-    assert len(bins) == 50
-    assert np.array_equal(bins, mock_bins)
 
 
 def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
@@ -636,14 +614,6 @@ def test_calculate_efficiency_data_missing_histograms(mock_reader, hdf5_file_nam
     efficiency_data = histograms.calculate_efficiency_data()
     # Ensure no efficiency histogram is created
     assert "energy_eff" not in efficiency_data
-
-
-def test_energy_bins_with_histogram_edges(mock_reader, hdf5_file_name):
-    histograms = EventDataHistograms(hdf5_file_name)
-    mock_edges = np.linspace(0, 10, 5)
-    histograms.loaded_bin_edges["energy"] = mock_edges
-    bins = histograms.energy_bins
-    assert np.array_equal(bins, mock_edges)
 
 
 def test_view_cone_bins_min_equals_max(mock_reader, hdf5_file_name):

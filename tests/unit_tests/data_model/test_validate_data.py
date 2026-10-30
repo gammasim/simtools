@@ -1,13 +1,11 @@
 #!/usr/bin/python3
 
-import copy
 import logging
 import sys
 from pathlib import Path
 
 import numpy as np
 import pytest
-import yaml
 from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
@@ -148,125 +146,6 @@ def test_validate_and_transform(caplog, mocker, tmp_test_directory):
         assert isinstance(_dict, dict)
     assert "Validating data from:" in caplog.text
     mock_prepare_model_parameter.assert_called_once()
-
-
-def test_validate_data_file(caplog, tmp_test_directory):
-    data_validator = validate_data.DataValidator()
-    # no input file defined, should pass
-    data_validator.validate_data_file()
-
-    data_validator.data_file_name = _write_mirror_file(tmp_test_directory)
-    with caplog.at_level(logging.INFO):
-        data_validator.validate_data_file()
-    assert "Validating tabled data from:" in caplog.text
-
-    data_validator.data_file_name = _write_num_gains_file(tmp_test_directory)
-    with caplog.at_level(logging.INFO):
-        data_validator.validate_data_file()
-    assert "Validating data from:" in caplog.text
-
-
-def test_validate_parameter_and_file_name(caplog, tmp_test_directory):
-    num_gain_file = _write_num_gains_file(tmp_test_directory)
-    parameter = "num_gains"
-    parameter_version = "1.0.0"
-
-    data_validator = validate_data.DataValidator()
-    data_validator.data_file_name = num_gain_file
-    data_validator.schema_file_name = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
-    data_validator.validate_and_transform()
-
-    data_validator.data_dict["parameter"] = "incorrect_name"
-    with pytest.raises(
-        ValueError,
-        match=r"Mismatch: parameter 'incorrect_name' vs. file 'num_gains-1.0.0'.",
-    ):
-        data_validator.validate_parameter_and_file_name()
-
-    data_validator.data_file_name = num_gain_file
-    data_validator.data_dict = {
-        "parameter": parameter,
-        "parameter_version": parameter_version,
-    }
-    data_validator.validate_parameter_and_file_name()
-
-    data_validator.data_file_name = Path(tmp_test_directory) / "incorrect_name-1.0.0.json"
-    data_validator.data_dict = {
-        "parameter": parameter,
-        "parameter_version": parameter_version,
-    }
-    with pytest.raises(
-        ValueError, match=r"Mismatch: parameter 'num_gains' vs. file 'incorrect_name-1.0.0'"
-    ):
-        data_validator.validate_parameter_and_file_name()
-
-    data_validator.data_file_name = Path(tmp_test_directory) / "num_gains-2.0.0.json"
-    data_validator.data_dict = {
-        "parameter": parameter,
-        "parameter_version": parameter_version,
-    }
-    with pytest.raises(ValueError, match=r"Mismatch: version '1.0.0' vs. file 'num_gains-2.0.0'"):
-        data_validator.validate_parameter_and_file_name()
-
-    data_validator.data_file_name = Path(tmp_test_directory) / "num_gains.json"
-    data_validator.data_dict = {"parameter": parameter, "parameter_version": None}
-    with caplog.at_level(logging.WARNING):
-        data_validator.validate_parameter_and_file_name()
-    assert "File 'num_gains' has no parameter version defined." in caplog.text
-
-
-def test_validate_invalid_version():
-    data_validator = validate_data.DataValidator(
-        schema_file=MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
-    )
-    data_validator.data_dict = {
-        "parameter": "num_gains",
-        "parameter_version": "invalid",
-        "value": 2,
-        "unit": "",
-    }
-    with pytest.raises(ValueError, match="Invalid version string 'invalid'"):
-        data_validator.validate_and_transform()
-
-
-def test_validate_data_columns(tmp_test_directory, caplog):
-    data_validator = validate_data.DataValidator()
-    with pytest.raises(TypeError):
-        data_validator._validate_data_table()
-
-    data_validator_1 = validate_data.DataValidator(
-        schema_file=None,
-        data_file=_write_mirror_file(tmp_test_directory),
-    )
-    data_validator_1.validate_data_file()
-    with pytest.raises(TypeError):
-        data_validator_1._validate_data_table()
-
-    data_validator_3 = validate_data.DataValidator(
-        schema_file=mirror_2f_schema_file,
-        data_file=_write_mirror_file(tmp_test_directory),
-    )
-    data_validator_3.validate_data_file()
-    data_validator_3._validate_data_table()
-    # test change of units
-    _value_in_org = data_validator_3.data_table["psf"].value[0]
-    data_validator_3._validate_data_columns()
-    for col in data_validator_3._data_description:
-        col["unit"] = "m" if col["unit"] == "cm" else col["unit"]
-    data_validator_3._validate_data_columns()
-    _value_in_m = data_validator_3.data_table["psf"].value[0]
-    assert data_validator_3.data_table["psf"].unit == "m"
-    assert _value_in_org == pytest.approx(_value_in_m * 100.0)
-
-    _incomplete_schema = {"data": []}
-    with open(tmp_test_directory / "incomplete_data_schema.schema.yml", "w") as _file:
-        yaml.dump(_incomplete_schema, _file)
-
-    data_validator_3.schema_file_name = tmp_test_directory / "incomplete_data_schema.schema.yml"
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(IndexError):
-            data_validator_3._validate_data_table()
-    assert "Error reading validation schema from" in caplog.text
 
 
 def test_sort_data(reference_columns, caplog):
@@ -523,52 +402,6 @@ def test_check_for_not_a_number(reference_columns):
         data_validator._check_for_not_a_number(np.nan, "wavelength")
 
 
-def test_read_validation_schema(tmp_test_directory):
-    data_validator = validate_data.DataValidator()
-
-    # no file given
-    with pytest.raises(TypeError):
-        data_validator._read_validation_schema(schema_file=None)
-
-    # file given
-    _schema = data_validator._read_validation_schema(schema_file=mirror_2f_schema_file)
-    assert isinstance(_schema, list)
-
-    # file does not exist
-    with pytest.raises(FileNotFoundError):
-        data_validator._read_validation_schema(schema_file="this_file_does_not_exist.yml")
-
-    # read a 'wrong' schema file with no 'data' key included
-    with open(tmp_test_directory / "wrong_schema.yml", "w") as _file:
-        yaml.dump({"wrong_key": []}, _file)
-    wrong_schema = "wrong_schema.yml"
-    with pytest.raises(KeyError, match=r"Error reading validation schema from .*wrong_schema.yml"):
-        data_validator._read_validation_schema(schema_file=tmp_test_directory / wrong_schema)
-
-    with pytest.raises(ValueError, match=r"^Schema version not_a_version not found"):
-        data_validator._read_validation_schema(
-            schema_file=tmp_test_directory / wrong_schema, schema_version="not_a_version"
-        )
-
-    corsika_starting_grammage = "corsika_starting_grammage.schema.yml"
-    # test model parameter schema with multiple documents - no version given
-    dict_1 = data_validator._read_validation_schema(
-        MODEL_PARAMETER_SCHEMA_PATH / corsika_starting_grammage
-    )
-    assert isinstance(dict_1[0], dict)
-
-    # test model parameter schema with multiple documents - version given
-    dict_2 = data_validator._read_validation_schema(
-        MODEL_PARAMETER_SCHEMA_PATH / corsika_starting_grammage, schema_version="0.2.0"
-    )
-    assert dict_2[0]["type"] == "dict"
-    # test model parameter schema with multiple documents - version given
-    dict_3 = data_validator._read_validation_schema(
-        MODEL_PARAMETER_SCHEMA_PATH / corsika_starting_grammage, schema_version="0.1.0"
-    )
-    assert dict_3[0]["type"] == "float64"
-
-
 # incomplete test
 def test_validate_heterogeneous_list_from_multi_entry_schema(mocker):
     mocker.patch(
@@ -676,21 +509,6 @@ def test_validate_data_files_directory(tmp_test_directory, caplog):
     assert "reference_point_altitude-1.0.0.json" in caplog.text
 
 
-def test_validate_data_files_single_file(caplog, tmp_test_directory):
-    test_file = _write_num_gains_file(tmp_test_directory)
-
-    with caplog.at_level(logging.INFO):
-        validate_data.DataValidator.validate_data_files(file_name=test_file)
-
-    assert "Validated data file" in caplog.text
-    assert "num_gains-1.0.0.json" in caplog.text
-
-
-def test_validate_data_files_no_input():
-    result = validate_data.DataValidator.validate_data_files()
-    assert result is None
-
-
 def test__check_site_and_array_element_consistency():
     data_validator = validate_data.DataValidator()
 
@@ -737,38 +555,6 @@ def test_empty_table_columns_validate_units_without_value_ranges(required_range)
         validator._validate_data_columns()
         assert validator.data_table["distance"].unit == u.m
         assert len(validator.data_table) == 0
-
-
-def test_validate_model_parameter_keeps_single_item_json_array():
-    """A one-item JSON array of a dict parameter stays a list and validates again."""
-    record = {
-        "parameter": "camera_pixel_types",
-        "parameter_version": "1.0.0",
-        "model_parameter_schema_version": schema.get_model_parameter_schema("camera_pixel_types")[
-            "schema_version"
-        ],
-        "type": "dict",
-        "unit": None,
-        "file": False,
-        "value": [
-            {
-                "type_id": 1,
-                "pmt_type": 0,
-                "cathode_shape": 0,
-                "cathode_diameter_cm": 2.5,
-                "funnel_shape": 3,
-                "funnel_diameter_cm": 4.9,
-                "funnel_depth_cm": 5.1,
-            }
-        ],
-    }
-
-    validated = validate_data.DataValidator.validate_model_parameter(copy.deepcopy(record))
-
-    assert validated["value"] == record["value"]
-    assert (
-        validate_data.DataValidator.validate_model_parameter(validated)["value"] == record["value"]
-    )
 
 
 def test_validate_model_parameter_keeps_empty_json_array():

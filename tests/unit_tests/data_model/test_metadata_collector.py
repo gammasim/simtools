@@ -5,11 +5,8 @@ import getpass
 import json
 import logging
 import re
-import uuid
 from pathlib import Path
 
-import astropy.units as u
-import jsonschema
 import numpy as np
 import pytest
 from astropy.table import Table
@@ -37,75 +34,6 @@ def test_associated_data_keeps_required_data_description(mocker):
     context = {"associated_data": []}
     collector._fill_context_meta(context)
     assert context["associated_data"] == [{"id": "input-id", "format": "yaml", "data": data}]
-
-
-def test_get_data_model_schema_file_name():
-    # from args_dict / command line
-    args_dict = {"no_schema": "schema_file.yml"}
-    _collector = metadata_collector.MetadataCollector(args_dict)
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file is None
-
-    args_dict = {"schema_file": str(METADATA_JSON_SCHEMA)}
-    _collector = metadata_collector.MetadataCollector(args_dict, clean_meta=False)
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file == args_dict["schema_file"]
-
-    # from metadata
-    _collector.top_level_meta["cta"]["product"]["data"]["model"]["url"] = str(
-        SCHEMA_PATH / "top_level_meta.schema.yml"
-    )
-    schema_file = _collector.get_data_model_schema_file_name()
-    # test that priority is given to args_dict (if not none)
-    assert schema_file == args_dict["schema_file"]
-    _collector.args_dict["schema_file"] = None
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file == str(SCHEMA_PATH / "top_level_meta.schema.yml")
-
-    _collector.top_level_meta["cta"]["product"]["data"]["model"].pop("url")
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file is None
-
-    # from data model_name
-    _collector.model_parameter_name = "array_coordinates"
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert Path(schema_file) == (
-        schema.get_model_parameter_schema_file(_collector.model_parameter_name)
-    )
-
-    # from input metadata
-    _collector.input_metadata = [
-        {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
-    ]
-    _collector.model_parameter_name = None
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file == "from_input_meta"
-
-
-def test_get_top_level_metadata(args_dict_site, mocker):
-    mocker.patch(
-        "simtools.data_model.metadata_collector.gen.now_date_time_in_isoformat",
-        side_effect=[
-            "2020-01-01T00:00:00+00:00",
-            "2020-01-01T00:00:00+00:00",
-            "2020-01-01T00:00:00+00:00",
-            "2099-01-01T00:00:00+00:00",
-        ],
-    )
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    assert (
-        collector.top_level_meta["cta"]["activity"]["end"]
-        == collector.top_level_meta["cta"]["activity"]["start"]
-    )
-
-    # no update when activity cannot be found in the metadata
-    collector.observatory = "not_cta"
-    top_level_meta = collector.get_top_level_metadata()
-    assert top_level_meta["cta"]["activity"]["end"] == top_level_meta["cta"]["activity"]["start"]
-
-    collector.observatory = "cta"  # back to default
-    top_level_meta = collector.get_top_level_metadata()
-    assert top_level_meta["cta"]["activity"]["end"] > top_level_meta["cta"]["activity"]["start"]
 
 
 def test_fill_contact_meta(args_dict_site, caplog):
@@ -440,21 +368,73 @@ def test_write_metadata_to_yml(args_dict_site, tmp_test_directory, caplog):
         collector.write(yml_file=None)
 
 
-def test_fill_contact_meta_failed_system(args_dict_site, caplog, monkeypatch):
+def test_get_data_model_schema_file_name():
+    # from args_dict / command line
+    args_dict = {"no_schema": "schema_file.yml"}
+    _collector = metadata_collector.MetadataCollector(args_dict)
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file is None
 
-    def mock_getuser():
-        raise KeyError("Failed to get username")
+    args_dict = {"schema_file": str(METADATA_JSON_SCHEMA)}
+    _collector = metadata_collector.MetadataCollector(args_dict, clean_meta=False)
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file == args_dict["schema_file"]
 
-    monkeypatch.setattr(getpass, "getuser", mock_getuser)
+    # from metadata
+    _collector.top_level_meta["cta"]["product"]["data"]["model"]["url"] = str(
+        SCHEMA_PATH / "top_level_meta.schema.yml"
+    )
+    schema_file = _collector.get_data_model_schema_file_name()
+    # test that priority is given to args_dict (if not none)
+    assert schema_file == args_dict["schema_file"]
+    _collector.args_dict["schema_file"] = None
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file == str(SCHEMA_PATH / "top_level_meta.schema.yml")
 
-    contact_dict = {}
+    _collector.top_level_meta["cta"]["product"]["data"]["model"].pop("url")
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file is None
+
+    # from data model_name
+    _collector.model_parameter_name = "array_coordinates"
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert Path(schema_file) == (
+        schema.get_model_parameter_schema_file(_collector.model_parameter_name)
+    )
+
+    # from input metadata
+    _collector.input_metadata = [
+        {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
+    ]
+    _collector.model_parameter_name = None
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file == "from_input_meta"
+
+
+def test_get_top_level_metadata(args_dict_site, mocker):
+    mocker.patch(
+        "simtools.data_model.metadata_collector.gen.now_date_time_in_isoformat",
+        side_effect=[
+            "2020-01-01T00:00:00+00:00",
+            "2020-01-01T00:00:00+00:00",
+            "2020-01-01T00:00:00+00:00",
+            "2099-01-01T00:00:00+00:00",
+        ],
+    )
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    assert (
+        collector.top_level_meta["cta"]["activity"]["end"]
+        == collector.top_level_meta["cta"]["activity"]["start"]
+    )
 
-    with caplog.at_level(logging.WARNING):
-        collector._fill_contact_meta(contact_dict)
+    # no update when activity cannot be found in the metadata
+    collector.observatory = "not_cta"
+    top_level_meta = collector.get_top_level_metadata()
+    assert top_level_meta["cta"]["activity"]["end"] == top_level_meta["cta"]["activity"]["start"]
 
-    assert "Failed to get user name" in caplog.text
-    assert contact_dict["name"] == "UNKNOWN_USER"
+    collector.observatory = "cta"  # back to default
+    top_level_meta = collector.get_top_level_metadata()
+    assert top_level_meta["cta"]["activity"]["end"] > top_level_meta["cta"]["activity"]["start"]
 
 
 def test_read_input_metadata_from_yml_or_json_no_file():

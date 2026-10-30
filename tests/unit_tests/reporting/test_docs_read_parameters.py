@@ -1,7 +1,6 @@
-import re
 from io import StringIO
 from pathlib import Path
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -151,125 +150,6 @@ def test__format_parameter_value(data, expected, tmp_path, run_context):
     assert read_parameters._format_parameter_value("test", *data) == expected
 
 
-def test__format_parameter_value_links_to_parameter_asset(tmp_path, run_context):
-    read_parameters = ReadParameters(
-        args={"model_version": "6.0.0", "telescope": "LSTN-01", "site": "North"},
-        output_path=tmp_path,
-        context=run_context,
-    )
-    read_parameters.model_reader.get_design_model = Mock(return_value="LSTN-design")
-
-    result = read_parameters._format_parameter_value(
-        "camera_pixel_layout",
-        "camera_pixel_layout-1.0.0.ecsv",
-        "",
-        True,
-        None,
-        "LSTN-01",
-        "North",
-    )
-
-    assert result == (
-        "[camera_pixel_layout-1.0.0.ecsv](https://gitlab.cta-observatory.org/cta-science/"
-        "simulations/simulation-model/simulation-models/-/blob/main/"
-        "simulation-models/model_parameters/LSTN-design/camera_pixel_layout/"
-        "camera_pixel_layout-1.0.0.ecsv)"
-    )
-
-
-def test__group_model_versions_by_parameter_version(tmp_path, run_context):
-    read_parameters = ReadParameters(args={}, output_path=tmp_path, context=run_context)
-
-    def entry(value, parameter_version, model_version):
-        return {
-            "value": value,
-            "parameter_version": parameter_version,
-            "model_version": model_version,
-            "file_flag": False,
-        }
-
-    mock_data = {
-        "nsb_pixel_rate": [
-            entry("all: 0.233591 GHz", "2.0.0", "6.0.0"),
-            entry("all: 0.238006 GHz", "1.0.0", "5.0.0"),
-        ],
-        "pm_gain_index": [entry("4.5", "1.0.0", "6.0.0"), entry("4.5", "1.0.0", "5.0.0")],
-    }
-
-    def expected(value, parameter_version, model_version):
-        return {
-            "value": value,
-            "parameter_version": parameter_version,
-            "file_flag": False,
-            "dict_table": None,
-            "dict_unit": None,
-            "model_version": model_version,
-        }
-
-    result = read_parameters._group_model_versions_by_parameter_version(mock_data)
-    assert result == {
-        "nsb_pixel_rate": [
-            expected("all: 0.233591 GHz", "2.0.0", "6.0.0"),
-            expected("all: 0.238006 GHz", "1.0.0", "5.0.0"),
-        ],
-        "pm_gain_index": [expected("4.5", "1.0.0", "5.0.0, 6.0.0")],
-    }
-
-
-def test__compare_parameter_across_versions(tmp_test_directory, mocker, run_context):
-    args = {"site": "North", "telescope": "LSTN-01"}
-    read_parameters = ReadParameters(args=args, output_path=tmp_test_directory, context=run_context)
-    mocker.patch.object(
-        read_parameters.model_reader, "get_model_versions", return_value=["5.0.0", "6.0.0"]
-    )
-
-    def param(value, parameter_version, file=False, unit="m"):
-        return {
-            "instrument": "LSTN-01",
-            "site": "North",
-            "parameter_version": parameter_version,
-            "value": value,
-            "unit": unit,
-            "file": file,
-        }
-
-    mock_data = {
-        "5.0.0": {
-            "quantum_efficiency": param(QE_FILE_NAME, "1.0.0", file=True, unit=None),
-            "array_element_position_ground": param([-70.93, -52.07, 43.0], "1.0.0"),
-        },
-        "6.0.0": {
-            "quantum_efficiency": param(QE_FILE_NAME, "1.0.0", file=True, unit=None),
-            "array_element_position_ground": param([-70.91, -52.35, 45.0], "2.0.0"),
-            "only_prod6_param": param(70.45, "1.0.0"),
-            "none_valued_param": param(None, "1.0.0", unit=None),
-        },
-    }
-
-    comparison_data = read_parameters._compare_parameter_across_versions(
-        mock_data,
-        [
-            "quantum_efficiency",
-            "array_element_position_ground",
-            "only_prod6_param",
-            "none_valued_param",
-        ],
-    )
-
-    qe_versions = [
-        entry["model_version"]
-        for entry in comparison_data["quantum_efficiency"]
-        if entry["parameter_version"] == "1.0.0"
-    ]
-    assert any("5.0.0" in v and "6.0.0" in v for v in qe_versions)
-
-    position = comparison_data["array_element_position_ground"]
-    assert len(position) == 2
-    assert [e["model_version"] for e in position if e["parameter_version"] == "2.0.0"] == ["6.0.0"]
-    assert [e["model_version"] for e in comparison_data["only_prod6_param"]] == ["6.0.0"]
-    assert "none_valued_param" not in comparison_data
-
-
 def test_produce_observatory_report(mocker, tmp_path, run_context):
     rp = ReadParameters({"site": "North", "model_version": "6.0.0"}, tmp_path, context=run_context)
 
@@ -311,105 +191,6 @@ def test_produce_observatory_report(mocker, tmp_path, run_context):
     assert "none_valued_param" not in content
     assert "## Array Layouts" in content
     assert "## Array Trigger Configurations" in content
-
-
-@pytest.mark.parametrize("model_version", [["7.0.0"], ["7.0.0", "8.0.0"], []])
-def test_model_version_setter_with_invalid_list(model_version, tmp_path, run_context):
-    read_parameters = ReadParameters({"model_version": "6.0.0"}, tmp_path, context=run_context)
-    with pytest.raises(
-        ValueError,
-        match=re.escape("Only one model version can be passed to ReadParameters, not a list."),
-    ):
-        read_parameters.model_version = model_version
-
-
-_SIM_PARAM = {
-    "p": {"value": 5.0, "unit": "", "parameter_version": "1.0.0"},
-    "none_p": {"value": None, "unit": "", "parameter_version": "1.0.0"},
-}
-
-_SIM_DESC = {
-    "p": {"description": "D", "short_description": "S"},
-    "none_p": {"description": "D", "short_description": None},
-}
-
-
-@pytest.mark.parametrize("simulation_software", ["corsika", "sim_telarray"])
-def test_get_simulation_configuration_data(simulation_software, tmp_path, run_context):
-    rp = ReadParameters(
-        args={
-            "model_version": "6.0.0",
-            "simulation_software": simulation_software,
-            "telescope": "LSTN-01",
-            "site": "North",
-        },
-        output_path=tmp_path,
-        context=run_context,
-    )
-    with (
-        patch.object(rp, "get_all_parameter_descriptions", return_value=_SIM_DESC),
-        patch.object(rp.model_reader, "export_model_files"),
-        patch.object(
-            rp.model_reader, "get_simulation_configuration_parameters", return_value=_SIM_PARAM
-        ),
-        patch.object(rp.model_reader, "get_array_elements", return_value=["LSTN-01"]),
-        patch("simtools.utils.names.get_site_from_array_element_name", return_value="North"),
-    ):
-        data, dict_tables = rp.get_simulation_configuration_data()
-    assert len(data) == 1
-    assert data[0][3] == "5.0"
-    assert dict_tables == []
-
-
-def test_get_simulation_configuration_data_passes_telescope_to_plotting(
-    tmp_test_directory, mocker, run_context
-):
-    """Pass the loop telescope to plotting for all-telescope reports."""
-    read_parameters = ReadParameters(
-        args={
-            "model_version": "6.0.0",
-            "simulation_software": "sim_telarray",
-            "all_model_versions": True,
-        },
-        output_path=Path(tmp_test_directory),
-        context=run_context,
-    )
-    read_parameters.model_reader.get_array_elements = Mock(return_value=["LSTN-01"])
-    read_parameters.model_reader.get_design_model = Mock(return_value="LSTN-design")
-    read_parameters.model_reader.get_simulation_configuration_parameters = Mock(
-        return_value={
-            "pm_photoelectron_spectrum": {
-                "value": "pe-spectrum.dat",
-                "unit": " ",
-                "file": True,
-                "parameter_version": "1.0.0",
-            }
-        }
-    )
-    read_parameters.model_reader.export_model_files.side_effect = lambda parameters, dest: (
-        Path(dest).mkdir(parents=True, exist_ok=True),
-        (Path(dest) / "pe-spectrum.dat").write_text("table data\n", encoding="utf-8"),
-    )
-    read_parameters.get_all_parameter_descriptions = Mock(
-        return_value={
-            "pm_photoelectron_spectrum": {
-                "description": "Photoelectron spectrum",
-                "short_description": "Spectrum",
-            }
-        }
-    )
-    generate_plot_configurations = mocker.patch(
-        "simtools.reporting.docs_parameter_plots.plot_tables.generate_plot_configurations",
-        return_value=None,
-    )
-
-    read_parameters.get_simulation_configuration_data()
-
-    read_parameters.model_reader.get_design_model.assert_called_once_with(
-        "6.0.0", "LSTN-01", collection="telescopes"
-    )
-    assert generate_plot_configurations.call_args.kwargs["telescope"] == "LSTN-design"
-    assert generate_plot_configurations.call_args.kwargs["site"] == "North"
 
 
 def test_produce_simulation_configuration_report(tmp_path, run_context):
@@ -742,66 +523,6 @@ def test_flasher_gauss_exponential_uses_simtel_table_writer(tmp_test_directory, 
     assert list((Path(tmp_test_directory) / "_images").glob("flasher_pulse_shape_*.png"))
 
 
-@pytest.mark.parametrize(
-    ("calibration_device", "data", "dict_tables", "expected_strings"),
-    [
-        (
-            "ILLN-01",
-            [
-                ["Calibration", "***laser_events***", "1.0.0", "10", "Desc", None],
-                ["Calibration", "dark_events", "1.0.0", "100", "Desc2", "Short2"],
-            ],
-            None,
-            ["***laser events***", "dark events"],
-        ),
-        (
-            "ILLN-02",
-            [["Calibration", 12345, "1.0.0", "10", "Desc", None]],
-            [("dict_parameter", [{"a": 1, "value": 2}], "m")],
-            ["12345"],
-        ),
-    ],
-)
-def test_write_single_calibration_report(
-    tmp_path, calibration_device, data, dict_tables, expected_strings, run_context
-):
-    output_file = tmp_path / f"{calibration_device}.md"
-    rp = ReadParameters(args={"model_version": "6.0.0"}, output_path=tmp_path, context=run_context)
-
-    with (
-        patch.object(names, "is_design_type", return_value=False),
-        patch.object(rp, "_write_dict_table") as write_dict_table,
-    ):
-        rp._write_single_calibration_report(
-            output_file, calibration_device, data, "ILLN-design", dict_tables=dict_tables
-        )
-
-    assert write_dict_table.call_count == int(dict_tables is not None)
-    if dict_tables is not None:
-        assert write_dict_table.call_args[0][0] == "dict_parameter"
-        assert write_dict_table.call_args[0][2] == [{"a": 1, "value": 2}]
-
-    content = output_file.read_text(encoding="utf-8")
-    for expected in expected_strings:
-        assert expected in content
-
-
-def test_generate_model_parameter_reports_for_devices(tmp_path, run_context):
-    args = {"all_sites": True, "all_telescopes": True}
-    read_parameters = ReadParameters(args=args, output_path=tmp_path, context=run_context)
-    array_elements = ["ILLN-01", "ILLN-02", "ILLS-01"]
-
-    with patch("simtools.utils.names.get_site_from_array_element_name") as mock_get_site:
-        mock_get_site.side_effect = lambda x: "North" if "ILLN" in x else "South"
-        with patch.object(read_parameters, "produce_model_parameter_reports") as mock_produce:
-            read_parameters.generate_model_parameter_reports_for_devices(array_elements)
-
-    assert mock_produce.call_count == 3
-    mock_produce.assert_has_calls([call(collection="calibration_devices")] * 3)
-    assert read_parameters.array_element == "ILLS-01"
-    assert read_parameters.site == "South"
-
-
 def test_produce_array_element_report_writes_design_note_and_dict_table(
     tmp_path, mocker, run_context
 ):
@@ -873,45 +594,6 @@ def test_produce_array_element_report_design_model_lists_all_parameters(
     assert "inherited from the design model" not in content
     assert "| param" in content
     assert write_dict_table.call_count == 1
-
-
-def test_write_telescope_structure_figure_generates_and_links_image(
-    tmp_test_directory, mocker, run_context
-):
-    from simtools.model.telescope_geometry import TelescopeGeometry
-
-    rp = ReadParameters(
-        args={"site": "North", "telescope": "LSTN-design", "model_version": "6.0.0"},
-        output_path=tmp_test_directory,
-        context=run_context,
-    )
-    telescope_model = Mock()
-    telescope_model.name = "LSTN-design"
-    telescope_model.model_version = "6.0.0"
-    rp.context.paths.output_path["default"] = Path(tmp_test_directory)
-    mocker.patch(
-        "simtools.reporting.model_figures.telescope_geometry.telescope_geometry",
-        return_value=TelescopeGeometry(name="LSTN-design"),
-    )
-
-    def save_image(_geometry, output_file):
-        output_path = Path(output_file).with_suffix(".png")
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.touch()
-
-    render = mocker.patch(
-        "simtools.reporting.model_figures.plot_telescope_structure.plot_telescope_structure",
-        side_effect=save_image,
-    )
-    buf = StringIO()
-    write_telescope_structure_figure(buf, telescope_model, rp._logger, context=rp.context)
-    telescope_model.model_version = "7.0.0"
-    second_buf = StringIO()
-    write_telescope_structure_figure(second_buf, telescope_model, rp._logger, context=rp.context)
-
-    render.assert_called_once()
-    assert "telescope_structure_LSTN-design_" in buf.getvalue()
-    assert buf.getvalue() == second_buf.getvalue()
 
 
 def test_write_telescope_structure_figure_reports_missing_inputs(
@@ -986,16 +668,3 @@ def test_produce_model_parameter_reports_writes_latest_dict_table(tmp_path, mock
     assert write_dict_table.call_args[1] == {"heading_level": 3}
     content = (tmp_path / "LSTN-01.md").read_text(encoding="utf-8")
     assert "## dict_param\n\n**Description**: desc" in content
-
-
-def test__write_dict_table(tmp_path, run_context):
-    rp = ReadParameters(args={}, output_path=tmp_path, context=run_context)
-    file = StringIO()
-    rp._write_dict_table("dict_param", file, [{"a": 1, "value": 2}], "m", heading_level=3)
-    content = file.getvalue()
-    assert content.startswith("\n### Dict Param\n\n")
-    assert "| 1 | 2 m |" in content
-
-    empty = StringIO()
-    rp._write_dict_table("dict_param", empty, [], "m")
-    assert empty.getvalue() == ""

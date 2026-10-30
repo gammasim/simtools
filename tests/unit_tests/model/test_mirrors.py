@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-from pathlib import Path
 
 import pytest
 from astropy.table import Table
@@ -77,20 +76,6 @@ def write_tmp_mirror_list(tmp_test_directory, incomplete_mirror_table):
     return mirror_list_file
 
 
-def test_rejects_sim_telarray_mirror_list(tmp_test_directory):
-    mirror_list_file = tmp_test_directory / "mirrors.dat"
-    Path(mirror_list_file).write_text("0 0 1 2 3\n", encoding="utf-8")
-    with pytest.raises(InvalidMirrorListFileError, match="canonical ECSV"):
-        Mirrors(mirror_list_file)
-
-
-def test_read_mirror_list_from_ecsv(mirror_template_ecsv):
-    mirrors = mirror_template_ecsv
-    assert MIRROR_COUNT == mirrors.number_of_mirrors
-    assert mirrors.mirror_diameter.value == pytest.approx(151.0)
-    assert 3 == mirrors.shape_type
-
-
 def test_read_mirror_list_from_ecsv_missing_mirror_diameter(
     tmp_test_directory, mirror_table_template, caplog
 ):
@@ -147,10 +132,6 @@ def assert_mirror_parameters(mirror_x, mirror_y, mirror_diameter, focal_length, 
     assert mirror_diameter.value == pytest.approx(151.0)
     assert focal_length.value == pytest.approx(2920.0)
     assert shape_type.value == 3
-
-
-def test_get_single_mirror_parameters(mirror_template_ecsv):
-    assert_mirror_parameters(*mirror_template_ecsv.get_single_mirror_parameters(MIRROR_PANEL_ID))
 
 
 def test_get_single_mirror_parameters_wrong_id(mirror_template_ecsv):

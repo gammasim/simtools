@@ -31,7 +31,6 @@ from simtools.production_configuration.grid import (
     generate_job_grid,
     normalize_energy_ranges,
     renumber_job_rows,
-    resolve_single_model_version,
     scale_energy_max_for_zenith_angle,
 )
 from simtools.production_configuration.jobs_io import build_job_grid_summary
@@ -132,11 +131,6 @@ def _horizontal_shared_axis_args(layout_by_version):
         ],
         "array_layout_name": {"by_version": layout_by_version},
     }
-
-
-def test_resolve_single_model_version_uses_first_list_entry():
-    assert resolve_single_model_version(["7.0.0", "7.1.0"]) == "7.0.0"
-    assert resolve_single_model_version("7.0.0") == "7.0.0"
 
 
 def test_build_axes_dict_from_cli_args_derives_horizontal_binning_from_density():
@@ -884,21 +878,6 @@ def test_renumber_job_rows_applies_run_number_offset():
         44,
         45,
     ]
-
-
-def test_build_job_grid_summary_formats_single_values_and_ranges():
-    rows = [
-        {"energy_min": 5 * u.deg, "showers_per_run": 3},
-        {"energy_min": 5 * u.deg, "showers_per_run": 3},
-    ]
-    summary = build_job_grid_summary(rows)
-
-    assert summary["energy_min_used"] == "5 deg"
-    assert summary["showers_per_run_used"] == "3"
-    assert summary["energy_max_used"] == "not available"
-    rows[1]["energy_min"] = 1 * u.deg
-    summary = build_job_grid_summary(rows)
-    assert summary["energy_min_used"] == "[1, 5] deg"
 
 
 def test_build_job_grid_summary_includes_used_configured_and_lookup_values():

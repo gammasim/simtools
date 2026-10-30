@@ -15,7 +15,10 @@ from simtools.ray_tracing.ray_tracing import DEFAULT_MAX_WORKERS
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "type",
-        help="Validation type: optics (field-angle scan) or cumulative_psf (measured PSF comparison).",
+        help=(
+            "Validation type: optics (field-angle scan) "
+            "or cumulative_psf (measured PSF comparison)."
+        ),
         type=str,
         choices=["optics", "cumulative_psf"],
         default="optics",

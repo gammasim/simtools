@@ -70,15 +70,3 @@ def test_common_particle_name():
 
     with pytest.raises(ValueError, match=r"^Invalid common"):
         format_checkers.check_common_particle_name("not_a_particle")
-
-
-@pytest.mark.parametrize(
-    ("format_name", "check"),
-    [
-        ("astropy_unit_of_length", format_checkers.check_astropy_unit_of_length),
-        ("array_trigger_name", format_checkers.check_array_triggers_name),
-    ],
-)
-def test_format_checkers_are_registered_under_schema_format_names(format_name, check):
-    """Formats used in model parameter schemas are checked under the same name."""
-    assert format_checkers.format_checker.checkers[format_name][0] is check

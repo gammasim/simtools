@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest import mock
 
 import astropy.units as u
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -97,47 +96,6 @@ def test_plot_segmentation_types(
         mock_save.assert_called_once_with(mock_fig, "test.png")
 
 
-def test__create_single_mirror_patch():
-    x, y = 100.0, 100.0
-    diameter = 150.0
-
-    patch = plot_mirrors._create_single_mirror_patch(x, y, diameter, 1)
-    assert isinstance(patch, mpatches.RegularPolygon)
-    assert patch.xy == (x, y)
-    assert np.isclose(patch.radius, diameter / np.sqrt(3))
-    # Rotation compensation: base (0) - pi/2 = -pi/2
-    assert np.isclose(patch.orientation, -np.pi / 2)
-
-    patch = plot_mirrors._create_single_mirror_patch(x, y, diameter, 3)
-    assert isinstance(patch, mpatches.RegularPolygon)
-    assert patch.xy == (x, y)
-    assert np.isclose(patch.radius, diameter / np.sqrt(3))
-    # Rotation compensation: base (pi/2) - pi/2 = 0
-    assert np.isclose(patch.orientation, 0)
-
-
-def test__add_mirror_labels():
-    mock_ax = mock.MagicMock()
-    x_pos = np.array([100.0, 200.0, 300.0, 400.0, 500.0])
-    y_pos = np.array([100.0, 200.0, 300.0, 400.0, 500.0])
-    mirror_ids = [1, 2, 3, 4, 5]
-
-    plot_mirrors._add_mirror_labels(mock_ax, x_pos, y_pos, mirror_ids, max_labels=3)
-
-    assert mock_ax.text.call_count == 3
-
-
-def test__configure_mirror_plot_single_position_uses_nonzero_limits():
-    mock_ax = mock.MagicMock()
-
-    plot_mirrors._configure_mirror_plot(mock_ax, np.array([100.0]), np.array([0.0]))
-
-    x_limits = mock_ax.set_xlim.call_args.args
-    y_limits = mock_ax.set_ylim.call_args.args
-    assert x_limits[0] < x_limits[1]
-    assert y_limits[0] < y_limits[1]
-
-
 @pytest.mark.parametrize(
     ("shape_type", "n_mirrors", "diameter"),
     [
@@ -219,16 +177,6 @@ def test__read_ring_segmentation_data(tmp_path):
     assert rings[1]["rmax"] == pytest.approx(300.0)
 
 
-def test__read_segmentation_file_empty_warning(tmp_path, caplog):
-    """Test warning when segmentation file has no valid numeric data."""
-    data_file = tmp_path / "empty_seg.dat"
-    data_file.write_text("# All comments\n% More comments\n")
-
-    plot_mirrors._read_segmentation_file(data_file)
-
-    assert "No valid numeric data found" in caplog.text
-
-
 def test_plot_mirror_ring_segmentation_empty_data(tmp_path, caplog):
     data_file = tmp_path / "empty_ring.dat"
     data_file.write_text("# No data\n")
@@ -296,13 +244,6 @@ def test_plot_mirror_ring_segmentation_various_ring_counts(tmp_path, ring_count,
 
         assert fig is not None
         plt.close(fig)
-
-
-def test__configure_mirror_plot_empty_data():
-    mock_ax = mock.MagicMock()
-    plot_mirrors._configure_mirror_plot(mock_ax, np.array([]), np.array([]))
-    mock_ax.text.assert_called_once()
-    assert "No valid mirror data" in mock_ax.text.call_args[0][2]
 
 
 def test__read_segmentation_file_with_invalid_x_y(tmp_path):

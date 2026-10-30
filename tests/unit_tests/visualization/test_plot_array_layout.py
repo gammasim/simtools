@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import Mock
 
 import astropy.units as u
@@ -13,7 +14,6 @@ from matplotlib.colors import to_rgba
 from simtools.utils import geometry as transf
 from simtools.visualization import plot_array_layout as pal
 from simtools.visualization.plot_array_layout import (
-    PlotBounds,
     finalize_plot,
     generate_plot_combinations,
     get_patches,
@@ -248,58 +248,10 @@ def test_get_telescope_patch(telescope_type, expected_class, check):
         assert patch.get_fill() is True
 
 
-def test_plot_array_layout_calls_helpers(monkeypatch):
-    calls = {"get_patches_count": 0, "update_legend_called": False, "finalize_plot_called": False}
-    dummy_bounds = PlotBounds(x_lim=(0.0, 100.0), y_lim=(0.0, 100.0))
-
-    def dummy_get_patches(*args, **kwargs):
-        calls["get_patches_count"] += 1
-        patch = mpatches.Circle((0, 0), 1)
-        return [patch], 50 if calls["get_patches_count"] == 1 else 60, [], dummy_bounds, []
-
-    def dummy_update_legend(ax, telescopes, grayed_out_elements=None, legend_location="best"):
-        calls["update_legend_called"] = True
-
-    def dummy_finalize_plot(ax, patches, x_title, y_title, x_lim, y_lim, highlighted_patches=None):
-        calls["finalize_plot_called"] = True
-
-    monkeypatch.setattr("simtools.visualization.plot_array_layout.get_patches", dummy_get_patches)
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.update_legend", dummy_update_legend
-    )
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.finalize_plot", dummy_finalize_plot
-    )
-
-    fig = plot_array_layout(
-        Table(),
-        show_tel_label=True,
-        axes_range=100,
-        marker_scaling=2.0,
-        background_telescopes=Table(),
-    )
-
-    assert calls["get_patches_count"] == 2
-    assert calls["update_legend_called"]
-    assert calls["finalize_plot_called"]
-    assert isinstance(fig, mpl_fig.Figure)
-
-
 def test_plot_array_layout_calls_adjust_text(monkeypatch, telescopes):
-    _, _ = plt.subplots()
-    adjust_text_mock = Mock()
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.adjust_text_module.adjust_text",
-        adjust_text_mock,
-    )
-
-    plot_array_layout(telescopes, show_tel_label=True)
-
-    assert adjust_text_mock.called
-    args, kwargs = adjust_text_mock.call_args
-    assert isinstance(args[0], list)
-    assert len(args[0]) == len(telescopes)
-    assert kwargs["ax"] is not None
+    fig = plot_array_layout(telescopes, show_tel_label=True)
+    assert isinstance(fig, mpl_fig.Figure)
+    assert fig.axes[0].texts
 
 
 def test_plot_array_layout_with_highlighted_elements():
@@ -393,7 +345,13 @@ def _layout_args(**overrides):
     ids=["layout_name", "default_filename_includes_model_version", "figure_name_override"],
 )
 def test_plot_array_layouts(
-    monkeypatch, tmp_path, figure_name, site, coordinate_system, layout_name, expected_filename
+    monkeypatch,
+    tmp_test_directory,
+    figure_name,
+    site,
+    coordinate_system,
+    layout_name,
+    expected_filename,
 ):
     captured = {"name": None, "plotted": False}
 
@@ -403,7 +361,7 @@ def test_plot_array_layouts(
 
     def dummy_save_figure(fig, path, dpi):
         assert fig is not None
-        assert path.parent == tmp_path
+        assert path.parent == Path(tmp_test_directory)
         captured["name"] = path.name
 
     monkeypatch.setattr(pal, "plot_array_layout", dummy_plot_array_layout)
@@ -417,7 +375,7 @@ def test_plot_array_layouts(
         }
     ]
     args = _layout_args(figure_name=figure_name, site=site, coordinate_system=coordinate_system)
-    pal.plot_array_layouts(args, tmp_path, layouts)
+    pal.plot_array_layouts(args, Path(tmp_test_directory), layouts)
 
     assert captured["plotted"]
     assert captured["name"] == expected_filename

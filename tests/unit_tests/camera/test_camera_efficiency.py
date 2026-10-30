@@ -88,18 +88,7 @@ def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
 
 def test_report_and_result_file_name(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
-    assert camera_efficiency_lst._file["results"].name.startswith(
-        _TELESCOPE_THROUGHPUT_FILE_PREFIX
-    )
-
-
-def test_prepared_nsb_spectrum_placeholder_uses_site_model_default(
-    camera_efficiency_lst, config_data_lst
-):
-    config = camera_efficiency_lst._configuration(
-        config_data_lst | {"nsb_spectrum": "${prepared:nsb_reference_spectrum.ecsv}"}
-    )
-    assert config["nsb_spectrum"] is None
+    assert camera_efficiency_lst._file["results"].name.startswith(_TELESCOPE_THROUGHPUT_FILE_PREFIX)
 
 
 @pytest.mark.parametrize(

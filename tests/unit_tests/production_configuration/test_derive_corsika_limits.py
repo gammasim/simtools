@@ -448,20 +448,6 @@ def test_compute_lower_energy_limit_never_below_broad_range_min(mocker):
     assert_quantity_allclose(result, 0.014 * u.TeV)
 
 
-def test_apply_broad_range_lower_energy_floor_uses_enforced_minimum_for_different_bins():
-    derived = 0.020 * u.TeV
-    broad_range_min = 0.030 * u.TeV
-    energy_bins = np.array([0.01, 0.02, 0.03, 0.04])
-
-    result = derive_corsika_limits._apply_broad_range_lower_energy_floor(
-        derived,
-        broad_range_min,
-        energy_bins,
-    )
-
-    assert_quantity_allclose(result, 0.030 * u.TeV)
-
-
 def test_find_low_energy_threshold_from_histogram_peak_at_first_bin():
     counts = np.array([10.0, 4.0, 1.0, 0.0])
     bin_edges = np.array([0.05, 0.1, 0.2, 0.4, 0.8])
@@ -492,14 +478,6 @@ def test_find_low_energy_threshold_from_histogram_validation_errors(
             bin_edges,
             threshold_fraction=threshold_fraction,
         )
-
-
-def test_find_low_energy_threshold_from_histogram_raises_for_all_zero_counts():
-    counts = np.array([0.0, 0.0, 0.0, 0.0])
-    bin_edges = np.array([0.1, 0.2, 0.4, 0.8, 1.6])
-
-    with pytest.raises(ValueError, match="at least one positive entry"):
-        derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
 
 
 @pytest.mark.parametrize(

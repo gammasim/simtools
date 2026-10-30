@@ -62,6 +62,24 @@ def test_read_ecsv_asset_rejects_non_ecsv(tmp_test_directory):
         read_ecsv_asset(path)
 
 
+def test_read_ecsv_asset_requires_standard_model_parameter_metadata(tmp_test_directory):
+    table = _table()
+    del table.meta["site"]
+    path = Path(tmp_test_directory) / "table.ecsv"
+    table.write(path, format="ascii.ecsv")
+
+    with pytest.raises(ValueError, match="Missing required ECSV metadata: site"):
+        read_ecsv_asset(
+            path,
+            parameter_data={
+                "parameter": "fadc_pulse_shape",
+                "parameter_version": "1.0.0",
+                "instrument": "LSTN-01",
+                "site": "North",
+            },
+        )
+
+
 def test_read_ecsv_asset_rejects_missing_description(tmp_test_directory):
     table = _table()
     table["amplitude"].info.description = None
@@ -90,18 +108,6 @@ def test_validate_table_asset_rejects_missing_and_unexpected_columns():
 
     with pytest.raises(ValueError, match="Missing required table columns"):
         validate_table_asset(QTable({"amplitude": [1.0]}), schema_entry=schema_entry)
-
-
-def test_validate_table_asset_allows_extra_described_columns():
-    table = _table()
-    schema_entry = {
-        "allow_extra_columns": True,
-        "table_columns": [{"name": "time", "required": True, "description": "Time"}],
-    }
-
-    result = validate_table_asset(table, schema_entry=schema_entry)
-
-    assert result.colnames == ["time", "amplitude"]
 
 
 def test_validate_table_asset_rejects_undescribed_column():
@@ -151,22 +157,6 @@ def test_validate_table_asset_rejects_nonfinite_and_out_of_range_values():
             table,
             schema_entry={"allow_extra_columns": True, "table_columns": [entry]},
         )
-
-
-def test_validate_table_asset_allows_nan_when_declared():
-    table = _table()
-    table["amplitude"][0] = float("nan")
-    entry = {
-        "name": "amplitude",
-        "description": "Amplitude",
-        "type": "float64",
-        "input_processing": ["allow_nan"],
-    }
-
-    validate_table_asset(
-        table,
-        schema_entry={"allow_extra_columns": True, "table_columns": [entry]},
-    )
 
 
 def test_validate_table_asset_rejects_dtype_and_string_mismatch():

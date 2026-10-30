@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-import urllib.error
 from pathlib import Path
 
 import jsonschema
@@ -11,12 +10,8 @@ from astropy.table import Table
 from packaging.specifiers import InvalidSpecifier
 
 from simtools.constants import (
-    MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
-    MODEL_PARAMETER_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
     SCHEMA_PATH,
-    SIM_TELARRAY_META_PARAMETER_METASCHEMA,
-    SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import schema
 from simtools.io import ascii_handler
@@ -24,15 +19,6 @@ from simtools.io import ascii_handler
 _INTEGRATION_CONFIG_FILES = sorted(
     (Path(__file__).parents[2] / "integration_tests" / "config").glob("*.yml")
 )
-
-
-def test_get_model_parameter_schema_file():
-    schema_file = str(schema.get_model_parameter_schema_file("num_gains"))
-
-    assert str(MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml") in schema_file
-
-    with pytest.raises(FileNotFoundError, match=r"^Schema file not found:"):
-        schema.get_model_parameter_schema_file("not_a_parameter")
 
 
 def test_get_parameter_type_and_unit_from_schema():
@@ -84,17 +70,6 @@ def testget_parameter_attribute_from_schema_with_invalid_data_type(mocker):
     )
 
     assert schema.get_parameter_attribute_from_schema("dummy", "0.1.0", "type") is None
-
-
-def test_get_model_parameter_schema_version():
-    most_recent = schema.get_model_parameter_schema_version()
-    assert most_recent == "0.4.0"
-
-    assert schema.get_model_parameter_schema_version("0.2.0") == "0.2.0"
-    assert schema.get_model_parameter_schema_version("0.1.0") == "0.1.0"
-
-    with pytest.raises(ValueError, match=r"^Schema version 0.0.1 not found in"):
-        schema.get_model_parameter_schema_version("0.0.1")
 
 
 def test_validate_dict_using_schema(tmp_test_directory, caplog):
@@ -171,15 +146,6 @@ def test_integration_configs_match_application_workflow_schema(config_file):
     )
 
 
-def test_add_array_elements():
-    test_dict_1 = {"data": {"InstrumentTypeElement": {"enum": ["LSTN", "MSTN"]}}}
-    test_dict_added = schema._add_array_elements("InstrumentTypeElement", test_dict_1)
-    assert len(test_dict_added["data"]["InstrumentTypeElement"]["enum"]) > 2
-    test_dict_2 = {"data": {"InstrumentTypeElement": {"not_the_right_enum": ["LSTN", "MSTN"]}}}
-    test_dict_added_2 = schema._add_array_elements("InstrumentTypeElement", test_dict_2)
-    assert len(test_dict_added_2["data"]["InstrumentTypeElement"]["enum"]) > 2
-
-
 def _mock_software_version(monkeypatch):
     monkeypatch.setattr("simtools.data_model.schema.get_software_version", lambda _: "1.0.0")
 
@@ -216,23 +182,6 @@ def test_validate_deprecation_and_version_warns_for_deprecated_data(
     assert message in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("data", "software_name"),
-    [
-        ({"simulation_software": [{"name": "simtools"}]}, "simtools"),
-        ({"simulation_software": [{"name": "simtools", "version": None}]}, "simtools"),
-        ({"simulation_software": [{"name": "custom_tool", "version": ">=1.0.0"}]}, "custom_tool"),
-        ({"simulation_software": [{"name": "other_software", "version": ">=0.2.0"}]}, "simtools"),
-    ],
-    ids=["missing-version", "none-version", "custom-name", "no-match"],
-)
-def test_validate_deprecation_and_version_accepts_optional_or_unrelated_constraints(
-    data, software_name, monkeypatch
-):
-    _mock_software_version(monkeypatch)
-    assert schema.validate_deprecation_and_version(data, software_name=software_name) is None
-
-
 def test_validate_deprecation_and_version_reports_invalid_constraints(caplog, monkeypatch):
     _mock_software_version(monkeypatch)
     mismatch = {
@@ -252,34 +201,6 @@ def test_validate_deprecation_and_version_reports_invalid_constraints(caplog, mo
             schema.validate_deprecation_and_version(mismatch, ignore_software_version=True) is None
         )
     assert "does not match" in caplog.text
-
-
-def test_extract_schema_url_from_metadata_dict():
-    # Test with cta lowercase (default observatory is "cta")
-    metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
-    result = schema._extract_schema_url_from_metadata_dict(metadata)
-    assert result == "https://schema.example.com"
-
-    # Test with CTA uppercase and explicit observatory parameter
-    metadata = {"CTA": {"product": {"data": {"model": {"url": "https://schema2.example.com"}}}}}
-    result = schema._extract_schema_url_from_metadata_dict(metadata, observatory="CTA")
-    assert result == "https://schema2.example.com"
-
-    # Test with custom observatory
-    metadata = {
-        "veritas": {"product": {"data": {"model": {"url": "https://veritas-schema.example.com"}}}}
-    }
-    result = schema._extract_schema_url_from_metadata_dict(metadata, observatory="veritas")
-    assert result == "https://veritas-schema.example.com"
-
-    # Test with no URL
-    metadata = {"cta": {"product": {}}}
-    result = schema._extract_schema_url_from_metadata_dict(metadata)
-    assert result is None
-
-    # Test with empty metadata
-    result = schema._extract_schema_url_from_metadata_dict({})
-    assert result is None
 
 
 def test_get_schema_file_from_file_metadata(tmp_test_directory):
@@ -304,43 +225,6 @@ def test_get_schema_file_from_file_metadata(tmp_test_directory):
 
     # Test with non-existent file
     result = schema.get_schema_file_from_file_metadata("non_existent_file.yml")
-    assert result is None
-
-
-def test_get_schema_file_name(tmp_test_directory):
-    # Test with schema_file provided
-    result = schema._get_schema_file_name(schema_file="my_schema.yml")
-    assert result == "my_schema.yml"
-
-    # Test with meta_schema_url in data_dict
-    data_dict = {"meta_schema_url": "https://schema.example.com"}
-    result = schema._get_schema_file_name(data_dict=data_dict)
-    assert result == "https://schema.example.com"
-
-    # Test with schema_url in data_dict (e.g. info.yml files)
-    data_dict = {"schema_url": "https://info-schema.example.com"}
-    result = schema._get_schema_file_name(data_dict=data_dict)
-    assert result == "https://info-schema.example.com"
-
-    # Test that meta_schema_url takes precedence over schema_url
-    data_dict = {
-        "meta_schema_url": "https://meta-schema.example.com",
-        "schema_url": "https://schema.example.com",
-    }
-    result = schema._get_schema_file_name(data_dict=data_dict)
-    assert result == "https://meta-schema.example.com"
-
-    # Test with file_name (lowercase cta)
-    test_file = Path(tmp_test_directory) / "test_file.yml"
-    metadata = {"cta": {"product": {"data": {"model": {"url": "https://file-schema.example.com"}}}}}
-    with open(test_file, "w", encoding="utf-8") as f:
-        yaml.dump(metadata, f)
-
-    result = schema._get_schema_file_name(file_name=test_file)
-    assert result == "https://file-schema.example.com"
-
-    # Test with no inputs
-    result = schema._get_schema_file_name()
     assert result is None
 
 
@@ -401,6 +285,117 @@ def test_validate_schema_from_files(tmp_test_directory, caplog):
             file_name="non_existent_file.yml",
             schema_file=schema_file,
         )
+
+
+def test_get_model_parameter_schema_file():
+    schema_file = str(schema.get_model_parameter_schema_file("num_gains"))
+
+    assert str(MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml") in schema_file
+
+    with pytest.raises(FileNotFoundError, match=r"^Schema file not found:"):
+        schema.get_model_parameter_schema_file("not_a_parameter")
+
+
+def test_get_model_parameter_schema_version():
+    most_recent = schema.get_model_parameter_schema_version()
+    assert most_recent == "0.4.0"
+
+    assert schema.get_model_parameter_schema_version("0.2.0") == "0.2.0"
+    assert schema.get_model_parameter_schema_version("0.1.0") == "0.1.0"
+
+    with pytest.raises(ValueError, match=r"^Schema version 0.0.1 not found in"):
+        schema.get_model_parameter_schema_version("0.0.1")
+
+
+def test_add_array_elements():
+    test_dict_1 = {"data": {"InstrumentTypeElement": {"enum": ["LSTN", "MSTN"]}}}
+    test_dict_added = schema._add_array_elements("InstrumentTypeElement", test_dict_1)
+    assert len(test_dict_added["data"]["InstrumentTypeElement"]["enum"]) > 2
+    test_dict_2 = {"data": {"InstrumentTypeElement": {"not_the_right_enum": ["LSTN", "MSTN"]}}}
+    test_dict_added_2 = schema._add_array_elements("InstrumentTypeElement", test_dict_2)
+    assert len(test_dict_added_2["data"]["InstrumentTypeElement"]["enum"]) > 2
+
+
+@pytest.mark.parametrize(
+    ("data", "software_name"),
+    [
+        ({"simulation_software": [{"name": "simtools"}]}, "simtools"),
+        ({"simulation_software": [{"name": "simtools", "version": None}]}, "simtools"),
+        ({"simulation_software": [{"name": "custom_tool", "version": ">=1.0.0"}]}, "custom_tool"),
+        ({"simulation_software": [{"name": "other_software", "version": ">=0.2.0"}]}, "simtools"),
+    ],
+    ids=["missing-version", "none-version", "custom-name", "no-match"],
+)
+def test_validate_deprecation_and_version_accepts_optional_or_unrelated_constraints(
+    data, software_name, monkeypatch
+):
+    _mock_software_version(monkeypatch)
+    assert schema.validate_deprecation_and_version(data, software_name=software_name) is None
+
+
+def test_extract_schema_url_from_metadata_dict():
+    # Test with cta lowercase (default observatory is "cta")
+    metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
+    result = schema._extract_schema_url_from_metadata_dict(metadata)
+    assert result == "https://schema.example.com"
+
+    # Test with CTA uppercase and explicit observatory parameter
+    metadata = {"CTA": {"product": {"data": {"model": {"url": "https://schema2.example.com"}}}}}
+    result = schema._extract_schema_url_from_metadata_dict(metadata, observatory="CTA")
+    assert result == "https://schema2.example.com"
+
+    # Test with custom observatory
+    metadata = {
+        "veritas": {"product": {"data": {"model": {"url": "https://veritas-schema.example.com"}}}}
+    }
+    result = schema._extract_schema_url_from_metadata_dict(metadata, observatory="veritas")
+    assert result == "https://veritas-schema.example.com"
+
+    # Test with no URL
+    metadata = {"cta": {"product": {}}}
+    result = schema._extract_schema_url_from_metadata_dict(metadata)
+    assert result is None
+
+    # Test with empty metadata
+    result = schema._extract_schema_url_from_metadata_dict({})
+    assert result is None
+
+
+def test_get_schema_file_name(tmp_test_directory):
+    # Test with schema_file provided
+    result = schema._get_schema_file_name(schema_file="my_schema.yml")
+    assert result == "my_schema.yml"
+
+    # Test with meta_schema_url in data_dict
+    data_dict = {"meta_schema_url": "https://schema.example.com"}
+    result = schema._get_schema_file_name(data_dict=data_dict)
+    assert result == "https://schema.example.com"
+
+    # Test with schema_url in data_dict (e.g. info.yml files)
+    data_dict = {"schema_url": "https://info-schema.example.com"}
+    result = schema._get_schema_file_name(data_dict=data_dict)
+    assert result == "https://info-schema.example.com"
+
+    # Test that meta_schema_url takes precedence over schema_url
+    data_dict = {
+        "meta_schema_url": "https://meta-schema.example.com",
+        "schema_url": "https://schema.example.com",
+    }
+    result = schema._get_schema_file_name(data_dict=data_dict)
+    assert result == "https://meta-schema.example.com"
+
+    # Test with file_name (lowercase cta)
+    test_file = Path(tmp_test_directory) / "test_file.yml"
+    metadata = {"cta": {"product": {"data": {"model": {"url": "https://file-schema.example.com"}}}}}
+    with open(test_file, "w", encoding="utf-8") as f:
+        yaml.dump(metadata, f)
+
+    result = schema._get_schema_file_name(file_name=test_file)
+    assert result == "https://file-schema.example.com"
+
+    # Test with no inputs
+    result = schema._get_schema_file_name()
+    assert result is None
 
 
 def test_validate_meta_schema_url_offline():

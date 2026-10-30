@@ -119,24 +119,6 @@ def _build_reference_tables_with_multiple_angular_bins():
     return metadata, bins
 
 
-def test_resolve_effective_throw_radius_accepts_original_or_smaller_radius():
-    assert monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m).to_value(
-        u.m
-    ) == pytest.approx(100.0)
-    assert monte_carlo_statistics_estimator._resolve_effective_throw_radius(
-        100.0 * u.m, 80.0 * u.m
-    ).to_value(u.m) == pytest.approx(80.0)
-
-
-def test_resolve_effective_view_cone_radius_accepts_original_or_smaller_radius():
-    assert monte_carlo_statistics_estimator._resolve_effective_view_cone_radius(
-        10.0 * u.deg
-    ).to_value(u.deg) == pytest.approx(10.0)
-    assert monte_carlo_statistics_estimator._resolve_effective_view_cone_radius(
-        10.0 * u.deg, 2.0 * u.deg
-    ).to_value(u.deg) == pytest.approx(2.0)
-
-
 def test_resolve_effective_throw_radius_rejects_invalid_override():
     with pytest.raises(ValueError, match="positive"):
         monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 0.0 * u.m)

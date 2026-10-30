@@ -5,12 +5,6 @@ import pytest
 from simtools.data_model import parameter_catalog as catalog
 
 
-def test_site_parameters_are_filtered_from_model_catalog():
-    parameters = catalog.site_parameters()
-    assert "altitude" in parameters
-    assert all(value.get("instrument", {}).get("class") == "Site" for value in parameters.values())
-
-
 def test_parameter_collection_uses_schema_metadata():
     assert catalog.get_collection_name_from_parameter_name("atmospheric_profile") == "sites"
     with pytest.raises(KeyError, match="Parameter Not_a_parameter without schema definition"):

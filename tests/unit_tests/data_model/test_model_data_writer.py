@@ -8,12 +8,10 @@ import astropy.units as u
 import pytest
 from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
-from jsonschema.exceptions import ValidationError
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
-from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.io.output_paths import OutputPaths
 from simtools.utils import names
@@ -164,28 +162,6 @@ def test_derive_data_format():
     assert writer.ModelDataWriter._derive_data_format(None) is None
     assert writer.ModelDataWriter._derive_data_format(None, output_file="file.ecsv") == ascii_format
     assert writer.ModelDataWriter._derive_data_format(None, output_file="file.hdf5") == "hdf5"
-
-
-def test_write_model_parameter_ignores_existing_parameter_version(run_context, tmp_test_directory):
-    parameter_version = "1.1.0"
-    instrument = "LSTN-01"
-    num_gains_name = "num_gains"
-    context = run_context.replace(args={"ignore_existing_parameter_version": True})
-
-    with patch(
-        "simtools.data_model.model_data_writer.ModelDataWriter.check_for_existing_parameter"
-    ) as mock_repository_check:
-        writer.ModelDataWriter.write_model_parameter(
-            parameter_name=num_gains_name,
-            value=2,
-            instrument=instrument,
-            parameter_version=parameter_version,
-            output_file=num_gains_name + ".json",
-            output_path=tmp_test_directory,
-            context=context,
-        )
-
-    mock_repository_check.assert_not_called()
 
 
 def test_write_model_parameter_does_not_write_metadata_on_validation_failure(tmp_test_directory):

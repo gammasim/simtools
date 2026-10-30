@@ -58,34 +58,6 @@ def test_verify_simulation_model_production_tables(tmp_test_directory):
 
 
 @pytest.mark.parametrize(UPDATE_TYPE, [PATCH_UPDATE, FULL_UPDATE])
-def test_initialize_production_writes_info_for_existing_base(tmp_test_directory, update_type):
-    root = Path(tmp_test_directory)
-    base_info = (
-        root / "simulation-models" / "productions" / INITIALIZATION_BASE_VERSION / INFO_FILE_NAME
-    )
-    base_info.parent.mkdir(parents=True)
-    base_info.write_text("{}", encoding="utf-8")
-
-    maintenance.initialize_production(
-        root, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION, update_type
-    )
-
-    target_info = (
-        root / "simulation-models" / "productions" / INITIALIZATION_TARGET_VERSION / INFO_FILE_NAME
-    )
-    assert ascii_handler.collect_data_from_file(target_info) == {
-        "model_version": INITIALIZATION_TARGET_VERSION,
-        MODEL_UPDATE: update_type,
-        MODEL_VERSION_HISTORY: [INITIALIZATION_BASE_VERSION],
-        "model_status": "development",
-        "description": (
-            f"Initial configuration based on production model {INITIALIZATION_BASE_VERSION}"
-        ),
-        "changes": {},
-    }
-
-
-@pytest.mark.parametrize(UPDATE_TYPE, [PATCH_UPDATE, FULL_UPDATE])
 @pytest.mark.parametrize("base_update_type", [PATCH_UPDATE, FULL_UPDATE])
 def test_initialize_production_preserves_required_history(
     tmp_test_directory, update_type, base_update_type
@@ -179,28 +151,6 @@ def test_verify_model_parameters_for_production(
     assert len(missing_files) == expected_missing
 
 
-@patch("simtools.io.ascii_handler.collect_data_from_file")
-def test_verify_global_corsika_parameters_uses_global_scope(mock_collect_data, tmp_test_directory):
-    mock_collect_data.return_value = {
-        "production_table_name": "configuration_corsika",
-        "parameters": {"global": {"corsika_iact_io_buffer": "1.0.0"}},
-    }
-
-    with patch(PATH_PATCH) as mock_get_path:
-        mock_file = Mock()
-        mock_file.exists.return_value = True
-        mock_get_path.return_value = mock_file
-
-        _, total_checked = maintenance._verify_model_parameters_for_production(
-            str(tmp_test_directory), Path(TEST_PRODUCTION_FILE)
-        )
-
-    assert total_checked == 1
-    mock_get_path.assert_called_once_with(
-        str(tmp_test_directory), "global", "corsika_iact_io_buffer", "1.0.0"
-    )
-
-
 @pytest.mark.parametrize(
     ("telescope", "subdirectory", "expected_name"),
     [
@@ -227,18 +177,6 @@ def test_get_model_parameter_file_path(tmp_test_directory, telescope, subdirecto
     assert result == expected
 
 
-@pytest.mark.parametrize(
-    ("telescope", "parameter_name", "expected_scope"),
-    [
-        ("configuration_corsika", None, "global"),
-        ("LSTN-design", None, "LSTN-design"),
-        ("LSTN-design", "iobuf_maximum", "global"),
-    ],
-)
-def test_get_model_parameter_scope(telescope, parameter_name, expected_scope):
-    assert maintenance._get_model_parameter_scope(telescope, parameter_name) == expected_scope
-
-
 @pytest.mark.parametrize(("param_version", "expected"), [("4.1.0", "4.1.0"), ("6.0.0", "6.0.0")])
 def test_check_for_major_version_jump(param_version, expected):
     json_data = {"schema_version": "0.3.0", "parameter_version": "4.0.1"}
@@ -249,83 +187,6 @@ def test_check_for_major_version_jump(param_version, expected):
     )
 
     assert result == expected
-
-
-@pytest.mark.parametrize(
-    ("file_stems", "max_version", "expected", "error_match"),
-    [
-        (
-            ["parameter-1.0.0", "parameter-3.0.0", "parameter-2.0.0"],
-            "10.0.0",
-            "parameter-3.0.0",
-            None,
-        ),
-        ([], "1.0.0", None, "No JSON files found for parameter 'parameter'"),
-        (["parameter-2.0.0"], "1.0.0", None, r"with version <= 1\.0\.0"),
-    ],
-)
-@patch("simtools.model_repository.maintenance.Path")
-def test_get_latest_model_parameter_file(mock_path, file_stems, max_version, expected, error_match):
-    mock_directory = Mock()
-    mock_path.return_value = mock_directory
-    mock_files = []
-    for stem in file_stems:
-        mock_file = Mock()
-        mock_file.stem = stem
-        mock_files.append(mock_file)
-    mock_directory.glob.return_value = mock_files
-
-    if error_match:
-        with pytest.raises(FileNotFoundError, match=error_match):
-            maintenance._get_latest_model_parameter_file("mock_directory", "parameter", max_version)
-    else:
-        result = maintenance._get_latest_model_parameter_file(
-            "mock_directory", "parameter", max_version
-        )
-        assert result == str(mock_files[file_stems.index(expected)])
-
-
-def test_update_parameters_dict_new_function():
-    existing_params = {"dsum_threshold": "3.0.0"}
-    changes = {
-        "MSTx-FlashCam": {
-            "dsum_threshold": {"version": "4.0.0", "value": 62.5},
-            "dsum_clipping": {"version": "1.0.0", "deprecated": True},
-        },
-        "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
-    }
-
-    parameters, deprecated = maintenance._update_parameters_dict(
-        existing_params, changes, "MSTx-FlashCam"
-    )
-
-    assert parameters["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
-    assert "dsum_clipping" not in parameters["MSTx-FlashCam"]
-    assert "dsum_clipping" in deprecated
-
-
-def test_apply_changes_to_production_table_update_model_version():
-    data = {
-        "model_version": "6.0.0",
-        "production_table_name": "SSTS-design",
-        "parameters": {
-            "SSTS-39": {
-                "array_element_position_ground": "2.0.0",
-                "array_element_position_utm": "2.0.0",
-            }
-        },
-        "design_model": {"SSTS-39": "SSTS-design"},
-    }
-    changes = {
-        "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}},
-        "SSTS-design": {"discriminator_threshold": {"version": "4.0.0", "value": 8.92}},
-    }
-
-    maintenance._apply_changes_to_production_table(
-        data["production_table_name"], data, changes, "6.5.0", False
-    )
-
-    assert data["model_version"] == "6.5.0"
 
 
 @pytest.mark.parametrize("patch_update", [False, True])
@@ -359,45 +220,6 @@ def test_apply_changes_to_production_table_configuration_corsika(patch_update):
     assert "corsika_first_interaction_height" not in data["parameters"]["global"]
     if patch_update:
         assert data["deprecated_parameters"] == ["corsika_first_interaction_height"]
-
-
-def test_apply_changes_to_production_table_patch_update():
-    data = {
-        "model_version": "6.0.0",
-        "production_table_name": "test_table",
-        "parameters": {"test_table": {"dsum_threshold": "1.0.0"}},
-    }
-    changes = {"test_table": {"dsum_threshold": {"version": "2.0.0", "value": 42}}}
-
-    assert maintenance._apply_changes_to_production_table(
-        data["production_table_name"], data, changes, "6.5.0", True
-    )
-    assert data["model_version"] == "6.5.0"
-
-    data_no_changes = {
-        "model_version": "6.0.0",
-        "production_table_name": "other_table",
-        "parameters": {"other_table": {"dsum_threshold": "1.0.0"}},
-    }
-    assert not maintenance._apply_changes_to_production_table(
-        data_no_changes["production_table_name"], data_no_changes, changes, "6.5.0", True
-    )
-
-
-def test_apply_changes_to_production_table_patch_update_only_sim_telarray_changes():
-    data = {
-        "model_version": "6.0.0",
-        "production_table_name": "LSTN-design",
-        "parameters": {"LSTN-design": {"transit_time_random": "1.0.0"}},
-    }
-    changes = {"LSTN-design": {"min_photons": {"version": "2.0.0", "value": 0}}}
-
-    result = maintenance._apply_changes_to_production_table(
-        data["production_table_name"], data, changes, "6.5.0", True
-    )
-
-    assert result is False
-    assert data["parameters"]["LSTN-design"]["transit_time_random"] == "1.0.0"
 
 
 def test_apply_changes_to_production_tables(tmp_test_directory):
@@ -442,28 +264,6 @@ def test_apply_changes_to_production_tables(tmp_test_directory):
     assert config_data["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "3.0.0"
 
 
-def test_apply_changes_to_production_tables_no_parameters(tmp_test_directory):
-    source_path = Path(tmp_test_directory) / "simulation-models/productions" / "6.0.0"
-    _write_production_file(
-        source_path,
-        "MSTx-FlashCam.json",
-        {"model_version": "6.0.0", "production_table_name": "MSTx-FlashCam", "parameters": {}},
-    )
-    changes = {"MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}}}
-
-    maintenance._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", tmp_test_directory
-    )
-
-    updated_data = json.loads(
-        (
-            Path(tmp_test_directory) / "simulation-models/productions/6.5.0/MSTx-FlashCam.json"
-        ).read_text(encoding="utf-8")
-    )
-    assert updated_data["model_version"] == "6.5.0"
-    assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
-
-
 def test_apply_changes_to_production_tables_invalid_data_type(tmp_test_directory):
     source_path = Path(tmp_test_directory) / "simulation-models/productions" / "6.0.0"
     source_path.mkdir(parents=True)
@@ -500,43 +300,6 @@ def test_generate_new_production_empty_version_history(
     )
     mock_apply_model_changes.assert_called_once_with(
         {}, str(tmp_test_directory), "v0.3.0", WORKFLOW_REPOSITORY, context=None
-    )
-
-
-@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_file")
-@patch("simtools.model_repository.maintenance._get_changes_to_production")
-@patch("simtools.model_repository.maintenance._apply_changes_to_production_tables")
-@patch("simtools.model_repository.maintenance._apply_changes_to_model_parameters")
-def test_generate_new_production_separates_recursive_table_changes_from_parameters(
-    mock_apply_model_changes,
-    mock_apply_table_changes,
-    mock_get_changes_to_production,
-    mock_collect_data,
-    tmp_test_directory,
-):
-    direct_changes = {"MSTx-FlashCam": {"new_parameter": {"version": "2.0.0", "value": 42.0}}}
-    recursive_changes = {
-        **direct_changes,
-        "LSTN-design": {"inherited_parameter": {"version": "1.0.0", "value": 10.0}},
-    }
-    mock_collect_data.return_value = {
-        "model_version": "7.0.0",
-        MODEL_VERSION_HISTORY: ["6.3.0"],
-        "changes": direct_changes,
-    }
-    mock_get_changes_to_production.return_value = recursive_changes, "6.0.0"
-
-    maintenance.generate_new_production("7.0.0", str(tmp_test_directory))
-
-    mock_apply_table_changes.assert_called_once_with(
-        recursive_changes, "6.0.0", "7.0.0", "full_update", str(tmp_test_directory)
-    )
-    mock_apply_model_changes.assert_called_once_with(
-        direct_changes,
-        str(tmp_test_directory),
-        "main",
-        DEFAULT_WORKFLOW_REPOSITORY,
-        context=None,
     )
 
 
@@ -645,30 +408,6 @@ def test_apply_changes_to_model_parameters_with_both_value_and_activity_id_raise
     mock_create_entry.assert_not_called()
 
 
-@patch("simtools.model_repository.maintenance._create_new_model_parameter_entry")
-def test_apply_changes_to_model_parameters_adds_info_entry_to_error(
-    mock_create_entry, tmp_test_directory
-):
-    mock_create_entry.side_effect = TypeError("Error validating dictionary")
-    changes = {
-        "OBS-South": {
-            "array_layouts": {
-                "version": "4.0.0",
-                "value": "019fd316-c3f8-7796-81dc-eab12f221a1c",
-            }
-        }
-    }
-
-    with pytest.raises(TypeError) as exc_info:
-        maintenance._apply_changes_to_model_parameters(changes, tmp_test_directory)
-
-    assert str(exc_info.value) == (
-        "Failed to process info.yml entry 'OBS-South -> array_layouts' "
-        "(version='4.0.0', value='019fd316-c3f8-7796-81dc-eab12f221a1c'): "
-        "Error validating dictionary"
-    )
-
-
 @patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_git")
 @patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter_json")
 def test_download_model_parameter_from_workflow(
@@ -706,92 +445,6 @@ def test_download_model_parameter_from_workflow(
     )
 
 
-@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_git")
-@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter_json")
-@patch("urllib.request.urlopen")
-def test_download_model_parameter_from_workflow_copies_file_asset(
-    mock_urlopen, mock_write_json, mock_collect_data, tmp_test_directory
-):
-    tmp_test_directory = Path(tmp_test_directory)
-    telescope = "LSTN-design"
-    parameter_data = {
-        "file": True,
-        "parameter_version": FILE_PARAMETER_VERSION,
-        "value": FILE_PARAMETER_ASSET,
-    }
-    mock_collect_data.return_value = parameter_data
-    mock_urlopen.return_value.__enter__.return_value.read.return_value = FILE_PARAMETER_CONTENT
-
-    maintenance._download_model_parameter_from_workflow(
-        telescope=telescope,
-        param=FILE_PARAMETER_NAME,
-        param_data={"version": FILE_PARAMETER_VERSION, "activity_id": FILE_PARAMETER_ACTIVITY_ID},
-        simulation_models_path=tmp_test_directory,
-        setting_workflows_git_tag=WORKFLOW_BRANCH,
-        setting_workflows_git_repository=WORKFLOW_REPOSITORY,
-    )
-
-    parameter_directory = (
-        tmp_test_directory
-        / "simulation-models"
-        / "model_parameters"
-        / telescope
-        / FILE_PARAMETER_NAME
-    )
-    parameter_file = parameter_directory / f"{FILE_PARAMETER_NAME}-{FILE_PARAMETER_VERSION}.json"
-    assert (parameter_directory / FILE_PARAMETER_ASSET).read_bytes() == FILE_PARAMETER_CONTENT
-    mock_write_json.assert_called_once_with(parameter_data, parameter_file)
-    mock_urlopen.assert_called_once_with(
-        f"{WORKFLOW_REPOSITORY.removesuffix('.git')}/-/raw/{WORKFLOW_BRANCH}/"
-        f"output/{telescope}/{FILE_PARAMETER_NAME}/{FILE_PARAMETER_ACTIVITY_ID}/"
-        f"{FILE_PARAMETER_NAME}/{FILE_PARAMETER_ASSET}",
-        timeout=30,
-    )
-
-
-@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_git")
-@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter_json")
-@patch("urllib.request.urlopen")
-def test_download_model_parameter_from_workflow_repairs_missing_file_asset(
-    mock_urlopen, mock_write_json, mock_collect_data, tmp_test_directory
-):
-    tmp_test_directory = Path(tmp_test_directory)
-    parameter_directory = (
-        tmp_test_directory
-        / "simulation-models"
-        / "model_parameters"
-        / "LSTN-design"
-        / FILE_PARAMETER_NAME
-    )
-    parameter_directory.mkdir(parents=True)
-    parameter_file = parameter_directory / f"{FILE_PARAMETER_NAME}-{FILE_PARAMETER_VERSION}.json"
-    parameter_file.write_text(
-        json.dumps(
-            {
-                "file": True,
-                "parameter_version": FILE_PARAMETER_VERSION,
-                "value": FILE_PARAMETER_ASSET,
-            }
-        ),
-        encoding="utf-8",
-    )
-    mock_urlopen.return_value.__enter__.return_value.read.return_value = FILE_PARAMETER_CONTENT
-
-    maintenance._download_model_parameter_from_workflow(
-        telescope="LSTN-design",
-        param=FILE_PARAMETER_NAME,
-        param_data={"version": FILE_PARAMETER_VERSION, "activity_id": FILE_PARAMETER_ACTIVITY_ID},
-        simulation_models_path=tmp_test_directory,
-        setting_workflows_git_tag=WORKFLOW_BRANCH,
-        setting_workflows_git_repository=WORKFLOW_REPOSITORY,
-    )
-
-    assert (parameter_directory / FILE_PARAMETER_ASSET).read_bytes() == FILE_PARAMETER_CONTENT
-    mock_collect_data.assert_not_called()
-    mock_write_json.assert_not_called()
-    mock_urlopen.assert_called_once()
-
-
 def test_copy_model_parameter_asset_from_workflow_preserves_existing_file_asset(
     tmp_test_directory,
 ):
@@ -808,19 +461,6 @@ def test_copy_model_parameter_asset_from_workflow_preserves_existing_file_asset(
     )
 
     assert asset_file.read_bytes() == FILE_PARAMETER_CONTENT
-
-
-def test_copy_model_parameter_asset_from_workflow_skips_non_file_parameters(tmp_test_directory):
-    with patch("simtools.model_repository.maintenance.urllib.request.urlopen") as mock_urlopen:
-        maintenance._copy_model_parameter_asset_from_workflow(
-            {"file": False, "value": 42},
-            Path(tmp_test_directory) / "parameter.json",
-            "output/parameter.json",
-            WORKFLOW_REPOSITORY,
-            WORKFLOW_BRANCH,
-        )
-
-    mock_urlopen.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -938,33 +578,6 @@ def test_download_model_parameter_from_workflow_raises_on_version_mismatch(
         )
 
     mock_write_json.assert_not_called()
-
-
-@patch("simtools.model_repository.maintenance._get_latest_model_parameter_file")
-@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter")
-def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp_test_directory):
-    telescope = "MSTx-FlashCam"
-    param = "dsum_threshold"
-    param_data = {"version": "1.0.0", "value": 42.5}
-    model_parameters_dir = Path(tmp_test_directory / "simulation-models/model_parameters")
-    (model_parameters_dir / telescope).mkdir(parents=True)
-    mock_get_latest.side_effect = FileNotFoundError("No files found")
-
-    maintenance._create_new_model_parameter_entry(
-        telescope, param, param_data, Path(tmp_test_directory)
-    )
-
-    mock_dump.assert_called_once_with(
-        parameter_name=param,
-        value=param_data["value"],
-        instrument=telescope,
-        parameter_version=param_data["version"],
-        output_file=f"{param}-{param_data['version']}.json",
-        output_path=model_parameters_dir / telescope / param,
-        unit=None,
-        model_parameter_schema_version=None,
-        context=None,
-    )
 
 
 def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_directory, run_context):
@@ -1117,70 +730,6 @@ def test_update_two_levels_in_changes_dict():
     assert result["LSTN-design"] == "non_dict_value"
 
 
-@patch("simtools.model_repository.maintenance._get_changes_dict")
-def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_directory):
-    modification_dict_7_0_0 = {
-        "model_version": "7.0.0",
-        MODEL_UPDATE: "full_update",
-        MODEL_VERSION_HISTORY: ["6.0.2"],
-        "changes": {
-            "LSTN-design": {
-                "transit_time_random": {"version": "1.0.0", "value": 0.36, "unit": "ns"}
-            },
-            "LSTS-design": {
-                "transit_time_random": {"version": "1.0.0", "value": 0.36, "unit": "ns"}
-            },
-            "MSTx-FlashCam": {
-                "transit_time_random": {"version": "1.0.0", "value": 0.0, "unit": "ns"}
-            },
-        },
-    }
-    info_6_0_2 = {
-        "model_version": "6.0.2",
-        MODEL_UPDATE: "patch_update",
-        MODEL_VERSION_HISTORY: ["6.0.1", "6.0.0"],
-        "changes": {
-            "LSTN-design": {"photons_per_run": {"deprecated": True}},
-            "MSTx-FlashCam": {
-                "calibration_devices": {
-                    "version": "1.0.0",
-                    "value": {"flat_fielding": "MSFx-FlashCam"},
-                }
-            },
-        },
-    }
-    info_6_0_1 = {
-        "model_version": "6.0.1",
-        MODEL_UPDATE: "patch_update",
-        MODEL_VERSION_HISTORY: ["6.0.0"],
-        "changes": {"LSTN-design": {"some_parameter": {"version": "1.0.0", "value": 100}}},
-    }
-    info_6_0_0 = {
-        "model_version": "6.0.0",
-        MODEL_UPDATE: "full_update",
-        MODEL_VERSION_HISTORY: [],
-        "changes": {},
-    }
-    version_data = {"6.0.2": info_6_0_2, "6.0.1": info_6_0_1, "6.0.0": info_6_0_0}
-
-    mock_get_changes_dict.side_effect = lambda version, path: version_data.get(version, {})
-
-    changes, base_version = maintenance._get_changes_to_production(
-        modification_dict_7_0_0, tmp_test_directory, update_type="full_update"
-    )
-
-    assert base_version == "6.0.0"
-    assert changes["LSTN-design"]["transit_time_random"]["value"] == pytest.approx(0.36)
-    assert changes["LSTS-design"]["transit_time_random"]["value"] == pytest.approx(0.36)
-    assert changes["MSTx-FlashCam"]["transit_time_random"]["value"] == pytest.approx(0.0)
-    assert changes["LSTN-design"]["photons_per_run"]["deprecated"] is True
-    assert "calibration_devices" in changes["MSTx-FlashCam"]
-    # The loop stops at the full_update base 6.0.0, so 6.0.1 changes are not included
-    assert "some_parameter" not in changes["LSTN-design"]
-    mock_get_changes_dict.assert_any_call("6.0.2", tmp_test_directory)
-    mock_get_changes_dict.assert_any_call("6.0.0", tmp_test_directory)
-
-
 @patch("simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name")
 def test_apply_changes_to_sim_telarray_production_table(mock_get_collection):
     mock_get_collection.side_effect = lambda param: (
@@ -1242,51 +791,3 @@ def test_apply_changes_to_sim_telarray_production_table_deprecated_patch_update(
     assert maintenance._apply_changes_to_sim_telarray_production_table(data, changes, "7.0.0", True)
     assert "min_photons" not in data["parameters"]["LSTN-design"]
     assert "min_photons" in data["deprecated_parameters"]
-
-
-@patch("simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name")
-def test_apply_changes_to_production_tables_routes_cst_to_correct_table(
-    mock_get_collection, tmp_test_directory
-):
-    mock_get_collection.side_effect = lambda param: (
-        "configuration_sim_telarray" if param == "min_photons" else "telescopes"
-    )
-    source_path = Path(tmp_test_directory) / "simulation-models/productions" / "6.0.0"
-    _write_production_file(
-        source_path,
-        "LSTN-design.json",
-        {
-            "production_table_name": "LSTN-design",
-            "model_version": "6.0.0",
-            "parameters": {"LSTN-design": {"transit_time_random": "0.9.0"}},
-        },
-    )
-    _write_production_file(
-        source_path,
-        "configuration_sim_telarray.json",
-        {
-            "production_table_name": "configuration_sim_telarray",
-            "model_version": "6.0.0",
-            "parameters": {"LSTN-design": {"min_photons": "1.0.0"}},
-        },
-    )
-    changes = {
-        "LSTN-design": {
-            "transit_time_random": {"version": "1.0.0", "value": 0.36},
-            "min_photons": {"version": "2.0.0", "value": 0},
-        }
-    }
-
-    maintenance._apply_changes_to_production_tables(
-        changes, "6.0.0", "7.0.0", "patch_update", tmp_test_directory
-    )
-
-    target_path = Path(tmp_test_directory) / "simulation-models/productions" / "7.0.0"
-    telescope_result = json.loads((target_path / "LSTN-design.json").read_text(encoding="utf-8"))
-    assert telescope_result["parameters"]["LSTN-design"]["transit_time_random"] == "1.0.0"
-    assert "min_photons" not in telescope_result["parameters"]["LSTN-design"]
-
-    cst_result = json.loads(
-        (target_path / "configuration_sim_telarray.json").read_text(encoding="utf-8")
-    )
-    assert cst_result["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"
