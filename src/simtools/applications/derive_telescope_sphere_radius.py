@@ -21,10 +21,10 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika"),
 )
 
 
@@ -38,6 +38,7 @@ def main():
         model_version=args["model_version"],
         site=args["site"],
         telescope_name=args[_TELESCOPE],
+        context=context,
     )
     radius = derive_telescope_sphere_radius(model)
     ModelDataWriter.write_model_parameter(
@@ -49,6 +50,7 @@ def main():
         output_path=args.get("output_path"),
         metadata_input_dict=args,
         unit="m",
+        context=context,
     )
     context.logger.info(f"Derived telescope sphere radius: {radius:.3f}")
 

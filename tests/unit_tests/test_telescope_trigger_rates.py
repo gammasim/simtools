@@ -17,7 +17,7 @@ from simtools.telescope_trigger_rates import (
 FILE_SIMTEL = "test_file.simtel"
 
 
-def test_telescope_trigger_rates():
+def test_telescope_trigger_rates(run_context):
     args_dict = {
         "telescope_config_file": Path("test_telescope_ids.txt"),
         "event_data_file": FILE_SIMTEL,
@@ -31,17 +31,12 @@ def test_telescope_trigger_rates():
         patch("simtools.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
         patch("simtools.telescope_trigger_rates._calculate_trigger_rates") as mock_calculate,
         patch("simtools.telescope_trigger_rates.plot_simtel_event_histograms.plot") as mock_plot,
-        patch("simtools.telescope_trigger_rates.io_handler.IOHandler") as mock_io_handler,
     ):
         mock_collect_data.return_value = {"telescope_configs": {"array1": [1, 2, 3]}}
         mock_histograms_instance = MagicMock()
         mock_histograms.return_value = mock_histograms_instance
         mock_calculate.return_value = (None, None, 1 * u.Hz)
-        mock_io_handler_instance = MagicMock()
-        mock_io_handler.return_value = mock_io_handler_instance
-        mock_io_handler_instance.get_output_directory.return_value = Path("output_dir")
-
-        telescope_trigger_rates(args_dict)
+        telescope_trigger_rates(args_dict, context=run_context)
 
         mock_collect_data.assert_called_once_with(Path("test_telescope_ids.txt"))
         mock_histograms.assert_called_once_with(
@@ -49,7 +44,9 @@ def test_telescope_trigger_rates():
         )
         mock_histograms_instance.fill.assert_called_once()
         mock_plot.assert_called_once_with(
-            mock_histograms_instance.histograms, output_path=Path("output_dir"), array_name="array1"
+            mock_histograms_instance.histograms,
+            output_path=run_context.paths.get_output_directory(),
+            array_name="array1",
         )
 
 

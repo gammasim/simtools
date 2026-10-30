@@ -97,7 +97,13 @@ def initialize_test_resources(test_directory, simtools_version, template_version
 
 
 def run_configured_applications(
-    args_dict, config_dir, log_dir, run_time, replacements, unique_tmp_directories=False
+    args_dict,
+    config_dir,
+    log_dir,
+    run_time,
+    replacements,
+    unique_tmp_directories=False,
+    context=None,
 ):
     """Run all resource-generation workflows using one prepared runtime.
 
@@ -149,7 +155,7 @@ def run_configured_applications(
         if "runtime_environment" in args_dict:
             tmp_args_dict["runtime_environment"] = args_dict["runtime_environment"]
         simtools_runner.run_applications(
-            tmp_args_dict, run_time=run_time, replacements=workflow_replacements
+            tmp_args_dict, run_time=run_time, replacements=workflow_replacements, context=context
         )
 
 
@@ -381,7 +387,7 @@ def validate_static_files(manifest_file):
     logger.info("Validated %d static files using %s", len(declared_files), manifest_file)
 
 
-def generate_test_resources(args_dict, run_time=None):
+def generate_test_resources(args_dict, run_time=None, context=None):
     """Download inputs and run resource-generation workflows for a release.
 
     Parameters
@@ -426,6 +432,7 @@ def generate_test_resources(args_dict, run_time=None):
             run_time=run_time,
             replacements=replacements,
             unique_tmp_directories=True,
+            context=context,
         )
     finally:
         _remove_empty_download_directories(downloaded_files, integration_test_dir)

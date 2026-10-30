@@ -23,6 +23,13 @@ Provide tools for reading, writing, and processing simulated shower and telescop
    :members:
 ```
 
+## Input metadata
+
+```{eval-rst}
+.. automodule:: simtools.sim_events.metadata_reader
+   :members:
+```
+
 ## Writer
 
 (sim_events_writer-1)=
@@ -53,25 +60,23 @@ Provide tools for reading, writing, and processing simulated shower and telescop
 (sim_events_validators-1)=
 
 ```{eval-rst}
-.. automodule:: simtools.sim_events.output_validator
-   :members:
-```
-
-## Production comparison
-
-(sim_events_production_comparison-1)=
-
-```{eval-rst}
-.. automodule:: simtools.sim_events.production_comparison
+.. automodule:: simtools.sim_events.validate_run_outputs
    :members:
 ```
 
 ## Native configuration and file formats
 
 ```{eval-rst}
-.. automodule:: simtools.sim_events.formats.registry
+.. automodule:: simtools.sim_events.formats.readers
    :members:
 
 .. automodule:: simtools.sim_events.formats.eventio_reader
+   :members:
+```
+
+## production_comparison_statistics
+
+```{eval-rst}
+.. automodule:: simtools.sim_events.production_comparison_statistics
    :members:
 ```

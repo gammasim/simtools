@@ -129,6 +129,14 @@ class LocalBackend:
             raise BackendExecutionError("Local job failure(s): " + "; ".join(failures))
         return [results[index] for index in sorted(results)]
 
+    def is_finished(self, submission):
+        """Return whether direct local results are already available."""
+        return "direct_results" in submission.metadata
+
+    def collect(self, submission):
+        """Return direct results after local execution."""
+        return self.wait(submission)
+
     def cancel(self, submission):
         """Cancel pending local jobs."""
         if "direct_results" in submission.metadata:

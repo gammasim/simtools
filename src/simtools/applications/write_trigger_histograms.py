@@ -84,15 +84,7 @@ _ARGUMENTS = (
         action="store_true",
         default=False,
     ),
-    cli.ArgumentDefinition(
-        "max_workers",
-        help=(
-            "Number of worker processes to use for execution "
-            "(default: 1; set to 0 for auto-detection of available cores)."
-        ),
-        type=int,
-        default=1,
-    ),
+    cli.MAX_WORKERS(default=1),
 )
 
 
@@ -102,13 +94,7 @@ def _post_parse(args_dict, config_sources, parser):
         parser.error("'--minimum_triggered_telescopes' must be at least 1.")
 
     if args_dict.get("event_data_directory") or args_dict.get("production_path"):
-        explicit_output_path_sources = set().union(
-            *(
-                config_sources.get(source, set())
-                for source in ("environment", "constructor", "yaml", "cli")
-            )
-        )
-        if "output_path" not in explicit_output_path_sources:
+        if config_sources.get("output_path") not in {"environment", "yaml", "cli"}:
             parser.error("'--output_path' is required with directory or production metadata input.")
 
         if args_dict.get("output_file") and not args_dict.get("output_file_from_default"):
@@ -135,15 +121,15 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
     post_parse=_post_parse,
+    needs=("model", "corsika", "output"),
 )
 
 
 def main():
     """Run the trigger-histogram writer CLI application."""
     app_context = APPLICATION.start()
-    write_trigger_histograms(app_context.args)
+    write_trigger_histograms(app_context.args, context=app_context)
 
 
 if __name__ == "__main__":

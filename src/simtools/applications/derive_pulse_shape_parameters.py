@@ -29,7 +29,6 @@ _ARGUMENTS = (
         type=float,
         nargs=2,
         default=[0.1, 0.9],
-        required=False,
     ),
     cli.ArgumentDefinition(
         "fall_range",
@@ -37,14 +36,12 @@ _ARGUMENTS = (
         type=float,
         nargs=2,
         default=[0.9, 0.1],
-        required=False,
     ),
     cli.ArgumentDefinition(
         "dt_ns",
         help="Time sampling step in ns used by the solver.",
         type=float,
         default=0.1,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "time_margin_ns",
@@ -54,7 +51,6 @@ _ARGUMENTS = (
         ),
         type=float,
         default=10.0,
-        required=False,
     ),
 )
 
@@ -69,10 +65,10 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika"),
 )
 
 
@@ -94,6 +90,7 @@ def main():
         model_version=app_context.args["model_version"],
         site=site,
         telescope_name=app_context.args["telescope"],
+        context=app_context,
     )
     fadc_sum_bins = telescope_model.get_parameter_value("fadc_sum_bins")
     fadc_mhz = telescope_model.get_parameter_value_with_unit("fadc_mhz").to_value("MHz")
@@ -112,6 +109,7 @@ def main():
         fall_width_ns=fall_width_ns,
         dt_ns=dt_ns,
         rise_range=rise_range,
+        fall_range=fall_range,
         t_start_ns=t_start_ns,
         t_stop_ns=t_stop_ns,
     )
@@ -136,6 +134,7 @@ def main():
         output_file="flasher_pulse_width.json",
         output_path=output_path,
         unit="ns",
+        context=app_context,
     )
     writer.ModelDataWriter.write_model_parameter(
         parameter_name="flasher_pulse_exp_decay",
@@ -145,6 +144,7 @@ def main():
         output_file="flasher_pulse_exp_decay.json",
         output_path=output_path,
         unit="ns",
+        context=app_context,
     )
     log.info(
         f"Wrote model parameter files flasher_pulse_width.json and "

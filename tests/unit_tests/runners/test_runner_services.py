@@ -17,24 +17,26 @@ SIM_TELARRAY = "sim_telarray"
 
 
 @pytest.fixture
-def runner_service(corsika_runner_mock_array_model):
+def runner_service(corsika_stage_mock_array_model):
     """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
-        config=corsika_runner_mock_array_model.corsika_config,
+        config=corsika_stage_mock_array_model.corsika_config,
         label="test-corsika-runner",
         run_type=CORSIKA,
+        context=corsika_stage_mock_array_model.context,
     )
     _runner_service.load_data_directory()
     return _runner_service
 
 
 @pytest.fixture
-def runner_service_mock_array_model(corsika_runner_mock_array_model):
+def runner_service_mock_array_model(corsika_stage_mock_array_model):
     """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
-        config=corsika_runner_mock_array_model.corsika_config,
+        config=corsika_stage_mock_array_model.corsika_config,
         label="test-corsika-runner",
         run_type=CORSIKA,
+        context=corsika_stage_mock_array_model.context,
     )
     _runner_service.load_data_directory()
     return _runner_service
@@ -47,6 +49,7 @@ def runner_service_config_only(corsika_config_mock_array_model):
         config=corsika_config_mock_array_model,
         label="test-corsika-runner",
         run_type=CORSIKA,
+        context=corsika_config_mock_array_model.context,
     )
 
 
@@ -59,6 +62,7 @@ def runner_service_pedestals(corsika_config_mock_array_model):
         config=corsika_config_pedestals,
         label="test-pedestals-runner",
         run_type="pedestals",
+        context=corsika_config_mock_array_model.context,
     )
 
 
@@ -74,6 +78,7 @@ def runner_service_config_only_diffuse_gamma(corsika_config_mock_array_model):
         config=corsika_config_mock_array_model,
         label="test-corsika-runner",
         run_type=CORSIKA,
+        context=corsika_config_mock_array_model.context,
     )
 
 
@@ -218,7 +223,7 @@ def test__get_file_basename(runner_service_config_only):
         runner_service_config_only._get_file_basename(run_number=1)
 
 
-def test_get_file_base_name_from_core_config_full():
+def test_get_file_base_name_from_core_config_full(run_context):
     config = {
         "run_mode": "test_mode",
         "run_number": 5,
@@ -232,12 +237,13 @@ def test_get_file_base_name_from_core_config_full():
         config=config,
         label="test-label",
         run_type=CORSIKA,
+        context=run_context,
     )
     basename = runner_service._get_file_base_name_from_core_config()
     assert basename == "test_mode_run000005_za20deg_azm046deg_South_test_layout_1.0.0_test-label"
 
 
-def test_get_file_base_name_from_core_config_minimal():
+def test_get_file_base_name_from_core_config_minimal(run_context):
     config = {
         "run_mode": "test_mode",
         "model_version": "1.0.0",
@@ -246,12 +252,13 @@ def test_get_file_base_name_from_core_config_minimal():
         config=config,
         label=None,
         run_type=CORSIKA,
+        context=run_context,
     )
     basename = runner_service._get_file_base_name_from_core_config()
     assert basename == "test_mode_1.0.0"
 
 
-def test_get_file_base_name_from_core_config_illuminator_with_light_source():
+def test_get_file_base_name_from_core_config_illuminator_with_light_source(run_context):
     config = {
         "run_mode": "illuminator",
         "light_source": "ILLN-01",
@@ -262,6 +269,7 @@ def test_get_file_base_name_from_core_config_illuminator_with_light_source():
         config=config,
         label="simulate_illuminator_MSTN-04",
         run_type=SIM_TELARRAY,
+        context=run_context,
     )
 
     basename = runner_service._get_file_base_name_from_core_config()

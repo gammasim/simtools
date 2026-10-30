@@ -225,3 +225,18 @@ def test_telescope_fiducial_sphere_fixed_pointing(zenith, expected):
         zenith_range=[zenith, zenith] * u.deg,
     )
     assert result.to_value(u.m) == pytest.approx(expected)
+
+
+def test_ground_to_telescope_frame():
+    zenith = np.radians(20.0)
+    towards_star = np.array([np.sin(zenith), 0.0, np.cos(zenith)])
+    # A telescope pointing at the star sees it along its optical axis.
+    direction = transf.ground_direction_to_telescope_frame(towards_star, 20.0, 0.0)
+    assert direction == pytest.approx([0.0, 0.0, 1.0], abs=1e-15)
+    # Points rotate like directions; the axes offsets shift the frame.
+    assert transf.ground_to_telescope_frame(towards_star, 20.0, 0.0) == pytest.approx(direction)
+    vertical = transf.ground_to_telescope_frame([0.0, 0.0, 5.0], 0.0, 0.0, [1.0, 0.25])
+    assert vertical == pytest.approx([-0.75, 0.0, 5.0])
+    turned = transf.ground_direction_to_telescope_frame([1.0, 0.0, 0.0], 0.0, 90.0)
+    assert np.linalg.norm(turned) == pytest.approx(1.0)
+    assert turned[2] == pytest.approx(0.0)

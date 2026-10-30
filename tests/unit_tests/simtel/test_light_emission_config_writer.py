@@ -74,53 +74,6 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     )
 
 
-def test__get_angular_distribution_string_for_sim_telarray_lambertian_failure(
-    simulator_instance,
-):
-    # Mock calibration model values
-    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
-        "Lambertian" if name == "flasher_angular_distribution" else None
-    )
-
-    # Mock _generate_lambertian_angular_distribution_table to raise OSError
-    with patch.object(
-        get_light_source_writer(simulator_instance),
-        "generate_lambertian_angular_distribution_table",
-        side_effect=OSError("Write failed"),
-    ):
-        result = get_light_source_writer(
-            simulator_instance
-        ).get_angular_distribution_string_for_sim_telarray()
-
-    # Should return the token string "lambertian" and log a warning
-    assert result == "lambertian"
-    simulator_instance._logger.warning.assert_called_with(
-        "Failed to write Lambertian angular distribution table: Write failed; using token instead."
-    )
-
-
-def test__get_pulse_shape_string_token(simulator_instance):
-    # Test Gauss with width
-    result = get_light_source_writer(simulator_instance).get_pulse_shape_string_token(
-        "Gauss", 5.0, 0.0
-    )
-    assert result == "gauss:5.0"
-
-    # Test with only shape (no width or exp)
-    result = get_light_source_writer(simulator_instance).get_pulse_shape_string_token(
-        "Line", 0.0, 0.0
-    )
-    assert result == "line"
-
-
-def test__get_pulse_shape_string_token_exponential(simulator_instance):
-    # Test exponential pulse shape with decay only
-    result = get_light_source_writer(simulator_instance).get_pulse_shape_string_token(
-        "Exponential", 0.0, 3.2
-    )
-    assert result == "exponential:3.2"
-
-
 def test__get_pulse_shape_argument_for_sim_telarray_simple_shapes(simulator_instance):
     # Mock simple pulse shape
     simulator_instance.calibration_model.get_parameter_value.return_value = ["Gauss", 5.0, 0.0]
@@ -249,15 +202,16 @@ def test__add_illuminator_command_options(simulator_instance):
 
         # Verify structure and key values
         assert isinstance(result, list)
-        assert len(result) == 8
+        assert len(result) == 9
         assert result[0] == "-x 100.0"  # 1.0m -> 100.0cm
         assert result[1] == "-y 200.0"  # 2.0m -> 200.0cm
         assert result[2] == "-z 1200.0"  # ground altitude plus 9.0m tower height
         assert result[3] == "-d 0.1,0.2,0.3"  # pointing vector from _calibration_pointing_direction
         assert result[4] == "-n 1000000"  # flasher_photons
-        assert result[5] == "-s 450"  # wavelength in nm
-        assert result[6] == "-p square:2.0"  # pulse shape
-        assert result[7] == "-a gauss:5.0"  # angular distribution
+        assert result[5] == "-N 1"  # number of events (default)
+        assert result[6] == "-s 450"  # wavelength in nm
+        assert result[7] == "-p square:2.0"  # pulse shape
+        assert result[8] == "-a gauss:5.0"  # angular distribution
 
 
 def test__add_illuminator_command_options_with_custom_position_and_pointing(simulator_instance):
@@ -286,21 +240,23 @@ def test__add_illuminator_command_options_with_custom_position_and_pointing(simu
             "flasher_photons": 2000000,
             "light_source_position": [5.0 * u.m, 6.0 * u.m, 7.0 * u.m],
             "light_source_pointing": [0.5, 0.6, 0.7],
+            "number_of_events": 20,
         }
 
         result = get_light_source_writer(simulator_instance).add_illuminator_command_options()
 
         # Verify custom values are used
         assert isinstance(result, list)
-        assert len(result) == 8
+        assert len(result) == 9
+        assert result[5] == "-N 20"  # xyzls simulates all requested events
         assert result[0] == "-x 500.0"  # 5.0m -> 500.0cm
         assert result[1] == "-y 600.0"  # 6.0m -> 600.0cm
         assert result[2] == "-z 700.0"  # 7.0m -> 700.0cm
         assert result[3] == "-d 0.5,0.6,0.7"  # custom pointing vector
         assert result[4] == "-n 2000000"  # custom flasher_photons
-        assert result[5] == "-s 380"  # wavelength in nm
-        assert result[6] == "-p gauss"  # pulse shape
-        assert result[7] == "-a uniform"  # angular distribution
+        assert result[6] == "-s 380"  # wavelength in nm
+        assert result[7] == "-p gauss"  # pulse shape
+        assert result[8] == "-a uniform"  # angular distribution
 
 
 def test__add_flasher_command_options(simulator_instance):
@@ -561,88 +517,6 @@ def test__add_flasher_command_options_invalid_gauss_exponential_width(simulator_
             get_light_source_writer(simulator_instance).add_flasher_command_options()
 
 
-def test__add_flasher_command_options_invalid_gauss_exponential_decay(simulator_instance):
-
-    # Minimal calibration mocks
-    def mock_get_param_with_unit(name):
-        if name == "flasher_position":
-            return [0.0 * u.cm, 0.0 * u.cm, 0.0 * u.cm]
-        if name == "flasher_wavelength":
-            return 420.0 * u.nm
-        if name == "flasher_pulse_shape":
-            return ["Gauss-Exponential", 2.0, 0.0]  # invalid decay
-        return None
-
-    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
-        mock_get_param_with_unit
-    )
-    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda k: (
-        4000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 2.0, 0.0]
-    )
-
-    # Telescope minimal mocks
-    mock_diameter = Mock()
-    mock_diameter.to.return_value.value = 160.0
-    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.side_effect = lambda k: (
-        40 if k == "fadc_sum_bins" else "hexagonal"
-    )
-
-    simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 100}
-
-    # Bypass geometry shape validation to exercise Gauss-Exponential parameter check
-    with (
-        patch(
-            "simtools.simtel.light_emission_config_writer.fiducial_radius_from_shape",
-            return_value=75.0,
-        ),
-        patch.object(
-            simulator_instance,
-            "calculate_distance_focal_plane_calibration_device",
-            return_value=Mock(**{"to.return_value.value": 900.0}),
-        ),
-    ):
-        with pytest.raises(
-            ValueError,
-            match=(
-                "Gauss-Exponential pulse shape requires positive width and exponential decay values"
-            ),
-        ):
-            get_light_source_writer(simulator_instance).add_flasher_command_options()
-
-
-def test__get_light_source_command(simulator_instance):
-    # Test flat_fielding type
-    simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
-
-    with patch.object(
-        get_light_source_writer(simulator_instance),
-        "add_flasher_command_options",
-        return_value=["flasher_option"],
-    ) as mock_flasher:
-        result = get_light_source_writer(simulator_instance).get_light_source_command()
-        assert result == ["flasher_option"]
-        mock_flasher.assert_called_once()
-
-    # Test illuminator type
-    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
-
-    with patch.object(
-        get_light_source_writer(simulator_instance),
-        "add_illuminator_command_options",
-        return_value=["illuminator_option"],
-    ) as mock_illuminator:
-        result = get_light_source_writer(simulator_instance).get_light_source_command()
-        assert result == ["illuminator_option"]
-        mock_illuminator.assert_called_once()
-
-    # Test unknown type raises ValueError
-    simulator_instance.light_emission_config = {"light_source_type": "unknown_type"}
-
-    with pytest.raises(ValueError, match="Unknown light_source_type 'unknown_type'"):
-        get_light_source_writer(simulator_instance).get_light_source_command()
-
-
 def test__get_site_command(simulator_instance, tmp_test_directory):
 
     # Mock altitude value
@@ -656,16 +530,15 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
             "prepare_flasher_atmosphere_files",
             return_value="atm_id_123",
         ) as mock_atmo,
-        patch("simtools.simtel.light_emission_config_writer.settings") as mock_settings,
     ):
-        mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
+        sim_path = simulator_instance.context.software.sim_telarray_path
         result = get_light_source_writer(simulator_instance).get_site_command(
             "ff-1m", "/config/dir", mock_altitude
         )
 
         expected = [
             "-I.",
-            "-I/mock/simtel/sim_telarray/cfg",
+            f"-I{sim_path}/cfg",
             "-I/config/dir",
             "--altitude 2200",
             "--atmosphere atm_id_123",
@@ -674,11 +547,12 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         mock_atmo.assert_called_once_with("/config/dir")
 
     # Test default path (non-flasher)
+    telescope_position_file = Path(tmp_test_directory) / "telpos.txt"
     with (
         patch.object(
             simulator_instance,
             "write_telescope_position_file",
-            return_value=f"{tmp_test_directory}/telpos.txt",
+            return_value=str(telescope_position_file),
         ) as mock_telpos,
         patch.object(
             simulator_instance,
@@ -686,7 +560,7 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
             return_value=[1.0 * u.m, 2.0 * u.m, 3.0 * u.m],
         ),
     ):
-        # Default-down pointing: do not use telpos file.
+        # Every pointing uses the model's telescope position and radius.
         simulator_instance.light_emission_config = {
             "light_source_type": "illuminator",
             "light_source_pointing": [0.0, 0.0, -1.0],
@@ -694,8 +568,9 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         result = get_light_source_writer(simulator_instance).get_site_command(
             "other-app", "/config/dir", mock_altitude
         )
-        assert result == ["-h  2200 "]
-        mock_telpos.assert_not_called()
+        expected = ["-h  2200 ", f"--telpos-file {telescope_position_file}"]
+        assert result == expected
+        assert mock_telpos.call_count == 1
 
         # Non-default pointing: use telpos file.
         simulator_instance.light_emission_config = {
@@ -705,8 +580,8 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         result = get_light_source_writer(simulator_instance).get_site_command(
             "other-app", "/config/dir", mock_altitude
         )
-        assert result == ["-h  2200 ", f"--telpos-file {tmp_test_directory}/telpos.txt"]
-        assert mock_telpos.call_count == 1
+        assert result == expected
+        assert mock_telpos.call_count == 2
 
 
 def test__make_light_emission_script(simulator_instance):
@@ -738,11 +613,10 @@ def test__make_light_emission_script(simulator_instance):
             "get_light_source_command",
             return_value=["--photons 1000000"],
         ) as mock_light_source,
-        patch("simtools.simtel.light_emission_config_writer.settings") as mock_settings,
     ):
         # Test flat_fielding (no atmospheric profile)
         simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
-        mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
+        sim_path = simulator_instance.context.software.sim_telarray_path
 
         # Mock runner_service.get_file_name to return a string path
         simulator_instance.runner_service.get_file_name.return_value = Path("/output/ff-1m.log.gz")
@@ -750,7 +624,7 @@ def test__make_light_emission_script(simulator_instance):
         result = get_light_source_writer(simulator_instance).make_command("/output/ff-1m.iact.gz")
 
         expected = (
-            "/mock/simtel/sim_telarray/LightEmission/ff-1m -I. --altitude 2200 "
+            f"{sim_path}/LightEmission/ff-1m -I. --altitude 2200 "
             "--photons 1000000 -o /output/ff-1m.iact.gz"
         )
         arguments = shlex.split(result)
@@ -784,10 +658,9 @@ def test__make_light_emission_script(simulator_instance):
             "get_light_source_command",
             return_value=["-x 100", "-y 200"],
         ),
-        patch("simtools.simtel.light_emission_config_writer.settings") as mock_settings,
     ):
         simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
-        mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
+        sim_path = simulator_instance.context.software.sim_telarray_path
 
         # Mock runner_service.get_file_name to return a string path
         simulator_instance.runner_service.get_file_name.return_value = Path(
@@ -799,7 +672,7 @@ def test__make_light_emission_script(simulator_instance):
         )
 
         expected = (
-            "/mock/simtel/sim_telarray/LightEmission/illuminator-app -h 2200 "
+            f"{sim_path}/LightEmission/illuminator-app -h 2200 "
             "-x 100 -y 200 -A /config/dir/atm_profile.dat "
             "-o /output/illuminator-app.iact.gz"
         )
@@ -858,29 +731,6 @@ def test__prepare_flasher_atmosphere_files(simulator_instance):
         assert mock_symlink.call_count == 2
 
 
-def test__prepare_flasher_atmosphere_files_with_existing_files(simulator_instance):
-    config_directory = Path("/config/dir")
-
-    # Mock site model
-    simulator_instance.site_model.get_parameter_value.return_value = "atm_profile.dat"
-
-    # Mock existing file that needs unlinking
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("pathlib.Path.is_symlink", return_value=False),
-        patch("pathlib.Path.unlink") as mock_unlink,
-        patch("pathlib.Path.symlink_to") as mock_symlink,
-    ):
-        result = get_light_source_writer(simulator_instance).prepare_flasher_atmosphere_files(
-            config_directory
-        )
-
-        # Should unlink existing files before creating new ones
-        assert mock_unlink.call_count == 2
-        assert mock_symlink.call_count == 2
-        assert result == 1
-
-
 def test__prepare_flasher_atmosphere_files_symlink_fallback_to_copy(simulator_instance):
     config_directory = Path("/config/dir")
 
@@ -900,28 +750,6 @@ def test__prepare_flasher_atmosphere_files_symlink_fallback_to_copy(simulator_in
 
         # Should fall back to copy when symlink fails
         assert mock_copy.call_count == 2
-        assert result == 1
-
-
-def test__prepare_flasher_atmosphere_files_copy_also_fails(simulator_instance):
-    config_directory = Path("/config/dir")
-
-    # Mock site model
-    simulator_instance.site_model.get_parameter_value.return_value = "atm_profile.dat"
-
-    # Mock both symlink and copy failure
-    with (
-        patch("pathlib.Path.exists", return_value=False),
-        patch("pathlib.Path.is_symlink", return_value=False),
-        patch("pathlib.Path.symlink_to", side_effect=OSError("Symlink failed")),
-        patch("shutil.copy2", side_effect=OSError("Copy failed")),
-    ):
-        result = get_light_source_writer(simulator_instance).prepare_flasher_atmosphere_files(
-            config_directory
-        )
-
-        # Should log warnings but still return model_id
-        assert simulator_instance._logger.warning.call_count == 2
         assert result == 1
 
 

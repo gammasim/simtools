@@ -57,7 +57,9 @@ finite choices declared by argparse.
 :glob: true
 :maxdepth: 1
 
+simtools-compare-atmospheres <applications/simtools-compare-atmospheres>
 simtools-compare-productions <applications/simtools-compare-productions>
+simtools-compare-science-results <applications/simtools-compare-science-results>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-create-setting-workflow <applications/simtools-create-setting-workflow>
 simtools-dependency-manifest <applications/simtools-dependency-manifest>
@@ -71,11 +73,10 @@ simtools-derive-pulse-shape-parameters <applications/simtools-derive-pulse-shape
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
 simtools-derive-telescope-sphere-radius <applications/simtools-derive-telescope-sphere-radius>
 simtools-derive-trigger-rates <applications/simtools-derive-trigger-rates>
-simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
-simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>
-simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
+simtools-docs-assemble-pages <applications/simtools-docs-assemble-pages>
+simtools-docs-generate-toctree <applications/simtools-docs-generate-toctree>
 simtools-docs-produce-production-summary <applications/simtools-docs-produce-production-summary>
-simtools-docs-produce-simulation-configuration-report <applications/simtools-docs-produce-simulation-configuration-report>
+simtools-docs-produce-reports <applications/simtools-docs-produce-reports>
 simtools-export-sim-telarray-metadata-schema <applications/simtools-export-sim-telarray-metadata-schema>
 simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-bias-curve-submissions <applications/simtools-generate-bias-curve-submissions>
@@ -87,7 +88,7 @@ simtools-get-array-layout <applications/simtools-get-array-layout>
 simtools-get-model-parameter <applications/simtools-get-model-parameter>
 simtools-inspect-file <applications/simtools-inspect-file>
 simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
-simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
+simtools-maintain-simulation-model-compare-production-tables <applications/simtools-maintain-simulation-model-compare-production-tables>
 simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
 simtools-maintain-simulation-model-write-array-element-positions <applications/simtools-maintain-simulation-model-write-array-element-positions>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
@@ -95,7 +96,7 @@ simtools-plot-camera <applications/simtools-plot-camera>
 simtools-plot-corsika-limits <applications/simtools-plot-corsika-limits>
 simtools-plot-production-grid <applications/simtools-plot-production-grid>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
-simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
+simtools-plot-telescope-structure <applications/simtools-plot-telescope-structure>
 simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-plot-simulated-event-distributions <applications/simtools-plot-simulated-event-distributions>
 simtools-plot-trigger-patches <applications/simtools-plot-trigger-patches>
@@ -113,10 +114,9 @@ simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-submit-array-layouts <applications/simtools-submit-array-layouts>
 simtools-submit-data-from-external <applications/simtools-submit-data-from-external>
 simtools-submit-model-parameter-from-external <applications/simtools-submit-model-parameter-from-external>
-simtools-validate-camera-efficiency <applications/simtools-validate-camera-efficiency>
-simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
+simtools-validate-telescope-throughput <applications/simtools-validate-telescope-throughput>
 simtools-validate-repository-consistency <applications/simtools-validate-repository-consistency>
 simtools-write-production-metadata <applications/simtools-write-production-metadata>
 simtools-write-reduced-event-lists <applications/simtools-write-reduced-event-lists>

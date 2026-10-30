@@ -6,7 +6,7 @@ from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.io import io_handler, table_handler
+from simtools.io import table_handler
 from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
 from simtools.sim_events.writer import EventDataWriter
 
@@ -39,8 +39,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
-    setup_io_handler=False,
+    needs=("corsika", "output"),
 )
 
 
@@ -64,7 +63,7 @@ def main():
     if not files:
         raise FileNotFoundError(f"No matching input files found for '{input_pattern}'.")
 
-    output_filepath = io_handler.IOHandler().get_output_file(app_context.args["output_file"])
+    output_filepath = app_context.paths.get_output_file(app_context.args["output_file"])
     if output_filepath.suffix.lower() not in (".hdf5", ".h5"):
         raise ValueError(
             f"Unsupported reduced event data format for '{output_filepath}'. "
@@ -87,7 +86,9 @@ def main():
         overwrite_existing=True,
         file_type="HDF5",
         metadata_documents=lambda: {
-            "METADATA": build_standard_metadata(app_context.args, output_filepath),
+            "METADATA": build_standard_metadata(
+                app_context.args, output_filepath, context=app_context
+            ),
             "SIMULATION_METADATA": build_simulation_metadata(
                 generator.get_simulation_input_metadata()
             ),

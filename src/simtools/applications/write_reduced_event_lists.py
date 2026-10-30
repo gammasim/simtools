@@ -32,15 +32,7 @@ _ARGUMENTS = (
         default=1,
         help="Number of input files combined into each reduced event file (default: 1).",
     ),
-    cli.ArgumentDefinition(
-        "max_workers",
-        type=int,
-        default=None,
-        help=(
-            "Maximum parallel output-file workers. Default: 60%% of CPU cores; use 1 for "
-            "serial execution or 0 for all cores."
-        ),
-    ),
+    cli.MAX_WORKERS,
     cli.ArgumentDefinition(
         "wait",
         action="store_true",
@@ -58,7 +50,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.BACKEND_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    resolve_sim_software_executables=False,
+    needs=(),
 )
 
 
@@ -75,9 +67,9 @@ def main():
         backend=app_context.args.get("backend", "local"),
         backend_config=app_context.args.get("backend_config"),
         wait_for_completion=app_context.args.get("wait", False),
-        output_path=app_context.io_handler.get_output_directory(),
-        metadata_args=app_context.args,
+        output_path=app_context.paths.get_output_directory(),
         input_file_list_pattern=app_context.args["input_file_list_pattern"],
+        context=app_context,
     )
 
 

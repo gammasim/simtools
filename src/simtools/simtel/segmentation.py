@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from simtools.data_model.mirror_segmentation import (
-    _kind_required_fields,
+    kind_required_fields,
     make_quantity,
     quantity_value,
     validate_segments,
@@ -55,7 +55,7 @@ def _parse_line(line, parameter_name, schema_version):
     fields = line.replace(",", " ").split()
     kind = fields.pop(0).lower()
     count = int(fields.pop(0))
-    required = _kind_required_fields(parameter_name, schema_version).get(kind)
+    required = kind_required_fields(parameter_name, schema_version).get(kind)
     if required is None:
         raise ValueError(f"Unknown mirror segmentation kind: {kind}")
     if "r_min" in required:
@@ -63,16 +63,6 @@ def _parse_line(line, parameter_name, schema_version):
     if "vertices" in required:
         return _parse_polygon(fields, line, kind, count)
     return _parse_shape(fields, line, kind, count)
-
-
-def parse_segmentation_file(path, parameter_name, schema_version):
-    """Parse a sim_telarray segmentation file for migration or diagnostics."""
-    records = []
-    for line in Path(path).read_text(encoding="utf-8").splitlines():
-        line = line.split("#", 1)[0].strip()
-        if line:
-            records.append(_parse_line(line, parameter_name, schema_version))
-    return validate_segments(records, parameter_name, schema_version)
 
 
 def write_mirror_segmentation(records, output_path, parameter_name, schema_version):
@@ -84,7 +74,7 @@ def write_mirror_segmentation(records, output_path, parameter_name, schema_versi
     output_path.parent.mkdir(parents=True, exist_ok=True)
     lines = []
     for record in records:
-        required = _kind_required_fields(parameter_name, schema_version)[record["kind"]]
+        required = kind_required_fields(parameter_name, schema_version)[record["kind"]]
         if "r_min" in required:
             lines.append(
                 f"RING {record['count']} {quantity_value(record, 'r_min', 'cm')} "

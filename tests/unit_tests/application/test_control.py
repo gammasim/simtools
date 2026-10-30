@@ -8,13 +8,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from simtools.application.control import (
-    _initialize_runtime,
     _resolve_model_version_to_latest_patch,
     _version_info,
     get_log_file,
+    initialize_runtime,
     setup_logging,
 )
-from simtools.settings import config
+from simtools.context import RunContext
 
 _DEVELOPMENT = "development"
 
@@ -35,7 +35,7 @@ def _read_stream(handler):
 def redact_test_setup():
     """Set up logging handler and application context for redaction testing."""
     mock_args_dict = {"log_level": "debug"}
-    app_context = _initialize_runtime(mock_args_dict, setup_io_handler=False)
+    app_context = initialize_runtime(mock_args_dict, needs=())
 
     handler = app_context.logger.handlers[0] if app_context.logger.handlers else None
 
@@ -92,24 +92,24 @@ def test_redact_filter_pattern_matching(
 
 def test_initialize_runtime_basic():
     mock_args_dict = {"log_level": "info", "test": True}
-    app_context = _initialize_runtime(mock_args_dict)
+    app_context = initialize_runtime(mock_args_dict)
 
     assert app_context.args == mock_args_dict
     assert isinstance(app_context.logger, logging.Logger)
-    assert app_context.io_handler is not None
+    assert app_context.paths is not None
 
     assert app_context.logger.level == logging.INFO
 
 
 def test_initialize_runtime_without_io_handler():
-    """Test application runtime startup without IOHandler."""
+    """Run paths remain available when version output is not requested."""
     mock_args_dict = {"log_level": "debug"}
-    app_context = _initialize_runtime(mock_args_dict, setup_io_handler=False)
+    app_context = initialize_runtime(mock_args_dict, needs=())
 
     # Verify returned values
     assert app_context.args == mock_args_dict
     assert isinstance(app_context.logger, logging.Logger)
-    assert app_context.io_handler is None
+    assert app_context.paths is not None
 
     # Verify logger level was set to debug
     assert app_context.logger.level == logging.DEBUG
@@ -120,48 +120,38 @@ def test_initialize_runtime_without_model_reader(mocker):
     model_reader = mocker.patch(
         "simtools.application.control.create_model_reader_from_configuration"
     )
-    app_context = _initialize_runtime(
-        {"log_level": "info"}, setup_io_handler=False, initialize_model_reader=False
-    )
+    app_context = initialize_runtime({"log_level": "info"}, needs=())
 
     model_reader.assert_not_called()
     assert app_context.model_reader is None
 
 
 def test_initialize_runtime_without_resolving_sim_software_executables():
-    """Test runtime startup forwards executable-resolution flag to settings load."""
+    """Test runtime startup accepts an application without software requirements."""
     mock_args_dict = {"log_level": "info"}
-    with patch("simtools.application.control.config.load") as mock_load:
-        _initialize_runtime(
-            mock_args_dict,
-            setup_io_handler=False,
-            resolve_sim_software_executables=False,
-        )
-
-    mock_load.assert_called_once_with(
+    context = initialize_runtime(
         mock_args_dict,
-        resolve_sim_software_executables=False,
+        needs=(),
     )
+    assert context.args == mock_args_dict
 
 
 def test_initialize_runtime_validates_simulation_dependencies_after_loading():
     """Dependency validation runs after settings load and before logging."""
     mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
     with (
-        patch("simtools.application.control.config.load") as mock_load,
         patch(
             "simtools.application.control.dependencies.validate_simulation_dependencies"
         ) as validate,
         patch("simtools.application.control.setup_logging") as setup_logging,
     ):
-        _initialize_runtime(
+        initialize_runtime(
             mock_args_dict,
-            setup_io_handler=False,
-            validate_simulation_dependencies=True,
+            needs=("sim_telarray", "corsika"),
         )
 
-    mock_load.assert_called_once()
-    validate.assert_called_once_with("corsika")
+    assert validate.call_args.args[0] == "corsika"
+    assert isinstance(validate.call_args.kwargs["context"], RunContext)
     setup_logging.assert_called_once()
 
 
@@ -173,15 +163,13 @@ def test_initialize_runtime_defers_dependency_validation_for_remote_jobs():
         "_defer_simulation_dependency_validation": True,
     }
     with (
-        patch("simtools.application.control.config.load"),
         patch(
             "simtools.application.control.dependencies.validate_simulation_dependencies"
         ) as validate,
     ):
-        _initialize_runtime(
+        initialize_runtime(
             mock_args_dict,
-            setup_io_handler=False,
-            validate_simulation_dependencies=True,
+            needs=("sim_telarray", "corsika"),
         )
 
     validate.assert_not_called()
@@ -191,7 +179,6 @@ def test_initialize_runtime_stops_when_dependencies_are_unavailable():
     """Dependency failures prevent the rest of application startup."""
     mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
     with (
-        patch("simtools.application.control.config.load"),
         patch(
             "simtools.application.control.dependencies.validate_simulation_dependencies",
             side_effect=ValueError("missing dependency"),
@@ -199,10 +186,9 @@ def test_initialize_runtime_stops_when_dependencies_are_unavailable():
         patch("simtools.application.control.setup_logging") as setup_logging,
     ):
         with pytest.raises(ValueError, match="missing dependency"):
-            _initialize_runtime(
+            initialize_runtime(
                 mock_args_dict,
-                setup_io_handler=False,
-                validate_simulation_dependencies=True,
+                needs=("sim_telarray", "corsika"),
             )
 
     setup_logging.assert_not_called()
@@ -218,7 +204,7 @@ def test_initialize_runtime_prepares_runtime_environment_from_cli():
         "simtools.application.control.prepare_runtime_environment",
         return_value=({"image": "test-image"}, ["podman", "run"]),
     ) as mock_prepare:
-        app_context = _initialize_runtime(mock_args_dict, setup_io_handler=False)
+        app_context = initialize_runtime(mock_args_dict, needs=())
 
     mock_prepare.assert_called_once_with(Path("runtime.yml"))
     assert app_context.run_time == ["podman", "run"]
@@ -233,7 +219,7 @@ def test_initialize_runtime_runtime_environment_ignored_from_cli():
         "ignore_runtime_environment": True,
     }
     with patch("simtools.application.control.prepare_runtime_environment") as mock_prepare:
-        app_context = _initialize_runtime(mock_args_dict, setup_io_handler=False)
+        app_context = initialize_runtime(mock_args_dict, needs=())
 
     mock_prepare.assert_not_called()
     assert app_context.run_time is None
@@ -358,10 +344,10 @@ def test_version_info_export_build_info_with_io_handler():
             with patch("simtools.application.control.version.__version__", "1.0.0"):
                 mock_build.return_value = {"corsika_build_id": "7.7500"}
 
-                _version_info(args_dict, mock_io_handler, logger)
+                _version_info(args_dict, mock_io_handler, logger, RunContext.from_arguments({}))
 
                 mock_io_handler.get_output_file.assert_called_once_with("build_info.json")
-                mock_export.assert_called_once_with("/output/build_info.json", "test_runtime")
+                assert mock_export.call_args.args[:2] == ("/output/build_info.json", "test_runtime")
 
 
 def test_version_info_export_build_info_without_io_handler():
@@ -373,9 +359,9 @@ def test_version_info_export_build_info_without_io_handler():
             with patch("simtools.application.control.version.__version__", "1.0.0"):
                 mock_build.return_value = {"corsika_build_id": "7.7500"}
 
-                _version_info(args_dict, None, logger)
+                _version_info(args_dict, None, logger, RunContext.from_arguments({}))
 
-                mock_export.assert_called_once_with("/output/build_info.json", "test_runtime")
+                assert mock_export.call_args.args[:2] == ("/output/build_info.json", "test_runtime")
 
 
 def test_get_log_file_explicit_file():
@@ -435,7 +421,10 @@ def test_setup_logging_with_logger_name():
 def test_setup_logging_with_file_handler(tmp_test_directory):
     log_file = Path(str(tmp_test_directory)) / "test.log"
     logger = setup_logging(
-        log_level="INFO", log_file=str(log_file), logger_name="test_file_handler"
+        log_level="INFO",
+        log_file=str(log_file),
+        logger_name="test_file_handler",
+        activity_id="test-activity",
     )
     try:
         logger.info("Test message")
@@ -446,7 +435,7 @@ def test_setup_logging_with_file_handler(tmp_test_directory):
         assert log_file.exists()
         content = log_file.read_text()
         assert "Test message" in content
-        assert config.activity_id in content
+        assert "test-activity" in content
     finally:
         for handler in logger.handlers[:]:
             handler.close()
@@ -464,7 +453,7 @@ def test_direct_simulations_check_selected_model_contract(
     monkeypatch.setattr(control.version, "is_development_build", False)
     monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: {})
     monkeypatch.setattr(
-        control, "_validate", lambda *args, **kwargs: captured.append(kwargs) or proof
+        control, "validate_release", lambda *args, **kwargs: captured.append(kwargs) or proof
     )
     args = {"simulation_models_path": str(tmp_test_directory), "test": development}
     control._validate_model_compatibility(args)
@@ -480,7 +469,9 @@ def test_development_build_accepts_unreleased_model_without_test_flag(
     captured = []
     monkeypatch.setattr(control.version, "is_development_build", True)
     monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: {})
-    monkeypatch.setattr(control, "_validate", lambda *args, **kwargs: captured.append(kwargs))
+    monkeypatch.setattr(
+        control, "validate_release", lambda *args, **kwargs: captured.append(kwargs)
+    )
     control._validate_model_compatibility({"simulation_models_path": str(tmp_test_directory)})
     assert captured == [{"revision": None, _DEVELOPMENT: True}]
 
@@ -492,6 +483,8 @@ def test_direct_git_simulation_checks_catalog_revision(tmp_test_directory, monke
     captured = []
     monkeypatch.setattr(control.version, "is_development_build", False)
     monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: catalog)
-    monkeypatch.setattr(control, "_validate", lambda *args, **kwargs: captured.append(kwargs))
+    monkeypatch.setattr(
+        control, "validate_release", lambda *args, **kwargs: captured.append(kwargs)
+    )
     control._validate_model_compatibility({"simulation_models_git_path": str(tmp_test_directory)})
     assert captured == [{"revision": "v0.18.0", _DEVELOPMENT: False}]

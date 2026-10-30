@@ -19,7 +19,7 @@ def _export_context(output_path, telescope, output_file):
             "export_model_file": True,
             "export_model_file_as_table": False,
         },
-        io_handler=SimpleNamespace(
+        paths=SimpleNamespace(
             get_output_directory=lambda: output_path,
             get_output_file=lambda name: output_path / name,
         ),
@@ -108,7 +108,7 @@ def test_export_non_file_parameter_is_rejected(tmp_test_directory):
             "export_model_file": True,
             "export_model_file_as_table": False,
         },
-        io_handler=SimpleNamespace(get_output_directory=lambda: tmp_test_directory),
+        paths=SimpleNamespace(get_output_directory=lambda: tmp_test_directory),
     )
 
     with pytest.raises(ValueError, match="does not reference a model file"):

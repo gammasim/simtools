@@ -8,7 +8,9 @@ SIMULATION_METADATA_SCHEMA_NAME = "simtools.reduced_event_list.simulation_metada
 SIMULATION_METADATA_SCHEMA_VERSION = "1.0.0"
 
 
-def build_standard_metadata(args_dict, output_file, product_data_name="reduced_event_data"):
+def build_standard_metadata(
+    args_dict, output_file, product_data_name="reduced_event_data", context=None
+):
     """
     Collect standard metadata for an embedded HDF5 product.
 
@@ -20,6 +22,8 @@ def build_standard_metadata(args_dict, output_file, product_data_name="reduced_e
         Output HDF5 file represented by the metadata.
     product_data_name : str, optional
         Product data-model name.
+    context : RunContext, optional
+        Run context used to collect the metadata.
 
     Returns
     -------
@@ -34,7 +38,9 @@ def build_standard_metadata(args_dict, output_file, product_data_name="reduced_e
             "metadata_product_data_name": product_data_name,
         }
     )
-    metadata = MetadataCollector(args_dict=metadata_args, clean_meta=False).get_top_level_metadata()
+    metadata = MetadataCollector(
+        args_dict=metadata_args, clean_meta=False, context=context
+    ).get_top_level_metadata()
     instrument = metadata.get("cta", {}).get("instrument", {})
     if "ID" in instrument:
         instrument["id"] = instrument.pop("ID")

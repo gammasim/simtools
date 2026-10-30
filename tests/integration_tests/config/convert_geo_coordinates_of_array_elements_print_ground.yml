@@ -12,6 +12,7 @@ applications:
     model_version: 6.0.2
     site: North
     print: ground
+  differential_test: true
   test_name: print_ground
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

@@ -7,9 +7,9 @@ from uuid import uuid4
 
 import numpy as np
 
+from simtools.context import RunContext
 from simtools.job_execution.execution import execute_jobs, options_from_args
 from simtools.job_execution.job import JobSpec
-from simtools.settings import config
 from simtools.utils.general import cleanup_intermediate_files
 
 logger = logging.getLogger(__name__)
@@ -27,15 +27,15 @@ class _PSFEvaluationJob:
     output_dir: Path
 
 
-def _dispatch_evaluations(parameters, args, measured_data, radius, output_dir, max_workers, worker):
+def dispatch_evaluations(
+    parameters, args, measured_data, radius, output_dir, max_workers, worker, context=None
+):
     """Execute a batch with independent output paths and portable runtime settings."""
     output_root = Path(output_dir).expanduser().resolve()
     output_root.mkdir(parents=True, exist_ok=True)
     directory = output_root / "parallel_evaluations" / uuid4().hex
-    runtime_args = dict(config.args)
-    source_config = (
-        dict(config.model_reader.source_config) if config.model_reader is not None else None
-    )
+    context = context or RunContext.from_environment()
+    source_config = context.model_reader.source_config if context.model_reader is not None else None
     mount_paths = [output_root]
     for key in ("path", "repository"):
         if source_config and source_config.get(key):
@@ -52,8 +52,7 @@ def _dispatch_evaluations(parameters, args, measured_data, radius, output_dir, m
                 radius=radius,
                 output_dir=directory / f"{JOB_PREFIX}{index:06d}",
             ),
-            runtime_args=runtime_args,
-            model_source_config=source_config,
+            context_spec=context.to_spec(),
             mount_paths=tuple(mount_paths),
         )
         for index, params in enumerate(parameters)

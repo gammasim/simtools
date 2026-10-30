@@ -12,6 +12,23 @@ new production tables by copying an existing base version and applies modificati
 to production tables and model parameters as provided in a configuration file (see
 the 'info.yml' examples in the simulation models repository).
 
+To initialize a production version that does not yet have a directory, provide
+``--initialize_from`` with the existing base version. The command creates an initial
+``info.yml`` for the new version and exits without generating production tables. For example:
+
+.. code-block:: console
+
+    simtools-maintain-simulation-model-add-production \\
+        --simulation_models_path ../simulation-models \\
+        --model_version 7.0.1 \\
+        --initialize_from 7.0.0
+
+Initialization only works when the target production directory does not exist. The
+generated ``info.yml`` starts as a patch update with no changes and identifies the base
+version in ``model_version_history``. Add the desired changes to ``info.yml``, then run the
+command again without ``--initialize_from`` to generate the patch tables and model parameters.
+Use ``--initialize_update_type full_update`` to initialize a full update instead.
+
 Two main use cases are covered by this script:
 
 1. full update: create a complete new set of production tables (e.g. for new major or minor

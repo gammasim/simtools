@@ -22,6 +22,42 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
    :members:
 ```
 
+(raytracingbackendsmodule)=
+
+## backends.interface
+
+```{eval-rst}
+.. automodule:: ray_tracing.backends.interface
+   :members:
+```
+
+(raytracingsimtelbackendmodule)=
+
+## backends.sim_telarray
+
+```{eval-rst}
+.. automodule:: ray_tracing.backends.sim_telarray
+   :members:
+```
+
+(raytracingobdeectbackendmodule)=
+
+## backends.obdeect
+
+```{eval-rst}
+.. automodule:: ray_tracing.backends.obdeect
+   :members:
+```
+
+(parameterchangesmodule)=
+
+## parameter_changes
+
+```{eval-rst}
+.. automodule:: ray_tracing.parameter_changes
+   :members:
+```
+
 (psfanalysismodule)=
 
 ## psf_analysis
@@ -37,6 +73,15 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
 
 ```{eval-rst}
 .. automodule:: ray_tracing.psf_parameter_optimisation
+   :members:
+```
+
+(psfparameterreportsmodule)=
+
+## psf_parameter_reports
+
+```{eval-rst}
+.. automodule:: ray_tracing.psf_parameter_reports
    :members:
 ```
 
@@ -60,5 +105,14 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
 
 ```{eval-rst}
 .. automodule:: simtools.ray_tracing.psf_evaluation
+   :members:
+```
+
+(telescopeshadowingmodule)=
+
+## telescope_shadowing
+
+```{eval-rst}
+.. automodule:: ray_tracing.telescope_shadowing
    :members:
 ```

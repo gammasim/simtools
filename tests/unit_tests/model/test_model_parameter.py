@@ -7,9 +7,14 @@ from pathlib import Path
 import pytest
 from astropy import units as u
 
-import simtools.utils.general as gen
-from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
+from simtools.data_model import parameter_catalog as catalog
+from simtools.model.model_parameter import (
+    InvalidModelParameterError,
+    ModelParameter,
+    _normalise_overrides,
+)
 from simtools.model.telescope_model import TelescopeModel
+from simtools.utils import value_conversion
 
 # Capture the original static method at import time, before autouse fixtures can mock it
 _check_model_parameter_versions = ModelParameter.__dict__[
@@ -38,63 +43,6 @@ def num_gains_dict():
             "file": False,
         }
     }
-
-
-def test_get_parameter_type(telescope_model_lst, caplog):
-    assert telescope_model_lst.get_parameter_type("num_gains") == "int64"
-    telescope_model_copy = copy.deepcopy(telescope_model_lst)
-    telescope_model_copy.parameters["num_gains"].pop("type")
-    with caplog.at_level(logging.DEBUG):
-        assert telescope_model_copy.get_parameter_type("num_gains") is None
-    assert "Parameter num_gains does not have a type." in caplog.text
-
-
-def test_get_parameter_file_flag(telescope_model_lst, caplog):
-    assert telescope_model_lst.get_parameter_file_flag("num_gains") is False
-    telescope_model_copy = copy.deepcopy(telescope_model_lst)
-    telescope_model_copy.parameters["num_gains"].pop("file")
-    with caplog.at_level(logging.DEBUG):
-        assert telescope_model_copy.get_parameter_file_flag("num_gains") is False
-    assert "Parameter num_gains does not have a file associated with it." in caplog.text
-
-
-def test_get_parameter_value(telescope_model_lst):
-    tel_model = copy.deepcopy(telescope_model_lst)
-    assert isinstance(tel_model.get_parameter_value("num_gains"), int)
-
-    with pytest.raises(InvalidModelParameterError):
-        tel_model.get_parameter_value("not_num_gains")
-
-    tel_model.parameters["num_gains"]["value"] = "2 3 4"
-    t_int = tel_model.get_parameter_value("num_gains")
-    assert len(t_int) == 3
-    assert isinstance(t_int, list)
-    assert isinstance(t_int[2], int)
-
-    t_1 = tel_model.get_parameter_value("telescope_transmission")
-    assert isinstance(t_1, list)
-    assert len(t_1) == 6
-
-    # single value floats should return as floats
-    _tmp_dict = {
-        "value": "0.8",
-        "type": "float64",
-    }
-    tel_model.parameters["t_2"] = _tmp_dict
-    t_2 = tel_model.get_parameter_value("t_2")
-    assert t_2 == pytest.approx(0.8)
-    # string-type lists
-    _tmp_dict["value"] = "0.8 0.9"
-    tel_model.parameters["t_2"] = _tmp_dict
-    t_2 = tel_model.get_parameter_value("t_2")
-    assert len(t_2) == 2
-    assert t_2[0] == pytest.approx(0.8)
-    assert t_2[1] == pytest.approx(0.9)
-    # mixed strings should become list of strings
-    _tmp_dict["value"] = "0.8 abc"
-    tel_model.parameters["t_2"] = _tmp_dict
-    t_2 = tel_model.get_parameter_value("t_2")
-    assert t_2 == ["0.8", "abc"]
 
 
 def test_get_parameter_value_with_unit(telescope_model_lst):
@@ -136,7 +84,7 @@ def test_handling_parameters(telescope_model_lst):
 
     tel_model.overwrite_model_parameter(
         "mirror_reflection_random_angle",
-        gen.convert_string_to_list(new_mrra),
+        value_conversion.convert_string_to_list(new_mrra),
     )
     assert tel_model.get_parameter_value("mirror_reflection_random_angle")[0] == pytest.approx(
         0.0080
@@ -175,425 +123,6 @@ def test_set_config_file_directory_and_name_initializes_directory(
     assert telescope_copy.config_file_path == Path(tmp_test_directory) / "config.cfg"
 
 
-def test_get_simulation_software_parameters(telescope_model_lst):
-    assert isinstance(telescope_model_lst.get_simulation_software_parameters("corsika"), dict)
-
-
-def test_load_simulation_software_parameter_ignores_repository_value_error(
-    telescope_model_lst, mocker
-):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    existing = {"min_photons": {"value": 3}}
-    telescope_copy._simulation_config_parameters["corsika"] = existing.copy()
-    get_parameters = mocker.patch.object(
-        telescope_copy.model_source,
-        "get_simulation_configuration_parameters",
-        side_effect=ValueError("missing configuration"),
-    )
-
-    telescope_copy._load_simulation_software_parameter_for_software("corsika")
-
-    assert telescope_copy.get_simulation_software_parameters("corsika") == existing
-    get_parameters.assert_called_once_with(
-        site=telescope_copy.site,
-        array_element_name=telescope_copy.name,
-        model_version=telescope_copy.model_version,
-        simulation_software="corsika",
-    )
-
-
-def test_load_simulation_software_parameter_preserves_preloaded_overrides(
-    telescope_model_lst, mocker
-):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    telescope_copy._simulation_config_parameters["sim_telarray"] = {
-        "min_photoelectrons": {"value": 7}
-    }
-    mocker.patch.object(
-        telescope_copy.model_source,
-        "get_simulation_configuration_parameters",
-        return_value={"min_photons": {"value": 3}},
-    )
-
-    telescope_copy._load_simulation_software_parameter_for_software("sim_telarray")
-
-    assert telescope_copy.get_simulation_software_parameters("sim_telarray") == {
-        "min_photoelectrons": {"value": 7},
-        "min_photons": {"value": 3},
-    }
-
-
-def test_apply_simulation_software_overwrites_ignores_unknown_software(telescope_model_lst):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    telescope_copy.overwrite_model_parameter_dict = {"unknown": {"num_gains": {"value": 2}}}
-
-    telescope_copy._apply_simulation_software_overwrites("unknown")
-
-
-def test_filter_overwrites_for_target_keeps_unknown_and_drops_ignored(mocker):
-    model_parameter = ModelParameter.__new__(ModelParameter)
-    mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
-        side_effect=lambda name: {
-            "ignored": "configuration_corsika",
-            "known": "telescopes",
-        }[name],
-    )
-    overwrites = {
-        "LSTN-01": {
-            "ignored": {"value": 1},
-            "known": {"value": 2},
-        },
-        "not-a-model": "skip",
-    }
-
-    assert model_parameter._filter_overwrites_for_target(
-        overwrites, ("configuration_corsika",)
-    ) == {"LSTN-01": {"known": {"value": 2}}}
-
-
-def test_filter_overwrites_for_target_returns_input_without_filtering():
-    model_parameter = ModelParameter.__new__(ModelParameter)
-    overwrites = {"LSTN-01": {"num_gains": {"value": 2}}}
-
-    assert model_parameter._filter_overwrites_for_target(overwrites, None) == overwrites
-
-
-def test_filter_overwrites_for_target_keeps_unknown_nested_parameter(mocker):
-    model_parameter = ModelParameter.__new__(ModelParameter)
-    mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
-        side_effect=KeyError("unknown"),
-    )
-
-    assert model_parameter._filter_overwrites_for_target(
-        {"LSTN-01": {"unknown": {"value": 2}}},
-        ("configuration_corsika",),
-    ) == {"LSTN-01": {"unknown": {"value": 2}}}
-
-
-def test_overwrite_detection_handles_flat_and_nested_unknown_parameters(mocker):
-    model_parameter = ModelParameter.__new__(ModelParameter)
-    mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
-        side_effect=KeyError("unknown"),
-    )
-    ignored_collections = ("configuration_corsika",)
-
-    model_parameter.overwrite_model_parameter_dict = {"unknown": {"value": 1}}
-    assert model_parameter._has_flat_overrides_for_collections(ignored_collections)
-
-    model_parameter.overwrite_model_parameter_dict = {"LSTN-01": {"unknown": {"value": 1}}}
-    assert model_parameter._has_nested_overrides_for_collections(ignored_collections)
-
-
-def test_overwrite_detection_distinguishes_ignored_and_ordinary_collections(mocker):
-    model_parameter = ModelParameter.__new__(ModelParameter)
-    model_parameter.overwrite_model_parameter_dict = {
-        "ordinary": {"value": 1},
-        "ignored": {"value": 2},
-    }
-    mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
-        side_effect=lambda name: {
-            "ordinary": "telescopes",
-            "ignored": "configuration_corsika",
-        }[name],
-    )
-    ignored_collections = ("configuration_corsika",)
-
-    assert model_parameter._has_flat_overrides_for_collections(ignored_collections)
-    model_parameter.overwrite_model_parameter_dict = {"LSTN-01": {"ordinary": {"value": 1}}}
-    assert not model_parameter._has_nested_overrides_for_collections(ignored_collections)
-
-
-def test_simulation_overwrite_routes_raw_value_and_metadata(telescope_model_lst):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-
-    telescope_copy._route_to_sim_telarray("min_photoelectrons", 8)
-    telescope_copy._route_to_sim_telarray(
-        "min_photons",
-        {"value": 4, "unit": "dimensionless", "model_parameter_schema_version": "1.0.0"},
-    )
-
-    parameters = telescope_copy.get_simulation_software_parameters("sim_telarray")
-    assert parameters["min_photoelectrons"] == {"value": 8}
-    assert parameters["min_photons"] == {
-        "value": 4,
-        "unit": "dimensionless",
-        "model_parameter_schema_version": "1.0.0",
-    }
-
-
-def _realistic_simulation_overwrites_with_bad_entry(bad_entry_value):
-    """Build realistic simulation overwrite changes used by overwrite-collection tests."""
-    return {
-        "LSTS-design": {
-            "effective_focal_length": {
-                "value": [2923.7, 0.0, 0.0, 0.0, 0.0],
-            },
-        },
-        "MSTS-05": {
-            "effective_focal_length": {
-                "value": [1644.51, 0.0, 0.0, 0.0, 0.0],
-            },
-        },
-        "SSTS-design": {
-            "effective_focal_length": {
-                "value": [315.191, 0.0, 0.0, 0.0, 0.0],
-            },
-        },
-        "SSTS-22": {
-            "effective_focal_length": {
-                "value": [215.191, 0.0, 0.0, 0.0, 0.0],
-            },
-        },
-        "bad_entry": bad_entry_value,
-        "LSTS-01": {
-            "effective_focal_length": {
-                "value": [2923.7, 0.0, 0.0, 2.0, 0.0],
-            },
-            "min_photoelectrons": {"value": 20},
-            "unknown_parameter": {"value": 1},
-        },
-    }
-
-
-@pytest.mark.parametrize(
-    (
-        "overwrite_model_parameter_dict",
-        "simulation_software",
-        "software_collection",
-        "expected",
-        "name_override",
-    ),
-    [
-        (
-            {},
-            "corsika",
-            "configuration_corsika",
-            {},
-            None,
-        ),
-        (
-            _realistic_simulation_overwrites_with_bad_entry("not a dict"),
-            "corsika",
-            "configuration_corsika",
-            {"effective_focal_length": {"value": [2923.7, 0.0, 0.0, 2.0, 0.0]}},
-            None,
-        ),
-        (
-            _realistic_simulation_overwrites_with_bad_entry([1, 2, 3]),
-            "sim_telarray",
-            "configuration_sim_telarray",
-            {"min_photoelectrons": {"value": 20}},
-            "LSTS-01",
-        ),
-        (
-            {
-                "LSTS-design": {
-                    "min_photoelectrons": {"value": 17},
-                },
-            },
-            "sim_telarray",
-            "configuration_sim_telarray",
-            {"min_photoelectrons": {"value": 17}},
-            "LSTS-01",
-        ),
-    ],
-)
-def test_collect_flat_simulation_overwrites(
-    telescope_model_lst,
-    mocker,
-    caplog,
-    overwrite_model_parameter_dict,
-    simulation_software,
-    software_collection,
-    expected,
-    name_override,
-):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    if name_override is not None:
-        telescope_copy.name = name_override
-    telescope_copy.overwrite_model_parameter_dict = overwrite_model_parameter_dict
-
-    collection_map = {
-        "effective_focal_length": "configuration_corsika",
-        "min_photoelectrons": "configuration_sim_telarray",
-        "unknown_parameter": KeyError,
-    }
-
-    def _get_collection_name(parameter_name):
-        collection = collection_map[parameter_name]
-        if collection is KeyError:
-            raise KeyError(parameter_name)
-        return collection
-
-    mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
-        side_effect=_get_collection_name,
-    )
-
-    with caplog.at_level(logging.WARNING):
-        result = telescope_copy._collect_flat_simulation_overwrites(
-            simulation_software,
-            software_collection,
-        )
-
-    assert result == expected
-
-    if software_collection != "configuration_sim_telarray":
-        expect_unknown_warning = any(
-            isinstance(v, dict) and "unknown_parameter" in v
-            for v in overwrite_model_parameter_dict.values()
-        )
-    else:
-        expect_unknown_warning = (
-            isinstance(overwrite_model_parameter_dict.get(telescope_copy.name), dict)
-            and "unknown_parameter" in overwrite_model_parameter_dict[telescope_copy.name]
-        )
-
-    if expect_unknown_warning:
-        assert "Skipping unknown overwrite parameter 'unknown_parameter'" in caplog.text
-    else:
-        assert caplog.text == ""
-
-
-def test_overwrite_model_parameter(telescope_model_lst):
-    tel_model = copy.deepcopy(telescope_model_lst)
-
-    logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('camera_pixels')}")
-    tel_model.overwrite_model_parameter("camera_pixels", 9999)
-    assert tel_model.get_parameter_value("camera_pixels") == 9999
-
-    logger.info("Testing changing camera_pixels to a float (now allowed)")
-    with pytest.raises(TypeError, match=r"^Error validating dictionary"):
-        tel_model.overwrite_model_parameter("camera_pixels", 9999.9)
-
-    logger.info("Testing changing camera_pixels to a nonsense string")
-    with pytest.raises(TypeError, match=r"^Error validating dictionary"):
-        tel_model.overwrite_model_parameter("camera_pixels", "bla_bla")
-
-    logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('mirror_focal_length')}")
-    tel_model.overwrite_model_parameter("mirror_focal_length", 55.0)
-    assert pytest.approx(55.0) == tel_model.get_parameter_value("mirror_focal_length")
-    tel_model.overwrite_model_parameter("mirror_focal_length", 55)
-    assert pytest.approx(55.0) == tel_model.get_parameter_value("mirror_focal_length")
-
-    tel_model.overwrite_model_parameter("mirror_focal_length", "9999.9 0.")
-    assert pytest.approx(9999.9) == tel_model.get_parameter_value("mirror_focal_length")[0]
-
-    logger.info("Testing changing mirror_focal_length to a nonsense string")
-    with pytest.raises(TypeError, match=r"^Error validating dictionary using"):
-        tel_model.overwrite_model_parameter("mirror_focal_length", "bla_bla")
-
-    with pytest.raises(InvalidModelParameterError, match="Parameter bla_bla not in the model"):
-        tel_model.overwrite_model_parameter("bla_bla", 9999.9)
-
-
-def test_resolve_schema_version_raises_for_invalid_version(telescope_model_lst, mocker):
-    tel_model = copy.deepcopy(telescope_model_lst)
-    mocker.patch(
-        "simtools.model.model_parameter.schema.get_model_parameter_schema",
-        side_effect=ValueError("Schema lookup failed"),
-    )
-
-    with pytest.raises(
-        ValueError,
-        match=(
-            r"Schema version 'invalid\.version' not available "
-            r"for parameter 'mirror_focal_length'"
-        ),
-    ):
-        tel_model._resolve_schema_version(
-            "mirror_focal_length",
-            {"model_parameter_schema_version": "invalid.version"},
-        )
-
-
-@pytest.mark.parametrize(
-    ("method_name", "exception"),
-    [
-        ("_resolve_schema_version", FileNotFoundError("missing schema")),
-        ("_overwrite_model_parameter_from_value", FileNotFoundError("missing schema")),
-    ],
-)
-def test_schema_file_errors_include_parameter_name(
-    telescope_model_lst, mocker, method_name, exception
-):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-
-    if method_name == "_resolve_schema_version":
-        mocker.patch(
-            "simtools.model.model_parameter.schema.get_model_parameter_schema",
-            side_effect=exception,
-        )
-
-        def call():
-            telescope_copy._resolve_schema_version("num_gains", None)
-    else:
-        mocker.patch.object(telescope_copy, "_update_parameter_dict", side_effect=exception)
-
-        def call():
-            telescope_copy._overwrite_model_parameter_from_value("num_gains", 1, None, None)
-
-    with pytest.raises(FileNotFoundError, match="Schema file for parameter num_gains not found"):
-        call()
-
-
-def test_overwrite_parameters_flat_dict_forwards_to_parameter_store(telescope_model_lst, mocker):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    mock_change = mocker.patch.object(TelescopeModel, "overwrite_model_parameter")
-
-    telescope_copy.overwrite_parameters(
-        {"camera_pixels": {"value": 9999}, "mirror_focal_length": {"value": 55}},
-        flat_dict=True,
-    )
-
-    target_parameters = telescope_copy.parameters
-    mock_change.assert_any_call(
-        "camera_pixels",
-        9999,
-        None,
-        None,
-        parameter_store=target_parameters,
-    )
-    mock_change.assert_any_call(
-        "mirror_focal_length",
-        55,
-        None,
-        None,
-        parameter_store=target_parameters,
-    )
-
-
-def test_overwrite_parameters_skips_ignored_collections(telescope_model_lst, mocker):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    mock_change = mocker.patch.object(TelescopeModel, "overwrite_model_parameter")
-
-    telescope_copy.overwrite_parameters(
-        {"correct_nsb_spectrum_to_telescope_altitude": {"value": "overwrite.dat"}},
-        flat_dict=True,
-    )
-
-    mock_change.assert_not_called()
-
-
-def test_overwrite_parameters_selects_changes_by_model_key(telescope_model_lst):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    original_num_gains = telescope_copy.parameters["num_gains"]["value"]
-    new_num_gains = 1 if original_num_gains != 1 else 2
-
-    telescope_copy.overwrite_parameters(
-        {
-            "MSTN-01": {"num_gains": {"value": 999}},
-            telescope_copy.name: {"num_gains": {"value": new_num_gains}},
-        }
-    )
-
-    assert telescope_copy.parameters["num_gains"]["value"] == new_num_gains
-
-
 def test_overwrite_parameter_with_schema_metadata(telescope_model_lst, tmp_test_directory, mocker):
     tel_model = copy.deepcopy(telescope_model_lst)
 
@@ -628,123 +157,6 @@ data:
     assert param_dict["model_parameter_schema_version"] == "0.1.0"
     # Type should remain scalar (not converted to list)
     assert isinstance(param_dict["type"], str)
-
-
-def test_overwrite_heterogeneous_list_with_schema_metadata(
-    telescope_model_lst, tmp_test_directory, mocker
-):
-    tel_model = copy.deepcopy(telescope_model_lst)
-
-    # Add a mock heterogeneous list parameter to the telescope model
-    tel_model.parameters["test_hetero_param"] = {
-        "value": ["old", 1.0, 2.0],
-        "type": "list",
-        "unit": ["none", "m", "m"],
-        "model_parameter_schema_version": "0.1.0",
-    }
-
-    # Create mock schema file for heterogeneous list parameter
-    schema_dir = Path(tmp_test_directory) / "schemas"
-    schema_dir.mkdir(parents=True, exist_ok=True)
-    schema_file = schema_dir / "test_hetero_param.schema.yml"
-    schema_content = """---
-schema_version: "0.2.0"
-name: test_hetero_param
-data:
-  - type: str
-  - type: float64
-  - type: float64
-"""
-    schema_file.write_text(schema_content)
-
-    mocker.patch("simtools.data_model.schema.MODEL_PARAMETER_SCHEMA_PATH", schema_dir)
-    mocker.patch(
-        "simtools.model.model_parameter.DataValidator.validate_model_parameter",
-        side_effect=lambda par_dict, par_name=None: par_dict,
-    )
-
-    # Overwrite with heterogeneous list value and schema metadata
-    tel_model.overwrite_model_parameter(
-        "test_hetero_param",
-        ["new_string", 5.0, 10.0],
-        metadata={
-            "unit": ["none", "ns", "ns"],
-            "model_parameter_schema_version": "0.2.0",
-        },
-    )
-
-    # Verify metadata was applied
-    param_dict = tel_model._get_parameter_dict("test_hetero_param")
-    assert param_dict["value"][0] == "new_string"
-    assert param_dict["value"][1] == pytest.approx(5.0)
-    assert param_dict["value"][2] == pytest.approx(10.0)
-    assert param_dict["unit"] == ["none", "ns", "ns"]
-    assert param_dict["model_parameter_schema_version"] == "0.2.0"
-    # Type should be a list of types for heterogeneous list
-    assert isinstance(param_dict["type"], list)
-    assert param_dict["type"] == ["str", "float64", "float64"]
-
-
-def test_updating_export_model_files(model_version):
-    tel = TelescopeModel(
-        site="North",
-        telescope_name="LSTN-01",
-        model_version=model_version,
-        label="test-telescope-model-2",
-    )
-
-    logger.debug(
-        "tel._is_exported_model_files should be False because write_sim_telarray_config_file"
-        " was not called yet."
-    )
-    assert False is tel._is_exported_model_files_up_to_date
-
-    # Exporting config file
-    tel.write_sim_telarray_config_file()
-    logger.debug(
-        "tel._is_exported_model_files should be True because "
-        "write_sim_telarray_config_file was called."
-    )
-    assert tel._is_exported_model_files_up_to_date
-
-    # Changing a non-file parameter
-    logger.info("Changing a parameter that IS NOT a file - mirror_reflection_random_angle")
-    tel.overwrite_model_parameter(
-        "mirror_reflection_random_angle",
-        "0.0080 0 0",
-        metadata={"unit": ["deg", "dimensionless", "deg"]},
-    )
-    logger.debug(
-        "tel._is_exported_model_files should still be True because the changed "
-        "parameter was not a file"
-    )
-    assert tel._is_exported_model_files_up_to_date
-
-    # Testing the model repository connection
-    logger.info("model repository should NOT be read next.")
-    tel.write_sim_telarray_config_file()
-
-    # Changing a parameter that is a file
-    logger.debug("Changing a parameter that IS a file - mirror_list")
-    tel.overwrite_model_parameter(
-        "mirror_list",
-        tel.get_parameter_value("mirror_list"),
-        metadata={"model_parameter_schema_version": "0.1.0"},
-    )
-    logger.debug(
-        "tel._is_exported_model_files should be False because a parameter that "
-        "is a file was changed."
-    )
-    assert False is tel._is_exported_model_files_up_to_date
-
-
-def test_overwrite_model_file(telescope_model_lst, mocker, tmp_test_directory):
-    parameter = "array_coordinates_UTM"
-    file_path = tmp_test_directory / "telescope_positions.ecsv"
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    mock_copy = mocker.patch("shutil.copy")
-    telescope_copy.overwrite_model_file(par_name=parameter, file_path=file_path)
-    mock_copy.assert_called_once_with(file_path, telescope_copy.config_file_directory)
 
 
 def test_get_parameter_value_with_none_type(telescope_model_lst, caplog):
@@ -793,92 +205,7 @@ def test_overwrite_model_parameter_with_parameter_version(
     assert tel_model.parameters["num_gains"]["parameter_version"] == "2.0.0"
 
 
-@pytest.mark.parametrize(
-    ("changes", "expected_version"),
-    [
-        ({"num_gains": 2}, None),
-        ({"num_gains": {"value": 2, "version": "2.0.0"}}, "2.0.0"),
-    ],
-)
-def test_overwrite_parameters_flat_dict_updates_value_and_optional_version(
-    telescope_model_lst,
-    changes,
-    expected_version,
-):
-    tel_model = copy.deepcopy(telescope_model_lst)
-    tel_model.overwrite_parameters(changes, flat_dict=True)
-
-    assert tel_model.parameters["num_gains"]["value"] == 2
-    if expected_version is not None:
-        assert tel_model.parameters["num_gains"]["parameter_version"] == expected_version
-
-
-def test_overwrite_parameters_no_matching_model_key_keeps_parameters_unchanged(telescope_model_lst):
-    tel_model = copy.deepcopy(telescope_model_lst)
-    original_params = copy.deepcopy(tel_model.parameters)
-
-    tel_model.overwrite_parameters({"MSTN-01": {"num_gains": {"value": 123}}})
-
-    if tel_model.name != "MSTN-01":
-        assert tel_model.parameters == original_params
-
-
-def test_overwrite_parameters_raises_for_unknown_parameter(telescope_model_lst):
-    tel_model = copy.deepcopy(telescope_model_lst)
-
-    with pytest.raises(
-        ValueError,
-        match=r"Parameter unknown_parameter not found in model .* cannot overwrite it.",
-    ):
-        tel_model.overwrite_parameters({"unknown_parameter": 1}, flat_dict=True)
-
-
-def test_export_model_files_removes_added_parameter_files_from_export(
-    telescope_model_lst, mocker, tmp_test_directory
-):
-    tel_model = copy.deepcopy(telescope_model_lst)
-    export_spy = mocker.patch.object(tel_model.model_reader, "export_model_files")
-    tel_model._added_parameter_files = ["num_gains"]
-
-    tel_model.export_model_files(destination_path=tmp_test_directory, update_if_necessary=False)
-
-    exported_parameters = export_spy.call_args.kwargs["parameters"]
-    assert "num_gains" not in exported_parameters
-
-
-def test_export_nsb_spectrum_to_telescope_altitude_correction_file(
-    telescope_model_lst, mocker, tmp_test_directory
-):
-    export_spy = mocker.patch.object(telescope_model_lst.model_reader, "export_model_files")
-    parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
-    parameter_value = telescope_model_lst.get_simulation_software_parameters("sim_telarray")[
-        parameter_name
-    ]["value"]
-
-    telescope_model_lst.export_nsb_spectrum_to_telescope_altitude_correction_file(
-        tmp_test_directory
-    )
-
-    export_spy.assert_called_once()
-    exported_parameter = export_spy.call_args.kwargs["parameters"][parameter_name]
-    assert exported_parameter["value"] == parameter_value
-    assert exported_parameter["file"] is True
-    assert export_spy.call_args.kwargs["dest"] == tmp_test_directory
-
-
-def test_export_nsb_spectrum_skips_missing_correction(
-    telescope_model_lst, mocker, tmp_test_directory
-):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    telescope_copy._simulation_config_parameters["sim_telarray"] = {}
-    export_spy = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
-
-    telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(tmp_test_directory)
-
-    export_spy.assert_not_called()
-
-
-def test_check_model_parameter_with_overwrite(model_version):
+def test_check_model_parameter_with_overwrite(model_version, run_context):
 
     # Create a temporary telescope model to get the current value of num_gains of the telescope,
     # to make sure we change it to a different value in the test
@@ -889,6 +216,7 @@ def test_check_model_parameter_with_overwrite(model_version):
         telescope_name=telescope_name,
         model_version=model_version,
         label="test-telescope-model",
+        context=run_context,
     )
 
     changes = {
@@ -907,6 +235,7 @@ def test_check_model_parameter_with_overwrite(model_version):
         model_version=model_version,
         label="test-telescope-model",
         overwrite_model_parameter_dict=changes,
+        context=run_context,
     )
 
     # The overwrite should have been applied during initialization
@@ -915,7 +244,7 @@ def test_check_model_parameter_with_overwrite(model_version):
     )
 
 
-def test_check_simulation_software_parameter_with_overwrite(model_version):
+def test_check_simulation_software_parameter_with_overwrite(model_version, run_context):
 
     site = "North"
     telescope_name = "LSTN-01"
@@ -933,6 +262,7 @@ def test_check_simulation_software_parameter_with_overwrite(model_version):
         model_version=model_version,
         label="test-telescope-model",
         overwrite_model_parameter_dict=changes,
+        context=run_context,
     )
 
     assert (
@@ -948,105 +278,6 @@ def test_check_simulation_software_parameter_with_overwrite(model_version):
     assert tel_model.get_simulation_software_parameters("sim_telarray")["min_photons"]["value"] == 0
 
 
-def test_check_corsika_simulation_software_parameter_with_overwrite(
-    model_version, mock_model_reader
-):
-
-    site = "North"
-    telescope_name = "LSTN-01"
-    corsika_parameter = "corsika_particle_kinetic_energy_cutoff"
-    mock_model_reader.get_simulation_configuration_parameters.side_effect = lambda **kwargs: (
-        {corsika_parameter: {"value": 1.0, "type": "float64", "file": False}}
-        if kwargs.get("simulation_software") == "corsika"
-        else {
-            "correct_nsb_spectrum_to_telescope_altitude": {
-                "value": "nsb.dat",
-                "type": "str",
-                "file": True,
-            }
-        }
-    )
-
-    changes = {
-        "configuration_corsika": {
-            corsika_parameter: {
-                "value": 2.5,
-            }
-        }
-    }
-
-    tel_model = TelescopeModel(
-        site=site,
-        telescope_name=telescope_name,
-        model_version=model_version,
-        label="test-telescope-model",
-        overwrite_model_parameter_dict=changes,
-    )
-
-    assert tel_model.get_simulation_software_parameters("corsika")[corsika_parameter][
-        "value"
-    ] == pytest.approx(2.5)
-
-
-def test_check_corsika_overwrite_with_configuration_key(model_version, mock_model_reader):
-
-    site = "North"
-    telescope_name = "LSTN-01"
-    corsika_parameter = "corsika_cherenkov_photon_bunch_size"
-    mock_model_reader.get_simulation_configuration_parameters.side_effect = lambda **kwargs: (
-        {corsika_parameter: {"value": 5.0, "type": "float64", "file": False}}
-        if kwargs.get("simulation_software") == "corsika"
-        else {
-            "correct_nsb_spectrum_to_telescope_altitude": {
-                "value": "nsb.dat",
-                "type": "str",
-                "file": True,
-            }
-        }
-    )
-
-    changes = {
-        "configuration_corsika": {
-            corsika_parameter: {
-                "version": "2.0.0",
-                "value": 50.0,
-            }
-        }
-    }
-
-    tel_model = TelescopeModel(
-        site=site,
-        telescope_name=telescope_name,
-        model_version=model_version,
-        label="test-telescope-model",
-        overwrite_model_parameter_dict=changes,
-    )
-
-    assert tel_model.get_simulation_software_parameters("corsika")[corsika_parameter][
-        "value"
-    ] == pytest.approx(50.0)
-
-
-def test__get_key_for_parameter_changes(telescope_model_lst):
-    assert telescope_model_lst._get_key_for_parameter_changes("North", None, {}) == "OBS-North"
-
-    lst = "LSTN-01"
-
-    assert telescope_model_lst._get_key_for_parameter_changes("North", lst, {}) is None
-
-    assert telescope_model_lst._get_key_for_parameter_changes("North", lst, {lst: "abc"}) == lst
-
-    assert (
-        telescope_model_lst._get_key_for_parameter_changes("North", lst, {"LSTN-design": "abc"})
-        == "LSTN-design"
-    )
-
-    assert (
-        telescope_model_lst._get_key_for_parameter_changes("North", "LSTN-design", {lst: "abc"})
-        is None
-    )
-
-
 def test_check_model_parameter_versions(mocker):
     parameters = {
         "num_gains": {
@@ -1060,7 +291,7 @@ def test_check_model_parameter_versions(mocker):
     }
 
     mocker.patch(
-        "simtools.model.model_parameter.names.model_parameters",
+        "simtools.data_model.parameter_catalog.model_parameters",
         return_value={"num_gains": {"schema_version": "1.0.0"}},
     )
     mock_validate = mocker.patch(
@@ -1077,25 +308,102 @@ def test_check_model_parameter_versions(mocker):
     assert parameters["unknown_param"]["value"] == 42
 
 
-def test_check_model_parameter_versions_allows_older_scalar_schema(mocker):
-    parameters = {
-        "num_gains": {
-            "value": 1,
-            "model_parameter_schema_version": "0.9.0",
-        }
+def test_normalise_overrides_keys_by_collection_element_and_parameter():
+    overrides = {
+        "LSTN-01": {"num_gains": {"value": 2, "version": "2.0.0"}, "min_photons": 3},
+        "global": {"min_photoelectrons": 8},
+        "not_a_mapping": 1,
     }
 
-    mocker.patch(
-        "simtools.model.model_parameter.names.model_parameters",
-        return_value={"num_gains": {"schema_version": "1.0.0"}},
-    )
-    validate_schema = mocker.patch(
-        "simtools.model.model_parameter.schema.validate_deprecation_and_version"
-    )
-    _check_model_parameter_versions(parameters, ignore_software_version=False)
+    result = _normalise_overrides(overrides)
 
-    validate_schema.assert_called_once_with(
-        data={"schema_version": "1.0.0"},
-        software_name=None,
-        ignore_software_version=False,
+    assert {(element, par) for (_, element, par) in result} == {
+        ("LSTN-01", "num_gains"),
+        ("LSTN-01", "min_photons"),
+        ("global", "min_photoelectrons"),
+    }
+    collection = catalog.get_collection_name_from_parameter_name("num_gains")
+    assert result[(collection, "LSTN-01", "num_gains")] == {
+        "value": 2,
+        "version": "2.0.0",
+        "metadata": None,
+    }
+
+
+def test_overwrite_model_parameter_with_parameter_version_only_raises_when_unknown(
+    telescope_model_lst,
+):
+    tel_model = copy.deepcopy(telescope_model_lst)
+
+    with pytest.raises(InvalidModelParameterError, match="Parameter unknown_parameter not in"):
+        tel_model.overwrite_model_parameter("unknown_parameter", 1)
+
+
+def test_overwrite_model_parameter_schema_file_error_names_parameter(telescope_model_lst):
+    tel_model = copy.deepcopy(telescope_model_lst)
+    tel_model.parameters["no_such_parameter"] = {"value": 1}
+
+    with pytest.raises(
+        FileNotFoundError, match="Schema file for parameter no_such_parameter not found"
+    ):
+        tel_model.overwrite_model_parameter("no_such_parameter", 1)
+
+
+def test_load_simulation_software_parameters_ignores_repository_value_error(
+    telescope_model_lst, mocker
+):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    existing = {"min_photons": {"value": 3}}
+    telescope_copy._simulation_config_parameters["corsika"] = existing.copy()
+    mocker.patch.object(
+        telescope_copy.model_reader,
+        "get_simulation_configuration_parameters",
+        side_effect=ValueError("missing configuration"),
     )
+
+    telescope_copy._load_simulation_software_parameters()
+
+    assert telescope_copy.get_simulation_software_parameters("corsika") == existing
+
+
+def test_load_simulation_software_parameters_keeps_routed_overrides(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy._simulation_config_parameters["sim_telarray"] = {
+        "min_photoelectrons": {"value": 7}
+    }
+    mocker.patch.object(
+        telescope_copy.model_reader,
+        "get_simulation_configuration_parameters",
+        side_effect=lambda **_kwargs: {"min_photons": {"value": 3}},
+    )
+
+    telescope_copy._load_simulation_software_parameters()
+
+    assert telescope_copy.get_simulation_software_parameters("sim_telarray") == {
+        "min_photoelectrons": {"value": 7},
+        "min_photons": {"value": 3},
+    }
+
+
+def test_route_to_sim_telarray_keeps_value_and_metadata(telescope_model_lst):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+
+    telescope_copy._route_to_sim_telarray(
+        "min_photoelectrons", {"value": 8, "version": None, "metadata": None}
+    )
+    telescope_copy._route_to_sim_telarray(
+        "min_photons",
+        {
+            "value": 4,
+            "version": None,
+            "metadata": {"unit": "dimensionless", "model_parameter_schema_version": "1.0.0"},
+        },
+    )
+
+    parameters = telescope_copy.get_simulation_software_parameters("sim_telarray")
+    assert parameters["min_photoelectrons"] == {"value": 8}
+    assert parameters["min_photons"] == {
+        "value": 4,
+        "unit": "dimensionless",
+        "model_parameter_schema_version": "1.0.0",
+    }

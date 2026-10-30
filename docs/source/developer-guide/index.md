@@ -7,9 +7,11 @@ This section outlines how to contribute effectively to the `simtools` project.
 - [Getting Started as Developer](getting_started_as_developer.md): Set up your development environment.
 - [First Steps](developer_guidelines.md): How to begin contributing.
 - [Coding Guidelines](coding_guidelines.md): Code style and best practices.
+- [Architecture Rules](architecture.md): Package layers, extension points, API, and test policy.
 - [Pull Requests](pull_requests.md): How to open a PR via [GitHub](https://github.com/gammasim/simtools/pulls).
 - [Documentation](documentation.md): Contributing to user and developer documentation.
 - [Simulation formats](simulation_formats.md): Add configuration writers and result readers.
+- [Ray-tracing backend](extending/ray-tracing-backend.md): Add a ray-tracing backend.
 - [Testing](testing.md): Unit, integration, and science tests.
 
 ## Automatic Processes
@@ -25,6 +27,7 @@ All software components of `simtools` are available as OCI-compatible container 
 - [Building simtools images](simtools_build_images.md):
 - [Dependency versions and provenance](dependency_versions.md): Maintain reproducible software
   versions and inspect container manifests.
+- [CTAO DataProducts metadata](ctao_datamodel.md): Maintain compatibility with ctao-datamodel.
 
 ## Preparing simtools Releases
 
@@ -36,12 +39,15 @@ All software components of `simtools` are available as OCI-compatible container 
 getting_started_as_developer.md
 developer_guidelines.md
 coding_guidelines.md
+architecture.md
 pull_requests.md
 documentation.md
 testing.md
 simulation_formats.md
+extending/ray-tracing-backend.md
 continuous_integration.md
 simtools_build_images.md
 dependency_versions.md
+ctao_datamodel.md
 release.md
 ```

@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch
 
 import matplotlib.pyplot as plt
@@ -39,50 +40,8 @@ def create_test_table(
     return Table(columns)
 
 
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
-def test_plot_grid_coverage(mock_savefig, tmp_test_directory):
-    table = vstack(
-        [
-            create_test_table(20, 0, "dark", "layout1"),
-            create_test_table(40, 0, "dark", "layout1"),
-        ]
-    )
-    grid_definition = {
-        "zenith": [20, 40],
-        "azimuth": [0],
-        "nsb_level": ["dark"],
-        "array_name": ["layout1"],
-    }
-
-    output_files = plot_corsika_limits.plot_grid_coverage(
-        table, grid_definition, tmp_test_directory
-    )
-    assert len(output_files) == 1
-    mock_savefig.assert_called_once()
-
-    _, ax = plt.subplots()
-    found_combinations_str = {("20", "0", "dark", "layout1"), ("40", "0", "dark", "layout1")}
-    plot_corsika_limits._plot_single_grid_coverage(
-        ax,
-        [20, 40],
-        [0],
-        "dark",
-        "layout1",
-        found_combinations_str,
-        "gamma",
-    )
-    assert "Primary Particle=gamma" in ax.get_title()
-    plt.close(ax.figure)
-
-    mock_savefig.reset_mock()
-    output_files = plot_corsika_limits.plot_grid_coverage(table, None, tmp_test_directory)
-    assert not output_files
-    mock_savefig.assert_not_called()
-
-
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
 @patch("simtools.visualization.plot_corsika_limits.plt.suptitle")
-def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
+def test_plot_limits(mock_suptitle, tmp_test_directory):
     table = vstack(
         [
             create_test_table(20, 0, "dark", "layout1"),
@@ -91,14 +50,15 @@ def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
         ]
     )
 
-    output_files = plot_corsika_limits.plot_limits(table, tmp_test_directory)
+    output_files = plot_corsika_limits.plot_limits(table, Path(tmp_test_directory))
     assert len(output_files) == 1
-    mock_savefig.assert_called_once()
+    assert output_files[0].exists()
+    assert output_files[0].stat().st_size > 0
     suptitle_text = mock_suptitle.call_args.args[0]
     assert "gamma" in suptitle_text
 
 
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
+@patch("simtools.visualization.plot_corsika_limits.save_figure")
 def test_plot_limits_combines_azimuths_with_filled_and_open_markers(
     mock_savefig, tmp_test_directory
 ):
@@ -128,7 +88,7 @@ def test_plot_limits_combines_azimuths_with_filled_and_open_markers(
     plt.close(plt.gcf())
 
 
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
+@patch("simtools.visualization.plot_corsika_limits.save_figure")
 def test_plot_limits_with_broad_range_overlay(mock_savefig, tmp_test_directory):
     table = vstack(
         [
@@ -170,3 +130,14 @@ def test_plot_limits_with_broad_range_overlay(mock_savefig, tmp_test_directory):
         for line in axis.get_lines()
     )
     plt.close(fig)
+
+
+def test_plot_limits_without_primary_particle_column(tmp_test_directory):
+    table = vstack([create_test_table(20, 0, "dark"), create_test_table(40, 0, "dark")])
+    table.remove_column("primary_particle")
+
+    output_files = plot_corsika_limits.plot_limits(table, Path(tmp_test_directory))
+
+    assert len(output_files) == 1
+    assert output_files[0].name == "limits_test_array_unknown.png"
+    plt.close("all")

@@ -8,4 +8,7 @@ Shared run settings and selection of software-specific configuration writers.
 
 .. automodule:: simtools.simulation.configuration
    :members:
+
+.. automodule:: simtools.simulation.light_source_profiles
+   :members:
 ```

@@ -37,6 +37,7 @@ class CalibrationModel(ModelParameter):
         overwrite_model_parameter_dict=None,
         model_reader=None,
         model_directory=None,
+        context=None,
     ):
         """Initialize CalibrationModel."""
         super().__init__(
@@ -48,6 +49,7 @@ class CalibrationModel(ModelParameter):
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             model_reader=model_reader,
             model_directory=model_directory,
+            context=context,
         )
 
         self._logger = logging.getLogger(__name__)

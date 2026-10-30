@@ -41,24 +41,21 @@ def test_get_list_of_test_configurations(integration_test_config_files):
         integration_test_config_files
     )
 
-    list_test_with_help = []
-    list_test_with_version = []
-    list_test_without_config = []
-
     for test_config in test_configs:
         assert isinstance(test_config, dict)
         assert "application" in test_config
         assert "test_name" in test_config
-        if "help" in test_config.get("configuration", {}):
-            list_test_with_help.append(test_config)
-        if "version" in test_config.get("configuration", {}):
-            list_test_with_version.append(test_config)
-        if "no_config" in test_config["test_name"]:
-            list_test_without_config.append(test_config)
 
     assert len(test_names) == len(test_configs)
-    assert len(list_test_with_help) == len(list_test_with_version)
-    assert len(list_test_without_config) == len(list_test_with_help)
+    expected_count = sum(
+        len(yaml.safe_load(path.read_text())["applications"])
+        for path in integration_test_config_files
+    )
+    assert len(test_configs) == expected_count
+    assert all(
+        test_config["test_name"] not in {"auto-help", "auto-version", "auto-no_config"}
+        for test_config in test_configs
+    )
 
 
 def test_create_tmp_output_path(tmp_test_directory):

@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.sim_events.formats.registry import get_reader
+from simtools.sim_events.formats.readers import get_reader
 
 CALIBRATION_RUN_MODES = frozenset(
     {"pedestals", "pedestals_dark", "pedestals_nsb_only", "direct_injection"}

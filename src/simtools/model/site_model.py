@@ -51,6 +51,7 @@ class SiteModel(ModelParameter):
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        context=None,
         model_directory=None,
         parameter_names=None,
         load_simulation_software_parameters=True,
@@ -66,6 +67,7 @@ class SiteModel(ModelParameter):
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
+            context=context,
             model_directory=model_directory,
             parameter_names=parameter_names,
             load_simulation_software_parameters=load_simulation_software_parameters,
@@ -230,13 +232,9 @@ class SiteModel(ModelParameter):
         model_directory: Path
             Model directory to export the file to.
         """
-        return get_model_writer(self).export_atmospheric_transmission_file(
+        return get_model_writer(self, context=self.context).export_atmospheric_transmission_file(
             model_directory=model_directory
         )
-
-    def _get_atmospheric_profile_simtel_file_name(self, parameter=None):
-        """Return the native filename used for the CORSIKA atmospheric profile."""
-        return get_model_writer(self).get_atmospheric_profile_file_name(parameter=parameter)
 
     def get_nsb_integrated_flux(self, wavelength_min=300 * u.nm, wavelength_max=650 * u.nm):
         """

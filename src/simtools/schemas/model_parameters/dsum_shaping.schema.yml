@@ -51,6 +51,16 @@ simulation_software:
       row_sort_keys: [sample]
       float_format: ".12g"
       write_comments: false
+plot_configuration:
+  - type: dsum_shaping_kernel
+    title: Digital-sum shaping kernel
+    xtitle: Sample index behind current interval
+    ytitle: Coefficient
+    tables:
+      - parameter: dsum_shaping
+        label: Kernel coefficient
+        column_x: sample
+        column_y: coefficient
 ---
 title: Schema for dsum_shaping model parameter
 schema_version: 0.1.0

@@ -8,16 +8,12 @@ from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition("input_meta", help="meta data file associated to input data", type=str),
     cli.ArgumentDefinition(
-        "input_meta", help="meta data file associated to input data", type=str, required=False
+        "input_file", aliases=("input_data_file",), help="Input data file", type=str, required=True
     ),
-    cli.ArgumentDefinition("input_data_file", help="Input data file", type=str, required=True),
-    cli.ArgumentDefinition(
-        "schema_file", help="Schema file describing input data", type=str, required=False
-    ),
-    cli.ArgumentDefinition(
-        "ignore_metadata", help="Ignore metadata", action="store_true", required=False
-    ),
+    cli.ArgumentDefinition("schema_file", help="Schema file describing input data", type=str),
+    cli.ArgumentDefinition("ignore_metadata", help="Ignore metadata", action="store_true"),
 )
 
 
@@ -28,7 +24,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("corsika", "output"),
 )
 
 
@@ -37,7 +33,9 @@ def main():
     app_context = APPLICATION.start()
 
     _metadata = (
-        None if app_context.args.get("ignore_metadata") else MetadataCollector(app_context.args)
+        None
+        if app_context.args.get("ignore_metadata")
+        else MetadataCollector(app_context.args, context=app_context)
     )
 
     data_validator = validate_data.DataValidator(
@@ -46,7 +44,7 @@ def main():
             if _metadata
             else app_context.args.get("schema_file")
         ),
-        data_file=app_context.args["input_data_file"],
+        data_file=app_context.args["input_file"],
     )
 
     writer.ModelDataWriter.write_product_data(
@@ -54,6 +52,7 @@ def main():
         output_file_format=app_context.args.get("output_file_format"),
         metadata=_metadata,
         product_data=data_validator.validate_and_transform(),
+        context=app_context,
     )
 
 

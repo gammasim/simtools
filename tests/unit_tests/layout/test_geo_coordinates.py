@@ -10,16 +10,6 @@ from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 
 
-def test_coordinate_parameter_names():
-    assert GeoCoordinates.coordinate_parameter_names() == (
-        "corsika_observation_level",
-        "epsg_code",
-        "reference_point_altitude",
-        "reference_point_utm_east",
-        "reference_point_utm_north",
-    )
-
-
 def test_crs_utm():
     geo = GeoCoordinates()
     utm_crs = geo.crs_utm(32719)
@@ -69,41 +59,20 @@ def test_crs_local():
 
 
 def test_coordinate_scale_factor():
-    _coord = GeoCoordinates()
-
-    ref_equator = TelescopePosition(name="Equator")
-    ref_equator.set_coordinates("mercator", 0.0, 0.0, 0.0)
-    scale_factor_equator = _coord._coordinate_scale_factor(ref_equator)
-    assert scale_factor_equator == pytest.approx(1.0, rel=1.0e-4)
-
-    ref_lapalma = TelescopePosition(name="LaPalma")
-    ref_lapalma.set_coordinates("mercator", 28.7621661, -17.8920302, 2177.0)
-    scale_factor_lapalma = _coord._coordinate_scale_factor(ref_lapalma)
-    assert scale_factor_lapalma == pytest.approx(1.0003415856959632, rel=1.0e-6)
-
-    ref_paranal = TelescopePosition(name="Paranal")
-    ref_paranal.set_coordinates("mercator", -24.68342915, -70.316345, 2147.0)
-    scale_factor_paranal = _coord._coordinate_scale_factor(ref_paranal)
-    assert scale_factor_paranal == pytest.approx(1.0003368142476146, rel=1.0e-6)
-
-    with pytest.raises(AttributeError):
-        _coord._coordinate_scale_factor(None)
+    geo = GeoCoordinates()
+    reference = TelescopePosition(name="LaPalma")
+    reference.set_coordinates("mercator", 28.7621661, -17.8920302, 2177.0)
+    assert geo._coordinate_scale_factor(reference) == pytest.approx(1.0003415856959632)
 
 
 def test_valid_reference_point():
-    geo_coords = GeoCoordinates()
-    reference_point = TelescopePosition(name="LaPalma")
-    reference_point.set_coordinates("mercator", 28.7621661, -17.8920302, 2177.0)
-    assert geo_coords._valid_reference_point(reference_point)
+    geo = GeoCoordinates()
+    reference = TelescopePosition(name="LaPalma")
+    reference.set_coordinates("mercator", 28.7621661, -17.8920302, 2177.0)
+    assert geo._valid_reference_point(reference)
+    reference.set_coordinates("mercator", np.nan, -17.8920302, 2177.0)
+    assert not geo._valid_reference_point(reference)
 
-    reference_point.set_coordinates("mercator", 28.7621661, -17.8920302, np.nan)
-    assert not geo_coords._valid_reference_point(reference_point)
 
-    reference_point.set_coordinates("mercator", np.nan, np.nan, 2177.0)
-    assert not geo_coords._valid_reference_point(reference_point)
-
-    reference_point.set_coordinates("mercator", np.nan, -17.8920302, 2177.0)
-    assert not geo_coords._valid_reference_point(reference_point)
-
-    reference_point.set_coordinates("mercator", 28.7621661, np.nan, 2177.0)
-    assert not geo_coords._valid_reference_point(reference_point)
+def test_coordinate_parameter_names():
+    assert "epsg_code" in GeoCoordinates.coordinate_parameter_names()

@@ -26,9 +26,9 @@ def test_main_reads_table_and_plots(tmp_test_directory):
     output_dir = Path(tmp_test_directory) / "plots"
     app_context = SimpleNamespace(
         args={"corsika_limits_file": "merged_limits.ecsv"},
-        io_handler=MagicMock(),
+        paths=MagicMock(),
     )
-    app_context.io_handler.get_output_directory.return_value = output_dir
+    app_context.paths.get_output_directory.return_value = output_dir
 
     merged_table = _create_merged_table()
 
@@ -45,5 +45,5 @@ def test_main_reads_table_and_plots(tmp_test_directory):
     ):
         app.main()
 
-    mock_read_table.assert_called_once_with("merged_limits.ecsv")
+    mock_read_table.assert_called_once_with("merged_limits.ecsv", context=app_context)
     mock_limits.assert_called_once_with(merged_table, output_dir)

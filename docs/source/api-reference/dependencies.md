@@ -2,12 +2,12 @@
 
 # Application, dependency and version management
 
-(settings)=
+(context)=
 
-## settings
+## context
 
 ```{eval-rst}
-.. automodule:: simtools.settings
+.. automodule:: simtools.context
    :members:
 ```
 

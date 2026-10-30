@@ -11,6 +11,15 @@ Support modules for running CORSIKA.
    :members:
 ```
 
+## input_writer
+
+(input-writer)=
+
+```{eval-rst}
+.. automodule:: corsika.input_writer
+   :members:
+```
+
 ## corsika_config
 
 (corsika-config-1)=
@@ -35,13 +44,4 @@ Support modules for running CORSIKA.
 .. automodule:: corsika.corsika_histograms
    :members:
 
-```
-
-## corsika_output_validator
-
-(corsika-output-validator-1)=
-
-```{eval-rst}
-.. automodule:: corsika.corsika_output_validator
-   :members:
 ```

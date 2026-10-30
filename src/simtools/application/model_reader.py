@@ -3,8 +3,7 @@
 import os
 
 from simtools import dependency_versions
-from simtools.model_repository.reader import SimulationModelReader
-from simtools.settings import config
+from simtools.model_repository import reader as model_repository_reader
 
 
 def create_model_reader(
@@ -42,7 +41,7 @@ def create_model_reader(
         )
 
     if simulation_models_path:
-        return SimulationModelReader.from_files(simulation_models_path)
+        return model_repository_reader.SimulationModelReader.from_files(simulation_models_path)
 
     if simulation_models_git_path:
         revision = simulation_models_git_revision
@@ -52,7 +51,9 @@ def create_model_reader(
             )
         if not revision:
             raise ValueError("A Git simulation-model revision is required.")
-        return SimulationModelReader.from_git(simulation_models_git_path, revision)
+        return model_repository_reader.SimulationModelReader.from_git(
+            simulation_models_git_path, revision
+        )
 
     raise ValueError("A filesystem path or Git simulation-model source is required.")
 
@@ -113,28 +114,3 @@ def create_model_reader_from_source_config(source_config):
             simulation_models_git_revision=commit,
         )
     raise ValueError(f"Unsupported model source type: {source_type!r}.")
-
-
-def require_model_reader(model_reader=None):
-    """Return an explicit or application-configured model reader.
-
-    Parameters
-    ----------
-    model_reader : SimulationModelReader, optional
-        Reader explicitly supplied by a caller outside an application context.
-
-    Returns
-    -------
-    SimulationModelReader
-        The supplied reader or the reader selected during application startup.
-
-    Raises
-    ------
-    RuntimeError
-        If no simulation-model reader has been selected.
-    """
-    if model_reader is not None:
-        return model_reader
-    if config.model_reader is None:
-        raise RuntimeError("No simulation model reader is configured.")
-    return config.model_reader

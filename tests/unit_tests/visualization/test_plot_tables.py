@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import logging
 from pathlib import Path
 from unittest import mock
 
@@ -9,12 +10,17 @@ from astropy import units as u
 from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_GENERATED
+from simtools.reporting import docs_parameter_plots
 from simtools.visualization import plot_tables
+
+PLOT_INTERSECTION_PROTON_CURVE = (
+    "simtools.visualization.plot_tables._plot_intersection_proton_curve"
+)
 
 
 @mock.patch("simtools.visualization.plot_tables.visualize")
 @mock.patch("simtools.visualization.plot_tables.read_table_data")
-def test_plot(mock_read_table_data, mock_visualize):
+def test_plot(mock_read_table_data, mock_visualize, run_context):
     config = {
         "tables": [
             {
@@ -32,33 +38,15 @@ def test_plot(mock_read_table_data, mock_visualize):
     mock_fig = mock.MagicMock()
     mock_visualize.plot_1d.return_value = mock_fig
 
-    plot_tables.plot(config, output_file)
+    plot_tables.plot(config, output_file, context=run_context)
 
-    mock_read_table_data.assert_called_once_with(config, None, model_reader=None)
+    mock_read_table_data.assert_called_once_with(
+        config, None, model_reader=None, context=run_context
+    )
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
-    mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file, close=True)
-
-
-@mock.patch("simtools.visualization.plot_tables.Table.read")
-def test_read_astropy_table_data_from_file(mock_read_table):
-    config = {
-        "tables": [
-            {
-                "label": "test_table",
-                "file_name": "test_file.ecsv",
-                "column_x": "x",
-                "column_y": "y",
-                "select_values": {"column_name": "x", "value": 42},
-            },
-        ]
-    }
-    mock_read_table.return_value = Table({"x": [41, 42], "y": [1.0, 2.0]})
-
-    result = plot_tables.read_table_data(config, None)
-
-    mock_read_table.assert_called_once_with("test_file.ecsv", format="ascii.ecsv")
-    np.testing.assert_array_equal(result["test_table"]["x"], np.array([42]))
-    np.testing.assert_array_equal(result["test_table"]["y"], np.array([2.0]))
+    mock_visualize.save_figure.assert_called_once_with(
+        mock_fig, output_file, close=True, context=run_context
+    )
 
 
 def test_select_values_from_table_accepts_unitless_schema_value_for_unit_column():
@@ -110,12 +98,8 @@ def test_read_non_ecsv_table_data_from_file_raises():
         plot_tables.read_table_data(config, Path(TEST_RESOURCES_GENERATED) / "model_parameters")
 
 
-@mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-def test_read_table_data_from_file(
-    mock_read_legacy_data_as_table,
-    mock_get_structure_array_from_table,
-):
+def test_read_table_data_from_file(mock_read_legacy_data_as_table):
     config = {
         "tables": [
             {
@@ -127,24 +111,17 @@ def test_read_table_data_from_file(
             },
         ]
     }
-    mock_table = mock.MagicMock()
+    mock_table = Table({"x": [1.0], "y": [2.0]})
     mock_read_legacy_data_as_table.return_value = mock_table
-    mock_structure_array = mock.MagicMock()
-    mock_get_structure_array_from_table.return_value = mock_structure_array
 
     result = plot_tables.read_table_data(config, None)
 
     mock_read_legacy_data_as_table.assert_called_once_with("test_file", "legacy_csv")
-    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
-    assert result == {"test_table": mock_structure_array}
+    assert result["test_table"].dtype.names == ("x", "y")
+    assert result["test_table"][0].tolist() == (1.0, 2.0)
 
 
-@mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
-@mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-def test_read_table_data_from_model_repository(
-    mock_read_legacy_data_as_table,
-    mock_get_structure_array_from_table,
-):
+def test_read_table_data_from_model_repository(run_context):
     config = {
         "tables": [
             {
@@ -159,12 +136,9 @@ def test_read_table_data_from_model_repository(
         ]
     }
     model_reader = mock.MagicMock()
-    mock_table = mock.MagicMock()
-    model_reader.export_model_file.return_value = mock_table
-    mock_structure_array = mock.MagicMock()
-    mock_get_structure_array_from_table.return_value = mock_structure_array
+    model_reader.export_model_file.return_value = Table({"x": [1.0], "y": [2.0]})
 
-    result = plot_tables.read_table_data(config, model_reader=model_reader)
+    result = plot_tables.read_table_data(config, model_reader=model_reader, context=run_context)
 
     model_reader.export_model_file.assert_called_once_with(
         parameter="test_parameter",
@@ -175,8 +149,8 @@ def test_read_table_data_from_model_repository(
         export_file_as_table=True,
         dest=mock.ANY,
     )
-    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
-    assert result == {"test_table": mock_structure_array}
+    assert result["test_table"].dtype.names == ("x", "y")
+    assert result["test_table"][0].tolist() == (1.0, 2.0)
 
 
 def test_read_table_data_no_table_data_defined():
@@ -184,35 +158,6 @@ def test_read_table_data_no_table_data_defined():
 
     with pytest.raises(ValueError, match=r"No table data defined in configuration."):
         plot_tables.read_table_data(config)
-
-
-def test_export_model_file():
-    table_config = {
-        "site": "test_site",
-        "telescope": "test_telescope",
-        "model_version": "test_version",
-        "parameter": "test_parameter",
-    }
-    model_reader = mock.MagicMock()
-    mock_table = mock.MagicMock()
-    model_reader.export_model_file.return_value = mock_table
-
-    config = {"tables": [table_config]}
-    table_config["label"] = "test_label"
-    table_config["column_x"] = "x"
-    table_config["column_y"] = "y"
-
-    plot_tables.read_table_data(config, model_reader=model_reader)
-
-    model_reader.export_model_file.assert_called_once_with(
-        parameter="test_parameter",
-        site="test_site",
-        array_element_name="test_telescope",
-        parameter_version=None,
-        model_version="test_version",
-        export_file_as_table=True,
-        dest=mock.ANY,
-    )
 
 
 def test_export_model_file_with_model_export_path(tmp_test_directory):
@@ -446,22 +391,89 @@ def test_generate_plot_configurations(
     assert result is None
 
 
-def test_get_plotting_label_duplicate_label():
-    config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
-    data = {"duplicate_label": "data"}
-    result = plot_tables._get_plotting_label(config, data)
-    assert result == "duplicate_label (1)"
-
-
-def test_get_plotting_label_multiple_duplicates():
-    config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
-    data = {
-        "duplicate_label": "data",
-        "duplicate_label (1)": "data",
-        "duplicate_label (2)": "data",
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
+def test_generate_plot_configurations_uses_and_names_selected_model_version(
+    mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory
+):
+    mock_read_parameter_dict.return_value = {"model_parameter_schema_version": "0.3.0"}
+    mock_read_table.return_value = Table({"wavelength": [300.0], "reflectivity": [0.9]})
+    mock_collect_data.return_value = {
+        "plot_configuration": [
+            {
+                "type": "mirror_reflectivity",
+                "tables": [{"column_x": "wavelength", "column_y": "reflectivity"}],
+            }
+        ]
     }
-    result = plot_tables._get_plotting_label(config, data)
-    assert result == "duplicate_label (3)"
+
+    configs, output_files = plot_tables.generate_plot_configurations(
+        parameter="mirror_reflectivity",
+        parameter_version="2.0.0",
+        site="North",
+        telescope="LSTN-design",
+        output_path=tmp_test_directory,
+        plot_type="all",
+        model_version="8.0.0",
+    )
+
+    assert mock_read_parameter_dict.call_args.args[0]["model_version"] == "8.0.0"
+    assert mock_read_table.call_args.args[0]["model_version"] == "8.0.0"
+    assert configs[0]["tables"][0]["model_version"] == "8.0.0"
+    assert output_files[0].name == "mirror_reflectivity_2.0.0_North_LSTN-design.pdf"
+
+
+def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(run_context):
+    plot_config = {
+        "title": "Reflectivity",
+        "xtitle": "Wavelength [nm]",
+        "tables": [{"model_version": "7.0.0", "label": "Mirror", "column_y": "y"}],
+    }
+    data = {"Mirror": [(300.0, 0.91), (400.0, 0.87)]}
+    context_dpi_120 = run_context.replace(args={"figure_dpi": 120})
+
+    initial_key = docs_parameter_plots._get_figure_cache_key(plot_config, data, context_dpi_120)
+    same_render_from_another_version = {
+        **plot_config,
+        "tables": [{**plot_config["tables"][0], "model_version": "8.0.0"}],
+    }
+    assert (
+        docs_parameter_plots._get_figure_cache_key(
+            same_render_from_another_version, data, context_dpi_120
+        )
+        == initial_key
+    )
+
+    changed_data = {"Mirror": [(300.0, 0.91), (400.0, 0.86)]}
+    assert (
+        docs_parameter_plots._get_figure_cache_key(plot_config, changed_data, context_dpi_120)
+        != initial_key
+    )
+    changed_config = {**plot_config, "xtitle": "Wavelength [angstrom]"}
+    assert (
+        docs_parameter_plots._get_figure_cache_key(changed_config, data, context_dpi_120)
+        != initial_key
+    )
+
+    context_dpi_240 = run_context.replace(args={"figure_dpi": 240})
+    assert (
+        docs_parameter_plots._get_figure_cache_key(plot_config, data, context_dpi_240)
+        != initial_key
+    )
+
+
+@pytest.mark.parametrize(
+    ("existing", "expected"),
+    [
+        (["duplicate_label"], "duplicate_label (1)"),
+        (["duplicate_label", "duplicate_label (1)", "duplicate_label (2)"], "duplicate_label (3)"),
+    ],
+)
+def test_get_plotting_label_duplicates(existing, expected):
+    config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
+    data = dict.fromkeys(existing, "data")
+    assert plot_tables._get_plotting_label(config, data) == expected
 
 
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
@@ -612,6 +624,7 @@ def test_resolve_plot_output_path_file_and_directory(tmp_path):
 
 
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch(PLOT_INTERSECTION_PROTON_CURVE)
 @mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
@@ -621,6 +634,7 @@ def test_plot_bias_curves_saves_and_closes_figure(
     mock_plot_nsb_curve,
     mock_plot_proton_curve,
     mock_plot_scaled_proton_curve,
+    mock_plot_intersection_proton_curve,
     mock_configure_axis,
     tmp_path,
 ):
@@ -638,16 +652,18 @@ def test_plot_bias_curves_saves_and_closes_figure(
     mock_plt.subplots.assert_called_once_with(figsize=(10, 7))
     mock_plot_nsb_curve.assert_called_once_with(mock_axis, nsb_stats)
     mock_plot_proton_curve.assert_called_once_with(mock_axis, proton_stats)
-    mock_plot_scaled_proton_curve.assert_called_once_with(mock_axis, proton_stats)
+    mock_plot_scaled_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
+    mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_configure_axis.assert_called_once_with(mock_axis, config, nsb_stats, proton_stats)
     mock_fig.tight_layout.assert_called_once_with()
-    mock_fig.savefig.assert_called_once_with(output_path, dpi=200, bbox_inches="tight")
-    mock_plt.close.assert_called_once_with(mock_fig)
+    mock_fig.savefig.assert_called_once_with(
+        output_path, format="png", bbox_inches="tight", dpi=200
+    )
     assert output_path.parent.exists()
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_nsb_curve_draws_errorbar_and_trend(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_nsb_curve_draws_errorbar_and_fit(mock_plot_fit):
     axis = mock.MagicMock()
     nsb_stats = {
         240: {"rate_hz": 200.0, "error_hz": 10.0},
@@ -665,97 +681,82 @@ def test_plot_nsb_curve_draws_errorbar_and_trend(mock_plot_trend):
         color="tab:blue",
         capsize=3,
     )
-    mock_plot_trend.assert_called_once_with(axis, [220, 240], [100.0, 200.0], color="tab:blue")
+    mock_plot_fit.assert_called_once_with(axis, [220, 240], [100.0, 200.0], color="tab:blue")
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_nsb_curve_returns_early_when_empty(mock_plot_trend):
+@pytest.mark.parametrize(
+    ("curve_function", "rate_220", "rate_240", "err_220", "err_240", "fmt", "label", "color"),
+    [
+        (plot_tables._plot_nsb_curve, 100.0, 200.0, 5.0, 10.0, "o", "NSB", "tab:blue"),
+        (plot_tables._plot_proton_curve, 10.0, 20.0, 1.0, 2.0, "s", "Proton", "tab:orange"),
+        # Scaled proton curve multiplies rates and errors by 1.35
+        (
+            plot_tables._plot_scaled_proton_curve,
+            10.0,
+            20.0,
+            1.0,
+            2.0,
+            "^",
+            "1.35 x Proton",
+            "tab:red",
+        ),
+    ],
+)
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_rate_curves_draw_points_and_fit(
+    mock_plot_fit, curve_function, rate_220, rate_240, err_220, err_240, fmt, label, color
+):
     axis = mock.MagicMock()
-
-    plot_tables._plot_nsb_curve(axis, {})
-
-    axis.errorbar.assert_not_called()
-    mock_plot_trend.assert_not_called()
-
-
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_proton_curve_draws_points_and_trend(mock_plot_trend):
-    axis = mock.MagicMock()
-    proton_stats = {
-        240: {"rate_hz": 20.0, "error_hz": 2.0},
-        220: {"rate_hz": 10.0, "error_hz": 1.0},
+    stats = {
+        240: {"rate_hz": rate_240, "error_hz": err_240},
+        220: {"rate_hz": rate_220, "error_hz": err_220},
     }
-
-    plot_tables._plot_proton_curve(axis, proton_stats)
-
+    scale = 1.35 if curve_function is plot_tables._plot_scaled_proton_curve else 1.0
+    rates = [rate_220 * scale, rate_240 * scale]
+    curve_function(axis, stats)
     axis.errorbar.assert_called_once_with(
         [220, 240],
-        [10.0, 20.0],
-        yerr=[1.0, 2.0],
-        fmt="s",
-        label="Proton",
-        color="tab:orange",
+        pytest.approx(rates),
+        yerr=pytest.approx([err_220 * scale, err_240 * scale]),
+        fmt=fmt,
+        label=label,
+        color=color,
         capsize=3,
     )
-    mock_plot_trend.assert_called_once_with(axis, [220, 240], [10.0, 20.0], color="tab:orange")
+    mock_plot_fit.assert_called_once_with(axis, [220, 240], pytest.approx(rates), color=color)
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_proton_curve_returns_early_when_empty(mock_plot_trend):
+@pytest.mark.parametrize(
+    "curve_function",
+    [
+        plot_tables._plot_nsb_curve,
+        plot_tables._plot_proton_curve,
+        plot_tables._plot_scaled_proton_curve,
+    ],
+)
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_rate_curves_return_early_when_empty(mock_plot_fit, curve_function):
     axis = mock.MagicMock()
-
-    plot_tables._plot_proton_curve(axis, {})
-
+    curve_function(axis, {})
     axis.errorbar.assert_not_called()
-    mock_plot_trend.assert_not_called()
+    mock_plot_fit.assert_not_called()
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_scaled_proton_curve_draws_points_and_trend(mock_plot_trend):
+def test_plot_log_linear_fit_returns_without_plot_for_insufficient_data(caplog):
     axis = mock.MagicMock()
-    proton_stats = {
-        240: {"rate_hz": 20.0, "error_hz": 2.0},
-        220: {"rate_hz": 10.0, "error_hz": 1.0},
-    }
+    caplog.set_level(logging.INFO, logger="simtools.visualization.plot_tables")
 
-    plot_tables._plot_scaled_proton_curve(axis, proton_stats)
-
-    # Rates should be scaled by 1.35
-    axis.errorbar.assert_called_once_with(
-        [220, 240],
-        [13.5, 27.0],  # 10.0 * 1.35, 20.0 * 1.35
-        yerr=[1.35, 2.7],  # 1.0 * 1.35, 2.0 * 1.35
-        fmt="^",
-        label="1.35 x Proton",
-        color="tab:red",
-        capsize=3,
-    )
-    mock_plot_trend.assert_called_once_with(axis, [220, 240], [13.5, 27.0], color="tab:red")
-
-
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_scaled_proton_curve_returns_early_when_empty(mock_plot_trend):
-    axis = mock.MagicMock()
-
-    plot_tables._plot_scaled_proton_curve(axis, {})
-
-    axis.errorbar.assert_not_called()
-    mock_plot_trend.assert_not_called()
-
-
-def test_plot_log_linear_trend_returns_without_plot_for_insufficient_data():
-    axis = mock.MagicMock()
-
-    plot_tables._plot_log_linear_trend(axis, [220], [10.0], color="tab:blue")
-    plot_tables._plot_log_linear_trend(axis, [220, 240], [0.0, -1.0], color="tab:blue")
+    plot_tables._plot_log_linear_fit(axis, [220], [10.0], color="tab:blue")
+    plot_tables._plot_log_linear_fit(axis, [220, 240], [0.0, -1.0], color="tab:blue")
 
     axis.plot.assert_not_called()
+    assert caplog.text.count("need at least two distinct thresholds") == 2
 
 
-def test_plot_log_linear_trend_plots_for_valid_positive_rates():
+def test_plot_log_linear_fit_plots_for_valid_positive_rates():
     axis = mock.MagicMock()
 
-    plot_tables._plot_log_linear_trend(axis, [220, 240, 260], [100.0, 10.0, 1.0], color="tab:blue")
+    plot_tables._plot_log_linear_fit(axis, [220, 240, 260], [100.0, 10.0, 1.0], color="tab:blue")
 
     axis.plot.assert_called_once()
     args, kwargs = axis.plot.call_args
@@ -799,77 +800,86 @@ def test_configure_bias_curve_axis_without_legend_logs_warning(mock_logger):
     )
 
 
+@pytest.mark.parametrize(
+    ("trigger_threshold", "expected_line"),
+    [(250.0, True), (None, False)],
+)
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch(PLOT_INTERSECTION_PROTON_CURVE)
 @mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
 @mock.patch("simtools.visualization.plot_tables.plt")
-def test_plot_bias_curves_with_trigger_threshold(
+def test_plot_bias_curves_trigger_threshold_line(
     mock_plt,
     mock_plot_nsb_curve,
     mock_plot_proton_curve,
     mock_plot_scaled_proton_curve,
+    mock_plot_intersection_proton_curve,
     mock_configure_axis,
+    trigger_threshold,
+    expected_line,
     tmp_path,
 ):
-    """Test that trigger threshold vertical line is added."""
-    mock_fig = mock.MagicMock()
     mock_axis = mock.MagicMock()
-    mock_plt.subplots.return_value = (mock_fig, mock_axis)
-    mock_axis.axvline.return_value = mock.MagicMock()
-
-    output_path = tmp_path / "bias.png"
-    config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
-    trigger_threshold = 250.0
-    nsb_stats = {220: {"rate_hz": 10, "error_hz": 1}}
+    mock_plt.subplots.return_value = (mock.MagicMock(), mock_axis)
     proton_stats = {220: {"rate_hz": 5}}
 
     plot_tables.plot_bias_curves(
-        nsb_stats,
+        {220: {"rate_hz": 10, "error_hz": 1}},
         proton_stats,
-        config,
-        output_path,
+        {"title": "Bias", "ymin": 1, "ymax": 1e6},
+        tmp_path / "bias.png",
         trigger_threshold,
     )
 
-    mock_axis.axvline.assert_called_once()
-    call_kwargs = mock_axis.axvline.call_args[1]
-    assert call_kwargs["x"] == pytest.approx(trigger_threshold)
-    assert call_kwargs["color"] == "grey"
-    assert call_kwargs["linestyle"] == "--"
-    assert call_kwargs["linewidth"] == pytest.approx(1.5)
-    assert call_kwargs["alpha"] == pytest.approx(0.5)
+    mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
+    if expected_line:
+        call_kwargs = mock_axis.axvline.call_args.kwargs
+        assert call_kwargs["x"] == pytest.approx(trigger_threshold)
+        assert call_kwargs["color"] == "grey"
+        assert call_kwargs["linestyle"] == "--"
+    else:
+        mock_axis.axvline.assert_not_called()
 
 
-@mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
-@mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
-@mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
-@mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
-@mock.patch("simtools.visualization.plot_tables.plt")
-def test_plot_bias_curves_without_trigger_threshold(
-    mock_plt,
-    mock_plot_nsb_curve,
-    mock_plot_proton_curve,
-    mock_plot_scaled_proton_curve,
-    mock_configure_axis,
-    tmp_path,
-):
-    """Test that vertical line is skipped when no trigger threshold is provided."""
-    mock_fig = mock.MagicMock()
-    mock_axis = mock.MagicMock()
-    mock_plt.subplots.return_value = (mock_fig, mock_axis)
+@pytest.mark.parametrize(
+    ("thresholds", "rates"), [([7], [10]), ([7, 7], [10, 20]), ([7, 8], [0, -1])]
+)
+def test_fit_bias_curve_insufficient_points(thresholds, rates):
+    assert plot_tables.fit_bias_curve(thresholds, rates) is None
 
-    output_path = tmp_path / "bias.png"
-    config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
-    nsb_stats = {220: {"rate_hz": 10, "error_hz": 1}}
-    proton_stats = {220: {"rate_hz": 5}}
 
-    plot_tables.plot_bias_curves(
-        nsb_stats,
-        proton_stats,
-        config,
-        output_path,
-        trigger_threshold=None,  # No threshold provided
+def test_fit_bias_curve_filters_invalid_points():
+    thresholds, coefficients = plot_tables.fit_bias_curve(
+        [7, 7.2, 8, 9, 10, np.inf], [100, 0, 10, np.nan, np.inf, 1]
     )
+    assert thresholds == pytest.approx([7, 8])
+    assert coefficients == pytest.approx([-1, 9])
 
-    mock_axis.axvline.assert_not_called()
+
+def test_documented_library_plot_example(tmp_test_directory):
+    data_path = Path(tmp_test_directory)
+    Table({"wavelength": [300.0, 400.0], "efficiency": [0.2, 0.8]}).write(
+        data_path / "response.ecsv", format="ascii.ecsv"
+    )
+    config = {
+        "type": "example_response",
+        "title": "Detector response",
+        "xtitle": "Wavelength [nm]",
+        "ytitle": "Response",
+        "tables": [
+            {
+                "file_name": "response.ecsv",
+                "label": "Response",
+                "column_x": "wavelength",
+                "column_y": "efficiency",
+            }
+        ],
+    }
+    output_file = data_path / "response.png"
+
+    result = plot_tables.plot(config, output_file, data_path=data_path)
+
+    assert result == output_file
+    assert output_file.exists()

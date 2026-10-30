@@ -1,12 +1,6 @@
 """Simulation runner for array simulations."""
 
-import shlex
-from pathlib import Path
-
-from simtools import settings
-from simtools.io import io_handler
-from simtools.job_execution.process_accounting import build_accounting_command
-from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
+from simtools.runners.simtel_runner import SimtelRunner
 
 
 class SimulatorArray(SimtelRunner):
@@ -28,72 +22,17 @@ class SimulatorArray(SimtelRunner):
         simulation_parameters,
         array_model,
         label=None,
+        context=None,
     ):
         """Initialize SimulatorArray."""
-        super().__init__(label=label, config=simulation_parameters, array_model=array_model)
+        super().__init__(
+            label=label, config=simulation_parameters, array_model=array_model, context=context
+        )
 
         self.simulation_parameters = simulation_parameters
         self.array_model = array_model
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
         self._log_file = None
-
-    def prepare_run(self, run_number=None, sub_script=None, corsika_file=None, extra_commands=None):
-        """
-        Build and return the full path of the bash run script containing the sim_telarray command.
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
-        corsika_file: str or Path
-            Full path of the input CORSIKA file.
-        extra_commands: list[str]
-            Additional commands for running simulations given in config.yml.
-        """
-        command = self.make_run_command(run_number=run_number, input_file=corsika_file)
-        log_file = self.runner_service.get_file_name(
-            file_type="sim_telarray_log", run_number=run_number
-        )
-        sub_script = Path(sub_script)
-        self._logger.debug(f"Run bash script - {sub_script}")
-        self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
-        with sub_script.open("w", encoding="utf-8") as file:
-            file.write("#!/usr/bin/env bash\n\n")
-            file.write("set -e\n")
-            file.write("set -o pipefail\n")
-            if extra_commands:
-                file.write("# Writing extras\n")
-                for line in extra_commands:
-                    file.write(f"{line}\n")
-                file.write("# End of extras\n\n")
-
-            resources_file = self.runner_service.get_file_name(
-                file_type="sim_telarray_resources", run_number=run_number
-            )
-            resource_files = []
-            for run_index in range(self.runs_per_set):
-                process_resources_file = resources_file
-                if self.runs_per_set > 1:
-                    process_resources_file = resources_file.with_name(
-                        f"{resources_file.stem}.part{run_index + 1:04d}{resources_file.suffix}"
-                    )
-                resource_files.append(process_resources_file)
-                accounting_command = build_accounting_command(
-                    command,
-                    process_resources_file,
-                    "sim_telarray",
-                    run_number,
-                    model_version=self.array_model.model_version,
-                    log_file=log_file,
-                    input_file=corsika_file,
-                )
-                file.write(f"{sim_telarray_env_as_string()} {shlex.join(accounting_command)}\n")
-
-            if self.file_list is None:
-                self.file_list = {}
-            self.file_list["sim_telarray_resources"] = (
-                resource_files[0] if len(resource_files) == 1 else resource_files
-            )
 
     def make_run_command(self, run_number=None, input_file=None):
         """
@@ -141,7 +80,7 @@ class SimulatorArray(SimtelRunner):
 
     def _make_run_command_for_calibration_simulations(self):
         """Build sim_telarray command for calibration simulations."""
-        cfg = settings.config.args
+        cfg = self.context.args
         altitude = self.array_model.site_model.get_parameter_value_with_unit(
             "reference_point_altitude"
         ).to_value("m")
@@ -188,7 +127,7 @@ class SimulatorArray(SimtelRunner):
         self.array_model.export_config_files("sim_telarray")
 
         cmd = [
-            str(settings.config.sim_telarray_exe),
+            str(self.context.software.sim_telarray_exe),
             "-c",
             str(self.array_model.config_file_path),
             f"-I{config_dir}",

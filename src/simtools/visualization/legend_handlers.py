@@ -9,8 +9,7 @@ from simtools.visualization.matplotlib_backend import lazy_module
 mcolors = lazy_module("matplotlib.colors")
 mpatches = lazy_module("matplotlib.patches")
 
-# Define properties of different telescope types for visualization purposes.
-# Radii are relative to a reference radius (REFERENCE_RADIUS).
+# Properties of telescope types for visualization. Radii are relative to REFERENCE_RADIUS.
 TELESCOPE_CONFIG = {
     "LST": {"color": "darkorange", "radius": 12.5, "shape": "circle", "filled": False},
     "MST": {"color": "dodgerblue", "radius": 9.15, "shape": "circle", "filled": False},
@@ -76,41 +75,10 @@ class OffPixelObject:
     """Off-Pixel Object."""
 
 
-class LSTObject:
-    """LST Object."""
-
-
-class MSTObject:
-    """MST Object."""
-
-
-class SCTObject:
-    """SCT Object."""
-
-
-class SSTObject:
-    """SST Object."""
-
-
-class HESSObject:
-    """HESS Object."""
-
-
-class MAGICObject:
-    """MAGIC Object."""
-
-
-class VERITASObject:
-    """VERITAS Object."""
-
-
-class MeanRadiusOuterEdgeObject:
-    """Object for Mean radius outer edge."""
-
-
-# Pixel handlers
 class _BaseHexPixelHandler:
-    """Base class for hexagonal pixel handlers."""
+    """Base class for hexagonal pixel handlers; subclasses set ``colors`` (face, edge)."""
+
+    colors = ("black", "black")
 
     @staticmethod
     def _create_hex_patch(handlebox, facecolor, edgecolor):
@@ -128,42 +96,33 @@ class _BaseHexPixelHandler:
         handlebox.add_artist(patch)
         return patch
 
+    def legend_artist(self, _, __, ___, handlebox):
+        """Legend artist."""
+        return self._create_hex_patch(handlebox, *self.colors)
+
 
 class HexPixelHandler(_BaseHexPixelHandler):
     """Legend handler class to plot a hexagonal "on" pixel."""
 
-    @staticmethod
-    def legend_artist(_, __, ___, handlebox):
-        """Legend artist."""
-        return HexPixelHandler._create_hex_patch(
-            handlebox, facecolor=(1, 1, 1, 0), edgecolor=(0, 0, 0, 1)
-        )
+    colors = ((1, 1, 1, 0), (0, 0, 0, 1))
 
 
 class HexEdgePixelHandler(_BaseHexPixelHandler):
     """Legend handler class to plot a hexagonal "edge" pixel."""
 
-    @staticmethod
-    def legend_artist(_, __, ___, handlebox):
-        """Legend artist."""
-        return HexEdgePixelHandler._create_hex_patch(
-            handlebox,
-            facecolor=(*mcolors.to_rgb("brown"), 0.5),
-            edgecolor=(*mcolors.to_rgb("black"), 1),
-        )
+    colors = ((0.6470588235294118, 0.16470588235294117, 0.16470588235294117, 0.5), (0, 0, 0, 1))
 
 
 class HexOffPixelHandler(_BaseHexPixelHandler):
     """Legend handler class to plot a hexagonal "off" pixel."""
 
-    @staticmethod
-    def legend_artist(_, __, ___, handlebox):
-        """Legend artist."""
-        return HexOffPixelHandler._create_hex_patch(handlebox, facecolor="black", edgecolor="black")
+    colors = ("black", "black")
 
 
 class _BaseSquarePixelHandler:
-    """Base class for square pixel handlers."""
+    """Base class for square pixel handlers; subclasses set ``colors`` (face, edge)."""
+
+    colors = ("black", "black")
 
     @staticmethod
     def _create_square_patch(handlebox, facecolor, edgecolor):
@@ -181,102 +140,78 @@ class _BaseSquarePixelHandler:
         handlebox.add_artist(patch)
         return patch
 
+    def legend_artist(self, _, __, ___, handlebox):
+        """Legend artist."""
+        return self._create_square_patch(handlebox, *self.colors)
+
 
 class SquarePixelHandler(_BaseSquarePixelHandler):
     """Legend handler class to plot a square "on" pixel."""
 
-    @staticmethod
-    def legend_artist(_, __, ___, handlebox):
-        """Legend artist."""
-        return SquarePixelHandler._create_square_patch(
-            handlebox, facecolor=(1, 1, 1, 0), edgecolor=(0, 0, 0, 1)
-        )
+    colors = ((1, 1, 1, 0), (0, 0, 0, 1))
 
 
 class SquareEdgePixelHandler(_BaseSquarePixelHandler):
     """Legend handler class to plot a square "edge" pixel."""
 
-    @staticmethod
-    def legend_artist(_, __, ___, handlebox):
-        """Legend artist."""
-        return SquareEdgePixelHandler._create_square_patch(
-            handlebox,
-            facecolor=(*mcolors.to_rgb("brown"), 0.5),
-            edgecolor=(*mcolors.to_rgb("black"), 1),
-        )
+    colors = ((0.6470588235294118, 0.16470588235294117, 0.16470588235294117, 0.5), (0, 0, 0, 1))
 
 
 class SquareOffPixelHandler(_BaseSquarePixelHandler):
     """Legend handler class to plot a square "off" pixel."""
 
-    @staticmethod
-    def legend_artist(_, __, ___, handlebox):
-        """Legend artist."""
-        return SquareOffPixelHandler._create_square_patch(
-            handlebox, facecolor="black", edgecolor="black"
-        )
+    colors = ("black", "black")
 
 
 class BaseLegendHandler:
     """Base telescope handler that can handle any telescope type."""
 
-    def __init__(self, telescope_type):
-        self.telescope_type = telescope_type
-        self.config = get_telescope_config(telescope_type)
+    telescope_type = None
 
-    def _create_circle(self, handlebox, x0, y0, radius):
-        """Create a circle patch."""
-        facecolor = self.config["color"] if self.config["filled"] else "none"
-        return mpatches.Circle(
-            xy=(x0, y0),
-            radius=radius * self.config["radius"] / REFERENCE_RADIUS,
-            facecolor=facecolor,
-            edgecolor=self.config["color"],
-            transform=handlebox.get_transform(),
-        )
+    def __init__(self, telescope_type=None):
+        self.telescope_type = self.telescope_type if telescope_type is None else telescope_type
+        self.config = get_telescope_config(self.telescope_type)
 
-    def _create_square(self, handlebox, x0, y0, size):
-        """Create a square patch."""
-        return mpatches.Rectangle(
-            [x0, y0],
-            size,
-            size,
-            facecolor=self.config["color"],
-            edgecolor=self.config["color"],
-            transform=handlebox.get_transform(),
-        )
-
-    def _create_hexagon(self, handlebox, x0, y0, radius):
-        """Create a hexagon patch."""
-        return mpatches.RegularPolygon(
-            (x0, y0),
-            numVertices=6,
-            radius=0.7 * radius * self.config["radius"] / REFERENCE_RADIUS,
-            orientation=np.deg2rad(30),
-            facecolor=self.config["color"],
-            edgecolor=self.config["color"],
-            transform=handlebox.get_transform(),
-        )
+    def _create_patch(self, handlebox, x0, y0, size):
+        """Create the patch for the configured shape, sized relative to ``size``."""
+        color = self.config["color"]
+        transform = handlebox.get_transform()
+        shape = self.config["shape"]
+        if shape == "circle":
+            facecolor = color if self.config["filled"] else "none"
+            return mpatches.Circle(
+                xy=(x0, y0),
+                radius=size * self.config["radius"] / REFERENCE_RADIUS,
+                facecolor=facecolor,
+                edgecolor=color,
+                transform=transform,
+            )
+        if shape == "square":
+            return mpatches.Rectangle(
+                [x0, y0], size, size, facecolor=color, edgecolor=color, transform=transform
+            )
+        if shape == "hexagon":
+            return mpatches.RegularPolygon(
+                (x0, y0),
+                numVertices=6,
+                radius=0.7 * size * self.config["radius"] / REFERENCE_RADIUS,
+                orientation=np.deg2rad(30),
+                facecolor=color,
+                edgecolor=color,
+                transform=transform,
+            )
+        raise ValueError(f"Unknown shape: {shape}")
 
     def legend_artist(self, _, __, ___, handlebox):
         """Create the appropriate patch based on telescope type."""
         shape = self.config["shape"]
-
         if shape == "circle":
             x0, y0 = calculate_center(handlebox, 4, 2)
-            radius = handlebox.height
-            patch = self._create_circle(handlebox, x0, y0, radius)
         elif shape == "square":
             x0, y0 = calculate_center(handlebox, 10, 1)
-            size = handlebox.height
-            patch = self._create_square(handlebox, x0, y0, size)
-        elif shape == "hexagon":
-            x0, y0 = calculate_center(handlebox)
-            radius = handlebox.height
-            patch = self._create_hexagon(handlebox, x0, y0, radius)
         else:
-            raise ValueError(f"Unknown shape: {shape}")
-
+            x0, y0 = calculate_center(handlebox)
+        patch = self._create_patch(handlebox, x0, y0, handlebox.height)
         handlebox.add_artist(patch)
         return patch
 
@@ -284,77 +219,40 @@ class BaseLegendHandler:
 class LSTHandler(BaseLegendHandler):
     """Legend handler for LST telescopes."""
 
-    def __init__(self):
-        super().__init__("LST")
+    telescope_type = "LST"
 
 
 class MSTHandler(BaseLegendHandler):
     """Legend handler for MST telescopes."""
 
-    def __init__(self):
-        super().__init__("MST")
+    telescope_type = "MST"
 
 
 class SSTHandler(BaseLegendHandler):
     """Legend handler for SST telescopes."""
 
-    def __init__(self):
-        super().__init__("SST")
+    telescope_type = "SST"
 
 
 class SCTHandler(BaseLegendHandler):
     """Legend handler for SCT telescopes."""
 
-    def __init__(self):
-        super().__init__("SCT")
+    telescope_type = "SCT"
 
 
 class HESSHandler(BaseLegendHandler):
     """Legend handler for HESS telescopes."""
 
-    def __init__(self):
-        super().__init__("HESS")
+    telescope_type = "HESS"
 
 
 class MAGICHandler(BaseLegendHandler):
     """Legend handler for MAGIC telescopes."""
 
-    def __init__(self):
-        super().__init__("MAGIC")
+    telescope_type = "MAGIC"
 
 
 class VERITASHandler(BaseLegendHandler):
     """Legend handler for VERITAS telescopes."""
 
-    def __init__(self):
-        super().__init__("VERITAS")
-
-
-class MeanRadiusOuterEdgeHandler:
-    """Legend handler class to plot the mean radius outer edge of the dish."""
-
-    @staticmethod
-    def legend_artist(_, __, ___, handlebox):
-        """Create a circle patch representing the mean radius outer edge."""
-        x0, y0 = calculate_center(handlebox, 4, 4)
-        radius = handlebox.height
-        patch = mpatches.Circle(
-            xy=(x0, y0),
-            radius=radius,
-            facecolor="none",
-            edgecolor="darkorange",
-            transform=handlebox.get_transform(),
-        )
-        handlebox.add_artist(patch)
-        return patch
-
-
-legend_handler_map = {
-    LSTObject: LSTHandler,
-    MSTObject: MSTHandler,
-    SSTObject: SSTHandler,
-    SCTObject: SCTHandler,
-    HESSObject: HESSHandler,
-    MAGICObject: MAGICHandler,
-    VERITASObject: VERITASHandler,
-}
+    telescope_type = "VERITAS"

@@ -8,7 +8,6 @@ import pytest
 
 import simtools.utils.general as gen
 from simtools.model.model_parameter import InvalidModelParameterError
-from simtools.simulation.configuration import get_model_writer
 
 logger = logging.getLogger()
 
@@ -40,31 +39,6 @@ def test_camera(telescope_model_lst, monkeypatch):
     tel_model._camera = "camera"
     _ = tel_model.camera
     assert load_camera_mock.call_count == 1
-
-
-def test_get_single_mirror_list_file(telescope_model_lst, monkeypatch):
-    tel_model = telescope_model_lst
-    export_single_mirror_list_file_mock = Mock()
-    monkeypatch.setattr(
-        get_model_writer(tel_model),
-        "export_single_mirror_list_file",
-        export_single_mirror_list_file_mock,
-    )
-
-    mirror_number = 1
-    set_focal_length_to_zero = True
-    get_model_writer(tel_model).single_mirror_list_file_paths = {mirror_number: "test_path"}
-
-    # Call the method
-    result = tel_model.get_single_mirror_list_file(mirror_number, set_focal_length_to_zero)
-
-    # Assert that export_single_mirror_list_file was called with the correct arguments
-    export_single_mirror_list_file_mock.assert_called_once_with(
-        mirror_number, set_focal_length_to_zero
-    )
-
-    # Assert that the method returns the correct path
-    assert result == "test_path"
 
 
 def test_load_mirrors(telescope_model_lst, monkeypatch, caplog):
@@ -125,6 +99,15 @@ def test_load_camera(telescope_model_lst, monkeypatch):
     assert tel_model._camera == camera_mock.from_configuration.return_value
 
 
+def _stub_camera_tables(monkeypatch, telescope_model):
+    """Stub camera table records and their parameter entries."""
+    monkeypatch.setattr(
+        telescope_model.model_reader, "get_parameter_table_records", lambda _data: []
+    )
+    for name in ("camera_pixel_layout", "camera_trigger_groups", "camera_trigger_members"):
+        monkeypatch.setitem(telescope_model.parameters, name, {"value": None})
+
+
 def test_resolve_camera_components_uses_explicit_lightguide(telescope_model_lst, monkeypatch):
     telescope_model_lst.parameters["camera_pixel_types"] = {
         "value": [
@@ -141,84 +124,13 @@ def test_resolve_camera_components_uses_explicit_lightguide(telescope_model_lst,
         ]
     }
     telescope_model_lst.parameters["camera_rotate"] = {"value": 0.0}
-    monkeypatch.setattr(telescope_model_lst, "_parameter_table_records", lambda _name: [])
+    _stub_camera_tables(monkeypatch, telescope_model_lst)
 
     result = telescope_model_lst._resolve_camera_components()
 
     assert result["pixel_types"][0]["lightguide_angle_file"] == (
         "lightguide_efficiency_vs_incidence_angle-LSTN-01.dat"
     )
-
-
-def test_resolve_camera_components_uses_shared_lightguide(telescope_model_lst, monkeypatch):
-    """Resolved light-guide files use the parameter identity when available."""
-    telescope_model_lst.parameters["camera_pixel_types"] = {
-        "value": [
-            {
-                "type_id": 1,
-                "pmt_type": 0,
-                "cathode_shape": 1,
-                "cathode_diameter_cm": 1.0,
-                "funnel_shape": 1,
-                "funnel_diameter_cm": 1.0,
-                "funnel_depth_cm": 0.0,
-                "lightguide_angle_parameter": "lightguide_efficiency_vs_incidence_angle",
-            }
-        ]
-    }
-    telescope_model_lst.parameters["camera_rotate"] = {"value": 0.0}
-    telescope_model_lst.parameters["lightguide_efficiency_vs_incidence_angle"] = {
-        "value": "lightguide.ecsv",
-        "instrument": "LSTN-design",
-    }
-    monkeypatch.setattr(telescope_model_lst, "_parameter_table_records", lambda _name: [])
-
-    result = telescope_model_lst._resolve_camera_components()
-
-    assert result["pixel_types"][0]["lightguide_angle_file"] == "lightguide-LSTN-design.dat"
-
-
-def test_resolve_camera_components_does_not_infer_lightguide(telescope_model_lst, monkeypatch):
-    telescope_model_lst.parameters["camera_pixel_types"] = {
-        "value": [
-            {
-                "type_id": 1,
-                "pmt_type": 0,
-                "cathode_shape": 0,
-                "cathode_diameter_cm": 1.0,
-                "funnel_shape": 1,
-                "funnel_diameter_cm": 1.0,
-                "funnel_depth_cm": 0.0,
-            }
-        ]
-    }
-    telescope_model_lst.parameters["camera_rotate"] = {"value": 0.0}
-    telescope_model_lst.parameters["lightguide_efficiency_vs_incidence_angle"] = {
-        "value": "lightguide.ecsv"
-    }
-    monkeypatch.setattr(telescope_model_lst, "_parameter_table_records", lambda _name: [])
-
-    result = telescope_model_lst._resolve_camera_components()
-
-    assert "lightguide_angle_file" not in result["pixel_types"][0]
-
-
-def test_is_file_2d_true(telescope_model_lst, monkeypatch):
-    table = astropy.table.QTable()
-    monkeypatch.setattr(telescope_model_lst, "get_parameter_table", Mock(return_value=table))
-    assert telescope_model_lst.is_file_2d("mirror_reflectivity") is True
-
-
-def test_is_file_2d_false_for_averaged_table(telescope_model_lst, monkeypatch):
-    table = astropy.table.QTable({"wavelength": [300.0], "transmission": [0.9]})
-    monkeypatch.setattr(telescope_model_lst, "get_parameter_table", Mock(return_value=table))
-    assert telescope_model_lst.is_file_2d("mirror_reflectivity") is False
-
-
-def test_is_file_2d_keyerror(telescope_model_lst, caplog):
-    result = telescope_model_lst.is_file_2d("missing_param")
-    assert result is False
-    assert "does not exist" in caplog.text
 
 
 def test_get_on_axis_eff_optical_area_ok(telescope_model_lst):
@@ -272,28 +184,6 @@ def test_mirrors_property(telescope_model_lst, monkeypatch):
     assert load_mirrors_mock.call_count == 1
 
 
-def test_export_single_mirror_list_file(telescope_model_lst, caplog):
-    tel_model = telescope_model_lst
-    tel_model._mirrors = Mock()
-    tel_model._mirrors.number_of_mirrors = 5
-
-    # Mock simtel_config_writer
-    mock_writer = Mock()
-    exporter = get_model_writer(tel_model)
-    exporter._load_simtel_config_writer = Mock()
-    exporter.config_writer = mock_writer
-
-    # Test valid mirror number
-    tel_model.export_single_mirror_list_file(mirror_number=1, set_focal_length_to_zero=True)
-    assert mock_writer.write_single_mirror_list_file.called
-    assert 1 in get_model_writer(tel_model).single_mirror_list_file_paths
-
-    # Test invalid mirror number (too high)
-    with caplog.at_level(logging.ERROR):
-        tel_model.export_single_mirror_list_file(mirror_number=10, set_focal_length_to_zero=False)
-    assert "mirror_number > number_of_mirrors" in caplog.text
-
-
 def test_get_telescope_effective_focal_length(telescope_model_lst):
     import astropy.units as u
 
@@ -326,81 +216,3 @@ def test_get_telescope_effective_focal_length(telescope_model_lst):
         unit="m", return_focal_length_if_zero=True
     )
     assert result == pytest.approx(16.0)
-
-
-def test_read_two_dim_wavelength_angle(telescope_model_lst):
-    table = astropy.table.QTable(
-        {
-            "wavelength": [300.0, 300.0, 400.0, 400.0],
-            "incidence_angle": [0.0, 10.0, 0.0, 10.0],
-            "reflectivity": [0.8, 0.75, 0.9, 0.85],
-        }
-    )
-    telescope_model_lst.get_parameter_table = Mock(return_value=table)
-
-    result = telescope_model_lst.read_two_dim_wavelength_angle("mirror_reflectivity")
-
-    assert "Wavelength" in result
-    assert "Angle" in result
-    assert "z" in result
-    assert len(result["Wavelength"]) == 2
-    assert len(result["Angle"]) == 2
-    assert result["z"].shape == (2, 2)
-
-
-def test_read_incidence_angle_distribution(telescope_model_lst):
-    incidence_table = astropy.table.Table(
-        {
-            "incidence_angle": [0.0, 10.0],
-            "fraction": [0.5, 0.3],
-        }
-    )
-    telescope_model_lst.get_parameter_table = Mock(return_value=incidence_table)
-    result = telescope_model_lst.read_incidence_angle_distribution("incidence_angle")
-
-    assert isinstance(result, astropy.table.Table)
-    assert len(result) == 2
-    assert "incidence_angle" in result.colnames
-    assert "fraction" in result.colnames
-
-
-def test_calc_average_curve():
-    import numpy as np
-
-    from simtools.model.telescope_model import TelescopeModel
-
-    # Mock curves data
-    curves = {
-        "Wavelength": np.array([300.0, 400.0, 500.0]),
-        "Angle": np.array([0.0, 10.0, 20.0]),
-        "z": np.array([[0.8, 0.85, 0.9], [0.75, 0.8, 0.85], [0.7, 0.75, 0.8]]),
-    }
-
-    # Mock incidence angle distribution
-    incidence_angle_dist = astropy.table.Table(
-        {
-            "incidence_angle": [0.0, 10.0, 20.0],
-            "fraction": [0.5, 0.3, 0.2],
-        }
-    )
-
-    result = TelescopeModel.calc_average_curve(curves, incidence_angle_dist)
-
-    assert isinstance(result, astropy.table.Table)
-    assert "Wavelength" in result.colnames
-    assert "z" in result.colnames
-    assert len(result) == 3
-
-
-def test_export_table_to_model_directory(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    # Create a mock table
-    test_table = astropy.table.Table({"Wavelength": [300.0, 400.0], "Value": [0.8, 0.9]})
-
-    file_name = "test_output.dat"
-    result = tel_model.export_table_to_model_directory(file_name, test_table)
-
-    expected_path = tel_model.config_file_directory / file_name
-    assert result == expected_path.absolute()
-    assert expected_path.exists()

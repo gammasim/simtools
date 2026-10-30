@@ -34,6 +34,7 @@ applications:
           TRIGGER_REFERENCE_BINS: 1
       - type: hdf5_product
         product: trigger_histograms
+  differential_test: true
   test_name: write_trigger_histograms
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

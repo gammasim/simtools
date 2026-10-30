@@ -22,7 +22,7 @@ applications:
     - 2e6
     output_path: simtools-output
     run_number: 10
-    sim_telarray_random_instrument_instances: 100
+    random_instrument_instances: 100
     site: North
   integration_tests:
   - test_outputs:

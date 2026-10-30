@@ -4,32 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from simtools.simtel.segmentation import parse_segmentation_file, write_mirror_segmentation
+from simtools.simtel.segmentation import write_mirror_segmentation
 
 PARAMETER_NAME = "primary_mirror_segmentation"
 SCHEMA_VERSION = "0.2.0"
-
-
-def test_parse_segmentation_file_ignores_comments_and_commas(tmp_test_directory):
-    source = Path(tmp_test_directory) / "segments.dat"
-    source.write_text(
-        "# header\nRING, 2, 1, 2, 90, 0, 0.1 # trailing comment\n",
-        encoding="utf-8",
-    )
-
-    records = parse_segmentation_file(source, PARAMETER_NAME, SCHEMA_VERSION)
-
-    assert records == [
-        {
-            "kind": "ring",
-            "count": 2,
-            "r_min": {"value": 1.0, "unit": "cm"},
-            "r_max": {"value": 2.0, "unit": "cm"},
-            "dphi": {"value": 90.0, "unit": "deg"},
-            "phi0": {"value": 0.0, "unit": "deg"},
-            "gap": {"value": 0.1, "unit": "cm"},
-        }
-    ]
 
 
 def test_write_mirror_segmentation_serializes_all_supported_shapes(tmp_test_directory):
@@ -60,14 +38,6 @@ def test_write_mirror_segmentation_serializes_all_supported_shapes(tmp_test_dire
         "HEX 1 1.0 2.0 3.0 4.0",
         "POLYGON 1 5.0 0.0 0.0 1.0 0.0 0.0 1.0",
     ]
-
-
-def test_parse_segmentation_file_rejects_unknown_kind(tmp_test_directory):
-    source = Path(tmp_test_directory) / "segments.dat"
-    source.write_text("OCTAGON 1 0 0 1\n", encoding="utf-8")
-
-    with pytest.raises(ValueError, match="Unknown mirror segmentation kind"):
-        parse_segmentation_file(source, PARAMETER_NAME, SCHEMA_VERSION)
 
 
 def test_write_mirror_segmentation_rejects_path_traversal(tmp_test_directory):

@@ -41,3 +41,12 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 .. automodule:: layout.array_layout_utils
    :members:
 ```
+
+(array_layout_sources_module)=
+
+## array_layout_sources
+
+```{eval-rst}
+.. automodule:: layout.array_layout_sources
+   :members:
+```

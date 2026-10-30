@@ -2,7 +2,7 @@
 
 from operator import methodcaller
 
-from simtools.sim_events import output_validator
+from simtools.sim_events import validate_run_outputs
 from simtools.testing import assertions
 
 
@@ -20,7 +20,7 @@ def validate_product(path, product):
     """Validate one structured HDF5 product using its registered validator."""
     validator_name = f"validate_{product}_file"
     try:
-        methodcaller(validator_name, path)(output_validator)
+        methodcaller(validator_name, path)(validate_run_outputs)
     except AttributeError as exc:
         raise ValueError(f"Unsupported HDF5 product '{product}'.") from exc
     except TypeError as exc:

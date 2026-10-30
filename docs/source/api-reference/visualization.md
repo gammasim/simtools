@@ -41,6 +41,14 @@ the visualization module.
    :members:
 ```
 
+
+## plot_telescope_structure
+
+```{eval-rst}
+.. automodule:: visualization.plot_telescope_structure
+   :members:
+```
+
 ## plot_corsika_histograms
 
 (corsika-histograms-visualize-1)=
@@ -91,10 +99,10 @@ the visualization module.
    :members:
 ```
 
-## plot_signal_level_production_comparison
+## plot_production_comparison
 
 ```{eval-rst}
-.. automodule:: visualization.plot_signal_level_production_comparison
+.. automodule:: visualization.plot_production_comparison
    :members:
 ```
 
@@ -143,10 +151,10 @@ the visualization module.
    :members:
 ```
 
-## plot_event_level_production_comparison
+## plot_science_comparison
 
 ```{eval-rst}
-.. automodule:: visualization.plot_event_level_production_comparison
+.. automodule:: visualization.plot_science_comparison
    :members:
 ```
 

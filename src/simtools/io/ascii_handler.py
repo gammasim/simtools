@@ -12,7 +12,8 @@ import numpy as np
 import yaml
 
 from simtools.io import io_handler
-from simtools.utils.general import ensure_list, is_url
+from simtools.utils import general
+from simtools.utils.value_conversion import ensure_list
 
 _logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ def collect_data_from_file(file_name, yaml_document=None, test_resources_path=No
     data: dict or list
         Data as dict or list.
     """
-    if is_url(file_name):
+    if general.is_url(file_name):
         return collect_data_from_http(file_name)
 
     suffix = Path(file_name).suffix.lower()
@@ -238,28 +239,6 @@ def read_file_encoded_in_utf_or_latin(file_name):
             raise UnicodeDecodeError(exc.encoding, exc.object, exc.start, exc.end, msg) from exc
 
     return lines
-
-
-def is_utf8_file(file_name):
-    """
-    Check if a file is encoded in UTF-8.
-
-    Parameters
-    ----------
-    file_name: str, Path
-        Name of the file to be checked.
-
-    Returns
-    -------
-    bool
-        True if the file is encoded in UTF-8, False otherwise.
-    """
-    try:
-        with open(file_name, encoding="utf-8") as file:
-            file.read()
-        return True
-    except UnicodeDecodeError:
-        return False
 
 
 def write_data_to_file(

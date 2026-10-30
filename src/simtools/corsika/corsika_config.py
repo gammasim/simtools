@@ -7,17 +7,24 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 
-from simtools import settings
 from simtools.constants import CORSIKA_MAX_SEED
+from simtools.corsika.input_writer import format_parameter
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.simulation.configuration import get_model_writer
 from simtools.simulation.parameters import SimulationParameters
-from simtools.utils import general as gen
+from simtools.utils import value_conversion
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 from simtools.utils.random import seeds
+
+CALIBRATION_RUN_MODES = ["pedestals", "pedestals_dark", "pedestals_nsb_only", "direct_injection"]
+
+
+def _format_repository_entry(parameters_from_repository, name):
+    """Format a model repository CORSIKA parameter using its schema-declared format."""
+    entry = parameters_from_repository[name]
+    return format_parameter(name, entry["value"], entry["unit"])
 
 
 class CorsikaConfig:
@@ -39,7 +46,7 @@ class CorsikaConfig:
         Instance label.
     """
 
-    def __init__(self, array_model, run_number, label=None):
+    def __init__(self, array_model, run_number, label=None, context=None):
         """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
 
@@ -48,16 +55,16 @@ class CorsikaConfig:
         self.zenith_angle = self.azimuth_angle = None
         self.curved_atmosphere_min_zenith_angle = None
         self.run_number = run_number
-        self.primary_particle = settings.config.args  # see setter for primary_particle
-        self.use_curved_atmosphere = settings.config.args  # see setter for use_curved_atmosphere
-        self.run_mode = settings.config.args.get("run_mode")
+        self.context = context or array_model.context
+        self.primary_particle = self.context.args  # see setter for primary_particle
+        self.use_curved_atmosphere = self.context.args  # see setter for use_curved_atmosphere
+        self.run_mode = self.context.args.get("run_mode")
 
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
         self.array_model = array_model
-        self.corsika_exec = settings.config.corsika_exe
-        self.interaction_table_path = settings.config.corsika_interaction_table_path
-        self.config = self._fill_corsika_configuration(settings.config.args)
-        self._initialize_from_config(settings.config.args)
+        self.interaction_table_path = self.context.software.corsika_interaction_table_path
+        self.config = self._fill_corsika_configuration(self.context.args)
+        self._initialize_from_config(self.context.args)
 
     @property
     def simulation_parameters(self):
@@ -84,9 +91,6 @@ class CorsikaConfig:
     def primary_particle(self, args):
         """
         Set primary particle from input dictionary or CORSIKA 7 particle ID.
-
-        This is to make sure that when setting the primary particle,
-        we get the full PrimaryParticle object expected.
 
         Parameters
         ----------
@@ -129,29 +133,15 @@ class CorsikaConfig:
                 self._use_curved_atmosphere = False
 
     def _fill_corsika_configuration(self, args):
-        """
-        Fill CORSIKA configuration.
-
-        Dictionary keys are CORSIKA parameter names. Values are converted to
-        CORSIKA-consistent units.
-
-        Parameters
-        ----------
-        args: dict
-            Configuration dictionary.
-
-        Returns
-        -------
-        dict
-            Dictionary with CORSIKA parameters.
-        """
+        """Fill CORSIKA configuration (dictionary keys are CORSIKA parameter names)."""
         if args is None:
             return {}
 
-        config = {}
-        config["RUNNR"] = [self.run_number]
-        config["USER"] = [settings.config.user]
-        config["HOST"] = [settings.config.hostname]
+        config = {
+            "RUNNR": [self.run_number],
+            "USER": [self.context.activity.user],
+            "HOST": [self.context.activity.hostname],
+        }
         if self.is_calibration_run():
             config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations(args)
         elif args.get("corsika_file", None) is not None:
@@ -163,66 +153,51 @@ class CorsikaConfig:
 
         config.update(
             self._fill_corsika_configuration_from_repository(
-                gen.ensure_list(args.get("model_version"))
+                value_conversion.ensure_list(args.get("model_version"))
             )
         )
         return config
 
     def _fill_corsika_configuration_from_repository(self, model_versions):
         """Fill CORSIKA configuration from the model repository."""
-        config = {}
         # all following parameters require model repository
         if not model_versions:
-            return config
+            return {}
 
         # For multiple model versions, check that CORSIKA parameters are identical
         self.assert_corsika_configurations_match(model_versions)
-        model_version = model_versions[0]
-
         self._logger.debug(
-            f"Using model version {model_version} for CORSIKA parameters from the model repository"
+            f"Using model version {model_versions[0]} for CORSIKA parameters "
+            "from the model repository"
         )
         parameters_from_repository = self.array_model.site_model.get_simulation_software_parameters(
             "corsika"
         )
-
-        config["INTERACTION_FLAGS"] = self._corsika_configuration_interaction_flags(
-            parameters_from_repository
-        )
-        config["CHERENKOV_EMISSION_PARAMETERS"] = self._corsika_configuration_cherenkov_parameters(
-            parameters_from_repository
-        )
-        config["DEBUGGING_OUTPUT_PARAMETERS"] = self._corsika_configuration_debugging_parameters()
-        config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(
-            parameters_from_repository
-        )
-        return config
+        return {
+            "INTERACTION_FLAGS": self._corsika_configuration_interaction_flags(
+                parameters_from_repository
+            ),
+            "CHERENKOV_EMISSION_PARAMETERS": self._corsika_configuration_cherenkov_parameters(
+                parameters_from_repository
+            ),
+            "DEBUGGING_OUTPUT_PARAMETERS": self._corsika_configuration_debugging_parameters(),
+            "IACT_PARAMETERS": self._corsika_configuration_iact_parameters(
+                parameters_from_repository
+            ),
+        }
 
     def _initialize_from_config(self, args):
-        """
-        Initialize additional parameters either from command line args or from derived config.
-
-        Takes into account that in the case of a given CORSIKA input file, some parameters are read
-        from the file instead of the command line args.
-
-        Parameters
-        ----------
-        args: dict
-            Command line arguments.
-        """
-        self.primary_particle = int(self.config.get("USER_INPUT", {}).get("PRMPAR", [1])[0])
-        self.shower_events = int(self.config.get("USER_INPUT", {}).get("NSHOW", [0])[0])
-        self.mc_events = int(
-            self.shower_events * self.config.get("USER_INPUT", {}).get("CSCAT", [1])[0]
-        )
+        """Initialize azimuth, zenith and event numbers from command line args or the config."""
+        user_input = self.config.get("USER_INPUT", {})
+        self.primary_particle = int(user_input.get("PRMPAR", [1])[0])
+        self.shower_events = int(user_input.get("NSHOW", [0])[0])
+        self.mc_events = int(self.shower_events * user_input.get("CSCAT", [1])[0])
 
         if args.get("corsika_file", None) is not None:
-            azimuth = self._to_corsika_phi(
-                0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
-            )
-            zenith = 0.5 * (
-                self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1]
-            )
+            phip = self.config["USER_INPUT"]["PHIP"]
+            thetap = self.config["USER_INPUT"]["THETAP"]
+            azimuth = self._to_corsika_phi(0.5 * (phip[0] + phip[1]))
+            zenith = 0.5 * (thetap[0] + thetap[1])
         else:
             azimuth = args.get("azimuth_angle", 0.0 * u.deg).to("deg").value
             zenith = args.get("zenith_angle", 20.0 * u.deg).to("deg").value
@@ -251,26 +226,23 @@ class CorsikaConfig:
         if len(model_versions) < 2:
             return
 
-        parameters_from_repository_list = []
-
-        # Get parameters for all model versions
-        for model_version in model_versions:
-            model_parameters = ModelParameter(model_version=model_version)
-            parameters_from_repository_list.append(
-                model_parameters.get_simulation_software_parameters("corsika")
-            )
+        parameters_list = [
+            ModelParameter(
+                model_version=version, context=self.context
+            ).get_simulation_software_parameters("corsika")
+            for version in model_versions
+        ]
 
         # Parameters that can differ between model versions (e.g., i/o buffer size)
         skip_parameters = ["corsika_iact_io_buffer", "corsika_iact_split_auto"]
 
-        # Check if all parameters match
-        for i in range(len(parameters_from_repository_list) - 1):
-            for key in parameters_from_repository_list[i]:
+        for i in range(len(parameters_list) - 1):
+            for key in parameters_list[i]:
                 if key in skip_parameters:
                     continue
 
-                current_value = parameters_from_repository_list[i][key]["value"]
-                next_value = parameters_from_repository_list[i + 1][key]["value"]
+                current_value = parameters_list[i][key]["value"]
+                next_value = parameters_list[i + 1][key]["value"]
 
                 if current_value != next_value:
                     self._logger.warning(
@@ -285,18 +257,7 @@ class CorsikaConfig:
                     )
 
     def _corsika_configuration_for_dummy_simulations(self, args_dict):
-        """
-        Return CORSIKA configuration for dummy simulations.
-
-        Settings are such that that the simulations are fast
-        and none (or not many) Cherenkov photons are generated.
-        This is e.g. used for some calibration run modes in sim_telarray.
-
-        Returns
-        -------
-        dict
-            Dictionary with CORSIKA parameters for dummy simulations.
-        """
+        """Return fast CORSIKA settings with no or few Cherenkov photons (calibration runs)."""
         theta, phi = self._get_corsika_theta_phi(args_dict)
         self._logger.info("Using CORSIKA configuration for dummy simulations.")
         return {
@@ -312,32 +273,14 @@ class CorsikaConfig:
         }
 
     def _corsika_configuration_from_corsika_file(self, corsika_input_file):
-        """
-        Get CORSIKA configuration run header of provided input files.
-
-        Reads configuration from the run and event headers from the CORSIKA input file
-        (unfortunately quite fine tuned to the pycorsikaio run and event
-        header implementation).
-
-        Parameters
-        ----------
-        corsika_input_file : str, path
-            Path to the CORSIKA input file.
-
-        Returns
-        -------
-        dict
-            Dictionary with CORSIKA parameters from input file.
-        """
+        """Return CORSIKA run and event header settings from an existing CORSIKA input file."""
         run_header, event_header = file_info.get_corsika_run_and_event_headers(corsika_input_file)
         self._logger.debug(f"CORSIKA run header from {corsika_input_file}")
 
         def to_float32(value):
-            """Convert value to numpy float32."""
             return np.float32(value) if value is not None else 0.0
 
         def to_int32(value):
-            """Convert value to numpy int32."""
             return np.int32(value) if value is not None else 0
 
         if run_header["n_observation_levels"] > 0:
@@ -366,19 +309,7 @@ class CorsikaConfig:
         }
 
     def _corsika_configuration_from_user_input(self, args_dict):
-        """
-        Get CORSIKA configuration from user input.
-
-        Parameters
-        ----------
-        args_dict : dict
-            Configuration dictionary.
-
-        Returns
-        -------
-        dict
-            Dictionary with CORSIKA parameters.
-        """
+        """Return CORSIKA run settings from user input."""
         theta, phi = self._get_corsika_theta_phi(args_dict)
         return {
             "EVTNR": [args_dict["event_number_first_shower"]],
@@ -423,96 +354,62 @@ class CorsikaConfig:
         return theta, phi
 
     def _corsika_configuration_interaction_flags(self, parameters_from_repository):
-        """
-        Return CORSIKA interaction flags / parameters.
-
-        Parameters
-        ----------
-        parameters_from_repository : dict
-            CORSIKA parameters from the model repository.
-
-        Returns
-        -------
-        interaction_parameters : dict
-            Dictionary with CORSIKA interaction parameters.
-        """
+        """Return CORSIKA interaction flags and parameters."""
         parameters = {}
-        first_interaction_height = parameters_from_repository.get(
-            "corsika_first_interaction_height"
-        )
-        if first_interaction_height is not None:
-            parameters["FIXHEI"] = self._input_config_first_interaction_height(
-                first_interaction_height
+        if "corsika_first_interaction_height" in parameters_from_repository:
+            parameters["FIXHEI"] = _format_repository_entry(
+                parameters_from_repository, "corsika_first_interaction_height"
             )
+        grammage = parameters_from_repository["corsika_starting_grammage"]
         parameters["FIXCHI"] = [
-            self._input_config_corsika_starting_grammage(
-                parameters_from_repository["corsika_starting_grammage"]
+            format_parameter(
+                "corsika_starting_grammage",
+                self._get_starting_grammage_value(grammage["value"]),
+                grammage["unit"],
             )
         ]
         if not self.use_curved_atmosphere:
             parameters["TSTART"] = ["T"]
-        parameters["ECUTS"] = self._input_config_corsika_particle_kinetic_energy_cutoff(
-            parameters_from_repository["corsika_particle_kinetic_energy_cutoff"]
+        parameters["ECUTS"] = _format_repository_entry(
+            parameters_from_repository, "corsika_particle_kinetic_energy_cutoff"
         )
         parameters["MUADDI"] = ["F"]
         parameters["MUMULT"] = ["T"]
-        parameters["LONGI"] = self._input_config_corsika_longitudinal_parameters(
-            parameters_from_repository["corsika_longitudinal_shower_development"]
+        parameters["LONGI"] = _format_repository_entry(
+            parameters_from_repository, "corsika_longitudinal_shower_development"
         )
         parameters["MAXPRT"] = ["10"]
         parameters["ECTMAP"] = ["1.e6"]
-        transition_energy = settings.config.args.get("corsika_hadronic_transition_energy")
+        transition_energy = self.context.args.get("corsika_hadronic_transition_energy")
         if transition_energy is not None:
             parameters["HILOW"] = [transition_energy.to_value("GeV")]
 
-        if settings.config.corsika_interaction_models[0] == "epos":
+        if self.context.software.corsika_interaction_models[0] == "epos":
             parameters.update(self._epos_flags())
 
         self._logger.debug(f"Interaction parameters: {parameters}")
         return parameters
 
     def _epos_flags(self):
-        """EPOS interaction model flags."""
-        epos_par = {}
+        """Return EPOS interaction model flags."""
         epos_path = Path(self.interaction_table_path)
-        epos_par["EPOPAR fname pathnx"] = [f"{epos_path}/"]
+        flags = {"EPOPAR fname pathnx": [f"{epos_path}/"]}
         for epos_file in ["inics", "iniev", "inirj", "initl"]:
-            epos_par[f"EPOPAR fname {epos_file}"] = [str(epos_path / f"epos.{epos_file}")]
-        epos_par["EPOPAR fname hpf"] = [str(epos_path / "tables.dat")]
+            flags[f"EPOPAR fname {epos_file}"] = [str(epos_path / f"epos.{epos_file}")]
+        flags["EPOPAR fname hpf"] = [str(epos_path / "tables.dat")]
         for dummy_output in ["check", "histo", "data", "copy"]:
-            epos_par[f"EPOPAR fname {dummy_output}"] = ["none"]
-
-        return epos_par
-
-    def _input_config_first_interaction_height(self, entry):
-        """Return FIXHEI parameter CORSIKA format."""
-        return [f"{entry['value'] * u.Unit(entry['unit']).to('cm'):.2f}", "0"]
-
-    def _input_config_corsika_starting_grammage(self, entry):
-        """Return FIXCHI parameter CORSIKA format."""
-        value = self._get_starting_grammage_value(entry["value"])
-        return f"{value * u.Unit(entry['unit']).to('g/cm2')}"
+            flags[f"EPOPAR fname {dummy_output}"] = ["none"]
+        return flags
 
     def _get_starting_grammage_value(self, value_entry):
-        """
-        Get appropriate starting grammage value from entry values.
-
-        Parameters
-        ----------
-        value_entry : float or list
-            Value or list of grammage configurations
-
-        Returns
-        -------
-        float
-            Selected grammage value
-        """
+        """Return the starting grammage value selected for the primary particle and telescopes."""
         if not isinstance(value_entry, list):
             return value_entry
 
         tel_types = {tel.design_model for tel in self.array_model.telescope_models.values()}
-        particle = self.primary_particle.name
-        matched_values = self._get_matching_grammage_values(value_entry, tel_types, particle)
+        matched_values = self._get_matching_grammage_values(
+            value_entry, tel_types, self.primary_particle.name
+        )
 
         return min(matched_values) if matched_values else 0
 
@@ -530,77 +427,27 @@ class CorsikaConfig:
 
         return matched if matched else defaults
 
-    def _input_config_corsika_particle_kinetic_energy_cutoff(self, entry):
-        """Return ECUTS parameter CORSIKA format."""
-        e_cuts = entry["value"]
-        return [
-            (
-                f"{e_cuts[0] * u.Unit(entry['unit']).to('GeV')} "
-                f"{e_cuts[1] * u.Unit(entry['unit']).to('GeV')} "
-                f"{e_cuts[2] * u.Unit(entry['unit']).to('GeV')} "
-                f"{e_cuts[3] * u.Unit(entry['unit']).to('GeV')}"
-            )
-        ]
-
-    def _input_config_corsika_longitudinal_parameters(self, entry):
-        """Return LONGI parameter CORSIKA format."""
-        return ["T", f"{entry['value'] * u.Unit(entry['unit']).to('g/cm2')}", "F", "F"]
-
     def _corsika_configuration_cherenkov_parameters(self, parameters_from_repository):
-        """
-        Return CORSIKA Cherenkov emission parameters.
-
-        Parameters
-        ----------
-        parameters_from_repository : dict
-            CORSIKA parameters from the model repository.
-
-        Returns
-        -------
-        dict
-            Dictionary with CORSIKA Cherenkov emission parameters.
-        """
-        parameters = {}
-        parameters["CERSIZ"] = [
-            parameters_from_repository["corsika_cherenkov_photon_bunch_size"]["value"]
-        ]
-        parameters["CERFIL"] = "0"
-        parameters["CWAVLG"] = self._input_config_corsika_cherenkov_wavelength(
-            parameters_from_repository["corsika_cherenkov_photon_wavelength_range"]
-        )
+        """Return CORSIKA Cherenkov emission parameters."""
+        parameters = {
+            "CERSIZ": [parameters_from_repository["corsika_cherenkov_photon_bunch_size"]["value"]],
+            "CERFIL": "0",
+            "CWAVLG": _format_repository_entry(
+                parameters_from_repository, "corsika_cherenkov_photon_wavelength_range"
+            ),
+        }
         self._logger.debug(f"Cherenkov parameters: {parameters}")
         return parameters
 
-    def _input_config_corsika_cherenkov_wavelength(self, entry):
-        """Return CWAVLG parameter CORSIKA format."""
-        wavelength_range = entry["value"]
-        return [
-            f"{wavelength_range[0] * u.Unit(entry['unit']).to('nm')}",
-            f"{wavelength_range[1] * u.Unit(entry['unit']).to('nm')}",
-        ]
-
     def _corsika_configuration_iact_parameters(self, parameters_from_repository):
-        """
-        Return CORSIKA IACT parameters.
-
-        Parameters
-        ----------
-        parameters_from_repository : dict
-            CORSIKA parameters from the model repository.
-
-        Returns
-        -------
-        dict
-            Dictionary with CORSIKA IACT parameters.
-        """
-        parameters = {}
-        parameters["SPLIT_AUTO"] = [parameters_from_repository["corsika_iact_split_auto"]["value"]]
-        parameters["IO_BUFFER"] = [
-            self._input_config_io_buff(parameters_from_repository["corsika_iact_io_buffer"])
-        ]
-        parameters["MAX_BUNCHES"] = [
-            parameters_from_repository["corsika_iact_max_bunches"]["value"]
-        ]
+        """Return CORSIKA IACT parameters."""
+        parameters = {
+            "SPLIT_AUTO": [parameters_from_repository["corsika_iact_split_auto"]["value"]],
+            "IO_BUFFER": [
+                _format_repository_entry(parameters_from_repository, "corsika_iact_io_buffer")
+            ],
+            "MAX_BUNCHES": [parameters_from_repository["corsika_iact_max_bunches"]["value"]],
+        }
         self._logger.debug(f"IACT parameters: {parameters}")
         return parameters
 
@@ -613,42 +460,8 @@ class CorsikaConfig:
             "PAROUT": ["F", "F"],
         }
 
-    def _input_config_io_buff(self, entry):
-        """Return IO_BUFFER parameter CORSIKA format (Byte or MB required)."""
-        value = entry["value"] * u.Unit(entry["unit"]).to("Mbyte")
-        # check if value is integer-like
-        if value.is_integer():
-            return f"{int(value)}MB"
-        return f"{int(entry['value'] * u.Unit(entry['unit']).to('byte'))}"
-
     def _to_corsika_phi(self, az, correct_for_geomagnetic_field_alignment=True):
-        """
-        Convert geographic arrival azimuth to CORSIKA phi.
-
-        Geographic azimuth is measured clockwise from geographic North toward
-        East and specifies the direction from which the primary arrives.
-
-        CORSIKA phi specifies the direction toward which the primary propagates
-        and is measured in the CORSIKA shower frame. The basic conversion is
-
-            phi = 180 degrees - azimuth
-
-        modulo 360 degrees. If requested, the site's CORSIKA geomagnetic rotation
-        parameter is then added to account for the alignment of the CORSIKA shower
-        frame with geomagnetic North.
-
-        Parameters
-        ----------
-        az : float
-            Geographic arrival azimuth in degrees.
-        correct_for_geomagnetic_field_alignment : bool
-            If True, add the site's CORSIKA geomagnetic rotation.
-
-        Returns
-        -------
-        float
-            CORSIKA phi in degrees.
-        """
+        """Convert geographic arrival azimuth to CORSIKA phi (shower frame, plus site rotation)."""
         b_field_declination = 0
         if correct_for_geomagnetic_field_alignment:
             b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
@@ -685,26 +498,10 @@ class CorsikaConfig:
 
     @staticmethod
     def _get_text_single_line(pars, line_begin=""):
-        """
-        Return one parameter per line for each input parameter.
-
-        Parameters
-        ----------
-        pars: dict
-            Dictionary with the parameters to be written in the file.
-
-        Returns
-        -------
-        str
-            Text with the parameters.
-        """
+        """Return one line of CORSIKA card text per parameter."""
         text = ""
         for par, values in pars.items():
-            line = line_begin + par + " "
-            for v in values:
-                line += str(v) + " "
-            line += "\n"
-            text += line
+            text += line_begin + par + " " + "".join(str(v) + " " for v in values) + "\n"
         return text
 
     def _get_top_level_run_parameters(self):
@@ -729,18 +526,18 @@ class CorsikaConfig:
 
         with open(input_file, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
-            text_run_parameters = self._get_text_single_line(self._get_top_level_run_parameters())
-            file.write(text_run_parameters)
-            text_parameters = self._get_text_single_line(self.config["USER_INPUT"])
-            file.write(text_parameters)
+            file.write(self._get_text_single_line(self._get_top_level_run_parameters()))
+            file.write(self._get_text_single_line(self.config["USER_INPUT"]))
 
             file.write("\n* [ SITE PARAMETERS ]\n")
-            text_site_parameters = self._get_text_single_line(
-                self.array_model.site_model.get_corsika_site_parameters(
-                    config_file_style=True, model_directory=self.array_model.get_config_directory()
+            file.write(
+                self._get_text_single_line(
+                    self.array_model.site_model.get_corsika_site_parameters(
+                        config_file_style=True,
+                        model_directory=self.array_model.get_config_directory(),
+                    )
                 )
             )
-            file.write(text_site_parameters)
 
             file.write("\n* [ IACT ENV PARAMETERS ]\n")
             file.write(f"IACT setenv PRMNAME {self.primary_particle.name}\n")
@@ -751,23 +548,17 @@ class CorsikaConfig:
             self._write_seeds(file)
 
             file.write("\n* [ TELESCOPES ]\n")
-            telescope_list_text = self.get_corsika_telescope_list()
-            file.write(telescope_list_text)
+            file.write(self.get_corsika_telescope_list())
 
             file.write("\n* [ INTERACTION FLAGS ]\n")
-            text_interaction_flags = self._get_text_single_line(self.config["INTERACTION_FLAGS"])
-            file.write(text_interaction_flags)
+            file.write(self._get_text_single_line(self.config["INTERACTION_FLAGS"]))
             file.write(f"DATDIR {self.interaction_table_path}\n")
 
             file.write("\n* [ CHERENKOV EMISSION PARAMETERS ]\n")
-            text_cherenkov = self._get_text_single_line(
-                self.config["CHERENKOV_EMISSION_PARAMETERS"]
-            )
-            file.write(text_cherenkov)
+            file.write(self._get_text_single_line(self.config["CHERENKOV_EMISSION_PARAMETERS"]))
 
             file.write("\n* [ DEBUGGING OUTPUT PARAMETERS ]\n")
-            text_debugging = self._get_text_single_line(self.config["DEBUGGING_OUTPUT_PARAMETERS"])
-            file.write(text_debugging)
+            file.write(self._get_text_single_line(self.config["DEBUGGING_OUTPUT_PARAMETERS"]))
 
             file.write("\n* [ OUTPUT FILE ]\n")
             if use_multipipe:
@@ -776,11 +567,7 @@ class CorsikaConfig:
                 file.write(f"TELFIL {output_file.name}\n")
 
             file.write("\n* [ IACT TUNING PARAMETERS ]\n")
-            text_iact = self._get_text_single_line(
-                self.config["IACT_PARAMETERS"],
-                "IACT ",
-            )
-            file.write(text_iact)
+            file.write(self._get_text_single_line(self.config["IACT_PARAMETERS"], "IACT "))
             file.write("\nEXIT")
 
         # Write out the atmospheric transmission file to the model directory.
@@ -791,17 +578,8 @@ class CorsikaConfig:
         )
 
     def _write_seeds(self, file):
-        """
-        Generate and write seeds in the CORSIKA input file.
-
-        CORSIKA seeds consist of 4 integers.
-
-        Parameters
-        ----------
-        file: stream
-            File where the telescope positions will be written.
-        """
-        corsika_seeds = settings.config.args.get("corsika_seeds", False)
+        """Generate and write the four CORSIKA seeds to the input file."""
+        corsika_seeds = self.context.args.get("corsika_seeds", False)
         if not corsika_seeds:
             corsika_seeds = seeds(n_seeds=4, max_seed=CORSIKA_MAX_SEED)
         if len(corsika_seeds) != 4:
@@ -821,13 +599,11 @@ class CorsikaConfig:
         corsika_input_list = ""
         for telescope_name, telescope in self.array_model.telescope_models.items():
             positions = telescope.get_parameter_value_with_unit("array_element_position_ground")
+            sphere_radius = telescope.get_parameter_value_with_unit("telescope_sphere_radius")
             corsika_input_list += "TELESCOPE"
             for pos in positions:
                 corsika_input_list += f"\t {pos.to('cm').value:.3f}"
-            sphere_radius = telescope.get_parameter_value_with_unit("telescope_sphere_radius").to(
-                "cm"
-            )
-            corsika_input_list += f"\t {sphere_radius:.3f}"
+            corsika_input_list += f"\t {sphere_radius.to('cm'):.3f}"
             corsika_input_list += f"\t # {telescope_name}\n"
 
         return corsika_input_list
@@ -836,22 +612,12 @@ class CorsikaConfig:
         """
         Check if this simulation is a calibration run.
 
-        Parameters
-        ----------
-        run_mode: str
-            Run mode of the simulation.
-
         Returns
         -------
         bool
             True if it is a calibration run, False otherwise.
         """
-        return self.run_mode in [
-            "pedestals",
-            "pedestals_dark",
-            "pedestals_nsb_only",
-            "direct_injection",
-        ]
+        return self.run_mode in CALIBRATION_RUN_MODES
 
 
 def get_site_config_parameters(site_model, model_directory=None):
@@ -877,7 +643,10 @@ def get_site_config_parameters(site_model, model_directory=None):
         # We always use a custom profile by filename, so this has to be set to 99
         "ATMOSPHERE": [99, "Y"],
         "IACT ATMOFILE": [
-            model_directory / get_model_writer(site_model).get_atmospheric_profile_file_name()
+            model_directory
+            / get_model_writer(
+                site_model, context=site_model.context
+            ).get_atmospheric_profile_file_name()
         ],
         "MAGNET": [
             site_model.get_parameter_value("geomag_horizontal"),

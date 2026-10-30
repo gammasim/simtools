@@ -1,20 +1,21 @@
 """Execute one serialized job specification for a remote backend."""
 
 import argparse
+import inspect
+import json
 import logging
+import os
 import pickle
 import re
+import stat
 import subprocess
+import time
 import traceback
+from contextlib import ExitStack
 from pathlib import Path
 
-from simtools.application.model_reader import (
-    create_model_reader_from_configuration,
-    create_model_reader_from_source_config,
-)
-from simtools.io import io_handler
+from simtools.context import RunContext
 from simtools.job_execution.job import JobSpec
-from simtools.settings import config
 
 logger = logging.getLogger(__name__)
 
@@ -51,28 +52,101 @@ def _configure_worker_logging(log_file):
 
 def execute_job_spec(job_spec):
     """Execute one Python or command job specification."""
-    _initialize_runtime(job_spec)
+    context = _initialize_runtime(job_spec)
     if job_spec.initializer is not None:
         job_spec.initializer(*job_spec.initargs)
     if job_spec.function is not None:
+        if context is not None and "context" in inspect.signature(job_spec.function).parameters:
+            return job_spec.function(job_spec.item, context=context)
         return job_spec.function(job_spec.item)
-    return subprocess.run(list(job_spec.command), check=True).returncode
+    return execute_command(job_spec)[0]
+
+
+def execute_command(job_spec):
+    """Run a command job with its configured streams and environment.
+
+    Returns
+    -------
+    tuple
+        Return code, wall-clock runtime in seconds, and the captured standard output and
+        standard error (None unless captured).
+    """
+    command = job_spec.command
+    if isinstance(command, (str, Path)) and Path(command).is_file():
+        command_path = Path(command)
+        command_path.chmod(command_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+        command = str(command_path)
+    if job_spec.options.runtime_environment:
+        runtime = job_spec.options.runtime_environment
+        prefix = list(runtime) if isinstance(runtime, (tuple, list)) else [runtime]
+        command = [*prefix, command]
+    if job_spec.options.configuration:
+        args = _configuration_arguments(job_spec.options.configuration)
+        command = [command, *args] if isinstance(command, str) else [*command, *args]
+    environment = os.environ.copy()
+    environment.update(job_spec.options.env or {})
+    started = time.perf_counter()
+    with ExitStack() as streams:
+        stdin = job_spec.options.stdin
+        if isinstance(stdin, (str, Path)):
+            stdin = streams.enter_context(Path(stdin).open(encoding="utf-8"))
+        stdout = _stream(streams, job_spec.options.stdout, job_spec.options.capture_output)
+        stderr = _stream(streams, job_spec.options.stderr, job_spec.options.capture_output)
+        result = subprocess.run(
+            command,
+            shell=isinstance(command, str),
+            check=job_spec.options.check,
+            text=True,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            env=environment,
+        )
+    return (
+        result.returncode,
+        time.perf_counter() - started,
+        result.stdout if isinstance(result.stdout, str) else None,
+        result.stderr if isinstance(result.stderr, str) else None,
+    )
+
+
+def _stream(streams, path, capture_output):
+    """Return the subprocess stream for a log file (closed with ``streams``) or a pipe."""
+    if path is not None:
+        return streams.enter_context(Path(path).open("w", encoding="utf-8"))
+    return subprocess.PIPE if capture_output else None
+
+
+def _configuration_arguments(configuration):
+    """Convert application configuration to command-line arguments."""
+    arguments = []
+    for key, value in configuration.items():
+        if isinstance(value, bool):
+            if value:
+                arguments.append(f"--{key}")
+        elif isinstance(value, list):
+            arguments.extend(_list_arguments(key, value))
+        else:
+            arguments.extend((f"--{key}", str(value)))
+    return arguments
+
+
+def _list_arguments(key, value):
+    """Convert a list configuration value (JSON objects, repeated groups or values)."""
+    if not value:
+        return []
+    if isinstance(value[0], dict):
+        return [f"--{key}", json.dumps(value)]
+    if isinstance(value[0], list):
+        return [token for group in value for token in (f"--{key}", *(str(item) for item in group))]
+    return [f"--{key}", *(str(item) for item in value)]
 
 
 def _initialize_runtime(job_spec):
     """Restore the submitting application's runtime for function jobs."""
-    if job_spec.runtime_args is None:
-        return
-    config.load(job_spec.runtime_args)
-    if job_spec.model_source_config is not None:
-        model_reader = create_model_reader_from_source_config(job_spec.model_source_config)
-    else:
-        model_reader = create_model_reader_from_configuration(job_spec.runtime_args)
-    config.set_model_reader(model_reader)
-    io_handler.IOHandler().set_paths(
-        output_path=job_spec.runtime_args.get("output_path"),
-        model_path=job_spec.runtime_args.get("model_path"),
-    )
+    if job_spec.context_spec is None:
+        return None
+    return RunContext.from_spec(job_spec.context_spec)
 
 
 def write_job_payload(job_spec, path):

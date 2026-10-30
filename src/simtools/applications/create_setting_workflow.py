@@ -3,8 +3,6 @@
 
 from pathlib import Path
 
-import yaml
-
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import argument_helpers
 from simtools.configuration import arguments as cli
@@ -13,8 +11,6 @@ from simtools.data_model.setting_workflow import create_setting_workflow, run_se
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
-    resolve_sim_software_executables=False,
-    setup_io_handler=False,
     excluded_standard_arguments=("runtime_environment_file",),
     arguments=(
         cli.ArgumentDefinition(
@@ -25,7 +21,12 @@ APPLICATION = ApplicationDefinition.for_module(
         ),
         cli.ArgumentDefinition("parameter", required=True, help="Model parameter name."),
         cli.ArgumentDefinition("parameter_version", required=True, help="New parameter version."),
-        cli.ArgumentDefinition("value", required=True, help="Value, optionally with a unit."),
+        cli.ArgumentDefinition(
+            "value",
+            type=argument_helpers.string_or_list,
+            required=True,
+            help="Value or list of values, optionally with units.",
+        ),
         cli.ArgumentDefinition("description", required=True, help="Scientific reason or source."),
         cli.ArgumentDefinition(
             "site",
@@ -45,22 +46,22 @@ APPLICATION = ApplicationDefinition.for_module(
         ),
         cli.ArgumentDefinition("run", action="store_true", help="Run the prepared workflow."),
     ),
+    needs=("model",),
 )
 
 
 def main():
     """Prepare the workflow and report the files and production reference."""
     context = APPLICATION.start()
-    config_file = create_setting_workflow(context.args, context.model_reader)
+    config_file = create_setting_workflow(context.args, context.model_reader, context=context)
     context.logger.info(f"Prepared workflow: {config_file}")
     reference = _production_info_reference(context.args, config_file)
-    context.logger.info("info.yml entry:\n%s", yaml.safe_dump(reference, sort_keys=False))
     context.logger.info(
         "Add the following to the corresponding production-info file:\n%s",
         _production_info_text(reference),
     )
     if context.args.get("run"):
-        output = run_setting_workflow(config_file, context.args)
+        output = run_setting_workflow(config_file, context.args, context=context)
         context.logger.info(f"Results: {output}")
 
 

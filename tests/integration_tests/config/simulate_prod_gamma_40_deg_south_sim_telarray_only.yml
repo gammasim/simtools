@@ -15,8 +15,8 @@ applications:
     log_level: DEBUG
     model_version: 7.0.0
     output_path: simtools-output
-    sim_telarray_instrument_seed: 1745
-    sim_telarray_seed:
+    instrument_seed: 1745
+    simulation_seed:
     - 290
     simulation_software: sim_telarray
     site: South

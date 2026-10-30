@@ -82,7 +82,7 @@ pytest --no-cov -vv \
   --model_version 7.0.0 \
   --simulation_models_git_path ../simulation-models.git \
   --simulation_models_git_revision v0.17.2 \
-  'tests/integration_tests/test_applications_from_config.py::test_applications_from_config[simtools-docs-produce-array-element-report_run]'
+  'tests/integration_tests/test_applications_from_config.py::test_applications_from_config[simtools-docs-produce-reports_run0]'
 ```
 
 Filesystem and Git sources cannot be configured together. All model-dependent workflows use
@@ -236,3 +236,23 @@ subset, `key_columns` to compare rows in deterministic key order, `metadata`
 to include table metadata, and typed `filters` with operators such as `equal`,
 `less`, `greater_equal`, `in`, or `not_in`. Reference filtering never executes
 configuration text as code.
+
+## Differential output checks
+
+The pull-request differential job runs configurations marked with
+`differential_test: true` in their application entry against the merge base
+and the pull request, using the same model and test-resource revisions. The
+pull request's selection is used for both checkouts; a selected case missing
+from the merge base is an error. Its `diff_report.md` lists changed comparable
+files and up to 20 differences per file. ECSV, FITS, HDF5, JSON, and YAML
+outputs are compared by their contents. Generated activity and product identifiers,
+timestamps, temporary test paths in provenance, and the simtools software version
+are normalized. Other metadata and scientific values remain significant. Temporary
+test configuration files and logs are ignored. Binary outputs are reported by presence and size
+for context and do not fail the job. Comparison errors cannot be approved with
+the `expected-output-change` label.
+
+Review every reported difference to determine whether it changes an expected
+scientific product. Add the `expected-output-change` pull-request label when
+the output change is intentional; the report remains available in the job
+summary and artifact. The job is informational and is not a required check.

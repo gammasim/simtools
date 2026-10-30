@@ -70,6 +70,7 @@ simulation_software:
       row_sort_keys: [mirror_panel_id]
       float_format: ".12g"
       write_comments: false
+  - name: obdeect
 ---
 title: Schema for mirror_list model parameter
 schema_version: 0.1.0

@@ -29,13 +29,15 @@ def test_main_generates_job_grid(mock_start, mock_metadata_collector, mock_gener
         "output_file": "job_grid.ecsv",
         "run_number_offset": 10,
     }
-    mock_start.return_value = SimpleNamespace(args=args, io_handler=io_handler)
+    mock_start.return_value = SimpleNamespace(args=args, paths=io_handler)
     metadata = {"cta": {"activity": {"name": "production_generate_grid"}}}
     mock_metadata_collector.return_value.get_top_level_metadata.return_value = metadata
     app.main()
 
-    mock_metadata_collector.assert_called_once_with(args)
-    mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"), metadata=metadata)
+    mock_metadata_collector.assert_called_once_with(args, context=mock_start.return_value)
+    mock_generate_job_grid.assert_called_once_with(
+        args, Path("job_grid.ecsv"), metadata=metadata, context=mock_start.return_value
+    )
     mock_start.assert_called_once_with()
 
 

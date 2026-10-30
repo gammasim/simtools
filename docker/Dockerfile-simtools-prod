@@ -47,6 +47,7 @@ WORKDIR /workdir
 
 COPY LICENSE README.md dependency_versions.yml pyproject.toml /workdir/simtools/
 COPY src /workdir/simtools/src
+COPY .github/scripts/install_python_dependencies.sh /workdir/install_python_dependencies.sh
 
 ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
 ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
@@ -59,9 +60,9 @@ ENV SIMTOOLS_SIMTEL_IMAGE=${SIMTEL_IMAGE}
 # hadolint ignore=DL4006
 RUN python"${PYTHON_VERSION}" -m venv env \
   && . env/bin/activate \
-  && python -m pip install --no-cache-dir --upgrade pip \
   && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_GAMMASIMTOOLS="${SIMTOOLS_VERSION}" \
-    pip install --no-cache-dir '/workdir/simtools' \
+    bash /workdir/install_python_dependencies.sh --no-cache-dir '/workdir/simtools[obdeect]' \
+  && rm /workdir/install_python_dependencies.sh \
   && SIMTOOLS_CONTAINER_BUILD=1 simtools-dependency-manifest \
   && pip cache purge && rm -rf /root/.cache \
   && mkdir -p /opt/simtools/provenance \

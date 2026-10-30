@@ -6,12 +6,19 @@ from unittest.mock import Mock
 import astropy.units as u
 import pytest
 
-from simtools import settings
+from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.model.array_model import ArrayModel
-from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.model_writer import SimtelModelWriter
 from simtools.simulation.configuration import get_model_writer
 
+_NORTH = "North"
+_NSB_FLUX = "get_nsb_integrated_flux"
+_ARGS = "_args"
+_ZENITH_ANGLE = "zenith_angle"
+_AZIMUTH_ANGLE = "azimuth_angle"
+_PROTON = "proton"
+_PRIMARY = "primary"
+_PDGID = "PDGID"
 GLOBAL_FILE_PARAMETER = "iobuf_maximum"
 
 
@@ -22,15 +29,17 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     mock_writer = mocker.Mock()
     mock_writer.write_telescope_config_file = mocker.Mock()
 
-    mock_export = mocker.patch.object(TelescopeModel, "export_model_files")
+    mock_export = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
     mock_load_writer = mocker.patch.object(
         exporter,
         "_load_simtel_config_writer",
         side_effect=lambda *args, **kwargs: setattr(exporter, "config_writer", mock_writer),
     )
 
-    telescope_copy.write_sim_telarray_config_file()
-    mock_export.assert_called_once_with(update_if_necessary=True)
+    exporter.write_sim_telarray_config_file()
+    mock_export.assert_any_call(
+        parameters=telescope_copy.parameters, dest=telescope_copy.config_file_directory
+    )
     mock_load_writer.assert_called_once_with(label="test-telescope-model-lst")
     mock_writer.write_telescope_config_file.assert_called_once()
 
@@ -40,9 +49,9 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
 
     add_model = copy.deepcopy(telescope_model_lst)
     add_model.parameters = {"test_param": "test_value"}
+    mocker.patch.object(add_model.model_reader, "export_model_files")
 
-    telescope_copy.write_sim_telarray_config_file(additional_models=add_model)
-    assert mock_export.call_count == 2  # Called for both models
+    exporter.write_sim_telarray_config_file(additional_models=add_model)
     mock_load_writer.assert_called_once_with(label="test-telescope-model-lst")
     assert "test_param" not in telescope_copy.parameters
     assert (
@@ -50,8 +59,6 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
         == "test_value"
     )
     mock_writer.write_telescope_config_file.assert_called_once()
-
-    mock_export.assert_any_call(telescope_copy.config_file_directory, update_if_necessary=True)
 
 
 def test_write_sim_telarray_config_file_exports_software_parameter_assets(
@@ -66,7 +73,6 @@ def test_write_sim_telarray_config_file_exports_software_parameter_assets(
         "get_simulation_software_parameters",
         return_value=software_parameters,
     )
-    mocker.patch.object(TelescopeModel, "export_model_files")
     mock_export = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
     mock_writer = mocker.Mock()
     exporter = get_model_writer(telescope_copy)
@@ -76,7 +82,7 @@ def test_write_sim_telarray_config_file_exports_software_parameter_assets(
         side_effect=lambda *args, **kwargs: setattr(exporter, "config_writer", mock_writer),
     )
 
-    telescope_copy.write_sim_telarray_config_file()
+    exporter.write_sim_telarray_config_file()
 
     mock_export.assert_any_call(
         parameters={parameter_name: parameter}, dest=telescope_copy.config_file_directory
@@ -90,7 +96,6 @@ def test_write_sim_telarray_config_file_exports_nsb_correction_file(telescope_mo
         "correct_nsb_spectrum_to_telescope_altitude"
     ] = {"value": "correction.ecsv"}
 
-    mocker.patch.object(TelescopeModel, "export_model_files")
     mock_export_nsb = mocker.patch.object(
         exporter, "export_nsb_spectrum_to_telescope_altitude_correction_file"
     )
@@ -101,7 +106,7 @@ def test_write_sim_telarray_config_file_exports_nsb_correction_file(telescope_mo
         side_effect=lambda *args, **kwargs: setattr(exporter, "config_writer", mock_writer),
     )
 
-    telescope_copy.write_sim_telarray_config_file()
+    exporter.write_sim_telarray_config_file()
 
     mock_export_nsb.assert_called_once_with(model_directory=telescope_copy.config_file_directory)
 
@@ -113,7 +118,7 @@ def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model
         "value": "correction-1.0.0.ecsv",
         "parameter_version": "1.0.0",
         "instrument": "LSTS-design",
-        "site": "North",
+        "site": _NORTH,
     }
     telescope_copy._simulation_config_parameters["sim_telarray"][parameter_name] = parameter
     mock_export = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
@@ -124,7 +129,7 @@ def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model
         "simtools.simtel.model_writer.table_serializers.write_simtel_table"
     )
 
-    telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(
+    get_model_writer(telescope_copy).export_nsb_spectrum_to_telescope_altitude_correction_file(
         model_directory=telescope_copy.config_file_directory
     )
 
@@ -132,7 +137,7 @@ def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model
     assert exported["parameter"] == parameter_name
     assert exported["parameter_version"] == "1.0.0"
     assert exported["instrument"] == "LSTS-design"
-    assert exported["site"] == "North"
+    assert exported["site"] == _NORTH
     assert exported["file"] is True
     mock_table.assert_called_once_with(exported)
     mock_write_table.assert_called_once()
@@ -162,15 +167,13 @@ def test_add_additional_models(telescope_model_lst, mocker):
         GLOBAL_FILE_PARAMETER: global_parameter,
         "min_photons": {"value": 3},
     }
-    mock_model.export_model_files = mocker.Mock()
 
     exporter._add_additional_models(mock_model, parameters)
     assert "new_param" in parameters
     assert parameters["new_param"] == "new_value"
     assert parameters[GLOBAL_FILE_PARAMETER] == global_parameter
     assert "min_photons" not in parameters
-    mock_model.export_model_files.assert_called_once()
-    mock_model.model_reader.export_model_files.assert_called_once_with(
+    mock_model.model_reader.export_model_files.assert_any_call(
         parameters={GLOBAL_FILE_PARAMETER: global_parameter},
         dest=telescope_copy.config_file_directory,
     )
@@ -186,31 +189,59 @@ def test_add_additional_models(telescope_model_lst, mocker):
     assert parameters["param2"] == "value2"
 
 
-def test_get_additional_simtel_metadata(array_model_north, mocker):
+def test_get_additional_simtel_metadata(array_model_north, mocker, run_context):
     array_model_north_cp = copy.deepcopy(array_model_north)
-    mocker.patch.object(
-        array_model_north_cp.site_model, "get_nsb_integrated_flux", return_value=42.0
-    )
-    mocker.patch.object(
-        settings.config,
-        "_args",
-        {
-            "primary": "gamma",
-            "azimuth_angle": 180.0 * u.deg,
-            "zenith_angle": 20.0 * u.deg,
+    mocker.patch.object(array_model_north_cp.site_model, _NSB_FLUX, return_value=42.0)
+    array_model_north_cp.context = run_context.replace(
+        args={
+            "site": _NORTH,
+            _PRIMARY: "gamma",
+            _AZIMUTH_ANGLE: 180.0 * u.deg,
+            _ZENITH_ANGLE: 20.0 * u.deg,
             "ha": 0.0 * u.deg,
             "dec": 30.0 * u.deg,
-        },
+        }
     )
 
     metadata = get_model_writer(array_model_north_cp)._get_additional_simtel_metadata()
 
     assert metadata["nsb_integrated_flux"] == pytest.approx(42.0)
-    assert metadata["primary"] == "gamma"
-    assert metadata["azimuth_angle"] == pytest.approx(180.0)
-    assert metadata["zenith_angle"] == pytest.approx(20.0)
+    assert metadata[_PRIMARY] == "gamma"
+    assert metadata[_AZIMUTH_ANGLE] == pytest.approx(180.0)
+    assert metadata[_ZENITH_ANGLE] == pytest.approx(20.0)
     assert metadata["ha_angle"] == pytest.approx(0.0)
     assert metadata["dec_angle"] == pytest.approx(30.0)
+    assert metadata["INSTRUME"] == "CTAO-North"
+    assert metadata[_PDGID] == 22
+
+
+def test_metadata_from_corsika_input_uses_shower_parameters(array_model_north, mocker, run_context):
+    model = copy.deepcopy(array_model_north)
+    mocker.patch.object(model.site_model, _NSB_FLUX, return_value=42.0)
+    model.context = run_context.replace(
+        args={
+            "site": _NORTH,
+            "corsika_file": "showers.iact",
+            _PRIMARY: None,
+            _ZENITH_ANGLE: 5 * u.deg,
+            _AZIMUTH_ANGLE: 10 * u.deg,
+        }
+    )
+    reader = mocker.patch("simtools.simtel.model_writer.get_reader").return_value
+    reader.read_simulation_parameters.return_value = {
+        "primary_particle": PrimaryParticle("common_name", _PROTON),
+        _ZENITH_ANGLE: 30.0,
+        _AZIMUTH_ANGLE: 120.0,
+    }
+
+    metadata = get_model_writer(model)._get_additional_simtel_metadata()
+
+    assert metadata[_PDGID] == 2212
+    assert metadata[_PRIMARY] == _PROTON
+    assert metadata["SIMZEN"] == pytest.approx(30.0)
+    assert metadata["SIMAZ"] == pytest.approx(120.0)
+    assert metadata[_ZENITH_ANGLE] == pytest.approx(30.0)
+    assert metadata[_AZIMUTH_ANGLE] == pytest.approx(120.0)
 
 
 def test_export_all_simtel_config_files(mocker):
@@ -233,18 +264,21 @@ def test_export_simtel_telescope_config_files(array_model_north):
     am = array_model_north
 
     for tel_model in am.telescope_models.values():
-        tel_model.write_sim_telarray_config_file = Mock()
+        tel_model.configuration_writers = {"sim_telarray": Mock()}
 
     am.export_simtel_telescope_config_files()
 
     for tel_model in am.telescope_models.values():
-        tel_model.write_sim_telarray_config_file.assert_called_once()
+        tel_model.configuration_writers[
+            "sim_telarray"
+        ].write_sim_telarray_config_file.assert_called_once()
 
     assert get_model_writer(am)._telescope_model_files_exported is True
 
 
-def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
+def test_export_simtel_telescope_config_files_skips_duplicates(mocker, run_context):
     am = Mock(spec=ArrayModel)
+    am.context = run_context
     am._logger = Mock()
     am.configuration_writers = {}
     am.calibration_models = {}
@@ -252,19 +286,23 @@ def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
     # Create two telescope objects with the same name
     tel_model_1 = Mock()
     tel_model_1.name = "LST_1"
-    tel_model_1.write_sim_telarray_config_file = Mock()
+    tel_model_1.configuration_writers = {"sim_telarray": Mock()}
 
     tel_model_2 = Mock()
     tel_model_2.name = "LST_1"  # Same name as tel_model_1
-    tel_model_2.write_sim_telarray_config_file = Mock()
+    tel_model_2.configuration_writers = {"sim_telarray": Mock()}
 
     am.telescope_models = {"LSTN-01": tel_model_1, "LSTN-02": tel_model_2}
 
     ArrayModel.export_simtel_telescope_config_files(am)
 
     # Verify write was called only once (for the first telescope with this name)
-    tel_model_1.write_sim_telarray_config_file.assert_called_once()
-    tel_model_2.write_sim_telarray_config_file.assert_not_called()
+    tel_model_1.configuration_writers[
+        "sim_telarray"
+    ].write_sim_telarray_config_file.assert_called_once()
+    tel_model_2.configuration_writers[
+        "sim_telarray"
+    ].write_sim_telarray_config_file.assert_not_called()
 
     # Verify the logger was called for the second telescope
     # Both telescope entries share one configuration file.
@@ -274,7 +312,7 @@ def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
 
 def test_export_sim_telarray_config_file(array_model_north, mocker):
     am = array_model_north
-    mocker.patch.object(am.site_model, "export_model_files")
+    mocker.patch.object(am.site_model.model_reader, "export_model_files")
 
     mock_simtel_writer = mocker.MagicMock()
     mocker.patch(
@@ -290,7 +328,7 @@ def test_export_sim_telarray_config_file(array_model_north, mocker):
     am.export_sim_telarray_config_file()
 
     # Verify site model export was called
-    am.site_model.export_model_files.assert_called_once()
+    am.site_model.model_reader.export_model_files.assert_called_once()
 
     # Verify SimtelConfigWriter was instantiated with correct parameters
     mock_simtel_writer.write_array_config_file.assert_called_once()

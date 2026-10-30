@@ -3,156 +3,137 @@ from pathlib import Path
 import pytest
 import yaml
 
-from simtools.science_tests import definitions as science_test_definitions
-from simtools.science_tests import execution as science_test_execution
+from simtools.science_tests import definitions as defs
+from simtools.science_tests import execution
 
-_WORKFLOW_FILE_NAME = "workflow.yml"
-_METRICS_FILE_NAME = "metrics.json"
-_SCIENCE_REPORT_METRICS_PATH = f"__SCIENCE_REPORT_PATH__/{_METRICS_FILE_NAME}"
+ACCEPTANCE = "acceptance"
+APPLICATION = "application"
+COMPARE = "compare"
+COMPARE_YML = "compare.yml"
+COMPARISON = "comparison"
+CONFIGURATION = "configuration"
+CONTEXT_FILE = "context_file"
+DERIVE = "derive"
+OUTPUT_PATH = "output_path"
+RELEASE_DIR = "release_dir"
+SIMTOOLS_COMPARE_PRODUCTIONS = "simtools-compare-productions"
+SITES_KEY = "sites"
+TESTS = "tests"
+UTF_8 = "utf-8"
+WORKFLOW = "workflow"
+
+WORKFLOW_FILE = "workflow.yml"
+METRICS_FILE = "metrics.json"
+REPORT_METRICS = f"{defs.REPORT_PATH}/{METRICS_FILE}"
+SITES = ["north", "south"]
+LIGHT = "release-light"
 
 
-def _write_yaml(path, data):
+def write_yaml(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(data), encoding="utf-8")
+    path.write_text(yaml.safe_dump(data), encoding=UTF_8)
+    return path
 
 
-def _skip_comparison_input_validation(_applications, _production_paths):
-    """Keep science execution unit tests independent of production metadata trees."""
+def workflow(*applications, **extra):
+    return {
+        "schema_version": "0.7.0",
+        "schema_name": "application_workflow.metaschema",
+        "applications": list(applications),
+        **extra,
+    }
 
 
 @pytest.fixture(autouse=True)
-def mock_comparison_input_validation(monkeypatch):
-    """Mock production metadata validation while testing science orchestration."""
-    monkeypatch.setattr(
-        science_test_execution,
-        "_validate_comparison_inputs",
-        _skip_comparison_input_validation,
-    )
+def skip_comparison_input_validation(monkeypatch):
+    """Keep orchestration tests independent of production metadata trees."""
+    monkeypatch.setattr(execution, "validate_comparison_inputs", lambda *_args: None)
 
 
 @pytest.fixture
 def campaign(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    release = root / "release"
-    template = root / "science-test-template"
-    _write_yaml(
-        release / "release.yml",
-        {
-            "release_label": "candidate",
-            "baseline": "baseline",
-            "required_sites": ["north", "south"],
-        },
+    """Release with a 'derive' test and a 'compare' test reading baseline products."""
+    root = Path(tmp_test_directory) / "campaign"
+    release = root / "v2" / "science_tests"
+    template = root / defs.TEMPLATE_DIRECTORY
+    write_yaml(
+        release / defs.RELEASE_FILE,
+        {"release_label": "v2", "baseline": "v1", "required_sites": SITES, "model_version": "7"},
     )
-    for site in ("north", "south"):
-        _write_yaml(
-            release / "sites" / f"{site}.yml",
-            {
-                "site": site,
-                "array_layout_name": f"CTAO-{site.title()}-Alpha",
-                "required_tests": ["compare"],
-            },
+    for site in SITES:
+        write_yaml(
+            template / SITES_KEY / f"{site}.yml",
+            {"site": site, "array_layout_name": f"CTAO-{site}", "required_tests": [COMPARE]},
         )
-    _write_yaml(
+    write_yaml(
         template / "catalogue.yml",
         {
-            "tests": {
-                "derive": {
-                    "workflow": _WORKFLOW_FILE_NAME,
-                    "tier": "release-light",
-                    "sites": ["north", "south"],
-                },
-                "compare": {
-                    "workflow": _WORKFLOW_FILE_NAME,
-                    "tier": "release-light",
-                    "sites": ["north", "south"],
-                    "depends_on": ["derive"],
-                    "acceptance_rule": "comparison",
+            TESTS: {
+                DERIVE: {WORKFLOW: WORKFLOW_FILE, "tier": LIGHT, SITES_KEY: SITES},
+                COMPARE: {
+                    WORKFLOW: COMPARE_YML,
+                    "tier": LIGHT,
+                    SITES_KEY: SITES,
+                    "depends_on": [DERIVE],
+                    "acceptance_rule": COMPARISON,
                 },
             }
         },
     )
-    _write_yaml(
-        template / _WORKFLOW_FILE_NAME,
-        {
-            "schema_version": "0.7.0",
-            "schema_name": "application_workflow.metaschema",
-            "applications": [
-                {
-                    "application": "simtools-compare-productions",
-                    "configuration": {"output_path": "__SCIENCE_REPORT_PATH__"},
-                }
-            ],
-            "collection": {
-                "output_path": "__SCIENCE_COLLECTION_PATH__",
-                "files": [_METRICS_FILE_NAME],
-                "write_inventory": False,
-                "preserve_relative_paths": True,
-            },
+    application = {
+        APPLICATION: SIMTOOLS_COMPARE_PRODUCTIONS,
+        CONFIGURATION: {OUTPUT_PATH: defs.REPORT_PATH},
+    }
+    write_yaml(template / WORKFLOW_FILE, workflow(application))
+    baseline_application = {
+        APPLICATION: SIMTOOLS_COMPARE_PRODUCTIONS,
+        CONFIGURATION: {
+            OUTPUT_PATH: defs.REPORT_PATH,
+            "baseline_path": defs.BASELINE_SITE_PATH,
         },
+    }
+    write_yaml(template / COMPARE_YML, workflow(baseline_application))
+    write_yaml(
+        template / ACCEPTANCE / "expected-products.yml",
+        {TESTS: {DERIVE: [REPORT_METRICS], COMPARE: [REPORT_METRICS]}},
     )
-    _write_yaml(
-        template / "acceptance" / "expected-products.yml",
-        {
-            "tests": {
-                "derive": [_SCIENCE_REPORT_METRICS_PATH],
-                "compare": [_SCIENCE_REPORT_METRICS_PATH],
-            }
-        },
-    )
-    _write_yaml(
-        template / "acceptance" / "thresholds.yml",
+    write_yaml(
+        template / ACCEPTANCE / "thresholds.yml",
         {
             "rules": {
-                "comparison": {
+                COMPARISON: {
                     "mode": "advisory",
-                    "metrics": [
-                        {
-                            "file": _SCIENCE_REPORT_METRICS_PATH,
-                            "key": "count",
-                            "minimum": 2,
-                        }
-                    ],
-                },
+                    "metrics": [{"file": REPORT_METRICS, "key": "count", "minimum": 2}],
+                }
             }
         },
     )
-    context = root / "context.yml"
-    _write_yaml(
-        context,
+    context = write_yaml(
+        release / defs.CONTEXT_FILE,
         {
-            key: str(root / name)
-            for key, name in zip(
-                science_test_definitions._PATH_KEYS, ("candidate", "baseline", "reference")
-            )
+            defs.CANDIDATE_PATH: str(root / "data" / "v2"),
+            defs.BASELINE_PATH: str(root / "data" / "v1"),
+            defs.PRODUCTION_CONFIGURATION_PATH: str(root / "data" / "production"),
         },
     )
-    return {"release_dir": release, "template_dir": template, "context_file": context}
+    return {RELEASE_DIR: release, "template_dir": template, CONTEXT_FILE: context}
+
+
+@pytest.fixture
+def bundle(campaign):
+    return defs.load_release(campaign[RELEASE_DIR], context_file=campaign[CONTEXT_FILE])
 
 
 @pytest.fixture
 def successful_workflow(monkeypatch):
+    """Replace workflow execution by writing the expected metrics product."""
     calls = []
 
-    def execute(args, replacements):
-        from simtools.runners.simtools_runner import _copy_collection_files
-
-        calls.append(replacements["__SCIENCE_SITE_KEY__"])
-        output = Path(replacements["__SCIENCE_REPORT_PATH__"])
+    def run(args, replacements):
+        calls.append((replacements["__SCIENCE_SITE_KEY__"], args["config_file"]))
+        output = Path(replacements[defs.REPORT_PATH])
         output.mkdir(parents=True, exist_ok=True)
-        (output / _METRICS_FILE_NAME).write_text('{"count": 3}', encoding="utf-8")
-        _copy_collection_files(
-            [{"configuration": {"output_path": str(output)}}],
-            {
-                "output_path": replacements["__SCIENCE_COLLECTION_PATH__"],
-                "files": [_METRICS_FILE_NAME],
-                "write_inventory": False,
-            },
-        )
+        (output / METRICS_FILE).write_text('{"count": 3}', encoding=UTF_8)
 
-    monkeypatch.setattr(science_test_execution, "run_applications", execute)
+    monkeypatch.setattr(execution, "run_applications", run)
     return calls
-
-
-@pytest.fixture
-def write_science_yaml():
-    return _write_yaml

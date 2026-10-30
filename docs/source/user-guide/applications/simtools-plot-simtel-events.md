@@ -57,8 +57,8 @@ output_file (str, optional)
     If omitted, uses input file stem.
 save_pngs (flag, optional)
     Also save individual PNG files per plot.
-dpi (int, optional)
-    Resolution for PNG outputs. Default: 300.
+figure_dpi (int, optional)
+    Resolution for PNG outputs (alias: ``dpi``). Default: 300.
 output_path (str, optional)
     Directory for output files.
 
@@ -78,7 +78,7 @@ output_path (str, optional)
      --simtel_file run000010.simtel.zst \\
      --telescope MSTN-01 \\
      --plots all \\
-     --save_pngs --dpi 200
+     --save_pngs --figure_dpi 200
 
 3) Plot specific events:
 

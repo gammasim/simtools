@@ -27,7 +27,7 @@ def test_hdf5_validators_dispatch(mocker):
     required.assert_called_once_with(path, ["DATA"])
     minimum.assert_called_once_with(path, {"DATA": 1})
     product = mocker.patch(
-        "simtools.testing.output_validation.hdf5.output_validator.validate_reduced_event_data_file"
+        "simtools.testing.output_validation.hdf5.validate_run_outputs.validate_reduced_event_data_file"
     )
     hdf5.validate_product(path, "reduced_event_data")
     product.assert_called_once_with(path)
@@ -37,7 +37,7 @@ def test_hdf5_validators_dispatch(mocker):
 
 def test_validate_product_rejects_non_callable_validator(mocker):
     """Reject a registered HDF5 product whose validator is not callable."""
-    mocker.patch.object(hdf5.output_validator, "validate_broken_file", None, create=True)
+    mocker.patch.object(hdf5.validate_run_outputs, "validate_broken_file", None, create=True)
 
     with pytest.raises(ValueError, match="not callable"):
         hdf5.validate_product(Path("output.hdf5"), "broken")

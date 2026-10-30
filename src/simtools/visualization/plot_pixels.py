@@ -1,18 +1,18 @@
 #!/usr/bin/python3
-"""Functions for plotting pixel layout information."""
+"""Functions for plotting pixel layout information.
+
+The camera (``simtools.model.camera.Camera``) and its raw pixel data are built by the caller,
+so this module does not import the model package.
+"""
 
 import logging
 from copy import deepcopy
-from pathlib import Path
 
 import astropy.units as u
 import numpy as np
 
-from simtools.application.model_reader import require_model_reader
-from simtools.io import io_handler
-from simtools.model.camera import Camera
-from simtools.model.model_utils import is_two_mirror_telescope
 from simtools.utils import names
+from simtools.utils.names import is_two_mirror_telescope
 from simtools.visualization import visualize
 from simtools.visualization.camera_plot_utils import (
     add_pixel_legend,
@@ -25,80 +25,56 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 logger = logging.getLogger(__name__)
 
 
-def plot(config, output_file, model_reader=None):
+def plot(output_file, camera, raw_pixels, *, rotate_angle=None, pixels_id_to_print=80):
     """
-    Plot pixel layout based on configuration.
+    Plot a pixel layout and save it to file.
 
     Parameters
     ----------
-    config : dict
-        Configuration dictionary containing:
-        - file_name : str, name of camera config file
-        - column_x : str, x-axis label
-        - column_y : str, y-axis label
-        - parameter_version: str, version of the parameter
-        - telescope : str, name of the telescope
-        - focal_length : float, optional focal length for Camera initialization
-        - rotate_angle : astropy.units.Quantity, optional rotation angle to apply (default 0 deg)
-    output_file : str
-        Path where to save the plot
-
-    Returns
-    -------
-    None
-        The function saves the plot to the specified output file.
+    output_file : str or Path
+        Path where to save the plot.
+    camera : Camera
+        Camera with pixel geometry (``pixels``, ``telescope_name``, ``get_edge_pixels``).
+    raw_pixels : dict
+        Unrotated pixel data with keys ``x``, ``y`` and ``rotate_angle`` (radians).
+    rotate_angle : astropy.units.Quantity, optional
+        Rotation applied to the telescope-specific pixel transform (default: from raw_pixels).
+    pixels_id_to_print : int, optional
+        Pixel IDs below this value are printed.
     """
-    model_reader = require_model_reader(model_reader)
-    output_directory = io_handler.IOHandler().get_output_directory()
-    plot_kwargs = {
-        "pixels_id_to_print": 80,
-        "focal_length": config.get("focal_length", 1.0),
-    }
-    if config.get("rotate_angle") is not None:
-        plot_kwargs["rotate_angle"] = config.get("rotate_angle")
-
-    if config["parameter"] == "camera_pixel_layout":
-        parameters = model_reader.get_model_parameters(
-            site=config["site"],
-            array_element_name=config.get("telescope"),
-            collection="telescopes",
-            model_version=config.get("model_version"),
-        )
-        if config.get("parameter_version"):
-            layout_parameter = model_reader.get_model_parameter(
-                parameter="camera_pixel_layout",
-                site=config["site"],
-                array_element_name=config.get("telescope"),
-                parameter_version=config["parameter_version"],
-                model_version=config.get("model_version"),
-            )
-            parameters["camera_pixel_layout"] = layout_parameter["camera_pixel_layout"]
-        camera_components = _resolve_camera_components(model_reader, parameters)
-        fig = plot_pixel_layout_from_configuration(
-            camera_components, config["telescope"], **plot_kwargs
-        )
-    else:
-        model_reader.export_model_file(
-            parameter=config["parameter"],
-            site=config["site"],
-            array_element_name=config.get("telescope"),
-            parameter_version=config.get("parameter_version"),
-            model_version=config.get("model_version"),
-            export_file_as_table=False,
-            dest=output_directory,
-        )
-        data_file_path = Path(output_directory / f"{config['file_name']}")
-        fig = plot_pixel_layout_from_file(data_file_path, config["telescope"], **plot_kwargs)
+    fig = plot_pixel_layout(
+        camera, raw_pixels, rotate_angle=rotate_angle, pixels_id_to_print=pixels_id_to_print
+    )
     visualize.save_figure(fig, output_file)
     plt.close(fig)
 
 
-def _resolve_camera_components(model_reader, parameters):
+def raw_pixels_from_configuration(configuration):
+    """
+    Return unrotated pixel data from resolved camera components.
+
+    Parameters
+    ----------
+    configuration : dict
+        Output of :func:`resolve_camera_components`.
+
+    Returns
+    -------
+    dict
+        Keys ``x``, ``y`` (cm) and ``rotate_angle`` (radians).
+    """
+    return {
+        "x": np.asarray([item["x_cm"] for item in configuration["pixels"]]),
+        "y": np.asarray([item["y_cm"] for item in configuration["pixels"]]),
+        "rotate_angle": np.deg2rad(float(configuration.get("rotate", 0.0))),
+    }
+
+
+def resolve_camera_components(model_reader, parameters):
     """Resolve camera component model parameters for plotting."""
-    pixel_types = deepcopy(parameters["camera_pixel_types"]["value"])
     return {
         "rotate": parameters["camera_rotate"]["value"],
-        "pixel_types": pixel_types,
+        "pixel_types": deepcopy(parameters["camera_pixel_types"]["value"]),
         "pixels": _table_records(model_reader, parameters["camera_pixel_layout"]),
         "triggers": _table_records(model_reader, parameters["camera_trigger_groups"]),
         "trigger_members": _table_records(model_reader, parameters["camera_trigger_members"]),
@@ -114,130 +90,33 @@ def _table_records(model_reader, parameter):
     ]
 
 
-def plot_pixel_layout_from_configuration(configuration, telescope_model_name, **kwargs):
-    """Plot a pixel layout from resolved camera component parameters.
+def plot_pixel_layout(camera, raw_pixels, *, rotate_angle=None, pixels_id_to_print=50):
+    """
+    Create the pixel layout figure.
 
     Parameters
     ----------
-    configuration : dict
-        Resolved camera component data containing ``rotate``, ``pixel_types``
-        and ``pixels``.
-    telescope_model_name : str
-        Name/model of the telescope.
-    **kwargs
-        Plot options accepted by :func:`plot_pixel_layout_from_file`.
+    camera : Camera
+        Camera with pixel geometry; its pixel positions are transformed in place.
+    raw_pixels : dict
+        Unrotated pixel data with keys ``x``, ``y`` and ``rotate_angle`` (radians).
+    rotate_angle : astropy.units.Quantity, optional
+        Rotation applied to the telescope-specific pixel transform.
+    pixels_id_to_print : int, optional
+        Pixel IDs below this value are printed.
 
     Returns
     -------
     matplotlib.figure.Figure
         The generated figure.
     """
-    logger.info("Plotting pixel layout for %s from camera components", telescope_model_name)
-    camera = Camera.from_configuration(
-        telescope_model_name,
-        configuration,
-        kwargs.get("focal_length", 1.0),
-    )
-    raw_pixels = Camera.initialize_pixel_dict()
-    first_type = configuration["pixel_types"][0]
-    raw_pixels["pixel_shape"] = first_type.get("funnel_shape", 1)
-    raw_pixels["pixel_diameter"] = first_type.get("funnel_diameter_cm", 1.0)
-    raw_pixels["rotate_angle"] = np.deg2rad(float(configuration.get("rotate", 0.0)))
-    raw_pixels["x"] = np.asarray([item["x_cm"] for item in configuration["pixels"]])
-    raw_pixels["y"] = np.asarray([item["y_cm"] for item in configuration["pixels"]])
-    raw_pixels["pix_id"] = [item["pixel_id"] for item in configuration["pixels"]]
-    raw_pixels["pix_on"] = [bool(item.get("enabled", True)) for item in configuration["pixels"]]
-    _apply_telescope_specific_pixel_transform(
-        camera,
-        rotate_angle=kwargs.get("rotate_angle"),
-        raw_pixels=raw_pixels,
-    )
-    return _create_pixel_plot(
-        camera,
-        pixels_id_to_print=kwargs.get("pixels_id_to_print", 50),
-        title=kwargs.get("title"),
-        xtitle=kwargs.get("xtitle"),
-        ytitle=kwargs.get("ytitle"),
-    )
+    logger.info("Plotting pixel layout for %s", camera.telescope_name)
+    _apply_telescope_specific_pixel_transform(camera, raw_pixels, rotate_angle)
+    return _create_pixel_plot(camera, pixels_id_to_print)
 
 
-def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
-    """
-    Plot the pixel layout from a camera config file.
-
-    This function reads the pixel configuration from the specified camera config file and
-    generates a plot of the pixel layout for the given telescope model.
-
-    Parameters
-    ----------
-    dat_file_path : str or Path
-        Path to the camera config file containing pixel configuration
-    telescope_model_name : str
-        Name/model of the telescope
-    **kwargs
-        pixels_id_to_print : int
-            Number of pixel IDs to print in the plot
-        rotate_angle : float, optional
-            Rotation angle applied to telescope-specific pixel transforms.
-        title : str
-            Plot title
-        xtitle : str
-            X-axis label
-        ytitle : str
-            Y-axis label
-        focal_length : float
-            Focal length to initialize the Camera (default 1.0)
-
-    Returns
-    -------
-    matplotlib.figure.Figure
-        The generated figure
-    """
-    logger.info(f"Plotting pixel layout for {telescope_model_name} from {dat_file_path}")
-
-    camera = Camera(
-        telescope_name=telescope_model_name,
-        camera_config_file=dat_file_path,
-        focal_length=kwargs.get("focal_length", 1.0),  # 1 used as placeholder, not relevant
-    )
-
-    _apply_telescope_specific_pixel_transform(
-        camera,
-        camera_config_file=dat_file_path,
-        rotate_angle=kwargs.get("rotate_angle"),
-    )
-
-    return _create_pixel_plot(
-        camera,
-        pixels_id_to_print=kwargs.get("pixels_id_to_print", 50),
-        title=kwargs.get("title"),
-        xtitle=kwargs.get("xtitle"),
-        ytitle=kwargs.get("ytitle"),
-    )
-
-
-def _create_pixel_plot(camera, pixels_id_to_print=50, title=None, xtitle=None, ytitle=None):
-    """
-    Create and configure the pixel layout plot.
-
-    Parameters
-    ----------
-    camera : Camera
-        Camera instance with pixel data
-    pixels_id_to_print : int, optional
-        Number of pixel IDs to print, default 50
-    title : str, optional
-        Plot title
-    xtitle : str, optional
-        X-axis label
-    ytitle : str, optional
-        Y-axis label
-
-    Returns
-    -------
-    matplotlib.figure.Figure
-        The generated figure
-    """
+def _create_pixel_plot(camera, pixels_id_to_print):
+    """Create and configure the pixel layout plot."""
     fig, ax = plt.subplots(figsize=(8, 8))
 
     on_pixels, edge_pixels, off_pixels = create_pixel_patches_by_type(camera)
@@ -245,85 +124,44 @@ def _create_pixel_plot(camera, pixels_id_to_print=50, title=None, xtitle=None, y
 
     array_element_type = names.get_array_element_type_from_name(camera.telescope_name)
     font_size = 2 if "SCT" in array_element_type else 4
-    for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
-        if camera.pixels["pix_id"][i_pix] < pixels_id_to_print:
-            plt.text(
-                x,
-                y,
-                camera.pixels["pix_id"][i_pix],
-                ha="center",
-                va="center",
-                fontsize=font_size,
-            )
+    for x, y, pix_id in zip(camera.pixels["x"], camera.pixels["y"], camera.pixels["pix_id"]):
+        if pix_id < pixels_id_to_print:
+            plt.text(x, y, pix_id, ha="center", va="center", fontsize=font_size)
 
-    _configure_plot(
-        ax,
-        camera,
-        title=title,
-        xtitle=xtitle,
-        ytitle=ytitle,
-    )
+    _configure_plot(ax, camera)
     add_pixel_legend(ax, on_pixels, off_pixels)
-
     return fig
 
 
-def _configure_plot(ax, camera, title=None, xtitle=None, ytitle=None):
-    """Configure the plot with titles, labels, and limits.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        The axes to configure
-    camera : Camera
-        Camera instance containing pixel data
-    title : str, optional
-        Plot title
-    xtitle : str, optional
-        X-axis label
-    ytitle : str, optional
-        Y-axis label
-
-
-    Returns
-    -------
-    None
-        The function modifies the plot axes in place.
-    """
-    x_min, x_max = min(camera.pixels["x"]), max(camera.pixels["x"])
-    y_min, y_max = min(camera.pixels["y"]), max(camera.pixels["y"])
-    padding = 0.1 * max(x_max - x_min, y_max - y_min)
-
+def _configure_plot(ax, camera):
+    """Configure titles, labels, limits and the coordinate-axes overlay."""
+    x_values, y_values = camera.pixels["x"], camera.pixels["y"]
+    padding = 0.1 * max(max(x_values) - min(x_values), max(y_values) - min(y_values))
     setup_camera_axis_properties(ax, camera, grid=True, axis_below=True, padding=padding)
 
-    plt.xlabel(xtitle or "Horizontal scale [cm]", fontsize=18, labelpad=0)
-    plt.ylabel(ytitle or "Vertical scale [cm]", fontsize=18, labelpad=0)
-    ax.set_title(
-        title or "Pixel layout",
-        fontsize=15,
-        y=1.02,
-    )
+    plt.xlabel("Horizontal scale [cm]", fontsize=18, labelpad=0)
+    plt.ylabel("Vertical scale [cm]", fontsize=18, labelpad=0)
+    ax.set_title("Pixel layout", fontsize=15, y=1.02)
     plt.tick_params(axis="both", which="major", labelsize=15)
 
     rotation = camera.pixels.get("plot_rotate_angle", camera.pixels["rotate_angle"]) * u.rad
     _add_coordinate_axes(ax, rotation)
-    x_min = min(camera.pixels["x"]) - (max(camera.pixels["x"]) - min(camera.pixels["x"])) * 0.05
-    y_min = min(camera.pixels["y"]) - (max(camera.pixels["y"]) - min(camera.pixels["y"])) * 0.05
-    ax.text(x_min, y_min, "For an observer facing the camera", fontsize=10, ha="left", va="bottom")
+    x_text = min(x_values) - (max(x_values) - min(x_values)) * 0.05
+    y_text = min(y_values) - (max(y_values) - min(y_values)) * 0.05
+    ax.text(
+        x_text, y_text, "For an observer facing the camera", fontsize=10, ha="left", va="bottom"
+    )
 
 
 def _add_coordinate_axes(ax, rotation=0 * u.deg):
-    """Add coordinate system axes to the plot."""
-    # Setup dimensions and positions
+    """Add the Az/Alt and pixel coordinate axis arrows to the plot."""
     x_min, x_max = ax.get_xlim()
     y_min, y_max = ax.get_ylim()
-    plot_size = min(x_max - x_min, y_max - y_min)
-    axis_length = plot_size * 0.08
+    axis_length = min(x_max - x_min, y_max - y_min) * 0.08
 
     x_origin = x_max - axis_length * 1.0
     y_origin_az = y_min + axis_length * 2.5
     y_origin_pix = y_min + axis_length * 1.2
-
     arrow_style = {
         "head_width": axis_length * 0.15,
         "head_length": axis_length * 0.15,
@@ -334,9 +172,9 @@ def _add_coordinate_axes(ax, rotation=0 * u.deg):
     az_direction = 1 if is_sst else -1
 
     def add_arrow_label(ox, oy, dx, dy, label, offset, color="black", ha="center", va="center"):
-        """Adding arrows with label."""
+        """Add an arrow with its label."""
         ax.arrow(ox, oy, dx, dy, fc=color, ec=color, **arrow_style)
-        if np.sqrt(dx**2 + dy**2) > 0:  # If not zero vector
+        if np.sqrt(dx**2 + dy**2) > 0:
             dir_unit = np.sqrt(dx**2 + dy**2)
             ax.text(
                 ox + dx + dx / dir_unit * axis_length * offset,
@@ -350,11 +188,10 @@ def _add_coordinate_axes(ax, rotation=0 * u.deg):
             )
 
     # Az-Alt axes
-    az_dx = az_direction * axis_length * arrow_length
     add_arrow_label(
         x_origin,
         y_origin_az,
-        az_dx,
+        az_direction * axis_length * arrow_length,
         0,
         "Az",
         0.25,
@@ -377,40 +214,24 @@ def _add_coordinate_axes(ax, rotation=0 * u.deg):
     add_arrow_label(x_origin, y_origin_pix, y_dx, y_dy, "$\\mathrm{y}_\\mathrm{pix}$", 0.45)
 
 
-def _apply_telescope_specific_pixel_transform(
-    camera, camera_config_file=None, rotate_angle=None, raw_pixels=None
-):
-    """Apply telescope-specific pixel position adjustments in-place."""
-    if raw_pixels is None:
-        if camera_config_file is None:
-            raise ValueError("A camera config file or raw pixel layout is required")
-        raw_pixels = Camera.read_pixel_list(camera_config_file)
+def _apply_telescope_specific_pixel_transform(camera, raw_pixels, rotate_angle=None):
+    """Apply the telescope-specific pixel transform to ``camera.pixels`` in place."""
     x_pos = np.asarray(raw_pixels["x"], dtype=float)
     y_pos = np.asarray(raw_pixels["y"], dtype=float)
-
-    if not is_two_mirror_telescope(camera.telescope_name):
+    two_mirror = is_two_mirror_telescope(camera.telescope_name)
+    if not two_mirror:
         y_pos = -y_pos
 
     if rotate_angle is None:
         raw_rotate_angle = raw_pixels.get("rotate_angle")
-        rotate_angle = 0.0 * u.deg if raw_rotate_angle is None else (raw_rotate_angle * u.rad)
-
+        rotate_angle = 0.0 * u.deg if raw_rotate_angle is None else raw_rotate_angle * u.rad
     if isinstance(rotate_angle, (int, float, np.floating)):
         rotate_angle = float(rotate_angle) * u.deg
-
-    rotate_angle = rotate_angle.to(u.deg)
-
-    if is_two_mirror_telescope(camera.telescope_name):
-        total_rotation = (90 * u.deg) - rotate_angle
-    else:
-        total_rotation = (-90 * u.deg) - rotate_angle
+    total_rotation = (90 if two_mirror else -90) * u.deg - rotate_angle.to(u.deg)
 
     rot_angle = total_rotation.to(u.rad).value
-    x_rot = x_pos * np.cos(rot_angle) - y_pos * np.sin(rot_angle)
-    y_rot = y_pos * np.cos(rot_angle) + x_pos * np.sin(rot_angle)
-
-    camera.pixels["x"] = x_rot
-    camera.pixels["y"] = y_rot
+    camera.pixels["x"] = x_pos * np.cos(rot_angle) - y_pos * np.sin(rot_angle)
+    camera.pixels["y"] = y_pos * np.cos(rot_angle) + x_pos * np.sin(rot_angle)
     if camera.pixels.get("pixel_shape") in (1, 3):
         camera.pixels["orientation"] = 30 if camera.pixels.get("pixel_shape") == 3 else 0
     camera.pixels["plot_rotate_angle"] = float(rot_angle)

@@ -12,7 +12,7 @@ from astropy.table import Table
 
 from simtools.io import ascii_handler
 from simtools.io.ascii_handler import to_builtin
-from simtools.utils import general
+from simtools.utils import general, value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def group_table_rows(table, column_names):
         Mapping from group key to grouped sub-table. Single-column grouping returns
         scalar keys, multi-column grouping returns tuple keys.
     """
-    column_names = general.ensure_list(column_names)
+    column_names = value_conversion.ensure_list(column_names)
     if len(table) == 0:
         return {}
 

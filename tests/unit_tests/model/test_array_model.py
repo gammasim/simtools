@@ -15,8 +15,9 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def array_model_north_from_list(model_version):
+def array_model_north_from_list(model_version, run_context):
     return ArrayModel(
+        context=run_context,
         label="test",
         site="North",
         model_version=model_version,
@@ -24,7 +25,7 @@ def array_model_north_from_list(model_version):
     )
 
 
-def test_array_model_north_from_file(model_version, tmp_test_directory):
+def test_array_model_north_from_file(model_version, tmp_test_directory, run_context):
     position_table = QTable()
     position_table["telescope_name"] = [
         "LSTN-01",
@@ -37,6 +38,7 @@ def test_array_model_north_from_file(model_version, tmp_test_directory):
     position_table.write(position_file, format="ascii.ecsv", overwrite=True)
 
     am = ArrayModel(
+        context=run_context,
         label="test",
         site="North",
         model_version=model_version,
@@ -45,8 +47,9 @@ def test_array_model_north_from_file(model_version, tmp_test_directory):
     assert am.number_of_telescopes == 13
 
 
-def test_array_model_run_specific_config_directory(model_version, io_handler):
+def test_array_model_run_specific_config_directory(model_version, io_handler, run_context):
     am = ArrayModel(
+        context=run_context,
         site="North",
         model_version=model_version,
         array_elements=["LSTN-01"],
@@ -60,28 +63,23 @@ def test_array_model_run_specific_config_directory(model_version, io_handler):
     assert am.telescope_models["LSTN-01"].config_file_path.parent == expected
 
 
-def test_array_model_north_init_without_layout_or_telescope_list(model_version):
+def test_array_model_north_init_without_layout_or_telescope_list(model_version, run_context):
     with pytest.raises(ValueError, match=r"No array elements found."):
-        ArrayModel(label="test", site="North", model_version=model_version)
+        ArrayModel(context=run_context, label="test", site="North", model_version=model_version)
 
 
-def test_input_validation(array_model_north):
+def test_input_validation(array_model_north, run_context):
     am = array_model_north
     am.print_telescope_list()
     assert am.number_of_telescopes == 13
 
 
-def test_site(array_model_north):
-    am = array_model_north
-    assert am.site == "North"
-
-
-def test_get_config_file(array_model_north):
+def test_get_config_file(array_model_north, run_context):
     am = array_model_north
     assert am.config_file_path.name == "CTAO-North-test_layout.cfg"
 
 
-def test_export_array_elements_as_table(array_model_north):
+def test_export_array_elements_as_table(array_model_north, run_context):
     am = array_model_north
     table_ground = am.export_array_elements_as_table(coordinate_system="ground")
     assert isinstance(table_ground, QTable)
@@ -94,8 +92,9 @@ def test_export_array_elements_as_table(array_model_north):
     assert len(table_utm) > 0
 
 
-def test_export_array_elements_as_table_with_calibration_elements_flag():
+def test_export_array_elements_as_table_with_calibration_elements_flag(run_context):
     array_model = Mock(spec=ArrayModel)
+    array_model.context = None
     array_model.layout_name = "test_layout"
     array_model.site_model = Mock()
     array_model.site_model.site = "South"
@@ -146,33 +145,7 @@ def test_export_array_elements_as_table_with_calibration_elements_flag():
         )
 
 
-def test_get_array_elements_from_list(array_model_north, site_model_north):
-    am = array_model_north
-    assert am._get_array_elements_from_list(["LSTN-01", "MSTN-01"]) == {
-        "LSTN-01": None,
-        "MSTN-01": None,
-    }
-    all_msts_plus_lst = am._get_array_elements_from_list(["LSTN-01", "MSTN"], site_model_north)
-    assert "MSTN-01" in all_msts_plus_lst
-    assert "MSTN-05" in all_msts_plus_lst
-    assert "LSTN-01" in all_msts_plus_lst
-
-
-def test_get_all_array_elements_of_type(array_model_north, site_model_north):
-    am = array_model_north
-    assert am._get_all_array_elements_of_type("LSTS", site_model_north) == {
-        "LSTS-01": None,
-        "LSTS-02": None,
-        "LSTS-03": None,
-        "LSTS-04": None,
-    }
-    # simple check that more than 10 MSTS are there
-    assert len(am._get_all_array_elements_of_type("MSTS", site_model_north)) > 10
-
-    assert len(am._get_all_array_elements_of_type("MSTE", site_model_north)) == 0
-
-
-def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version):
+def test_pack_model_files(array_model_north, model_version, run_context):
     mock_tarfile = MagicMock()
     mock_tarfile_open = MagicMock()
     # Create a context manager wrapper so `with tarfile.open(...) as tar:` yields mock_tarfile
@@ -182,14 +155,12 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
     mock_cm.__exit__.side_effect = lambda *args: mock_tarfile.close()
     mock_tarfile_open.return_value = mock_cm
     # Return files under the mocked config directory so relative_to(base) works
-    mock_output_dir = tmp_path / "output" / "directory" / "model" / model_version
+    mock_output_dir = array_model_north.get_config_directory()
     mock_rglob = MagicMock(return_value=[mock_output_dir / "file1", mock_output_dir / "file2"])
-    mock_get_output_directory = MagicMock(return_value=mock_output_dir)
 
     with (
         patch("tarfile.open", mock_tarfile_open),  # NOSONAR
         patch("pathlib.Path.rglob", mock_rglob),
-        patch.object(io_handler, "get_output_directory", mock_get_output_directory),
         patch("pathlib.Path.is_file", return_value=True),
     ):
         archive_path = array_model_north.pack_model_files()
@@ -202,14 +173,14 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
     with (
         patch("tarfile.open", mock_tarfile_open),  # NOSONAR
         patch("pathlib.Path.rglob", mock_rglob),
-        patch.object(io_handler, "get_output_directory", mock_get_output_directory),
     ):
         assert array_model_north.pack_model_files() is None
 
 
-def test_build_calibration_models():
+def test_build_calibration_models(run_context):
 
     array_model_north = Mock(spec=ArrayModel)
+    array_model_north.context = None
     array_model_north._build_calibration_models = ArrayModel._build_calibration_models
     telescope_model = Mock()
     telescope_model.get_calibration_device_name = Mock()
@@ -267,31 +238,3 @@ def test_build_calibration_models():
 
         # Check that CalibrationModel was called twice with correct parameters
         assert mock_calibration_model.call_count == 2
-
-
-def test_build_telescope_models():
-
-    array_model_north = Mock()
-    array_model_north.model_version = "6.0.0"
-    array_model_north.label = "test"
-
-    site_model = Mock()
-    site_model.site = "North"
-
-    array_elements = {"LSTN-01": None, "non_telescope": None}
-
-    with (
-        patch(
-            "simtools.model.array_model.names.get_collection_name_from_array_element_name"
-        ) as mock_names,
-        patch("simtools.model.array_model.TelescopeModel") as mock_tel_model,
-    ):
-        mock_names.side_effect = lambda name: "telescopes" if name == "LSTN-01" else "other"
-
-        telescope_models, _ = ArrayModel._build_telescope_models(
-            array_model_north, site_model, array_elements, None
-        )
-
-        assert "LSTN-01" in telescope_models
-        assert "non_telescope" not in telescope_models
-        mock_tel_model.assert_called_once()

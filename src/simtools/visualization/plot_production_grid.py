@@ -7,8 +7,9 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.production_configuration.job_grid_io import JOB_GRID_SCHEMA
+from simtools.production_configuration.jobs_io import JOB_GRID_SCHEMA
 from simtools.visualization.matplotlib_backend import pyplot as plt
+from simtools.visualization.visualize import save_figure
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
@@ -353,7 +354,7 @@ class ProductionGridPlotter:
         output_file = self.output_path / (
             f"{DEFAULT_OUTPUT_FILE_STEM}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
         )
-        figure.savefig(output_file, bbox_inches="tight", dpi=300)
+        save_figure(figure, output_file.with_suffix(""), figure_format=["png"], dpi=300)
         logger.info(f"Saved sky projection plot to {output_file}")
 
         plt.close(figure)
@@ -582,7 +583,7 @@ class ProductionGridPlotter:
 
         figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.95))
         output_file = self.output_path / f"{output_file_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
-        figure.savefig(output_file, bbox_inches="tight", dpi=300)
+        save_figure(figure, output_file.with_suffix(""), figure_format=["png"], dpi=300)
         logger.info(f"Saved azimuth/zenith color-scale plot to {output_file}")
         plt.close(figure)
 
@@ -677,7 +678,7 @@ class ProductionGridPlotter:
         figure.tight_layout()
 
         output_file = self.output_path / f"{output_file_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
-        figure.savefig(output_file, bbox_inches="tight", dpi=300)
+        save_figure(figure, output_file.with_suffix(""), figure_format=["png"], dpi=300)
         logger.info(f"Saved zenith profile plot to {output_file}")
         plt.close(figure)
 
@@ -700,7 +701,7 @@ class ProductionGridPlotter:
         axis.grid(True, alpha=0.25)
         figure.colorbar(scatter, ax=axis).set_label("Azimuth angle (deg)")
         output_file = self.output_path / f"{output_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
-        figure.savefig(output_file, dpi=180)
+        save_figure(figure, output_file.with_suffix(""), figure_format=["png"], dpi=180)
         plt.close(figure)
         logger.info("Saved shower statistics plot to %s", output_file)
 

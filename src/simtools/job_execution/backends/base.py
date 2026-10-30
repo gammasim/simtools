@@ -30,5 +30,11 @@ class ExecutionBackend(Protocol):
     def wait(self, submission: SubmissionHandle) -> list[JobResult]:
         """Wait for completion and return ordered results."""
 
+    def is_finished(self, submission: SubmissionHandle) -> bool:
+        """Return whether a submission has completed."""
+
+    def collect(self, submission: SubmissionHandle) -> list[JobResult]:
+        """Collect results after a submission has finished."""
+
     def cancel(self, submission: SubmissionHandle) -> None:
         """Cancel an active submission."""

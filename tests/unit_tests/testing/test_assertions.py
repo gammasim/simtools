@@ -170,18 +170,18 @@ def test_check_output_from_sim_telarray(
     mock_file = Path("test_file.zst")
 
     mock_assert_output = mocker.patch(
-        "simtools.simtel.simtel_output_validator.assert_expected_sim_telarray_output_and_event_type",
+        "simtools.sim_events.validate_run_outputs.assert_expected_sim_telarray_output_and_event_type",
         return_value=expected_result,
     )
     mock_assert_metadata = mocker.patch(
-        "simtools.simtel.simtel_output_validator.assert_expected_sim_telarray_metadata",
+        "simtools.sim_events.validate_run_outputs.assert_expected_sim_telarray_metadata",
         return_value=True,
     )
     mock_assert_events = mocker.patch(
-        "simtools.simtel.simtel_output_validator.assert_events_of_type", return_value=True
+        "simtools.sim_events.validate_run_outputs.assert_events_of_type", return_value=True
     )
     mock_assert_showers = mocker.patch(
-        "simtools.simtel.simtel_output_validator.assert_n_showers_and_energy_range",
+        "simtools.sim_events.validate_run_outputs.assert_n_showers_and_energy_range",
         return_value=True,
     )
 

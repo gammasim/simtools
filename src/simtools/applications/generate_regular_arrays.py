@@ -39,12 +39,11 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
-        cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("corsika", "output"),
 )
 
 
@@ -80,14 +79,14 @@ def main():
             output_file=output_file,
             output_file_format=app_context.args.get("output_file_format", "ascii.ecsv"),
             product_data=array_table,
+            context=app_context,
         )
 
         write_array_elements_info_yaml(
             array_table,
             app_context.args["site"],
             app_context.args["model_version"],
-            app_context.io_handler.get_output_directory()
-            / Path(output_file).with_suffix(".info.yml"),
+            app_context.paths.get_output_directory() / Path(output_file).with_suffix(".info.yml"),
         )
 
 

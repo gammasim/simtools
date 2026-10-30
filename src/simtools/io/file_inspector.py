@@ -8,9 +8,19 @@ import h5py
 from astropy.table import Table
 
 from simtools.io import ascii_handler
-from simtools.io.file_type import is_file_type, looks_like_text_file, validate_file_type
+from simtools.io.file_type import (
+    is_file_type,
+    looks_like_text_file,
+    matches_suffix,
+    product_suffixes,
+    validate_file_type,
+)
 from simtools.io.table_handler import read_metadata_document, read_table_from_hdf5
-from simtools.simtel import simtel_io_metadata
+
+INSPECTORS = {
+    "sim_telarray_output": ("simtools.simtel.file_inspector", "inspect_sim_telarray_file"),
+    "production_sim_telarray": ("simtools.simtel.file_inspector", "inspect_sim_telarray_file"),
+}
 
 
 def inspect_file(file_path, max_entries=50, format_report=True, entry_name=None):
@@ -163,28 +173,6 @@ def inspect_table_file(file_path, max_entries=50, format_report=True):
     return _format_table_report(report) if format_report else report
 
 
-def inspect_sim_telarray_file(file_path, max_entries=50, format_report=True):
-    """Inspect one sim_telarray file and return a report."""
-    file_path = validate_file_type(file_path, "sim_telarray")
-    if not is_file_type(file_path, "sim_telarray"):
-        raise ValueError(f"File '{file_path}' has unsupported suffix for sim_telarray inspection.")
-    global_meta, telescope_meta = simtel_io_metadata.read_sim_telarray_metadata(file_path)
-    sorted_global_items = sorted(global_meta.items()) if global_meta is not None else []
-    telescope_ids = sorted(telescope_meta.keys())
-    preview_telescope_ids = telescope_ids[:max_entries]
-    report = {
-        "file_path": file_path,
-        "file_type": "sim_telarray",
-        "file_size_bytes": file_path.stat().st_size,
-        "global_metadata": dict(sorted_global_items[:max_entries]),
-        "global_metadata_truncated": _is_truncated(sorted_global_items, max_entries),
-        "telescope_count": len(telescope_ids),
-        "telescope_ids": preview_telescope_ids,
-        "telescope_ids_truncated": _is_truncated(telescope_ids, max_entries),
-    }
-    return _format_simtel_report(report) if format_report else report
-
-
 def inspect_text_file(file_path, max_entries=50, format_report=True):
     """Inspect one plain-text file and return a report."""
     file_path = Path(file_path)
@@ -200,19 +188,39 @@ def inspect_text_file(file_path, max_entries=50, format_report=True):
     return _format_text_report(report) if format_report else report
 
 
+def inspect_sim_telarray_file(file_path, max_entries=50, format_report=True):
+    """Inspect one sim_telarray file and return a report."""
+    module = import_module("simtools.simtel.file_inspector")
+    return module.inspect_sim_telarray_file(
+        file_path,
+        max_entries=max_entries,
+        format_report=format_report,
+    )
+
+
 def _select_inspector(file_path):
     """Return the inspector function appropriate for the file path."""
+    inspector = _select_product_inspector(file_path)
+    if inspector is not None:
+        return inspector
     if is_file_type(file_path, "hdf5"):
         return inspect_hdf5_file
     if is_file_type(file_path, "json_or_yaml"):
         return inspect_json_or_yaml_file
     if is_file_type(file_path, "table"):
         return inspect_table_file
-    if is_file_type(file_path, "sim_telarray"):
-        return inspect_sim_telarray_file
     if looks_like_text_file(file_path):
         return inspect_text_file
     raise ValueError(f"Unsupported file type for inspection: {file_path.suffix or '<no suffix>'}.")
+
+
+def _select_product_inspector(file_path):
+    """Load the inspector registered for a matching file product."""
+    for product, (module_name, inspector_name) in INSPECTORS.items():
+        if matches_suffix(file_path, product_suffixes(product)):
+            module = import_module(module_name)
+            return getattr(module, inspector_name)
+    return None
 
 
 def _inspect_trigger_histogram_file(file_path, format_report=True):
@@ -294,27 +302,6 @@ def _format_text_report(report):
     lines.extend(f"- {line}" for line in report["preview_lines"])
     if report["preview_truncated"]:
         lines.append("- ... output truncated ...")
-    return "\n".join(lines)
-
-
-def _format_simtel_report(report):
-    """Format a sim_telarray inspection report."""
-    lines = [
-        f"File: {report['file_path']}",
-        f"Detected file type: {report['file_type']}",
-        f"file_size_bytes: {report['file_size_bytes']}",
-        f"telescope_count: {report['telescope_count']}",
-        f"telescope_ids: {report['telescope_ids']}",
-        "global_metadata:",
-    ]
-    if report["global_metadata"]:
-        lines.extend(f"- {key}: {value}" for key, value in report["global_metadata"].items())
-    else:
-        lines.append("- none")
-    if report["global_metadata_truncated"]:
-        lines.append("- ... metadata truncated ...")
-    if report["telescope_ids_truncated"]:
-        lines.append("telescope_ids_truncated: True")
     return "\n".join(lines)
 
 

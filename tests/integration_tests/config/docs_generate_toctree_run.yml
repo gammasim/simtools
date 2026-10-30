@@ -1,0 +1,15 @@
+---
+applications:
+- application: simtools-docs-generate-toctree
+  docs:
+    title: Generate toctree index files for generated reports
+    summary: >-
+      Write index.md files with Sphinx toctrees into a documentation source tree containing
+      generated simulation model reports.
+  configuration:
+    docs_path: docs
+  skip_integration_test: >-
+    Writes index files into a documentation source tree; covered by unit tests.
+  test_name: run
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0

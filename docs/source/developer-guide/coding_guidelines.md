@@ -36,11 +36,14 @@ git commit --no-verify
 
 Linters of almost all file types are run by the CI-linter workflow.
 
-To run pylint locally, use:
+To run the configured pylint hook on all tracked Python files, use:
 
 ```bash
-pylint $(git ls-files 'simtools/*.py')
+pre-commit run pylint --all-files
 ```
+
+The pre-commit pylint hook checks tracked Python files outside `tests/`, including
+application modules.
 
 To run ruff locally, use:
 

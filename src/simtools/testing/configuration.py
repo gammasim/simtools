@@ -6,9 +6,9 @@ import shutil
 import sys
 from pathlib import Path
 
-import simtools.utils.general as gen
 import simtools.version as simtools_version
 from simtools.io import ascii_handler, io_handler
+from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 _PREPARED_RESOURCE_PATTERN = re.compile(r"\$\{prepared:([^}]+)\}")
@@ -23,7 +23,6 @@ def get_list_of_test_configurations(config_files, test_resources_path=None):
     Return list of test configuration dictionaries or test names.
 
     Read all configuration files for testing.
-    Add "--help" and "--version" calls for all applications.
 
     Parameters
     ----------
@@ -43,22 +42,6 @@ def get_list_of_test_configurations(config_files, test_resources_path=None):
 
     configs = _read_configs_from_files(config_files, test_resources_path=test_resources_path)
 
-    # list of all applications
-    # (needs to be sorted for pytest-xdist, see Known Limitations in their website)
-    _applications = sorted({item["application"] for item in configs if "application" in item})
-    for app in _applications:
-        configs.extend(
-            [
-                {"application": app, "test_name": "auto-help", "configuration": {"help": True}},
-                {
-                    "application": app,
-                    "test_name": "auto-version",
-                    "configuration": {"version": True},
-                },
-                {"application": app, "test_name": "auto-no_config"},
-            ]
-        )
-
     return (
         configs,
         [
@@ -75,7 +58,7 @@ def _read_configs_from_files(config_files, test_resources_path=None):
         # read config file
         # remove new line characters from config - otherwise issues
         # with especially long file names
-        _dict = gen.remove_substring_recursively_from_dict(
+        _dict = value_conversion.remove_substring_recursively_from_dict(
             ascii_handler.collect_data_from_file(file_name=config_file), substring="\n"
         )
         configs.extend(

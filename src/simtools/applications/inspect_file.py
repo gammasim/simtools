@@ -15,14 +15,12 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "max_entries",
         help="Maximum number of entries or preview lines to print; use 0 for no limit.",
-        required=False,
         default=50,
         type=int,
     ),
     cli.ArgumentDefinition(
         "show_entry",
         help="Print one HDF5 root dataset, for example SIMULATION_METADATA or SHOWERS.",
-        required=False,
         default=None,
         type=str,
     ),
@@ -32,7 +30,7 @@ _ARGUMENTS = (
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(*_ARGUMENTS,),
-    setup_io_handler=False,
+    needs=("corsika",),
 )
 
 

@@ -25,16 +25,6 @@ The Testing module provides tools for testing the code. This might be part of th
 ```
 
 
-(loginspectormodule)=
-
-## log_inspector
-
-```{eval-rst}
-.. automodule:: testing.log_inspector
-   :members:
-
-```
-
 (resourcegenerationmodule)=
 
 ## resource_generation
@@ -55,14 +45,11 @@ The Testing module provides tools for testing the code. This might be part of th
 
 ```
 
-(validate_outputmodule)=
+(outputvalidationmodule)=
 
-## validate_output
+## output_validation
 
 ```{eval-rst}
-.. automodule:: testing.validate_output
-   :members:
-
 .. automodule:: testing.output_validation
    :members:
 ```

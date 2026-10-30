@@ -30,6 +30,7 @@ dependencies = [
   "adjusttext",
   "astropy",
   "boost-histogram",
+  "ctao-datamodel>=1.4,<2",
   "ctao-dpps-cosmic-ray-spectra",
   "eventio",
   "h5py",
@@ -38,6 +39,7 @@ dependencies = [
   "numpy",
   "packaging",
   "particle",
+  "pillow",
   "pygit2>=1.19",
   "pyproj",
   "python-dotenv",
@@ -47,9 +49,11 @@ dependencies = [
 optional-dependencies.dev = [
   "flake8",
   "flake8-cognitive-complexity",
+  "import-linter",
   "pre-commit",
   "pylint",
   "ruff",
+  "vulture",
 ]
 optional-dependencies.doc = [
   "myst-parser",
@@ -61,6 +65,9 @@ optional-dependencies.doc = [
 ]
 optional-dependencies.htcondor = [
   "htcondor>=25.0.7; platform_system=='Linux'",
+]
+optional-dependencies.obdeect = [
+  "obdeect>=0.6",
 ]
 optional-dependencies.tests = [
   "psutil",
@@ -77,7 +84,9 @@ optional-dependencies.tests = [
 urls."bug tracker" = "https://github.com/gammasim/simtools/issues"
 urls.documentation = "https://gammasim.github.io/simtools/"
 urls.repository = "https://github.com/gammasim/simtools"
+scripts.simtools-compare-atmospheres = "simtools.applications.compare_atmospheres:main"
 scripts.simtools-compare-productions = "simtools.applications.compare_productions:main"
+scripts.simtools-compare-science-results = "simtools.applications.compare_science_results:main"
 scripts.simtools-convert-geo-coordinates-of-array-elements = """\
   simtools.applications.convert_geo_coordinates_of_array_elements:main\
   """
@@ -93,15 +102,10 @@ scripts.simtools-derive-psf-parameters = "simtools.applications.derive_psf_param
 scripts.simtools-derive-pulse-shape-parameters = "simtools.applications.derive_pulse_shape_parameters:main"
 scripts.simtools-derive-telescope-sphere-radius = "simtools.applications.derive_telescope_sphere_radius:main"
 scripts.simtools-derive-trigger-rates = "simtools.applications.derive_trigger_rates:main"
-scripts.simtools-docs-produce-array-element-report = "simtools.applications.docs_produce_array_element_report:main"
-scripts.simtools-docs-produce-calibration-reports = "simtools.applications.docs_produce_calibration_reports:main"
-scripts.simtools-docs-produce-model-parameter-reports = """\
-  simtools.applications.docs_produce_model_parameter_reports:main\
-  """
+scripts.simtools-docs-assemble-pages = "simtools.applications.docs_assemble_pages:main"
+scripts.simtools-docs-generate-toctree = "simtools.applications.docs_generate_toctree:main"
 scripts.simtools-docs-produce-production-summary = "simtools.applications.docs_produce_production_summary:main"
-scripts.simtools-docs-produce-simulation-configuration-report = """\
-  simtools.applications.docs_produce_simulation_configuration_report:main\
-  """
+scripts.simtools-docs-produce-reports = "simtools.applications.docs_produce_reports:main"
 scripts.simtools-export-sim-telarray-metadata-schema = "simtools.applications.export_sim_telarray_metadata_schema:main"
 scripts.simtools-generate-array-config = "simtools.applications.generate_array_config:main"
 scripts.simtools-generate-bias-curve-submissions = "simtools.applications.generate_bias_curve_submissions:main"
@@ -115,8 +119,8 @@ scripts.simtools-inspect-file = "simtools.applications.inspect_file:main"
 scripts.simtools-maintain-simulation-model-add-production = """\
   simtools.applications.maintain_simulation_model_add_production:main\
   """
-scripts.simtools-maintain-simulation-model-compare-productions = """\
-  simtools.applications.maintain_simulation_model_compare_productions:main\
+scripts.simtools-maintain-simulation-model-compare-production-tables = """\
+  simtools.applications.maintain_simulation_model_compare_production_tables:main\
   """
 scripts.simtools-maintain-simulation-model-verify-production-tables = """\
   simtools.applications.maintain_simulation_model_verify_production_tables:main\
@@ -131,9 +135,7 @@ scripts.simtools-plot-production-grid = "simtools.applications.plot_production_g
 scripts.simtools-plot-simtel-events = "simtools.applications.plot_simtel_events:main"
 scripts.simtools-plot-simulated-event-distributions = "simtools.applications.plot_simulated_event_distributions:main"
 scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:main"
-scripts.simtools-plot-tabular-data-for-model-parameter = """\
-  simtools.applications.plot_tabular_data_for_model_parameter:main\
-  """
+scripts.simtools-plot-telescope-structure = "simtools.applications.plot_telescope_structure:main"
 scripts.simtools-plot-trigger-patches = "simtools.applications.plot_trigger_patches:main"
 scripts.simtools-production-derive-corsika-limits = "simtools.applications.production_derive_corsika_limits:main"
 scripts.simtools-production-derive-monte-carlo-statistics = """\
@@ -153,11 +155,10 @@ scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_
 scripts.simtools-submit-model-parameter-from-external = """\
   simtools.applications.submit_model_parameter_from_external:main\
   """
-scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
-scripts.simtools-validate-cumulative-psf = "simtools.applications.validate_cumulative_psf:main"
 scripts.simtools-validate-file-using-schema = "simtools.applications.validate_file_using_schema:main"
 scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
 scripts.simtools-validate-repository-consistency = "simtools.applications.validate_repository_consistency:main"
+scripts.simtools-validate-telescope-throughput = "simtools.applications.validate_telescope_throughput:main"
 scripts.simtools-write-production-metadata = "simtools.applications.write_production_metadata:main"
 scripts.simtools-write-reduced-event-lists = "simtools.applications.write_reduced_event_lists:main"
 scripts.simtools-write-trigger-histograms = "simtools.applications.write_trigger_histograms:main"
@@ -194,25 +195,26 @@ format.line-ending = "auto"
 format.skip-magic-trailing-comma = false
 lint.select = [ "E4", "E7", "E9", "F" ]
 lint.extend-select = [
-  "A",      # built-in shadowing
-  "C4",     # comprehension
-  "C90",    # mccabe complex structure
-  "COM",    # flake8-commas
-  "D",      # pydocstyle
-  "ERA",    # commented-out code
-  "F",      # pyflakes
-  "G",      # logging
-  "I",      # isort
-  "ICN",    # import name conventions
-  "ISC",    # implicit string concat rules
-  "N",      # pep8 naming
-  "NPY",    # numpy
-  "PT",     # pytest
-  "PTH",    # use pathlib
-  "RET",    # return statements
-  "RUF",    # ruff
-  "RUF069", # float equality comparison (preview)
-  "UP",     # pyupgrade
+  "A",       # built-in shadowing
+  "C4",      # comprehension
+  "C90",     # mccabe complex structure
+  "COM",     # flake8-commas
+  "D",       # pydocstyle
+  "ERA",     # commented-out code
+  "F",       # pyflakes
+  "G",       # logging
+  "I",       # isort
+  "ICN",     # import name conventions
+  "ISC",     # implicit string concat rules
+  "N",       # pep8 naming
+  "NPY",     # numpy
+  "PLC2701", # private name imported from another module
+  "PT",      # pytest
+  "PTH",     # use pathlib
+  "RET",     # return statements
+  "RUF",     # ruff
+  "RUF069",  # float equality comparison (preview)
+  "UP",      # pyupgrade
 ]
 lint.ignore = [
   "COM812", # incompatible with ruff format
@@ -227,6 +229,7 @@ lint.ignore = [
 lint.explicit-preview-rules = true
 lint.per-file-ignores."**/tests/**" = [
   "D",
+  "PLC2701", # unit tests may test private helpers of the module under test
 ]
 lint.per-file-ignores."**/tests_*.py" = [
   "D",
@@ -316,6 +319,91 @@ main.min-public-methods = 1
 [tool.codespell]
 ignore-words-list = "chec,arrang,livetime,astroid"
 
+[tool.vulture]
+# Names kept deliberately although vulture reports them as unused (dynamic use,
+# test infrastructure, data fields read by callers).
+paths = [ "src/simtools" ]
+ignore_names = [
+  "_check_run_result",
+  "_export_file_parameter_data",
+  "_fill_activity_meta",
+  "_fill_contact_meta",
+  "_fill_context_meta",
+  "_fill_instrument_meta",
+  "_fill_process_meta",
+  "_fill_product_meta",
+  "_interpolate_corsika_limits",
+  "_parse_line",
+  "_plot_xy_heatmap",
+  "_read_query_parameter",
+  "_remove_line_feed",
+  "add_mirrored_options",
+  "area_weight",
+  "AtmosphericTransmissionWriter",
+  "auto_download",
+  "cache_hits",
+  "cache_misses",
+  "check_array_element",
+  "check_array_triggers_name",
+  "check_astropy_unit",
+  "check_astropy_unit_of_length",
+  "check_astropy_unit_of_time",
+  "check_common_particle_name",
+  "create_detailed_parameter_plot",
+  "curved_atmosphere_min_zenith_angle",
+  "EventReader",
+  "ExecutionBackend",
+  "final_percentage_diff",
+  "from_memory",
+  "get_dependency_manifest_digest",
+  "get_list_of_test_configurations",
+  "get_mirrored_option",
+  "GITHUB_BLOB_BASE",
+  "HESSHandler",
+  "HexEdgePixelHandler",
+  "HexOffPixelHandler",
+  # Legend handlers are looked up by name (getattr) in camera_plot_utils and by telescope type.
+  "HexPixelHandler",
+  "iers_degraded_accuracy",
+  "LightSourceRayTracingBackend",
+  "LSTHandler",
+  "MAGICHandler",
+  "ModelStorage",
+  "MSTHandler",
+  "number_of_telescopes",
+  "ObdeectBackend",
+  "peak_timing",
+  "read_legacy_lst_single_pe",
+  "register_stage",
+  "RpolMatrixWriter",
+  "SCTHandler",
+  "SimtelBackend",
+  "simulated_angular_distances",
+  "simulated_core_distances",
+  "simulated_energies",
+  "skip_multiple_version_test",
+  "SquareEdgePixelHandler",
+  "SquareOffPixelHandler",
+  "SquarePixelHandler",
+  "SSTHandler",
+  "TEST_RESOURCES_DOWNLOADED",
+  "TEST_RESOURCES_GENERATED",
+  "TEST_RESOURCES_STATIC",
+  "triggered_angular_distances",
+  "triggered_core_distances",
+  "triggered_energies",
+  "use_network",
+  "validate_application_output",
+  "validate_data_type",
+  "validate_release_tag",
+  "validate_trigger_histograms_file",
+  "VERITASHandler",
+  "write_config_file",
+  "X",
+  "Y",
+]
+min_confidence = 60
+
 [tool.pytest]
 ini_options.minversion = "6.0"
 ini_options.testpaths = "tests/unit_tests/"
@@ -323,7 +411,6 @@ ini_options.pythonpath = [ "tests" ]
 ini_options.norecursedirs = [
   "build",
   "docs/_build",
-  "src/simtools/applications",
 ]
 ini_options.addopts = [
   "-v",
@@ -348,7 +435,7 @@ ini_options.filterwarnings = [
 ]
 
 [tool.coverage]
-run.omit = [ "*__init__*", "src/simtools/_version.py", "src/simtools/applications/**" ]
+run.omit = [ "*__init__*", "src/simtools/_version.py" ]
 run.relative_files = true
 report.exclude_also = [
   'if __name__ == "__main__":',
@@ -374,3 +461,93 @@ fragment.maintenance.name = "Maintenance"
 fragment.maintenance.showcontent = true
 fragment.model.name = "Simulation model"
 fragment.model.showcontent = true
+
+[tool.importlinter]
+root_packages = [
+  "simtools.application",
+  "simtools.applications",
+  "simtools.atmosphere",
+  "simtools.camera",
+  "simtools.configuration",
+  "simtools.corsika",
+  "simtools.data_model",
+  "simtools.io",
+  "simtools.histogram",
+  "simtools.job_execution",
+  "simtools.layout",
+  "simtools.model",
+  "simtools.model_repository",
+  "simtools.production_configuration",
+  "simtools.ray_tracing",
+  "simtools.reporting",
+  "simtools.runners",
+  "simtools.science_tests",
+  "simtools.sim_events",
+  "simtools.simtel",
+  "simtools.simulation",
+  "simtools.testing",
+  "simtools.utils",
+  "simtools.visualization",
+]
+
+[[tool.importlinter.contracts]]
+name = "simtools layers (see docs/source/developer-guide/architecture.md)"
+type = "layers"
+layers = [
+  "simtools.applications",
+  "simtools.application : simtools.configuration : simtools.testing",
+  "simtools.science_tests : simtools.production_configuration : simtools.reporting : simtools.runners",
+  """\
+  simtools.corsika : simtools.simtel : simtools.ray_tracing : simtools.camera : simtools.job_execution : \
+  simtools.simulation : simtools.atmosphere\
+  """,
+  "simtools.visualization",
+  "simtools.model : simtools.model_repository : simtools.layout",
+  "simtools.io : simtools.data_model : simtools.sim_events",
+  "simtools.histogram",
+  "simtools.utils",
+]
+ignore_imports = [
+  "simtools.corsika.build_options -> simtools.configuration.defaults",
+  "simtools.data_model.format_checkers -> simtools.corsika.primary_particle",
+  "simtools.data_model.setting_workflow -> simtools.runners.simtools_runner",
+  "simtools.model.array_model -> simtools.simulation.configuration",
+  "simtools.model.model_utils -> simtools.simulation.configuration",
+  "simtools.model.site_model -> simtools.corsika.corsika_config",
+  "simtools.model.site_model -> simtools.simulation.configuration",
+  "simtools.model.telescope_model -> simtools.simulation.configuration",
+  "simtools.production_configuration.grid -> simtools.configuration.argument_helpers",
+  "simtools.production_configuration.grid -> simtools.configuration.defaults",
+  "simtools.sim_events.formats.eventio_reader -> simtools.corsika.primary_particle",
+  "simtools.sim_events.formats.eventio_reader -> simtools.simtel.simtel_io_metadata",
+  "simtools.sim_events.validate_run_outputs -> simtools.job_execution.log_inspector",
+  "simtools.sim_events.validate_run_outputs -> simtools.model.mirrors",
+  "simtools.sim_events.validate_run_outputs -> simtools.model_repository.asset_names",
+  "simtools.sim_events.validate_run_outputs -> simtools.production_configuration.trigger_histograms",
+  "simtools.sim_events.validate_run_outputs -> simtools.simtel.sim_telarray_metadata",
+  "simtools.sim_events.validate_run_outputs -> simtools.simtel.simtel_io_metadata",
+  "simtools.production_configuration.comparison -> simtools.camera.trace_analysis",
+  "simtools.production_configuration.comparison -> simtools.production_configuration.trigger_histograms",
+  "simtools.production_configuration.comparison -> simtools.simtel.simtel_event_reader",
+  "simtools.production_configuration.comparison -> simtools.simtel.simtel_io_metadata",
+  "simtools.sim_events.reader -> simtools.corsika.primary_particle",
+  "simtools.simtel.simulator_array -> simtools.runners.simtel_runner",
+  "simtools.simtel.simulator_light_emission -> simtools.runners.runner_services",
+  "simtools.simtel.simulator_light_emission -> simtools.runners.simtel_runner",
+  "simtools.simtel.simulator_ray_tracing -> simtools.runners.simtel_runner",
+  "simtools.visualization.plot_production_grid -> simtools.production_configuration.jobs_io",
+  "simtools.visualization.plot_simtel_events -> simtools.camera.trace_analysis",
+  "simtools.visualization.plot_simtel_events -> simtools.simtel.simtel_event_reader",
+  "simtools.visualization.plot_simtel_events -> simtools.simtel.simtel_io_metadata",
+]
+
+[[tool.importlinter.contracts]]
+name = "visualization receives model and engine data"
+type = "forbidden"
+source_modules = [ "simtools.visualization" ]
+forbidden_modules = [ "simtools.ray_tracing", "simtools.camera", "simtools.model" ]
+allow_indirect_imports = true
+ignore_imports = [
+  "simtools.visualization.plot_simtel_events -> simtools.camera.trace_analysis",
+  "simtools.visualization.plot_simtel_events -> simtools.model.camera",
+]

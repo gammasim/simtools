@@ -84,6 +84,13 @@ segmentation; sim_telarray text is generated only by the simulator adapters.
    :members:
 ```
 
+## parameter_catalog
+
+```{eval-rst}
+.. automodule:: data_model.parameter_catalog
+   :members:
+```
+
 (datamodelvalidatedata)=
 
 ## validate_data

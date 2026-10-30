@@ -24,7 +24,7 @@ class GitModelSourceDependencyError(RuntimeError):
 
 
 class GitObjectStore(ABC):
-    """Library-neutral interface used by ``GitModelSource``."""
+    """Library-neutral interface used by ``GitStorage``."""
 
     @abstractmethod
     def resolve_revision(self, revision):
