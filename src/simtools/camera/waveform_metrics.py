@@ -59,7 +59,7 @@ def _pulse_width(wave, peak_index, threshold, dt_ns):
     peak = wave[peak_index]
     if peak <= 0:
         return 0.0, False
-    if peak < threshold:
+    if not peak >= threshold:
         return 0.0, False
     left = right = peak_index
     while left > 0 and wave[left - 1] >= threshold:
