@@ -35,6 +35,15 @@ _CAMERA_COMPONENT_PARAMETERS = (
     "camera_trigger_members",
 )
 _FLASHER_LEGACY_PARAMETERS = ("flasher_pulse_width", "flasher_pulse_exp_decay")
+_LIGHTGUIDE_KEYS = (
+    ("lightguide_angle_parameter", "lightguide_angle_file"),
+    ("lightguide_wavelength_parameter", "lightguide_wavelength_file"),
+)
+_SKIPPED_PARAMETERS = (
+    *_CAMERA_COMPONENT_PARAMETERS,
+    "camera_config_file",
+    *_FLASHER_LEGACY_PARAMETERS,
+)
 
 
 class SimtelConfigWriter:
@@ -71,8 +80,6 @@ class SimtelConfigWriter:
         context=None,
     ):
         """Initialize SimtelConfigWriter."""
-        self._logger = logging.getLogger(__name__)
-
         self._site = site
         self._model_version = model_version
         self._label = label
@@ -106,7 +113,7 @@ class SimtelConfigWriter:
         telescope_design_model: str
             Telescope design model.
         """
-        self._logger.debug(f"Writing telescope config file {config_file_path}")
+        logger.debug(f"Writing telescope config file {config_file_path}")
 
         telescope_name = telescope_name or self._telescope_model_name
         _telescope_design_model = telescope_design_model or self._telescope_design_model
@@ -116,11 +123,11 @@ class SimtelConfigWriter:
 
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
-
-            file.write("#ifdef TELESCOPE\n")
-            file.write(f"   echo Configuration for {telescope_name} - TELESCOPE $(TELESCOPE)\n")
-            file.write("#endif\n\n")
-
+            file.write(
+                "#ifdef TELESCOPE\n"
+                f"   echo Configuration for {telescope_name} - TELESCOPE $(TELESCOPE)\n"
+                "#endif\n\n"
+            )
             for simtel_name, simtel_value in simtel_par.items():
                 file.write(f"{simtel_name} = {self._get_value_string_for_simtel(simtel_value)}\n")
             metadata = self._get_sim_telarray_metadata(
@@ -132,28 +139,10 @@ class SimtelConfigWriter:
                     ["camera_config_file"] if "camera_config_file" in simtel_par else []
                 ),
             )
-            for meta in metadata:
-                file.write(f"{meta}\n")
+            file.write("".join(f"{meta}\n" for meta in metadata))
 
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path, telescope_name=None):
-        """
-        Convert parameter dictionary to sim_telarray configuration file format.
-
-        Accounts for differences between the data models for sim_telarray configuration
-        and the simulation models.
-
-        Parameters
-        ----------
-        parameters: dict
-            Model parameters.
-        config_file_path: str or Path
-            Path of the file to write on.
-
-        Returns
-        -------
-        dict
-            Model parameters in sim_telarray format.
-        """
+        """Convert model parameters to sim_telarray names and values."""
         simtel_par = {}
         camera_file = self._write_camera_file(
             parameters, config_file_path, telescope_name=telescope_name
@@ -163,11 +152,7 @@ class SimtelConfigWriter:
         elif "camera_config_file" in parameters:
             simtel_par["camera_config_file"] = parameters["camera_config_file"]["value"]
         for par, value in parameters.items():
-            if (
-                par in _CAMERA_COMPONENT_PARAMETERS
-                or par == "camera_config_file"
-                or par in _FLASHER_LEGACY_PARAMETERS
-            ):
+            if par in _SKIPPED_PARAMETERS:
                 continue
             if par == "mirror_list" and uses_segmented_dual_mirror_geometry(parameters):
                 simtel_par["mirror_list"] = None
@@ -191,10 +176,9 @@ class SimtelConfigWriter:
 
     def _write_camera_file(self, parameters, config_file_path, telescope_name=None):
         """Write a sim_telarray camera file from independent camera parameters."""
-        component_names = set(_CAMERA_COMPONENT_PARAMETERS) & set(parameters)
-        if not component_names:
+        missing = sorted(set(_CAMERA_COMPONENT_PARAMETERS) - set(parameters))
+        if len(missing) == len(_CAMERA_COMPONENT_PARAMETERS):
             return None
-        missing = sorted(set(_CAMERA_COMPONENT_PARAMETERS) - component_names)
         if missing:
             raise ValueError(f"Camera component parameters are missing: {missing}")
 
@@ -203,40 +187,17 @@ class SimtelConfigWriter:
         cache_key = repr(
             tuple((name, parameters.get(name)) for name in _CAMERA_COMPONENT_PARAMETERS)
         )
-        shared_camera = self._camera_uses_design_parameters(parameters)
+        shared_camera = self._telescope_design_model is not None and all(
+            parameters[name].get("instrument") == self._telescope_design_model
+            for name in _CAMERA_COMPONENT_PARAMETERS
+        )
         camera_name = self._telescope_design_model if shared_camera else telescope_name
         output = destination / f"camera-{camera_name}.dat"
         if output.is_file() and (shared_camera or self._camera_file_cache.get(output) == cache_key):
             return output.name
 
-        pixel_types = deepcopy(self._parameter_value(parameters, "camera_pixel_types"))
-        for pixel_type in pixel_types:
-            angle_parameter = pixel_type.pop("lightguide_angle_parameter", None)
-            if angle_parameter is not None:
-                pixel_type["lightguide_angle_parameter"] = angle_parameter
-                self._resolve_lightguide_file(
-                    pixel_type,
-                    "lightguide_angle_parameter",
-                    "lightguide_angle_file",
-                    parameters,
-                    destination,
-                    telescope_name,
-                )
-            self._resolve_lightguide_file(
-                pixel_type,
-                "lightguide_wavelength_parameter",
-                "lightguide_wavelength_file",
-                parameters,
-                destination,
-                telescope_name,
-            )
-
-        pixels = self._camera_table_records(parameters, "camera_pixel_layout")
-        expected_pixels = self._parameter_value(parameters, "camera_pixels")
-        if expected_pixels is not None and int(expected_pixels) != len(pixels):
-            raise ValueError(
-                f"camera_pixels={expected_pixels} does not match camera layout rows={len(pixels)}"
-            )
+        pixel_types = self._write_lightguide_tables(parameters, destination, telescope_name)
+        pixels = self._validated_camera_pixels(parameters)
         configuration = {
             "rotate": self._parameter_value(parameters, "camera_rotate"),
             "pixel_types": pixel_types,
@@ -248,105 +209,80 @@ class SimtelConfigWriter:
         self._camera_file_cache[output] = cache_key
         return result
 
-    def _camera_uses_design_parameters(self, parameters):
-        """Return whether all camera components come from the design model."""
-        if self._telescope_design_model is None:
-            return False
-        return all(
-            parameters[name].get("instrument") == self._telescope_design_model
-            for name in _CAMERA_COMPONENT_PARAMETERS
-        )
+    def _write_lightguide_tables(self, parameters, destination, telescope_name):
+        """Return pixel types with light-guide table references written to sim_telarray files."""
+        pixel_types = deepcopy(self._parameter_value(parameters, "camera_pixel_types"))
+        for pixel_type in pixel_types:
+            for parameter_key, output_key in _LIGHTGUIDE_KEYS:
+                parameter_name = pixel_type.pop(parameter_key, None)
+                if parameter_name is not None:
+                    pixel_type[output_key] = self._write_parameter_table(
+                        parameter_name,
+                        parameters[parameter_name],
+                        destination,
+                        f"{parameter_name}-{telescope_name}.dat",
+                        require_rows=True,
+                    )
+        return pixel_types
+
+    def _validated_camera_pixels(self, parameters):
+        """Return camera pixel rows after checking them against the expected pixel count."""
+        pixels = self._camera_table_records(parameters, "camera_pixel_layout")
+        expected_pixels = self._parameter_value(parameters, "camera_pixels")
+        if expected_pixels is not None and int(expected_pixels) != len(pixels):
+            raise ValueError(
+                f"camera_pixels={expected_pixels} does not match camera layout rows={len(pixels)}"
+            )
+        return pixels
 
     @staticmethod
     def _parameter_value(parameters, parameter_name):
         """Return a selected parameter value or ``None`` for an absent optional value."""
-        data = parameters.get(parameter_name)
-        return None if data is None else data.get("value")
+        return (parameters.get(parameter_name) or {}).get("value")
 
     def _camera_table_records(self, parameters, parameter_name):
-        """Read one exported camera component table into scalar records."""
-        table = self._read_camera_table(parameters, parameter_name)
-        columns = [
-            [getattr(value, "value", value) for value in table[column]] for column in table.colnames
-        ]
-        return [dict(zip(table.colnames, row)) for row in zip(*columns)]
-
-    def _read_camera_table(self, parameters, parameter_name):
-        """Read and validate an exported camera component table."""
+        """Return the rows of an exported camera component table as scalar dicts."""
         parameter_data = parameters.get(parameter_name)
         if parameter_data is None:
             raise ValueError(f"Camera component parameter is missing: {parameter_name}")
+        table = self._read_parameter_table(parameter_data)
+        columns = [[getattr(v, "value", v) for v in table[column]] for column in table.colnames]
+        return [dict(zip(table.colnames, row)) for row in zip(*columns)]
+
+    def _read_parameter_table(self, parameter_data):
+        """Return the astropy table of a model parameter via the model reader."""
         if self._model_reader is None:
             raise RuntimeError("sim_telarray table serialization requires a model reader")
         return self._model_reader.get_parameter_table(parameter_data)
 
-    def _resolve_lightguide_file(
-        self, pixel_type, parameter_key, output_key, parameters, destination, telescope_name
+    def _write_parameter_table(
+        self, parameter_name, parameter_data, destination, default_name, require_rows=False
     ):
-        """Export a selected lightguide table and store its generated basename."""
-        parameter_name = pixel_type.pop(parameter_key, None)
-        if parameter_name is None:
-            return
-        schema_data = schema.get_model_parameter_schema(
-            parameter_name, parameters[parameter_name].get("model_parameter_schema_version")
-        )
-        contract = get_simtel_serialization(schema_data)
-        output_name = get_simtel_table_file_name(parameters[parameter_name])
-        shared_output = output_name is not None
-        output_name = output_name or f"{parameter_name}-{telescope_name}.dat"
-        cache_key = (parameter_name, parameters[parameter_name])
-        if (
-            self._get_cached_table_output(
-                destination, contract, output_name, cache_key, allow_existing=shared_output
+        """Write an ECSV model parameter as sim_telarray table unless it is already up to date."""
+        contract = get_simtel_serialization(
+            schema.get_model_parameter_schema(
+                parameter_name, parameter_data.get("model_parameter_schema_version")
             )
-            is None
+        )
+        shared_name = get_simtel_table_file_name(parameter_data)
+        output_name = shared_name or default_name
+        output_path = Path(destination) / output_name
+        serialization_key = repr(((parameter_name, parameter_data), contract))
+        if not (
+            output_path.is_file()
+            and (
+                shared_name is not None
+                or self._serialized_table_cache.get(output_path) == serialization_key
+            )
         ):
-            table = self._read_camera_table(parameters, parameter_name)
-            if len(table) == 0:
+            table = self._read_parameter_table(parameter_data)
+            if require_rows and len(table) == 0:
                 raise ValueError(f"Selected lightguide parameter is empty: {parameter_name}")
-            self._write_cached_table(
-                table,
-                destination,
-                contract=contract,
-                output_name=output_name,
-                cache_key=cache_key,
-                allow_existing=shared_output,
+            table_serializers.write_simtel_table(
+                table, destination, contract=contract, output_name=output_name
             )
-        pixel_type[output_key] = output_name
-
-    def _get_cached_table_output(
-        self, destination, contract, output_name, cache_key, allow_existing=False
-    ):
-        """Return a cached table filename when its serialized output is available."""
-        output_path = Path(destination) / output_name
-        serialization_key = repr((cache_key, contract))
-        if output_path.is_file() and (
-            allow_existing or self._serialized_table_cache.get(output_path) == serialization_key
-        ):
-            return output_name
-        return None
-
-    def _write_cached_table(
-        self, table, destination, contract, output_name, cache_key, allow_existing=False
-    ):
-        """Write a table once while its model data and destination remain unchanged."""
-        output_path = Path(destination) / output_name
-        serialization_key = repr((cache_key, contract))
-        if (
-            self._get_cached_table_output(
-                destination, contract, output_name, cache_key, allow_existing=allow_existing
-            )
-            is not None
-        ):
-            return output_name
-        result = table_serializers.write_simtel_table(
-            table,
-            destination,
-            contract=contract,
-            output_name=output_name,
-        )
-        self._serialized_table_cache[output_path] = serialization_key
-        return result
+            self._serialized_table_cache[output_path] = serialization_key
+        return output_name
 
     @staticmethod
     def _get_sim_telarray_config_parameter_name(parameter_name):
@@ -354,35 +290,13 @@ class SimtelConfigWriter:
         simtel_name = catalog.get_simulation_software_name_from_parameter_name(
             parameter_name, software_name="sim_telarray"
         )
-        if (
-            simtel_name
-            and catalog.get_simulation_software_meta_parameter_mode(
-                parameter_name, software_name="sim_telarray"
-            )
-            == "set"
-        ):
-            return None
-        return simtel_name
+        mode = catalog.get_simulation_software_meta_parameter_mode(
+            parameter_name, software_name="sim_telarray"
+        )
+        return None if simtel_name and mode == "set" else simtel_name
 
     def _get_flasher_parameters_for_sim_telarray(self, parameters, simtel_par):
-        """
-        Combine flasher pulse time parameters into a single parameter.
-
-        Takes into account that sim_telarray expects a single parameter with a specific name.
-
-        Parameters
-        ----------
-        parameters: dict
-            Model parameters.
-        simtel_par: dict
-            Model parameters in sim_telarray format.
-
-        Returns
-        -------
-        dict
-            Model parameters in sim_telarray format including flasher parameters.
-
-        """
+        """Combine flasher pulse time parameters into the single sim_telarray parameter set."""
         if "flasher_pulse_shape" not in parameters:
             return simtel_par
 
@@ -391,7 +305,6 @@ class SimtelConfigWriter:
             "tophat": "laser_pulse_twidth",
             "gauss-exponential": "laser_pulse_sigtime",
         }
-
         shape_value = self._parameter_value(parameters, "flasher_pulse_shape")
         if isinstance(shape_value, str):
             shape = shape_value.lower()
@@ -402,40 +315,78 @@ class SimtelConfigWriter:
         else:
             shape, width, exp_decay = shape_value
             shape = shape.lower()
-
         simtel_par.pop("flasher_pulse_width", None)
         simtel_par.pop("flasher_pulse_exp_decay", None)
-
         simtel_par["laser_pulse_exptime"] = exp_decay if ("exponential" in shape) else 0.0
-
         simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
         if shape in mapping:
             simtel_par[mapping[shape]] = width
         elif shape != "exponential":
-            self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")
+            logger.warning(f"Flasher pulse shape '{shape}' without width definition")
 
         return simtel_par
 
     def _get_value_string_for_simtel(self, value):
-        """
-        Return a value string for simtel.
-
-        Parameters
-        ----------
-        value: any
-            Value to convert to string.
-
-        Returns
-        -------
-        str
-            Value string for simtel.
-        """
+        """Return a value string for simtel (none, 0/1 for booleans, space-separated lists)."""
         value = "none" if value is None else value  # simtel requires 'none'
         if isinstance(value, bool):
             value = 1 if value else 0
         elif isinstance(value, list | np.ndarray):
             value = value_conversion.convert_list_to_string(value, shorten_list=True)
         return value
+
+    def _config_type_meta_parameters(self, config_type, telescope_model_name, design_model):
+        """Return the release/config header lines and metaparam prefix for a config type."""
+        meta_parameters = [
+            f"config_release = {self._model_version} with simtools v{simtools.version.__version__}",
+            f"config_version = {self._model_version}",
+        ]
+        design_model = design_model or "design_model_not_set"
+        if config_type == "telescope":
+            meta_parameters.extend(
+                [
+                    f"camera_config_name = {design_model}",
+                    f"camera_config_variant = {telescope_model_name}",
+                    f"camera_config_version = {self._model_version}",
+                    f"optics_config_name = {design_model}",
+                    f"optics_config_variant = {telescope_model_name}",
+                    f"optics_config_version = {self._model_version}",
+                ]
+            )
+            return meta_parameters, "metaparam telescope"
+        if config_type == "site":
+            meta_parameters.extend(
+                [
+                    f"site_config_name = {self._site}",
+                    "site_config_variant = ",
+                    f"site_config_version = {self._model_version}",
+                    f"array_config_name = {self._layout_name}",
+                    "array_config_variant = ",
+                    f"array_config_version = {self._model_version}",
+                    "metaparam global add random_seed",
+                ]
+            )
+            return meta_parameters, "metaparam global"
+        raise ValueError(f"Unknown metadata type {config_type}")
+
+    @staticmethod
+    def _model_parameter_meta_lines(model_parameters, prefix):
+        """Return add/set metaparam lines for model parameters known to sim_telarray."""
+        lines = []
+        for key, value in (model_parameters or {}).items():
+            if key == "camera_config_file":
+                continue
+            simtel_name = catalog.get_simulation_software_name_from_parameter_name(
+                key, software_name="sim_telarray"
+            )
+            mode = catalog.get_simulation_software_meta_parameter_mode(
+                key, software_name="sim_telarray"
+            )
+            if simtel_name and mode == "add":
+                lines.append(f"{prefix} add {simtel_name}")
+            elif simtel_name and mode == "set":
+                lines.append(f"{prefix} set {simtel_name}={value['value']}")
+        return lines
 
     def _get_sim_telarray_metadata(
         self,
@@ -446,91 +397,21 @@ class SimtelConfigWriter:
         telescope_design_model=None,
         additional_meta_parameters=None,
     ):
-        """
-        Return sim_telarray metadata.
-
-        Parameters
-        ----------
-        type: str
-            Type of the configuration file (telescope, site)
-        model_parameters: dict
-            Model parameters dictionary.
-        telescope_model_name: str
-            Name of the telescope model
-        additional_metadata: dict
-            Dictionary with additional metadata to include using 'set'.
-        telescope_design_model: str
-            Name of the telescope design model.
-
-        Returns
-        -------
-        list
-            List with sim_telarray metadata.
-        """
-        meta_parameters = [
-            f"config_release = {self._model_version} with simtools v{simtools.version.__version__}",
-            f"config_version = {self._model_version}",
-        ]
-        telescope_design_model = telescope_design_model or "design_model_not_set"
-        if config_type == "telescope":
-            meta_parameters.extend(
-                [
-                    f"camera_config_name = {telescope_design_model}",
-                    f"camera_config_variant = {telescope_model_name}",
-                    f"camera_config_version = {self._model_version}",
-                    f"optics_config_name = {telescope_design_model}",
-                    f"optics_config_variant = {telescope_model_name}",
-                    f"optics_config_version = {self._model_version}",
-                ]
-            )
-            prefix = "metaparam telescope"
-        elif config_type == "site":
-            meta_parameters.extend(
-                [
-                    f"site_config_name = {self._site}",
-                    "site_config_variant = ",
-                    f"site_config_version = {self._model_version}",
-                    f"array_config_name = {self._layout_name}",
-                    "array_config_variant = ",
-                    f"array_config_version = {self._model_version}",
-                ]
-            )
-            prefix = "metaparam global"
-            meta_parameters.append("metaparam global add random_seed")
-        else:
-            raise ValueError(f"Unknown metadata type {config_type}")
-
-        self._add_model_parameters_to_metadata(model_parameters, meta_parameters, prefix)
+        """Return sim_telarray metadata lines for a 'telescope' or 'site' configuration file."""
+        meta_parameters, prefix = self._config_type_meta_parameters(
+            config_type, telescope_model_name, telescope_design_model
+        )
+        meta_parameters.extend(self._model_parameter_meta_lines(model_parameters, prefix))
 
         for parameter in additional_meta_parameters or []:
             meta_parameters.append(f"{prefix} add {parameter}")
 
-        if additional_metadata:
-            for key, value in additional_metadata.items():
-                if value is not None:
-                    meta_parameters.append(f"{prefix} set {key}={value}")
+        for key, value in (additional_metadata or {}).items():
+            if value is not None:
+                meta_parameters.append(f"{prefix} set {key}={value}")
 
         simtel_validate_metadata.validate_metadata(meta_parameters)
         return meta_parameters
-
-    def _add_model_parameters_to_metadata(self, model_parameters, meta_parameters, prefix):
-        """Add model parameters to metadata."""
-        if not model_parameters:
-            return
-
-        for key, value in model_parameters.items():
-            if key == "camera_config_file":
-                continue
-            simtel_name = catalog.get_simulation_software_name_from_parameter_name(
-                key, software_name="sim_telarray"
-            )
-            mode = catalog.get_simulation_software_meta_parameter_mode(
-                key, software_name="sim_telarray"
-            )
-            if simtel_name and mode == "add":
-                meta_parameters.append(f"{prefix} add {simtel_name}")
-            elif simtel_name and mode == "set":
-                meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
 
     def write_array_config_file(
         self, config_file_path, telescope_model, site_model, additional_metadata=None
@@ -562,17 +443,17 @@ class SimtelConfigWriter:
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "ARRAY CONFIGURATION FILE")
 
-            file.write("#ifndef TELESCOPE\n")
-            file.write("# define TELESCOPE 0\n")
-            file.write("#endif\n\n")
+            file.write("#ifndef TELESCOPE\n# define TELESCOPE 0\n#endif\n\n")
 
             # TELESCOPE 0 - global parameters
-            file.write("#if TELESCOPE == 0\n")
-            file.write(self.TAB + "echo *****************************\n")
-            file.write(self.TAB + f"echo Site: {self._site}\n")
-            file.write(self.TAB + f"echo LayoutName: {self._layout_name}\n")
-            file.write(self.TAB + f"echo ModelVersion: {self._model_version}\n")
-            file.write(self.TAB + "echo *****************************\n\n")
+            file.write(
+                "#if TELESCOPE == 0\n"
+                f"{self.TAB}echo *****************************\n"
+                f"{self.TAB}echo Site: {self._site}\n"
+                f"{self.TAB}echo LayoutName: {self._layout_name}\n"
+                f"{self.TAB}echo ModelVersion: {self._model_version}\n"
+                f"{self.TAB}echo *****************************\n\n"
+            )
 
             self._write_simtools_parameters(file)
 
@@ -639,68 +520,44 @@ class SimtelConfigWriter:
         set_focal_length_to_zero: bool
             Flag to set the focal length to zero.
         """
-        (
-            __,
-            __,
-            mirror_panel_diameter,
-            focal_length,
-            shape_type,
-        ) = mirrors.get_single_mirror_parameters(mirror_number)
+        _, _, mirror_panel_diameter, focal_length, shape_type = (
+            mirrors.get_single_mirror_parameters(mirror_number)
+        )
         with open(single_mirror_list_file, "w", encoding="utf-8") as file:
             self._write_header(file, "MIRROR LIST FILE", "#")
-
-            file.write("# Column 1: X pos. [cm] (North/Down)\n")
-            file.write("# Column 2: Y pos. [cm] (West/Right from camera)\n")
-            file.write("# Column 3: flat-to-flat diameter [cm]\n")
             file.write(
+                "# Column 1: X pos. [cm] (North/Down)\n"
+                "# Column 2: Y pos. [cm] (West/Right from camera)\n"
+                "# Column 3: flat-to-flat diameter [cm]\n"
                 "# Column 4: focal length [cm], typically zero = adapting in sim_telarray.\n"
-            )
-            file.write(
                 "# Column 5: shape type: 0=circular, 1=hex. with flat side parallel to y, "
                 "2=square, 3=other hex. (default: 0)\n"
-            )
-            file.write(
                 "# Column 6: Z pos (height above dish backplane) [cm], typ. omitted (or zero)"
                 " to adapt to dish shape settings.\n"
-            )
-            file.write("#\n")
-            file.write(
+                "#\n"
                 f"0. 0. {mirror_panel_diameter.to('cm').value} "
                 f"{focal_length.to('cm').value if not set_focal_length_to_zero else 0} "
                 f"{shape_type} 0.\n"
             )
 
     def _write_header(self, file, title, comment_char="%"):
-        """
-        Write a generic header.
-
-        Parameters
-        ----------
-        file: file
-            File to write.
-        title: str
-            Title of the header.
-        comment_char: str
-            Character to be used for comments, which differs among types of config files.
-        """
-        header = f"{comment_char}{50 * '='}\n"
-        header += f"{comment_char} {title}\n"
-        header += f"{comment_char} Site: {self._site}\n"
-        header += f"{comment_char} ModelVersion: {self._model_version}\n"
-        header += (
-            f"{comment_char} TelescopeModelName: {self._telescope_model_name}\n"
-            if self._telescope_model_name is not None
-            else ""
-        )
-        header += (
-            f"{comment_char} LayoutName: {self._layout_name}\n"
-            if self._layout_name is not None
-            else ""
-        )
-        header += f"{comment_char} Label: {self._label}\n" if self._label is not None else ""
-        header += f"{comment_char}{50 * '='}\n"
-        header += f"{comment_char}\n"
-        file.write(header)
+        """Write a generic header with site, model version and optional names."""
+        sep = f"{comment_char}{50 * '='}"
+        optional = {
+            "TelescopeModelName": self._telescope_model_name,
+            "LayoutName": self._layout_name,
+            "Label": self._label,
+        }
+        lines = [
+            sep,
+            f"{comment_char} {title}",
+            f"{comment_char} Site: {self._site}",
+            f"{comment_char} ModelVersion: {self._model_version}",
+            *(f"{comment_char} {key}: {val}" for key, val in optional.items() if val is not None),
+            sep,
+            comment_char,
+        ]
+        file.write("".join(f"{line}\n" for line in lines))
 
     def _write_simtools_parameters(self, file):
         """Write simtools-specific parameters as metadata."""
@@ -726,34 +583,18 @@ class SimtelConfigWriter:
             raise AttributeError("CORSIKA executable path is not set in settings.") from exc
 
         file.write(f"{self.TAB}% Simtools parameters\n")
-        meta_lines = []
-        for key, value in meta_items.items():
-            if not isinstance(value, list):
-                meta_lines.append(f"metaparam global set {key} = {value}")
-
+        meta_lines = [
+            f"metaparam global set {key} = {value}"
+            for key, value in meta_items.items()
+            if not isinstance(value, list)
+        ]
         simtel_validate_metadata.validate_metadata(meta_lines)
-        for line in meta_lines:
-            file.write(f"{self.TAB}{line}\n")
+        file.write("".join(f"{self.TAB}{line}\n" for line in meta_lines))
 
     def _write_site_parameters(
         self, file, site_parameters, model_path, telescope_model, additional_metadata=None
     ):
-        """
-        Write site parameters.
-
-        Parameters
-        ----------
-        file: file
-            File to write on.
-        site_parameters: site parameters
-            Site parameters.
-        model_path: Path
-            Path to the model for writing of additional files.
-        telescope_model: dict of TelescopeModel
-            Telescope models.
-        additional_metadata: dict
-            Dictionary with additional metadata to include.
-        """
+        """Write site parameters and their sim_telarray metadata."""
         file.write(self.TAB + "% Site parameters\n")
         for par, value in site_parameters.items():
             simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
@@ -781,41 +622,16 @@ class SimtelConfigWriter:
         parameter_name=None,
         parameter_data=None,
     ):
-        """
-        Convert model parameter value to simtel format.
-
-        This might involve format or unit conversion and writing to a parameter file.
-
-        Parameters
-        ----------
-        simtel_name: str
-            Parameter name.
-        value: any
-            Value to convert.
-        model_path: Path
-            Path to the model for writing of additional files.
-        telescope_model: dict of TelescopeModel
-            Telescope models.
-
-        Returns
-        -------
-        str, any
-            Converted parameter name and value.
-        """
+        """Convert a model parameter value to sim_telarray format (may write a table file)."""
         if simtel_name is None:
             return None, None
-        conversion_dict = {
-            "array_triggers": self._write_array_triggers_file,
-            "fadc_pulse_shape": lambda v, mp, tm: self._write_table_parameter_file(
-                "fadc_pulse_shape", v, mp, tm, parameter_name, parameter_data
-            ),
-        }
         if simtel_name in {"primary_segmentation", "secondary_segmentation"} and isinstance(
             value, list
         ):
-            output, shared_output = self._get_segmentation_output_path(
-                parameter_name, model_path, parameter_data
-            )
+            instrument = parameter_data.get("instrument")
+            shared_output = instrument is not None and instrument == self._telescope_design_model
+            suffix = instrument if shared_output else Path(model_path).stem
+            output = Path(model_path).parent / f"{parameter_name}-{suffix}.dat"
             if shared_output and output.is_file():
                 return simtel_name, output.name
             return simtel_name, segmentation.write_mirror_segmentation(
@@ -828,25 +644,26 @@ class SimtelConfigWriter:
             return simtel_name, self._write_table_parameter_file(
                 simtel_name, value, model_path, telescope_model, parameter_name, parameter_data
             )
+        conversions = {
+            "array_triggers": lambda: self._write_array_triggers_file(
+                value, model_path, telescope_model
+            ),
+            "fadc_pulse_shape": lambda: self._write_table_parameter_file(
+                "fadc_pulse_shape",
+                value,
+                model_path,
+                telescope_model,
+                parameter_name,
+                parameter_data,
+            ),
+        }
         try:
-            value = conversion_dict[simtel_name](value, model_path, telescope_model)
+            value = conversions[simtel_name]()
         except KeyError:
             pass
         except AttributeError:  # covers cases where telescope_model is None
             return None, None
         return simtel_name, value
-
-    def _get_segmentation_output_path(self, parameter_name, model_path, parameter_data):
-        """Return the output path and sharing flag for mirror segmentation."""
-        instrument = parameter_data.get("instrument")
-        if instrument is not None and instrument == self._telescope_design_model:
-            suffix = instrument
-            shared_output = True
-        else:
-            suffix = Path(model_path).stem
-            shared_output = False
-        output = Path(model_path).parent / f"{parameter_name}-{suffix}.dat"
-        return output, shared_output
 
     def _write_table_parameter_file(
         self,
@@ -857,212 +674,82 @@ class SimtelConfigWriter:
         source_parameter=None,
         parameter_data=None,
     ):
-        """
-        Write an ECSV table parameter to an ASCII file for sim_telarray.
-
-        Parameters
-        ----------
-        parameter_name : str
-            Parameter name.
-        value : str
-            ECSV filename from the model parameter record.
-        model_path : Path
-            Path to the telescope config file being written.
-        _telescope_model : ignored
-            Unused; present to match the conversion callback signature.
-
-        Returns
-        -------
-        str
-            Basename of the written file, or the original string value unchanged.
-        """
+        """Write an ECSV table parameter as sim_telarray table; return its basename or value."""
         if isinstance(value, str) and value.lower().endswith(".ecsv"):
-            dest_dir = Path(model_path).parent
             if self._model_reader is None:
                 raise RuntimeError("sim_telarray table serialization requires a model reader")
-            schema_data = schema.get_model_parameter_schema(
-                source_parameter, parameter_data.get("model_parameter_schema_version")
-            )
-            contract = get_simtel_serialization(schema_data)
-            output_name = get_simtel_table_file_name(parameter_data)
-            shared_output = output_name is not None
-            output_name = (
-                output_name or f"{source_parameter or parameter_name}-{Path(model_path).stem}.dat"
-            )
-            cache_key = (source_parameter or parameter_name, parameter_data)
-            if (
-                self._get_cached_table_output(
-                    dest_dir, contract, output_name, cache_key, allow_existing=shared_output
-                )
-                is not None
-            ):
-                return output_name
-            table = self._model_reader.get_parameter_table(parameter_data)
-            return self._write_cached_table(
-                table,
-                dest_dir,
-                contract=contract,
-                output_name=output_name,
-                cache_key=cache_key,
-                allow_existing=shared_output,
+            name = source_parameter or parameter_name
+            return self._write_parameter_table(
+                name,
+                parameter_data,
+                Path(model_path).parent,
+                f"{name}-{Path(model_path).stem}.dat",
             )
         if not isinstance(value, dict):
             return value
         raise TypeError("sim_telarray table writing requires a validated Astropy ECSV table")
 
     def _write_array_triggers_file(self, array_triggers, model_path, telescope_model):
-        """
-        Write array trigger definition file in simtel format.
-
-        Parameters
-        ----------
-        array_triggers: dict
-            Array trigger definitions.
-        model_path: Path
-            Path to the model for writing of additional files.
-        telescope_model: dict of TelescopeModel
-            Telescope models.
-        """
-        trigger_per_telescope_type = self._group_telescopes_by_type(telescope_model)
-        hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity = (
-            self._process_telescope_triggers(array_triggers, trigger_per_telescope_type)
-        )
-
-        array_triggers_file = "array_triggers.dat"
-        model_directory = self._get_model_directory(model_path)
-        with open(model_directory / array_triggers_file, "w", encoding="utf-8") as file:
-            file.write("# Array trigger definition\n")
-            self._write_trigger_lines(
-                file, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
-            )
-
-        return array_triggers_file
-
-    @staticmethod
-    def _get_model_directory(model_path):
-        """Return the configuration directory for a directory or config-file path."""
-        path = Path(model_path)
-        return path if path.is_dir() else path.parent
-
-    def _group_telescopes_by_type(self, telescope_model):
-        """Group telescopes by their type."""
+        """Write the array trigger definition file (simtel format) and return its basename."""
         trigger_per_telescope_type = {}
         for count, tel_name in enumerate(telescope_model.keys()):
             telescope_type = names.get_array_element_type_from_name(tel_name)
             trigger_per_telescope_type.setdefault(telescope_type, []).append(count + 1)
-        return trigger_per_telescope_type
 
-    def _process_telescope_triggers(self, array_triggers, trigger_per_telescope_type):
-        """Process telescope triggers and group them by hardstereo and parameters."""
-        hardstereo_lines = []
+        lines = []
         non_hardstereo_groups = {}
         all_non_hardstereo_tels = []
         multiplicity = None
-
         for tel_type, tel_list in trigger_per_telescope_type.items():
-            trigger_dict = self._get_array_triggers_for_telescope_type(
-                array_triggers, tel_type, len(tel_list)
-            )
-            width, minsep = self._extract_trigger_parameters(trigger_dict)
-            multiplicity = trigger_dict["multiplicity"]["value"]  # Store for later use
-
-            if trigger_dict.get("hard_stereo", {}).get("value"):
-                line = self._build_trigger_line(
-                    trigger_dict, tel_list, width, minsep, hardstereo=True
-                )
-                hardstereo_lines.append(line)
+            suffix = "_single_telescope" if len(tel_list) == 1 else "_array"
+            trigger = next((t for t in array_triggers if t["name"] == tel_type + suffix), None)
+            width = trigger["width"]["value"] * u.Unit(trigger["width"]["unit"]).to("ns")
+            sep = trigger["min_separation"]
+            minsep = None
+            if all(sep[key] is not None for key in ["value", "unit"]):
+                minsep = sep["value"] * u.Unit(sep["unit"]).to("m")
+            multiplicity = trigger["multiplicity"]["value"]  # Store for later use
+            if trigger.get("hard_stereo", {}).get("value"):
+                lines.append(self._trigger_line(multiplicity, tel_list, width, minsep, True))
             else:
-                key = (width, minsep)
-                non_hardstereo_groups.setdefault(key, []).extend(tel_list)
+                non_hardstereo_groups.setdefault((width, minsep), []).extend(tel_list)
                 all_non_hardstereo_tels.extend(tel_list)
 
-        return hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+        # Individual non-hardstereo groups if they have different parameters
+        if len(non_hardstereo_groups) > 1:
+            lines += [
+                self._trigger_line(multiplicity, tel_list, width, minsep)
+                for (width, minsep), tel_list in non_hardstereo_groups.items()
+            ]
+        # Combined line with all non-hardstereo telescopes using shortest values
+        if all_non_hardstereo_tels:
+            minseps = [minsep for _, minsep in non_hardstereo_groups if minsep is not None]
+            lines.append(
+                self._trigger_line(
+                    multiplicity,
+                    sorted(all_non_hardstereo_tels),
+                    min(width for width, _ in non_hardstereo_groups),
+                    min(minseps) if minseps else None,
+                )
+            )
 
-    def _extract_trigger_parameters(self, trigger_dict):
-        """Extract width and min_separation parameters from trigger dictionary."""
-        width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
-        minsep = None
-        if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
-            minsep = trigger_dict["min_separation"]["value"] * u.Unit(
-                trigger_dict["min_separation"]["unit"]
-            ).to("m")
-        return width, minsep
+        array_triggers_file = "array_triggers.dat"
+        model_path = Path(model_path)
+        model_directory = model_path if model_path.is_dir() else model_path.parent
+        with open(model_directory / array_triggers_file, "w", encoding="utf-8") as file:
+            file.write("# Array trigger definition\n" + "".join(f"{line}\n" for line in lines))
 
-    def _build_trigger_line(self, trigger_dict, tel_list, width, minsep, hardstereo=False):
-        """Build a trigger line string."""
-        line = f"Trigger {trigger_dict['multiplicity']['value']} of "
-        line += ", ".join(map(str, tel_list))
-        line += f" width {width}"
+        return array_triggers_file
+
+    @staticmethod
+    def _trigger_line(multiplicity, tel_list, width, minsep, hardstereo=False):
+        """Return one sim_telarray 'Trigger' line."""
+        line = f"Trigger {multiplicity} of " + ", ".join(map(str, tel_list)) + f" width {width}"
         if hardstereo:
             line += " hardstereo"
         if minsep is not None:
             line += f" minsep {minsep}"
         return line
-
-    def _write_trigger_lines(
-        self, file, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
-    ):
-        """Write all trigger lines to file."""
-        # Write hardstereo lines first
-        for line in hardstereo_lines:
-            file.write(f"{line}\n")
-
-        # Write individual non-hardstereo groups if they have different parameters
-        if len(non_hardstereo_groups) > 1:
-            for (width, minsep), tel_list in non_hardstereo_groups.items():
-                line = f"Trigger {multiplicity} of "
-                line += ", ".join(map(str, tel_list))
-                line += f" width {width}"
-                if minsep is not None:
-                    line += f" minsep {minsep}"
-                file.write(f"{line}\n")
-
-        # Write combined line with all non-hardstereo telescopes using shortest values
-        if all_non_hardstereo_tels:
-            min_width = min(width for width, minsep in non_hardstereo_groups.keys())
-            min_minsep = self._get_minimum_minsep(non_hardstereo_groups)
-
-            combined_line = f"Trigger {multiplicity} of "
-            combined_line += ", ".join(map(str, sorted(all_non_hardstereo_tels)))
-            combined_line += f" width {min_width}"
-            if min_minsep is not None:
-                combined_line += f" minsep {min_minsep}"
-            file.write(f"{combined_line}\n")
-
-    def _get_minimum_minsep(self, non_hardstereo_groups):
-        """Get minimum min_separation value from groups."""
-        minsep_values = [
-            minsep for width, minsep in non_hardstereo_groups.keys() if minsep is not None
-        ]
-        return min(minsep_values) if minsep_values else None
-
-    def _get_array_triggers_for_telescope_type(
-        self, array_triggers, telescope_type, num_telescopes_of_type
-    ):
-        """
-        Get array trigger for a specific telescope type.
-
-        Parameters
-        ----------
-        array_triggers: dict
-            Array trigger definitions.
-        telescope_type: str
-            Telescope type.
-        num_telescopes_of_type: int
-            Number of telescopes of the specified type.
-
-        Returns
-        -------
-        dict
-            Array trigger for the telescope type.
-        """
-        suffix = "_array"
-        if num_telescopes_of_type == 1:
-            suffix = "_single_telescope"
-        for trigger_dict in array_triggers:
-            if trigger_dict["name"] == telescope_type + suffix:
-                return trigger_dict
-        return None
 
     def write_dummy_telescope_configuration_file(
         self, parameters, config_file_path, telescope_name
@@ -1105,50 +792,28 @@ class SimtelConfigWriter:
             if key in parameters:
                 parameters[key]["value"] = val
 
-        parameters["camera_config_file"] = {
-            "value": dummy_defaults["camera_config_file"],
-        }
+        parameters["camera_config_file"] = {"value": dummy_defaults["camera_config_file"]}
 
         camera_components = {
-            name: parameters.pop(name)
-            for name in _CAMERA_COMPONENT_PARAMETERS
-            if name in parameters
+            n: parameters.pop(n) for n in _CAMERA_COMPONENT_PARAMETERS if n in parameters
         }
         try:
             self.write_telescope_config_file(config_file_path, parameters, telescope_name)
         finally:
             parameters.update(camera_components)
 
-        config_file_directory = Path(config_file_path).parent
-        self._write_dummy_mirror_list_files(config_file_directory, telescope_name)
-        self._write_dummy_camera_files(config_file_directory, telescope_name)
-
-    def _write_dummy_mirror_list_files(self, config_directory, telescope_name):
-        """Write dummy mirror list with single mirror and reflectivity file."""
-        with open(
-            config_directory / f"{telescope_name}_single_12m_mirror.dat", "w", encoding="utf-8"
-        ) as file:
-            file.write("0 0 1200 0.0 0\n")
-        with open(
-            config_directory / f"{telescope_name}_reflectivity.dat", "w", encoding="utf-8"
-        ) as file:
-            file.writelines(f"{w} 0.8\n" for w in range(200, 801, 50))
-
-    def _write_dummy_camera_files(self, config_directory, telescope_name):
-        """Write dummy camera, pulse shape, and funnels file with a single pixel."""
-        with open(
-            config_directory / f"{telescope_name}_single_pixel_camera.dat", "w", encoding="utf-8"
-        ) as file:
-            file.write(f'PixType 1   0  0 300   1 300 0.00   "{telescope_name}_funnels.dat"\n')
-            file.write("Pixel 0 1 0. 0.  0  0  0 0x00 1\n")
-            file.write("Trigger 1 of 0\n")
-
-        with open(config_directory / f"{telescope_name}_funnel.dat", "w", encoding="utf-8") as file:
-            file.writelines(f"{a} 0.78 1.5\n" for a in range(36))
-
-        with open(config_directory / f"{telescope_name}_pulse.dat", "w", encoding="utf-8") as file:
-            file.write("0 0 0\n")
-            file.write("1 1 1\n")
-            file.write("2 2 2\n")
-            file.write("3 3 3\n")
-            file.write("4 0 0\n")
+        t = telescope_name
+        dummy_files = {
+            f"{t}_single_12m_mirror.dat": "0 0 1200 0.0 0\n",
+            f"{t}_reflectivity.dat": "".join(f"{w} 0.8\n" for w in range(200, 801, 50)),
+            f"{t}_single_pixel_camera.dat": (
+                f'PixType 1   0  0 300   1 300 0.00   "{t}_funnels.dat"\n'
+                "Pixel 0 1 0. 0.  0  0  0 0x00 1\n"
+                "Trigger 1 of 0\n"
+            ),
+            f"{t}_funnel.dat": "".join(f"{a} 0.78 1.5\n" for a in range(36)),
+            f"{t}_pulse.dat": "0 0 0\n1 1 1\n2 2 2\n3 3 3\n4 0 0\n",
+        }
+        config_directory = Path(config_file_path).parent
+        for file_name, text in dummy_files.items():
+            (config_directory / file_name).write_text(text, encoding="utf-8")
