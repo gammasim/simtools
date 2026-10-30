@@ -125,11 +125,12 @@ The following environment variables must be set for simtools applications to fin
 
 Simulation-model parameters and referenced files are read from a local checkout or a local
 normal, bare, or mirror Git repository. Applications that use model parameters accept
-`--simulation_models_path`, `--simulation_models_git_path`, and
+
+- a local checkout of the simulation-model repository, use `--simulation_models_path`
+- a local Git repository, use `--simulation_models_git_path` and
 `--simulation_models_git_revision`.
 
 (environment-variables)=
-
 ## Environment Variables
 
 The environment variables listed below are used by simtools applications and defined by the user
@@ -139,8 +140,6 @@ in a `.env` file to be placed in the working directory. Copy the template file
 `simtools-tests` resource version are maintained in `dependency_versions.yml`.
 
 ```console
-# Path to a checked-out simulation-model repository
-SIMTOOLS_SIMULATION_MODELS_PATH='/workdir/simulation-models'
 # Or use a local Git repository and revision
 SIMTOOLS_SIMULATION_MODELS_GIT_PATH='/workdir/simulation-models.git'
 SIMTOOLS_SIMULATION_MODELS_GIT_REVISION='HEAD'
@@ -154,6 +153,13 @@ SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH='/workdir/corsika-interaction-tables'
 SIMTOOLS_USER_NAME='Max Mustermann'
 # ORCID of the user running the application
 SIMTOOLS_USER_ORCID='0000-1234-5678-0000'
+```
+
+In case you want to point to a local checkout of the simulation-model repository, use the following environment variable:
+
+```console
+# Path to a checked-out simulation-model repository
+SIMTOOLS_SIMULATION_MODELS_PATH='/workdir/simulation-models'
 ```
 
 ```{note}
