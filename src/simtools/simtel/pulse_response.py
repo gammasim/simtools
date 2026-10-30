@@ -272,14 +272,25 @@ def _accumulate_waveform(sums, key, wave, dt):
     sums[key] = (total + wave, count + 1, dt)
 
 
-def _read_scan_file(file, telescope, pixels, levels, expected_steps, width_options, pedestal):
+def _read_scan_file(
+    file,
+    telescope,
+    pixels,
+    levels,
+    expected_steps,
+    width_options,
+    pedestal,
+    *,
+    stream_factory=SimTelFile,
+    mapping_reader=get_sim_telarray_telescope_id_to_telescope_name_mapping,
+):
     """Yield measured gain channels from an ordered scan, checking event counts."""
-    mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping(file)
+    mapping = mapping_reader(file)
     tel_id = next((key for key, value in mapping.items() if value == telescope), None)
     if tel_id is None:
         raise ValueError(f"Telescope {telescope} is missing from {file}")
     count = 0
-    with SimTelFile(file, skip_calibration=False) as stream:
+    with stream_factory(file, skip_calibration=False) as stream:
         dt = stream.telescope_descriptions[tel_id]["pixel_settings"]["time_slice"]
         for event in stream:
             if event[TELESCOPE_EVENTS].get(tel_id) is None:

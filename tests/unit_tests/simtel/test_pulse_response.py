@@ -124,28 +124,56 @@ def test_invalid_intensities(pulse_model):
         pulse_response.template_responses(pulse_model, [-1])
 
 
-def test_scan_reads_both_gains_and_pedestals(mocker):
+def test_scan_reads_both_gains_and_pedestals():
     event = {
         "event_id": 1,
         "telescope_events": {1: {"adc_samples": np.array([[[10, 12, 10]], [[20, 21, 20]]])}},
         "camera_monitorings": {1: {"pedestal": [[20], [40]], "n_ped_slices": 2}},
     }
-    mocker.patch.object(
-        pulse_response,
-        "get_sim_telarray_telescope_id_to_telescope_name_mapping",
-        return_value={1: TELESCOPE},
+
+    class FakeStream:
+        telescope_descriptions = {1: {"pixel_settings": {"time_slice": 1}}}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def __iter__(self):
+            return iter([event])
+
+    parsed = list(
+        pulse_response._read_scan_file(
+            SCAN_FILE,
+            TELESCOPE,
+            [0],
+            np.asarray([100]),
+            np.asarray([0]),
+            {pulse_response.WIDTH_FRACTION: 0.95, pulse_response.THRESHOLD_ADC: None},
+            None,
+            stream_factory=lambda *_args, **_kwargs: FakeStream(),
+            mapping_reader=lambda _file: {1: TELESCOPE},
+        )
     )
-    reader = mocker.patch.object(pulse_response, "SimTelFile")
-    reader.return_value.__enter__.return_value = MagicMock(
-        telescope_descriptions={1: {"pixel_settings": {"time_slice": 1}}},
-        __iter__=lambda _: iter([event]),
-    )
-    table, waves = pulse_response.flasher_responses([SCAN_FILE], [100], [1], TELESCOPE, [0])
-    assert table[PEAK].tolist() == pytest.approx([2, 1])
-    assert table[ADC_SUM].tolist() == pytest.approx([2, 1])
-    assert len(waves) == 2
+    rows = [item[0] for item in parsed]
+    assert [row[PEAK] for row in rows] == pytest.approx([2, 1])
+    assert [row[ADC_SUM] for row in rows] == pytest.approx([2, 1])
+    assert len(parsed) == 2
     with pytest.raises(ValueError, match="count"):
-        pulse_response.flasher_responses([SCAN_FILE], [100], [2], TELESCOPE, [0])
+        list(
+            pulse_response._read_scan_file(
+                SCAN_FILE,
+                TELESCOPE,
+                [0],
+                np.asarray([100]),
+                np.asarray([0, 0]),
+                {pulse_response.WIDTH_FRACTION: 0.95, pulse_response.THRESHOLD_ADC: None},
+                None,
+                stream_factory=lambda *_args, **_kwargs: FakeStream(),
+                mapping_reader=lambda _file: {1: TELESCOPE},
+            )
+        )
 
 
 def test_scan_rejects_ambiguous_steps():
@@ -155,14 +183,13 @@ def test_scan_rejects_ambiguous_steps():
 
 def test_summary_and_outputs(pulse_model, tmp_test_directory, mocker):
     table, waves = pulse_response.template_responses(pulse_model, [5, 15])
-    plot = mocker.patch.object(pulse_response, "plot_response")
     path = pulse_response.write_response(table, waves, tmp_test_directory, RESPONSE)
     loaded = Table.read(path)
     summary = Table.read(tmp_test_directory / "response_summary.ecsv")
     assert len(loaded) == len(summary) == 8
+    assert path.with_suffix(".pdf").is_file()
     assert summary["event_count"].tolist() == [1] * 8
     assert np.allclose(summary["peak_adc_std"], 0)
-    plot.assert_called_once()
 
 
 @pytest.mark.parametrize("value", [0, -1, float("nan")])

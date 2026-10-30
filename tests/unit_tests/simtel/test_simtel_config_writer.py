@@ -445,7 +445,6 @@ def test_write_tel_config_adds_response_table_metadata(
             )
     simtel_config_writer._model_reader = mocker.Mock()
     simtel_config_writer._model_reader.get_parameter_table.return_value = QTable(rows=rows)
-    mocker.patch.object(simtel_config_writer, "_write_camera_file", return_value="camera.dat")
     config_file = Path(tmp_test_directory) / "CTAO-LSTN-01.cfg"
     simtel_config_writer.write_telescope_config_file(
         config_file,
