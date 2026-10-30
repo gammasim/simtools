@@ -83,7 +83,6 @@ short_description: FADC reference pulse and intensity-dependent response templat
 data:
   - type: file
     unit: dimensionless
-    table_validation: fadc_templates
     table_columns:
       - name: template_kind
         description: Reference pulse or intensity-dependent response template

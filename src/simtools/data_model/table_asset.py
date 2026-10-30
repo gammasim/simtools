@@ -64,56 +64,7 @@ def validate_table_asset(table, schema_entry=None, parameter_data=None):
     _validate_processing(table, table_columns)
     _validate_metadata(table, (schema_entry or {}).get("table_metadata", []))
     _validate_identity(table, parameter_data)
-    if (schema_entry or {}).get("table_validation") == "fadc_templates":
-        validate_fadc_template_table(table)
     return table
-
-
-def validate_fadc_template_table(table):
-    """Validate the reference and response row groups in a unified FADC table."""
-    if set(table["template_kind"]) != {"reference", "response"}:
-        raise ValueError("Unified FADC table must contain reference and response rows")
-    if set(table["gain"]) != {"HG", "LG"}:
-        raise ValueError("Unified FADC table must contain HG and LG rows")
-    if not np.all(np.isfinite(table["intensity"])) or not np.all(np.isfinite(table["amplitude"])):
-        raise ValueError("Unified FADC intensity and amplitude values must be finite")
-    if not np.all(np.isfinite(table["time"])):
-        raise ValueError("Unified FADC time values must be finite")
-    references = []
-    for gain in ("HG", "LG"):
-        reference_times = _fadc_reference_grid(table, gain)
-        _fadc_response_grid(table, gain)
-        references.append(reference_times)
-    if not np.array_equal(references[0], references[1]):
-        raise ValueError("HG and LG reference pulses must share their time grid")
-
-
-def _fadc_reference_grid(table, gain):
-    """Validate and return the ordered linear reference time grid for one gain."""
-    reference = table[(table["template_kind"] == "reference") & (table["gain"] == gain)]
-    intensity = np.asarray(reference["intensity"], dtype=float)
-    if intensity.size == 0 or not np.all(np.isclose(intensity, 1.0, rtol=0, atol=1e-12)):
-        raise ValueError(f"Unified FADC {gain} reference rows must have intensity 1")
-    times = np.sort(np.asarray(reference["time"], dtype=float))
-    if times.size < 2 or not np.all(np.diff(times) > 0):
-        raise ValueError(f"Unified FADC {gain} reference times must increase")
-    return times
-
-
-def _fadc_response_grid(table, gain):
-    """Validate that a gain's response templates share one increasing time grid."""
-    response = table[(table["template_kind"] == "response") & (table["gain"] == gain)]
-    levels = np.unique(np.asarray(response["intensity"], dtype=float))
-    if levels.size < 2 or levels[0] <= 0:
-        raise ValueError(f"Unified FADC {gain} responses require two positive intensity levels")
-    grids = []
-    for level in levels:
-        times = np.sort(np.asarray(response[response["intensity"] == level]["time"], dtype=float))
-        if times.size < 2 or not np.all(np.diff(times) > 0):
-            raise ValueError(f"Unified FADC {gain} response times must increase")
-        grids.append(times)
-    if any(not np.array_equal(grids[0], grid) for grid in grids[1:]):
-        raise ValueError(f"Unified FADC {gain} response templates must share a time grid")
 
 
 def get_simtel_serialization(schema_dict):
