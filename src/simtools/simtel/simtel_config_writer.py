@@ -723,12 +723,13 @@ class SimtelConfigWriter:
             ]
         # Combined line with all non-hardstereo telescopes using shortest values
         if all_non_hardstereo_tels:
-            minseps = [minsep for _, minsep in non_hardstereo_groups if minsep is not None]
+            group_keys = list(non_hardstereo_groups)
+            minseps = [minsep for _, minsep in group_keys if minsep is not None]
             lines.append(
                 self._trigger_line(
                     multiplicity,
                     sorted(all_non_hardstereo_tels),
-                    min(width for width, _ in non_hardstereo_groups),
+                    min(width for width, _ in group_keys),
                     min(minseps) if minseps else None,
                 )
             )
