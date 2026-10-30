@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793347608029,
+  "lastUpdate": 1793351763570,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33998,6 +33998,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 472.59765625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5afe3345862eba3473d1a98a5791b96783eb41ec",
+          "message": "Declarative CORSIKA input, simulation stage fakes, extension guides (W5) (#2728)\n\n* Declarative CORSIKA input, simulation stage fakes and extension guides\n\nCORSIKA parameters carry a schema `format`; one generic writer replaces the\n_input_config_* methods. Fake shower/telescope stages with a contract test.\nDeveloper guides for adding stages and CORSIKA parameters. Simulator and\nrunner modules shrunk.\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Add news fragment\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Remove the extension guides added in this wave\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Fix SonarQube S3358 in source directory selection\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T10:07:29+01:00",
+          "tree_id": "a314d26e4488e5a00c633ecf9e2df23437cb60a3",
+          "url": "https://github.com/gammasim/simtools/commit/5afe3345862eba3473d1a98a5791b96783eb41ec"
+        },
+        "date": 1793351749178,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 67.12953642800001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 69.27,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 477.90234375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
