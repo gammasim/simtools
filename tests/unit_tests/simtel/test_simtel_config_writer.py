@@ -815,7 +815,7 @@ def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
             "simtools.data_model.parameter_catalog.get_simulation_software_meta_parameter_mode",
             return_value="add",
         ),
-        mock.patch("simtools.simtel.simtel_validate_metadata.validate_metadata"),
+        mock.patch("simtools.simtel.sim_telarray_metadata.validate_metadata"),
     ):
         tel_meta = simtel_config_writer._get_sim_telarray_metadata(
             "telescope", model_parameters, "test_telescope"

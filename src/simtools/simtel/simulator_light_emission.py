@@ -20,14 +20,14 @@ from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.ray_tracing.backends.interface import LightSourceRequest, get_backend
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
-from simtools.simtel import simtel_output_validator
+from simtools.sim_events import validate_run_outputs
 from simtools.simtel.photon_bunch_file import (
     bypass_optics_level,
     camera_bunches,
     write_photon_bunches,
 )
 from simtools.simtel.simtel_seeds import instance_seed_pairs
-from simtools.simulation.configuration import get_light_source_writer
+from simtools.simulation.configuration import get_light_source_writer, get_model_writer
 from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
 from simtools.utils import value_conversion
 from simtools.utils.geometry import (
@@ -150,7 +150,9 @@ class SimulatorLightEmission(SimtelRunner):
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(**model_kwargs)
         )
-        self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
+        get_model_writer(self.telescope_model).write_sim_telarray_config_file(
+            additional_models=self.site_model
+        )
 
         self.light_emission_config = self._initialize_light_emission_configuration(
             light_emission_config
@@ -691,7 +693,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def validate_simulations(self):
         """Validate that the simulations were successful."""
-        simtel_output_validator.validate_sim_telarray(
+        validate_run_outputs.validate_sim_telarray(
             data_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_output")),
             log_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_log")),
             array_models=None,

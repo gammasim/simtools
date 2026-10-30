@@ -60,7 +60,7 @@ Provide tools for reading, writing, and processing simulated shower and telescop
 (sim_events_validators-1)=
 
 ```{eval-rst}
-.. automodule:: simtools.sim_events.output_validator
+.. automodule:: simtools.sim_events.validate_run_outputs
    :members:
 ```
 

@@ -80,7 +80,7 @@ def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
     mock_telescope_model.site = "North"
     mock_telescope_model.name = "LSTN-01"
     mock_telescope_model.label = "ray_tracing"
-    mock_telescope_model.write_sim_telarray_config_file = mocker.Mock()
+    mock_telescope_model.configuration_writers = {"sim_telarray": mocker.Mock()}
     mock_telescope_model.mirrors.get_single_mirror_parameters = mocker.Mock(
         return_value=(0, 0, 2600.0, 0, 0)
     )
@@ -110,7 +110,6 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north, run_context):
 
 @pytest.fixture
 def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_north, run_context):
-    telescope_model_lst_mock.write_sim_telarray_config_file()
     return RayTracing(
         telescope_model=telescope_model_lst_mock,
         site_model=site_model_north,
@@ -145,7 +144,6 @@ def test_ray_tracing_init(telescope_model_lst_mock, site_model_north, caplog, ru
 def test_ray_tracing_single_mirror_mode(
     telescope_model_lst_mock, site_model_north, caplog, run_context
 ):
-    telescope_model_lst_mock.write_sim_telarray_config_file()
 
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
@@ -171,7 +169,6 @@ def test_ray_tracing_single_mirror_mode(
 def test_ray_tracing_single_mirror_mode_mirror_numbers(
     telescope_model_lst_mock, site_model_north, mocker, run_context
 ):
-    telescope_model_lst_mock.write_sim_telarray_config_file()
     ray = RayTracing(
         telescope_model=telescope_model_lst_mock,
         site_model=site_model_north,

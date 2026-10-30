@@ -450,6 +450,7 @@ def test___init__(tmp_test_directory, run_context):
 
     with patch(models_path) as mock_init_models:
         mock_telescope_model = Mock()
+        mock_telescope_model.configuration_writers = {"sim_telarray": Mock()}
         mock_site_model = Mock()
         mock_calibration_model = Mock()
         mock_calibration_model.get_parameter_value.return_value = None
@@ -493,9 +494,9 @@ def test___init__(tmp_test_directory, run_context):
         )
 
         # Verify telescope model config file was written
-        mock_telescope_model.write_sim_telarray_config_file.assert_called_once_with(
-            additional_models=mock_site_model
-        )
+        mock_telescope_model.configuration_writers[
+            "sim_telarray"
+        ].write_sim_telarray_config_file.assert_called_once_with(additional_models=mock_site_model)
 
 
 def test___init___passes_custom_model_directory(tmp_test_directory, run_context):
@@ -504,7 +505,8 @@ def test___init___passes_custom_model_directory(tmp_test_directory, run_context)
     model_directory = Path(tmp_test_directory) / "model" / "isolated"
 
     with patch(models_path) as mock_init_models:
-        mock_init_models.return_value = (Mock(), Mock(), Mock())
+        telescope = Mock(configuration_writers={"sim_telarray": Mock()})
+        mock_init_models.return_value = (telescope, Mock(), Mock())
         SimulatorLightEmission(
             {
                 "site": "North",
@@ -529,6 +531,7 @@ def test___init___with_wavelength(tmp_test_directory, run_context):
 
     with patch(models_path) as mock_init_models:
         mock_telescope_model = Mock()
+        mock_telescope_model.configuration_writers = {"sim_telarray": Mock()}
         mock_site_model = Mock()
         mock_calibration_model = Mock()
         mock_calibration_model.get_parameter_value.return_value = None
@@ -838,7 +841,7 @@ def test_validate_simulations_success(simulator_instance, tmp_test_directory):
 
     # Mock the validator to avoid actual validation
     with patch(
-        "simtools.simtel.simulator_light_emission.simtel_output_validator.validate_sim_telarray"
+        "simtools.simtel.simulator_light_emission.validate_run_outputs.validate_sim_telarray"
     ):
         result = simulator_instance.validate_simulations()
 

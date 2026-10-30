@@ -4,14 +4,14 @@
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.io import ascii_handler
-from simtools.simtel import simtel_validate_metadata
+from simtools.simtel import sim_telarray_metadata
 
 _ARGUMENTS = (
     cli.ArgumentDefinition("output_file", help="Output file name", type=str, required=True),
     cli.ArgumentDefinition(
         "source_type",
         help="Metadata source type to export",
-        choices=simtel_validate_metadata.META_PARAMETER_SOURCE_TYPES,
+        choices=sim_telarray_metadata.META_PARAMETER_SOURCE_TYPES,
         default="all",
     ),
     cli.ArgumentDefinition("schema_version", help="Registry schema version", type=str),
@@ -32,7 +32,7 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    registry = simtel_validate_metadata.get_meta_parameter_registry(
+    registry = sim_telarray_metadata.get_meta_parameter_registry(
         schema_version=app_context.args.get("schema_version"),
         source_type=app_context.args["source_type"],
     )

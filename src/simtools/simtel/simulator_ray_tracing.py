@@ -7,6 +7,7 @@ from collections import namedtuple
 from simtools.context import RunContext
 from simtools.ray_tracing import parameter_changes
 from simtools.runners.simtel_runner import SimtelRunner
+from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 
 # pylint: disable=no-member
@@ -161,7 +162,7 @@ class SimulatorRayTracing(SimtelRunner):
         The run_number and input_file parameters are not relevant for the ray tracing simulation.
         """
         if self._write_config:
-            self.telescope_model.write_sim_telarray_config_file(
+            get_model_writer(self.telescope_model).write_sim_telarray_config_file(
                 additional_models=self.site_model,
                 label=self.label,
             )
