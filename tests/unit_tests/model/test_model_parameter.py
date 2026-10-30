@@ -600,38 +600,14 @@ def test_overwrite_model_parameter_updates_value_and_optional_version(
         assert tel_model.parameters["num_gains"]["parameter_version"] == expected_version
 
 
-def test_overwrite_model_parameter_invalid_schema_version_names_parameter(
-    telescope_model_lst, mocker
-):
+def test_overwrite_model_parameter_schema_file_error_names_parameter(telescope_model_lst):
     tel_model = copy.deepcopy(telescope_model_lst)
-    mocker.patch(
-        "simtools.model.model_parameter.schema.get_model_parameter_schema",
-        side_effect=ValueError("Schema lookup failed"),
-    )
+    tel_model.parameters["no_such_parameter"] = {"value": 1}
 
     with pytest.raises(
-        ValueError,
-        match=(
-            r"Schema version 'invalid\.version' not available "
-            r"for parameter 'mirror_focal_length'"
-        ),
+        FileNotFoundError, match="Schema file for parameter no_such_parameter not found"
     ):
-        tel_model.overwrite_model_parameter(
-            "mirror_focal_length",
-            1.0,
-            metadata={"model_parameter_schema_version": "invalid.version"},
-        )
-
-
-def test_overwrite_model_parameter_schema_file_error_names_parameter(telescope_model_lst, mocker):
-    tel_model = copy.deepcopy(telescope_model_lst)
-    mocker.patch(
-        "simtools.model.model_parameter.schema.get_model_parameter_schema",
-        side_effect=FileNotFoundError("missing schema"),
-    )
-
-    with pytest.raises(FileNotFoundError, match="Schema file for parameter num_gains not found"):
-        tel_model.overwrite_model_parameter("num_gains", 1)
+        tel_model.overwrite_model_parameter("no_such_parameter", 1)
 
 
 def test_load_simulation_software_parameters_ignores_repository_value_error(

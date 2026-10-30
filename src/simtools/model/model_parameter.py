@@ -394,9 +394,10 @@ class ModelParameter:
         elements = {element for (_, element, _) in self._overrides}
         if self.name in elements:
             return self.name
-        if self.design_model in elements:
-            return self.design_model
-        return None
+        design_model = self.model_reader.get_design_model(
+            self.model_version, self.name, collection=self.collection
+        )
+        return design_model if design_model in elements else None
 
     def _load_simulation_software_parameters(self):
         """Load simulation software parameters and apply the matching overrides."""
