@@ -18,7 +18,7 @@ from simtools.visualization.plot_trigger_patches import (
 SITE = "site"
 TELESCOPE = "telescope"
 MODEL_VERSION = "model_version"
-OUTPUT_NAME = "output_name"
+OUTPUT_FILE = "output_file"
 OVERWRITE_MODEL_PARAMETERS = "overwrite_model_parameters"
 ECSV_FORMAT = "ascii.ecsv"
 TEXT_ENCODING = "utf-8"
@@ -26,11 +26,10 @@ TEXT_ENCODING = "utf-8"
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
-    resolve_sim_software_executables=False,
-    validate_simulation_dependencies=False,
     arguments=(
         cli.ArgumentDefinition(
-            OUTPUT_NAME,
+            OUTPUT_FILE,
+            aliases=("output_name",),
             type=str,
             default=None,
             help="Base name output files; defaults: trigger-patches-<telescope>.",
@@ -41,6 +40,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE(required=True),
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model",),
 )
 
 
@@ -54,8 +54,9 @@ def run(app_context):
         label="plot_trigger_patches",
         model_reader=app_context.model_reader,
         overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(
-            args[OVERWRITE_MODEL_PARAMETERS]
+            args[OVERWRITE_MODEL_PARAMETERS], context=app_context
         ),
+        context=app_context,
     )
     pixel_table, group_table = analyze_trigger_patch_configuration(
         telescope.camera,
@@ -63,8 +64,8 @@ def run(app_context):
         telescope.get_parameter_table("camera_trigger_members"),
     )
 
-    output_name = args.get(OUTPUT_NAME) or f"trigger-patches-{telescope.name}"
-    pdf_path = app_context.io_handler.get_output_file(f"{output_name}.pdf")
+    output_name = args.get(OUTPUT_FILE) or f"trigger-patches-{telescope.name}"
+    pdf_path = app_context.paths.get_output_file(f"{output_name}.pdf")
     page_summary = write_trigger_patch_report(
         telescope.camera,
         pixel_table,

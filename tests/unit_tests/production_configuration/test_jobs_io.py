@@ -1,0 +1,344 @@
+from pathlib import Path
+
+import astropy.units as u
+import numpy as np
+import pytest
+from astropy.table import Table
+
+import simtools.applications.simulate_prod as app
+from simtools.constants import SCHEMA_PATH
+from simtools.io.ascii_handler import collect_data_from_file
+from simtools.production_configuration import jobs_io
+
+_FILESYSTEM_MODELS = "simulation_models_path"
+_GIT_MODELS = "simulation_models_git_path"
+
+
+def _job_rows():
+    return [
+        {
+            "run_number": 10,
+            "primary": "gamma",
+            "azimuth_angle": 45 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "ha": 123 * u.deg,
+            "dec": -45 * u.deg,
+            "energy_min": 30 * u.GeV,
+            "energy_max": 10 * u.TeV,
+            "cores_per_shower": 10,
+            "core_scatter_max": 200 * u.m,
+            "view_cone_min": 0 * u.deg,
+            "view_cone_max": 5 * u.deg,
+            "showers_per_run": 1000,
+            "nsb_rate": 0.24,
+            "model_version": "7.0.0",
+            "array_layout_name": "CTAO-North-Alpha",
+            "corsika_le_interaction": "urqmd",
+            "corsika_he_interaction": "epos",
+        }
+    ]
+
+
+def _metadata():
+    return {
+        "site": "North",
+        "simulation_software": "corsika_sim_telarray",
+        "coordinate_system": "ha_dec",
+    }
+
+
+def test_job_grid_schema_keeps_previous_format_document():
+    schemas = collect_data_from_file(SCHEMA_PATH / "job_grid_density.schema.yml")
+
+    assert [schema["schema_version"] for schema in schemas] == ["0.4.0", "0.3.0"]
+    assert "telescope" not in jobs_io.JOB_GRID_SCHEMA.columns
+    assert "telescope" in {column["name"] for column in schemas[1]["data"][0]["table_columns"]}
+
+
+def test_serialize_job_grid_writes_empty_grid_header(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "empty_job_grid.ecsv"
+
+    jobs_io.serialize_job_grid([], output_file, metadata=_metadata())
+    output_table = Table.read(output_file, format="ascii.ecsv")
+
+    assert output_table.colnames == [
+        *jobs_io.JOB_GRID_COLUMNS,
+        *jobs_io.JOB_GRID_SCHEMA.optional_columns,
+    ]
+    assert output_table.meta["job_grid_summary"]["simulation_rows"] == 0
+    assert output_table.meta["job_grid_format_version"] == "0.4.0"
+    assert "telescope" not in output_table.colnames
+
+
+def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    rows = _job_rows()
+    rows.append(
+        {
+            **rows[0],
+            "run_number": 11,
+            "overwrite_model_parameters": "overwrite file.yaml",
+            "scan_label": "asum220",
+        }
+    )
+
+    jobs_io.serialize_job_grid(rows, output_file, metadata=_metadata())
+    read_rows, _ = jobs_io.read_job_grid(output_file)
+
+    assert "overwrite_model_parameters" not in read_rows[0]
+    assert read_rows[1]["overwrite_model_parameters"] == "overwrite file.yaml"
+    assert read_rows[1]["scan_label"] == "asum220"
+
+
+def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.txt"
+
+    with pytest.raises(ValueError, match="\\.ecsv"):
+        jobs_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
+
+
+def test_serialize_job_grid_requires_nsb_rate(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    rows = _job_rows()
+    rows[0].pop("nsb_rate")
+
+    with pytest.raises(KeyError, match="nsb_rate"):
+        jobs_io.serialize_job_grid(rows, output_file, metadata=_metadata())
+
+
+def test_read_job_grid_rejects_non_ecsv_input(tmp_test_directory):
+    input_file = Path(tmp_test_directory) / "job_grid.txt"
+    input_file.write_text("dummy", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="\\.ecsv"):
+        jobs_io.read_job_grid(input_file)
+
+
+def test_read_job_grid_rejects_non_integral_integer_columns(tmp_test_directory):
+    input_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    jobs_io.serialize_job_grid(_job_rows(), input_file, metadata=_metadata())
+
+    table = Table.read(input_file, format="ascii.ecsv")
+    table["run_number"] = [10.5]
+    table.write(input_file, format="ascii.ecsv", overwrite=True)
+
+    with pytest.raises(TypeError):
+        jobs_io.read_job_grid(input_file)
+
+
+def test_serialize_job_row_handles_optional_and_required_values():
+    row = _job_rows()[0]
+
+    assert "scan_label" not in jobs_io._serialize_job_row(row)
+    assert jobs_io._serialize_job_row({**row, "scan_label": 123})["scan_label"] == "123"
+    with pytest.raises(TypeError, match="run_number"):
+        jobs_io._serialize_job_row({**row, "run_number": None})
+    assert jobs_io._cast_scalar("7", jobs_io.JOB_GRID_SCHEMA.column_dtypes["run_number"]) == 7
+
+
+def test_deserialize_job_row_skips_masked_blank_and_none_values():
+    row = {
+        "run_number": np.ma.masked,
+        "scan_label": "   ",
+        "overwrite_model_parameters": None,
+        "primary": "gamma",
+    }
+
+    assert jobs_io._deserialize_job_row(row) == {"primary": "gamma"}
+
+
+def test_validate_job_grid_table_restores_integral_float_columns(tmp_test_directory):
+    input_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    jobs_io.serialize_job_grid(_job_rows(), input_file, metadata=_metadata())
+    table = Table.read(input_file, format="ascii.ecsv")
+    table["run_number"] = table["run_number"].astype(float)
+
+    validated = jobs_io._validate_job_grid_table(table)
+
+    assert validated["run_number"].dtype.kind == "i"
+
+
+def test_remote_path_forwarding_follows_configuration_sources(tmp_test_directory):
+    args = {
+        "output_path": tmp_test_directory / "output",
+        "backend": "htcondor",
+        "corsika_path": Path("/controller/corsika7"),
+        "sim_telarray_path": Path("/controller/sim_telarray"),
+        "_metadata_configuration_sources": {"corsika_path": "cli"},
+    }
+
+    command = jobs_io.build_simulate_prod_job_specs(
+        args, _job_rows(), app.APPLICATION.build_parser(), _metadata()
+    )[0].command
+
+    assert "--corsika_path" in command
+    assert "--sim_telarray_path" not in command
+
+
+def test_job_grid_row_to_simulate_prod_args_maps_fields():
+    row = _job_rows()[0]
+
+    args = jobs_io.job_grid_row_to_simulate_prod_args(row)
+
+    assert args["primary"] == "gamma"
+    assert args["azimuth_angle"] == 45 * u.deg
+    assert args["zenith_angle"] == 20 * u.deg
+    assert args["energy_range"] == (30 * u.GeV, 10 * u.TeV)
+    assert args["core_scatter"] == (10, 200 * u.m)
+    assert args["view_cone"] == (0 * u.deg, 5 * u.deg)
+    assert args["showers_per_run"] == 1000
+    assert args["model_version"] == "7.0.0"
+    assert args["array_layout_name"] == "CTAO-North-Alpha"
+    assert args["corsika_le_interaction"] == "urqmd"
+    assert args["corsika_he_interaction"] == "epos"
+    assert "corsika_hadronic_transition_energy" not in args
+    assert args["ha"] == 123 * u.deg
+    assert args["dec"] == -45 * u.deg
+    assert args["run_number"] == 10
+    assert "site" not in args
+
+
+def test_job_grid_row_to_simulate_prod_args_includes_explicit_transition_energy():
+    row = _job_rows()[0]
+    row["corsika_hadronic_transition_energy"] = 120 * u.GeV
+
+    args = jobs_io.job_grid_row_to_simulate_prod_args(row)
+
+    assert args["corsika_hadronic_transition_energy"] == 120 * u.GeV
+
+
+@pytest.mark.parametrize("model_key", [_FILESYSTEM_MODELS, _GIT_MODELS])
+def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory, model_key):
+    """Build unique backend-neutral commands while forcing nested execution local."""
+    corsika_path = Path(tmp_test_directory) / "corsika" / "corsika.input"
+    model_path = Path(tmp_test_directory) / "models"
+    overwrite_path = Path(tmp_test_directory) / "overrides" / "overwrite.yml"
+    row = {
+        **_job_rows()[0],
+        "scan_label": "high_nsb",
+        "overwrite_model_parameters": str(overwrite_path),
+    }
+    args = {
+        "output_path": tmp_test_directory / "output",
+        "grid_output_path": tmp_test_directory / "grid",
+        "label": "prod",
+        model_key: model_path,
+        "reduced_event_lists": False,
+        "correct_for_b_field_alignment": False,
+        "corsika_file": corsika_path,
+    }
+
+    jobs = jobs_io.build_simulate_prod_job_specs(
+        args,
+        [row],
+        app.APPLICATION.build_parser(),
+        _metadata(),
+    )
+
+    assert len(jobs) == 1
+    command = jobs[0].command
+    assert command[1:5] == (
+        "-m",
+        "simtools.applications.simulate_prod",
+        "--backend",
+        "local",
+    )
+    assert "prod_high_nsb" in command
+    assert str(overwrite_path) in command
+    assert str(model_path) in command
+    assert str(tmp_test_directory / "output" / "job-000001") in command
+    assert str(tmp_test_directory / "grid" / "job-000001") in command
+    assert "--no-reduced_event_lists" in command
+    assert "--no-correct_for_b_field_alignment" in command
+    assert str(corsika_path) in command
+    assert jobs[0].mount_paths == (
+        tmp_test_directory / "output" / "job-000001",
+        tmp_test_directory / "grid" / "job-000001",
+        corsika_path.parent,
+        model_path,
+        overwrite_path.parent,
+    )
+    assert jobs[0].output_paths == (
+        tmp_test_directory / "output" / "job-000001",
+        tmp_test_directory / "grid" / "job-000001",
+    )
+    nested_args = app.APPLICATION.build_parser().parse_args(command[5:])
+    assert nested_args.reduced_event_lists is False
+    assert nested_args.correct_for_b_field_alignment is False
+    assert nested_args.corsika_file == str(corsika_path)
+    energy_range_index = command.index("--energy_range")
+    assert command[energy_range_index + 1] == "30.0 GeV 10.0 TeV"
+    core_scatter_index = command.index("--core_scatter")
+    assert command[core_scatter_index + 1] == "10 200.0 m"
+    view_cone_index = command.index("--view_cone")
+    assert command[view_cone_index + 1] == "0.0 deg 5.0 deg"
+
+
+@pytest.mark.parametrize("model_key", [_FILESYSTEM_MODELS, _GIT_MODELS])
+def test_job_commands_forward_git_revision_only_for_git_models(tmp_test_directory, model_key):
+    revision = "v0.18.0"
+    args = {
+        "output_path": tmp_test_directory / "output",
+        model_key: tmp_test_directory / "models",
+        "simulation_models_git_revision": revision,
+    }
+    if model_key == _FILESYSTEM_MODELS:
+        args[_GIT_MODELS] = tmp_test_directory / "inherited-git-models"
+
+    job = jobs_io.build_simulate_prod_job_specs(
+        args, [_job_rows()[0]], app.APPLICATION.build_parser(), _metadata()
+    )[0]
+
+    assert f"--{model_key}" in job.command
+    assert (f"--{_GIT_MODELS}" in job.command) == (model_key == _GIT_MODELS)
+    assert ("--simulation_models_git_revision" in job.command) == (model_key == _GIT_MODELS)
+    assert (revision in job.command) == (model_key == _GIT_MODELS)
+
+
+def test_build_simulate_prod_job_specs_uses_remote_environment_paths(tmp_test_directory):
+    """Remote jobs do not override backend-provided simulation software paths."""
+    args = {
+        "backend": "htcondor",
+        "output_path": tmp_test_directory / "output",
+        "sim_telarray_path": Path("/controller/sim_telarray"),
+        "corsika_path": Path("/controller/corsika7"),
+        "corsika_interaction_table_path": Path("/controller/tables"),
+        "_metadata_configuration_sources": {
+            "sim_telarray_path": "environment",
+            "corsika_path": "environment",
+            "corsika_interaction_table_path": "environment",
+        },
+    }
+
+    jobs = jobs_io.build_simulate_prod_job_specs(
+        args,
+        _job_rows(),
+        app.APPLICATION.build_parser(),
+        _metadata(),
+    )
+
+    command = jobs[0].command
+    assert "--sim_telarray_path" not in command
+    assert "--corsika_path" not in command
+    assert "--corsika_interaction_table_path" not in command
+
+
+@pytest.mark.parametrize(
+    ("row_updates", "expected"),
+    [
+        ({"overwrite_model_parameters": {"param1": 10}}, {"param1": 10}),
+        ({"model_parameter_set": "missing_set"}, None),
+        ({"model_parameter_set": "set1"}, {"param": 1}),
+        (
+            {"model_parameter_set": "set1", "overwrite_model_parameters": {"existing": 100}},
+            {"existing": 100, "param": 1},
+        ),
+        ({"model_parameter_set": "set1", "overwrite_model_parameters": "old"}, {"param": 1}),
+    ],
+)
+def test_parameter_scan_overwrites_assign_merge_or_skip(row_updates, expected):
+    metadata = {"model_parameter_sets": {"set1": {"param": 1}}}
+
+    args = jobs_io.job_grid_row_to_simulate_prod_args({**_job_rows()[0], **row_updates}, metadata)
+
+    assert args.get("overwrite_model_parameters") == expected

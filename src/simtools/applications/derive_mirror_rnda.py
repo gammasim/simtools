@@ -17,34 +17,20 @@ _ARGUMENTS = (
         "threshold",
         help="Convergence threshold for percentage difference.",
         type=float,
-        required=False,
         default=0.05,
     ),
     cli.ArgumentDefinition(
         "learning_rate",
         help="Learning rate for gradient descent.",
         type=float,
-        required=False,
         default=0.001,
     ),
-    cli.ArgumentDefinition(
-        "fraction",
-        help="PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95).",
-        type=float,
-        default=0.8,
-    ),
-    cli.ArgumentDefinition(
-        "max_workers",
-        help="Number of parallel worker processes to use.",
-        type=int,
-        required=False,
-        default=0,
-    ),
+    cli.PSF_CONTAINMENT_FRACTION,
+    cli.MAX_WORKERS(default=0),
     cli.ArgumentDefinition(
         "number_of_mirrors_to_test",
         help="Number of mirrors to optimize when --test is used.",
         type=int,
-        required=False,
         default=10,
     ),
     cli.ArgumentDefinition(
@@ -79,17 +65,20 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        *cli.RAY_TRACING_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args)
+    panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args, context=app_context)
     panel_psf.optimize_with_gradient_descent()
     panel_psf.write_optimization_data()
     if app_context.args.get("psf_hist"):

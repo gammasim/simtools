@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 from astropy.table import Table
+from matplotlib import pyplot as plt
 
 from simtools.visualization import plot_trigger_patches as patch_plot
 from simtools.visualization.plot_trigger_patches import (
@@ -292,12 +293,13 @@ def test_report_keeps_coverage_first_and_adds_distance_page(mocker, tmp_test_dir
         def __exit__(self, *_args):
             return None
 
-        def savefig(self, figure, **_kwargs):
+        def add(self, figure):
             self.page_titles.append(figure._suptitle.get_text())
             self.axis_bounds[CAMERA_AXIS_BOUNDS].append(figure.axes[0].get_position().bounds)
+            plt.close(figure)
 
     fake_pdf = FakePdf()
-    mocker.patch.object(patch_plot, "PdfPages", return_value=fake_pdf)
+    mocker.patch.object(patch_plot, "pdf_report", return_value=fake_pdf)
     images = []
 
     def capture_image(_camera, image, **_kwargs):

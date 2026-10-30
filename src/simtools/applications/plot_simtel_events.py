@@ -2,9 +2,9 @@
 
 """Plot simulated events from sim_telarray files."""
 
-import simtools.utils.general as gen
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.utils import value_conversion
 from simtools.visualization.plot_simtel_events import (
     PEDESTAL_SOURCE_MONITORING,
     PEDESTAL_SOURCE_WAVEFORM,
@@ -88,7 +88,6 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "save_pngs", action="store_true", help="Also save individual PNG images per plot"
     ),
-    cli.ArgumentDefinition("dpi", type=int, default=300, help="PNG dpi"),
 )
 
 
@@ -96,14 +95,14 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.FIGURE_DPI(aliases=("dpi",)),
         cli.SITE,
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
-    initialize_model_reader=False,
+    excluded_standard_arguments=("figure_dpi",),
+    needs=("corsika", "output"),
 )
 
 
@@ -111,8 +110,8 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    plots = gen.ensure_list(app_context.args.get("plots"))
-    generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.io_handler)
+    plots = value_conversion.ensure_list(app_context.args.get("plots"))
+    generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.paths)
 
 
 if __name__ == "__main__":

@@ -12,6 +12,13 @@ their reports.
    :members:
 ```
 
+## acceptance
+
+```{eval-rst}
+.. automodule:: science_tests.acceptance
+   :members:
+```
+
 ## definitions
 
 ```{eval-rst}
@@ -33,9 +40,26 @@ their reports.
    :members:
 ```
 
+## production
+
+```{eval-rst}
+.. automodule:: science_tests.production
+   :members:
+```
+
 ## reports
 
 ```{eval-rst}
 .. automodule:: science_tests.reports
+   :members:
+```
+
+## telescope_throughput
+
+Read and compare validation results for overall telescope throughput, including optical
+components, camera response, and night-sky-background rates.
+
+```{eval-rst}
+.. automodule:: science_tests.telescope_throughput
    :members:
 ```

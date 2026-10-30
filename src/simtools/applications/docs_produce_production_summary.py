@@ -17,7 +17,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
@@ -29,7 +29,7 @@ def main():
     if output_file is None:
         raise ValueError("Missing required argument output_file.")
 
-    output_file_path = app_context.io_handler.get_output_file(output_file)
+    output_file_path = app_context.paths.get_output_file(output_file)
     write_production_summary_markdown(
         output_file=output_file_path, model_reader=app_context.model_reader
     )

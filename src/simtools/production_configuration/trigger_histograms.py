@@ -1,6 +1,5 @@
 """Build and load trigger-histogram products from reduced event data."""
 
-import copy
 import logging
 import os
 import re
@@ -13,10 +12,12 @@ import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 
-import simtools.utils.general as gen
-from simtools.io import io_handler, table_handler
+from simtools.context import RunContext
+from simtools.histogram.hdf5 import read_histograms, write_histograms
+from simtools.histogram.histogram import Histogram
+from simtools.io import table_handler
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.io.file_type import _get_product_value, validate_file_type
+from simtools.io.file_type import product_value, validate_file_type
 from simtools.job_execution.execution import map_ordered, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
 from simtools.production_configuration.production_event_data_helpers import (
@@ -26,7 +27,6 @@ from simtools.production_configuration.production_event_data_helpers import (
 )
 from simtools.production_configuration.production_file_selection import (
     ProductionManifest,
-    _values_match,
     check_manifest,
     discover_product_manifests,
     get_manifest_schema_metadata,
@@ -34,10 +34,11 @@ from simtools.production_configuration.production_file_selection import (
     select_file_groups,
     selection_summary,
     stable_configuration_hash,
+    values_match,
 )
-from simtools.settings import config as settings_config
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.sim_events.metadata import build_standard_metadata
+from simtools.utils import value_conversion
 
 _RUN_NUMBERS = "run_numbers"
 
@@ -70,9 +71,10 @@ TRIGGER_HISTOGRAM_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
 TRIGGER_TOPOLOGY_COUNTS_TABLE = "TRIGGER_TOPOLOGY_COUNTS"
 TRIGGER_SUBSET_HISTOGRAMS_TABLE = "TRIGGER_SUBSET_HISTOGRAMS"
 TRIGGER_HISTOGRAM_DENSE_GROUP = "TRIGGER_HISTOGRAM_DENSE"
+_DENSE_HISTOGRAM_FORMAT_VERSION = 2
 
 _DERIVED_HISTOGRAM_SUFFIXES = ("_eff", "_cumulative")
-_REDUCED_EVENT_DATA_SUFFIX = _get_product_value("sim_telarray_event_data", "default_suffix")
+_REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
 _PART_SUFFIX_PATTERN = re.compile(r"\.part\d+$")
 
 
@@ -272,16 +274,14 @@ def _create_metadata_table(
                 "core_distance_bin_count": len(histograms.core_distance_bins) - 1,
                 "total_simulated_events": int(
                     np.sum(
-                        histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"][
-                            "histogram"
-                        ]
+                        histograms.histograms[
+                            "angular_distance_vs_energy_vs_core_distance_mc"
+                        ].values
                     )
                 ),
                 "total_triggered_events": int(
                     np.sum(
-                        histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
-                            "histogram"
-                        ]
+                        histograms.histograms["angular_distance_vs_energy_vs_core_distance"].values
                     )
                 ),
             }
@@ -295,74 +295,39 @@ def _is_persisted_histogram(name, histogram):
     """Return True for base histograms that should be serialized."""
     if name.endswith(_DERIVED_HISTOGRAM_SUFFIXES):
         return False
-    return isinstance(histogram, dict) and histogram.get("histogram") is not None
-
-
-def _iter_histogram_edges(histogram):
-    """Yield one bin-edge array per histogram axis."""
-    bin_edges = histogram["bin_edges"]
-    if histogram["1d"]:
-        yield 0, bin_edges
-        return
-    yield from enumerate(bin_edges)
+    return isinstance(histogram, Histogram)
 
 
 def _write_dense_histogram_payload(reference_specs, output_file):
     """Write persisted histogram arrays and bin edges as dense HDF5 datasets."""
     with h5py.File(output_file, "a") as hdf5_file:
         dense_group = hdf5_file.require_group(TRIGGER_HISTOGRAM_DENSE_GROUP)
-        dense_group.attrs["format_version"] = 1
+        dense_group.attrs["format_version"] = _DENSE_HISTOGRAM_FORMAT_VERSION
         for spec in reference_specs:
             reference_group = dense_group.create_group(str(spec["reference_id"]))
-            for histogram_name, histogram in _iter_persisted_histograms(spec["histograms"]):
-                histogram_group = reference_group.create_group(str(histogram_name))
-                _create_dense_histogram_dataset(
-                    histogram_group,
-                    "values",
-                    data=np.asarray(histogram["histogram"]),
-                )
-                for axis_index, edges in _iter_histogram_edges(histogram):
-                    _create_dense_histogram_dataset(
-                        histogram_group,
-                        f"edges_{axis_index}",
-                        data=np.asarray(edges, dtype=float),
-                    )
+            write_histograms(
+                reference_group,
+                dict(_iter_persisted_histograms(spec["histograms"])),
+            )
 
 
-def _create_dense_histogram_dataset(hdf5_group, dataset_name, data):
-    """Create one compressed dataset for dense trigger-histogram payloads."""
-    return hdf5_group.create_dataset(
-        dataset_name,
-        data=data,
-        chunks=True,
-        compression="gzip",
-        compression_opts=6,
-        shuffle=True,
-    )
-
-
-def _load_dense_histogram_payloads(reference_file):
-    """Load dense histogram arrays and edges grouped by reference id."""
+def load_dense_histogram_payloads(reference_file):
+    """Load dense histograms grouped by reference id."""
     with h5py.File(reference_file, "r") as hdf5_file:
         if TRIGGER_HISTOGRAM_DENSE_GROUP not in hdf5_file:
             return {}
 
         dense_group = hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP]
-        payloads = {}
-        for reference_id, reference_group in dense_group.items():
-            values_by_name = {}
-            edges_by_name = {}
-            for histogram_name, histogram_group in reference_group.items():
-                values_by_name[histogram_name] = np.asarray(histogram_group["values"])
-                axis_edges = {}
-                for dataset_name, dataset in histogram_group.items():
-                    if not dataset_name.startswith("edges_"):
-                        continue
-                    axis_index = int(dataset_name.split("_", maxsplit=1)[1])
-                    axis_edges[axis_index] = np.asarray(dataset, dtype=float)
-                edges_by_name[histogram_name] = axis_edges
-            payloads[reference_id] = (values_by_name, edges_by_name)
-        return payloads
+        version = dense_group.attrs.get("format_version")
+        if version != _DENSE_HISTOGRAM_FORMAT_VERSION:
+            raise ValueError(
+                f"Unsupported trigger histogram format in '{reference_file}': found "
+                f"{version}, supported version is {_DENSE_HISTOGRAM_FORMAT_VERSION}."
+            )
+        return {
+            reference_id: read_histograms(reference_group)
+            for reference_id, reference_group in dense_group.items()
+        }
 
 
 def inspect_trigger_histogram_file(file_path, format_report=True):
@@ -442,15 +407,11 @@ def _format_trigger_histogram_inspection(report):
 
 def _create_bin_table(reference_id, production_index, array_name, histograms):
     """Create the flattened per-bin histogram table."""
-    triggered_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
-        "histogram"
-    ]
-    simulated_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"][
-        "histogram"
-    ]
-    efficiency_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_eff"][
-        "histogram"
-    ]
+    triggered_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance"].values
+    simulated_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"].values
+    efficiency_hist = histograms.histograms[
+        "angular_distance_vs_energy_vs_core_distance_eff"
+    ].values
     energy_edges = histograms.energy_bins
     angular_edges = histograms.view_cone_bins
     core_edges = histograms.core_distance_bins
@@ -588,9 +549,10 @@ def _write_trigger_histogram_product(
     output_file,
     product_metadata=None,
     telescope_configs=None,
+    context=None,
 ):
     """Build and write one trigger-histogram product from production sources."""
-    telescope_configs = telescope_configs or _resolve_telescope_configs(args_dict)
+    telescope_configs = telescope_configs or _resolve_telescope_configs(args_dict, context)
     output_file = validate_file_type(output_file, file_type="hdf5")
 
     reference_specs = []
@@ -619,6 +581,7 @@ def _write_trigger_histogram_product(
         backend=args_dict.get("backend", "local"),
         max_workers=args_dict.get("max_workers", 1),
         backend_config=args_dict.get("backend_config"),
+        context=context,
     ):
         for spec in production_result:
             reference_specs.append(spec | {"reference_id": f"reference_{len(reference_specs)}"})
@@ -641,6 +604,7 @@ def _write_trigger_histogram_product(
                 args_dict,
                 output_file,
                 product_data_name=_TRIGGER_HISTOGRAMS,
+                context=context,
             ),
         },
     )
@@ -677,7 +641,7 @@ def _write_trigger_histogram_metadata(args_dict, output_file, product_metadata):
     write_data_to_file(manifest, metadata_file)
 
 
-def _write_directory_group_job(job_spec):
+def _write_directory_group_job(job_spec, context=None):
     """Build one directory-discovered trigger-histogram product."""
     args_dict = job_spec["args_dict"] | {
         "event_data_files": job_spec["event_data_files"],
@@ -691,18 +655,17 @@ def _write_directory_group_job(job_spec):
         job_spec["output_file"],
         product_metadata=job_spec.get("product_metadata"),
         telescope_configs=job_spec.get("telescope_configs"),
+        context=context,
     )
     return str(job_spec["output_file"])
 
 
-def _write_directory_products(args_dict):
+def _write_directory_products(args_dict, context=None):
     """Submit or execute one independent trigger-histogram product per directory group."""
-    output_directory = io_handler.IOHandler().get_output_directory()
+    context = context or RunContext.from_environment()
+    output_directory = context.paths.get_output_directory()
     event_data_directory = Path(args_dict["event_data_directory"]).resolve()
     groups = discover_event_data_groups(event_data_directory)
-    runtime_args = (
-        dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
-    )
     jobs = []
     for index, (group_name, event_data_files) in enumerate(groups):
         output_file = validate_file_type(
@@ -719,7 +682,9 @@ def _write_directory_products(args_dict):
                     "event_data_files": [str(file_path) for file_path in event_data_files],
                     "output_file": output_file,
                 },
-                runtime_args=runtime_args,
+                context_spec=context.to_spec()
+                if args_dict.get("backend", "local") != "local"
+                else None,
                 mount_paths=(event_data_directory,),
                 output_paths=(output_file,),
             )
@@ -728,11 +693,12 @@ def _write_directory_products(args_dict):
     return submit_jobs(jobs, options_from_args(args_dict, max_workers=args_dict.get("max_workers")))
 
 
-def _write_production_selection_products(args_dict):
+def _write_production_selection_products(args_dict, context=None):
     """Submit one trigger-histogram product per selected production configuration group."""
+    context = context or RunContext.from_environment()
     if args_dict.get("file_type", _REDUCED_EVENT_DATA) != _REDUCED_EVENT_DATA:
         raise ValueError("Production metadata input requires file_type='reduced_event_data'.")
-    output_directory = io_handler.IOHandler().get_output_directory()
+    output_directory = context.paths.get_output_directory()
     selection_result = select_file_groups(
         args_dict[_PRODUCTION_PATH_KEY],
         selections=args_dict.get(_SELECT_KEY),
@@ -744,12 +710,11 @@ def _write_production_selection_products(args_dict):
         raise ValueError("Production metadata selection did not match any files.")
 
     production_path = Path(args_dict[_PRODUCTION_PATH_KEY]).resolve()
-    runtime_args = (
-        dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
-    )
     products = []
     for group in selection_result[_GROUPS_KEY]:
-        telescope_configs = _resolve_group_telescope_configs(args_dict, group.configuration)
+        telescope_configs = _resolve_group_telescope_configs(
+            args_dict, group.configuration, context
+        )
         product_identity = {
             _HISTOGRAM_SETTINGS_KEY: _histogram_settings(args_dict),
             "array_selection": telescope_configs,
@@ -793,7 +758,9 @@ def _write_production_selection_products(args_dict):
                     },
                     "telescope_configs": telescope_configs,
                 },
-                runtime_args=runtime_args,
+                context_spec=context.to_spec()
+                if args_dict.get("backend", "local") != "local"
+                else None,
                 mount_paths=(production_path,),
                 output_paths=(output_file, metadata_file),
             )
@@ -802,7 +769,7 @@ def _write_production_selection_products(args_dict):
     return submit_jobs(jobs, options_from_args(args_dict, max_workers=args_dict.get("max_workers")))
 
 
-def write_trigger_histograms(args_dict):
+def write_trigger_histograms(args_dict, context=None):
     """
     Build trigger histograms and write them to file.
 
@@ -823,14 +790,17 @@ def write_trigger_histograms(args_dict):
         If the output file does not use an HDF5 suffix or no supported telescope
         selection is provided.
     """
+    context = context or RunContext.from_environment()
     if args_dict.get("event_data_directory"):
-        return _write_directory_products(args_dict)
+        return _write_directory_products(args_dict, context)
     if args_dict.get(_PRODUCTION_PATH_KEY):
-        return _write_production_selection_products(args_dict)
+        return _write_production_selection_products(args_dict, context)
 
-    production_patterns = gen.ensure_string_lists(args_dict["event_data_files"])
-    output_file = io_handler.IOHandler().get_output_file(args_dict["output_file"])
-    return _write_trigger_histogram_product(args_dict, production_patterns, output_file)
+    production_patterns = value_conversion.ensure_string_lists(args_dict["event_data_files"])
+    output_file = context.paths.get_output_file(args_dict["output_file"])
+    return _write_trigger_histogram_product(
+        args_dict, production_patterns, output_file, context=context
+    )
 
 
 def _group_output_stem(group, product_identity=None, selections=None, include_hash=False):
@@ -952,22 +922,22 @@ def _relative_to_directory(path, directory):
     return Path(os.path.relpath(path, directory)).as_posix()
 
 
-def _resolve_telescope_configs(args_dict):
+def _resolve_telescope_configs(args_dict, context):
     """Return normalized resolved telescope configurations."""
     return _use_readable_inline_array_names(
-        normalize_telescope_configs(resolve_telescope_configs(args_dict))
+        normalize_telescope_configs(resolve_telescope_configs(args_dict, context=context))
     )
 
 
-def _resolve_group_telescope_configs(args_dict, configuration):
+def _resolve_group_telescope_configs(args_dict, configuration, context):
     """Resolve telescope configurations from one selected production configuration."""
     group_args = dict(args_dict)
     _set_group_argument(group_args, configuration, "site")
     _set_group_argument(group_args, configuration, "model_version", list_value=True)
     if group_args.get("array_element_list"):
-        return _resolve_telescope_configs(group_args)
+        return _resolve_telescope_configs(group_args, context)
     _set_group_argument(group_args, configuration, "array_layout_name", list_value=True)
-    return _resolve_telescope_configs(group_args)
+    return _resolve_telescope_configs(group_args, context)
 
 
 def _set_group_argument(args_dict, configuration, key, list_value=False):
@@ -1067,42 +1037,22 @@ def _metadata_data_ranges(row):
     return {"angular_distance": (float(angular_min), float(angular_max))}
 
 
-def _template_histograms(histograms):
-    """Create metadata-rich empty histogram definitions for a loaded histogram object."""
-    return histograms.get_empty_histogram_definitions()
-
-
-def _apply_loaded_histograms(histograms, values_by_name, edges_by_name):
-    """Attach loaded histogram arrays and exact bin edges to a histogram object."""
-    templates = _template_histograms(histograms)
-    loaded = {}
+def _apply_loaded_histograms(loaded_histograms):
+    """Attach loaded histograms and exact bin edges to a histogram object."""
+    loaded = dict(loaded_histograms)
     loaded_bin_edges = {}
-    for histogram_name, values in values_by_name.items():
-        definition = copy.copy(templates.get(histogram_name, {}))
-        definition.setdefault("1d", values.ndim == 1)
-        definition["histogram"] = values
-        definition["event_data"] = (
-            None if definition["1d"] else tuple(None for _ in range(values.ndim))
-        )
-        axis_edges = edges_by_name[histogram_name]
-        definition["bin_edges"] = (
-            axis_edges[0]
-            if values.ndim == 1
-            else tuple(axis_edges[index] for index in range(values.ndim))
-        )
-        loaded[histogram_name] = definition
-
-    if "energy" in edges_by_name:
-        loaded_bin_edges["energy"] = edges_by_name["energy"][0]
-    if "core_distance" in edges_by_name:
-        loaded_bin_edges["core_distance"] = edges_by_name["core_distance"][0]
-    if "angular_distance" in edges_by_name:
-        loaded_bin_edges["viewcone"] = edges_by_name["angular_distance"][0]
+    for histogram_name, edges_key in (
+        ("energy", "energy"),
+        ("core_distance", "core_distance"),
+        ("angular_distance", "viewcone"),
+    ):
+        if histogram_name in loaded_histograms:
+            loaded_bin_edges[edges_key] = loaded_histograms[histogram_name].edges[0]
 
     return loaded, loaded_bin_edges
 
 
-def _histograms_from_reference_row_dense(row, values_by_name, edges_by_name):
+def _histograms_from_reference_row_dense(row, loaded_histograms):
     """Reconstruct finalized EventDataHistograms from dense HDF5 payloads."""
     histograms = EventDataHistograms.create_accumulator(
         array_name=row["array_name"],
@@ -1112,9 +1062,7 @@ def _histograms_from_reference_row_dense(row, values_by_name, edges_by_name):
         angular_distance_bin_width=_row_value(row, "angular_distance_bin_width"),
         core_distance_bin_count=int(row["core_distance_bin_count"]) + 1,
     )
-    loaded_histograms, loaded_bin_edges = _apply_loaded_histograms(
-        histograms, values_by_name, edges_by_name
-    )
+    loaded_histograms, loaded_bin_edges = _apply_loaded_histograms(loaded_histograms)
     histograms.set_loaded_histograms(
         loaded_histograms,
         file_info=_metadata_file_info(row),
@@ -1145,7 +1093,7 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
     list[tuple[astropy.table.Row, EventDataHistograms]]
         Metadata row and reconstructed histogram object for each reference.
     """
-    dense_payloads = _load_dense_histogram_payloads(reference_file)
+    dense_payloads = load_dense_histogram_payloads(reference_file)
     metadata = table_handler.read_tables(
         reference_file,
         [TRIGGER_HISTOGRAM_METADATA_TABLE],
@@ -1160,17 +1108,16 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
     loaded = []
     for row in metadata:
         reference_id = str(row["reference_id"])
-        values_by_name, edges_by_name = dense_payloads[reference_id]
         loaded.append(
             (
                 row,
-                _histograms_from_reference_row_dense(row, values_by_name, edges_by_name),
+                _histograms_from_reference_row_dense(row, dense_payloads[reference_id]),
             )
         )
     return loaded
 
 
-def _validate_derived_workflow(applications):
+def validate_derived_workflow(applications):
     """Check trigger products owned by histogram-writer workflow steps."""
     for application in applications:
         configuration = application.get(_CONFIGURATION_KEY, {})
@@ -1178,10 +1125,10 @@ def _validate_derived_workflow(applications):
             application.get("application") == "simtools-write-trigger-histograms"
             and _PRODUCTION_PATH_KEY in configuration
         ):
-            _validate_derived_products(configuration)
+            validate_derived_products(configuration)
 
 
-def _validate_derived_products(configuration):
+def validate_derived_products(configuration):
     """Check histogram metadata, run coverage, and source freshness without publishing it."""
     groups = select_file_groups(
         configuration[_PRODUCTION_PATH_KEY],
@@ -1226,5 +1173,5 @@ def _validate_derived_group(group, product, configuration):
         raise ValueError("Production inputs changed after derivation")
     for key, value in data[_HISTOGRAM_SETTINGS_KEY].items():
         expected = configuration.get(key, _DEFAULT_HISTOGRAM_SETTINGS.get(key))
-        if not _values_match(value, str(expected)):
+        if not values_match(value, str(expected)):
             raise ValueError(f"Histogram setting changed: {key}")

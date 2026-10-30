@@ -1,14 +1,15 @@
 """Array model represents an observatory consisting of site, telescopes, and further devices."""
 
 import logging
+import os
+import tarfile
 from pathlib import Path
 
 import astropy.units as u
 from astropy.table import QTable
 
-from simtools.application.model_reader import require_model_reader
+from simtools.context import RunContext
 from simtools.data_model import data_reader, schema
-from simtools.io import io_handler
 from simtools.io.ascii_handler import to_builtin
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.model_parameter import InvalidModelParameterError
@@ -16,7 +17,7 @@ from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simulation.configuration import get_model_writer
-from simtools.utils import general, names
+from simtools.utils import names
 
 
 class ArrayModel:
@@ -54,12 +55,16 @@ class ArrayModel:
         ignore_software_version=False,
         model_directory_subdir=None,
         model_reader=None,
+        context=None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
         self.model_version = model_version
         self.ignore_software_version = ignore_software_version
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
+        if self.model_reader is None:
+            raise RuntimeError("No simulation model reader is configured.")
         self.label = label
         self.layout_name = (
             layout_name[0]
@@ -68,10 +73,10 @@ class ArrayModel:
         )
         self._config_file_path = None
         self._config_file_directory = None
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
 
         self.overwrite_model_parameter_dict = read_overwrite_model_parameter_dict(
-            overwrite_model_parameters
+            overwrite_model_parameters, context=self.context
         )
 
         self.array_elements, self.site_model, self.telescope_models, self.calibration_models = (
@@ -118,6 +123,7 @@ class ArrayModel:
             overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
             ignore_software_version=self.ignore_software_version,
             model_reader=self.model_reader,
+            context=self.context,
         )
 
         # Case 1: array_elements is a file name
@@ -271,6 +277,7 @@ class ArrayModel:
                 overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
                 ignore_software_version=self.ignore_software_version,
                 model_reader=self.model_reader,
+                context=self.context,
             )
             calibration_models[element_name] = self._build_calibration_models(
                 telescope_models[element_name],
@@ -304,6 +311,7 @@ class ArrayModel:
                 label=self.label,
                 overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
                 model_reader=self.model_reader,
+                context=self.context,
             )
         return calibration_models
 
@@ -320,15 +328,17 @@ class ArrayModel:
         simulation_software : str
             Registered configuration format.
         """
-        return get_model_writer(self, simulation_software).export_config_files()
+        return get_model_writer(
+            self, simulation_software, context=self.context
+        ).export_config_files()
 
     def export_simtel_telescope_config_files(self):
         """Export sim_telarray configuration files for all telescopes into the model directory."""
-        return get_model_writer(self).export_simtel_telescope_config_files()
+        return get_model_writer(self, context=self.context).export_simtel_telescope_config_files()
 
     def export_sim_telarray_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
-        return get_model_writer(self).export_sim_telarray_config_file()
+        return get_model_writer(self, context=self.context).export_sim_telarray_config_file()
 
     def export_all_simtel_config_files(self):
         """
@@ -336,7 +346,7 @@ class ArrayModel:
 
         Config files are exported into the output model directory.
         """
-        return get_model_writer(self).export_all_simtel_config_files()
+        return get_model_writer(self, context=self.context).export_all_simtel_config_files()
 
     def get_config_directory(self):
         """
@@ -368,12 +378,19 @@ class ArrayModel:
             return None
 
         archive_name = self.get_config_directory() / f"model_files_{self.model_version}.tar.gz"
-        general.pack_tar_file(
-            archive_name,
-            model_files,
-            sub_dir=f"model/{self.model_version}",
-            compression_level=1,
-        )
+        files = [Path(path) for path in model_files]
+        base = Path(os.path.commonpath([path.resolve() for path in files])).resolve()
+        if any(not path.is_file() or not path.resolve().is_relative_to(base) for path in files):
+            raise ValueError("Model files contain an unsafe path.")
+        # Archive creation, not expansion of untrusted input: files are validated above and
+        # added non-recursively.
+        with tarfile.open(archive_name, "w:gz", compresslevel=1) as archive:  # NOSONAR
+            for path in files:
+                archive.add(
+                    path,
+                    arcname=str(Path(f"model/{self.model_version}") / path.name),
+                    recursive=False,
+                )
         self._logger.info(f"Packed model files into {archive_name}")
         return archive_name
 
@@ -395,7 +412,9 @@ class ArrayModel:
         dict
             Dict with telescope positions.
         """
-        table = data_reader.read_table_from_file(file_name=array_elements_file)
+        table = data_reader.read_table_from_file(
+            file_name=array_elements_file, context=self.context
+        )
 
         return {
             row["telescope_name"]: self._get_telescope_position_parameter(
@@ -542,6 +561,7 @@ class ArrayModel:
                     label=self.label,
                     overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
                     model_reader=self.model_reader,
+                    context=self.context,
                 )
 
                 xyz = calibration_model.get_parameter_value_with_unit(
@@ -576,6 +596,6 @@ class ArrayModel:
 
     def initialize_seeds(self, zenith_angle=None, azimuth_angle=None):
         """Initialize sim_telarray seeds for instrument and shower simulations."""
-        return get_model_writer(self).initialize_seeds(
+        return get_model_writer(self, context=self.context).initialize_seeds(
             zenith_angle=zenith_angle, azimuth_angle=azimuth_angle
         )

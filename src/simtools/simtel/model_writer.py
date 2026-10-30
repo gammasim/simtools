@@ -6,14 +6,22 @@ from pathlib import Path
 
 import astropy.units as u
 
-from simtools import settings
+from simtools.context import RunContext
+from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
+from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simulation.configuration import export_model_files, get_model_writer
 from simtools.utils import names
 
+_CORSIKA_FILE = "corsika_file"
+_PRIMARY = "primary"
+_ZENITH_ANGLE = "zenith_angle"
+_AZIMUTH_ANGLE = "azimuth_angle"
 SIMTEL_SOFTWARE = "sim_telarray"
 
 
@@ -26,8 +34,9 @@ class SimtelModelWriter:
         Model providing validated parameters, tables, and output paths.
     """
 
-    def __init__(self, model):
+    def __init__(self, model, context=None):
         self.model = model
+        self.context = context or getattr(model, "context", None) or RunContext.from_environment()
         self._logger = logging.getLogger(__name__)
         self._serialized_tables = {}
         self.config_writer = None
@@ -49,7 +58,7 @@ class SimtelModelWriter:
         parameters = self.model.parameters.copy()
         software_parameters = self.model.get_simulation_software_parameters(SIMTEL_SOFTWARE) or {}
         parameters.update(software_parameters)
-        self.model.export_model_files(update_if_necessary=True)
+        export_model_files(self.model, update_if_necessary=True)
         self.model.model_reader.export_model_files(
             parameters=software_parameters,
             dest=self.model.config_file_directory,
@@ -85,11 +94,11 @@ class SimtelModelWriter:
         global_parameters = {
             name: parameter
             for name, parameter in software_parameters.items()
-            if names.is_global_sim_telarray_parameter(name)
+            if catalog.is_global_sim_telarray_parameter(name)
         }
         parameters.update(global_parameters)
-        additional_models.export_model_files(
-            self.model.config_file_directory, update_if_necessary=True
+        export_model_files(
+            additional_models, self.model.config_file_directory, update_if_necessary=True
         )
         additional_models.model_reader.export_model_files(
             parameters=global_parameters,
@@ -107,6 +116,7 @@ class SimtelModelWriter:
                 model_version=self.model.model_version,
                 label=desired_label,
                 model_reader=self.model.model_reader,
+                context=self.context,
             )
 
     def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
@@ -198,7 +208,7 @@ class SimtelModelWriter:
         for tel_model in self.model.telescope_models.values():
             name = tel_model.name
             if name not in exported_models:
-                tel_model.write_sim_telarray_config_file(
+                get_model_writer(tel_model, context=self.context).write_sim_telarray_config_file(
                     additional_models=self.model.calibration_models.get(tel_model.name)
                 )
                 exported_models.append(name)
@@ -211,7 +221,7 @@ class SimtelModelWriter:
 
     def export_sim_telarray_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
-        self.model.site_model.export_model_files()
+        export_model_files(self.model.site_model)
 
         self._logger.info(f"Writing array configuration file into {self.model.config_file_path}")
         simtel_writer = SimtelConfigWriter(
@@ -220,6 +230,7 @@ class SimtelModelWriter:
             model_version=self.model.model_version,
             label=self.model.label,
             model_reader=self.model.model_reader,
+            context=self.context,
         )
         simtel_writer.write_array_config_file(
             config_file_path=self.model.config_file_path,
@@ -249,21 +260,33 @@ class SimtelModelWriter:
         dict
             Dictionary with additional metadata.
         """
+        args = dict(self.context.args)
+        if args.get(_CORSIKA_FILE):
+            reader = get_reader(args[_CORSIKA_FILE], args.get("simulation_file_format", "eventio"))
+            shower = reader.read_simulation_parameters()
+            args.update(
+                primary=shower["primary_particle"].name,
+                primary_id_type="common_name",
+                zenith_angle=shower[_ZENITH_ANGLE],
+                azimuth_angle=shower[_AZIMUTH_ANGLE],
+            )
         metadata = {
             "nsb_integrated_flux": self.model.site_model.get_nsb_integrated_flux(),
         }
         for metadata_key, args_key in {
-            "primary": "primary",
-            "azimuth_angle": "azimuth_angle",
-            "zenith_angle": "zenith_angle",
+            _PRIMARY: _PRIMARY,
+            _AZIMUTH_ANGLE: _AZIMUTH_ANGLE,
+            _ZENITH_ANGLE: _ZENITH_ANGLE,
             "ha_angle": "ha",
             "dec_angle": "dec",
         }.items():
-            value = settings.config.args.get(args_key)
+            value = args.get(args_key)
             if value is not None:
                 metadata[metadata_key] = (
                     value.to_value(u.deg) if hasattr(value, "to_value") else value
                 )
+        if args.get(_PRIMARY) is not None:
+            metadata.update(get_ctao_simtel_metadata(args, site_model=self.model.site_model))
         return metadata
 
     def write_config_file(self, additional_models=None, label=None):
@@ -365,6 +388,7 @@ class SimtelModelWriter:
             model_version=self.model.model_version,
             zenith_angle=zenith_angle,
             azimuth_angle=azimuth_angle,
+            context=self.context,
         )
 
     def get_single_mirror_list_file(self, mirror_number, set_focal_length_to_zero=False):

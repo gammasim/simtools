@@ -64,6 +64,7 @@ simulation_software:
   - name: sim_telarray
     internal_parameter_name: primary_segmentation
     meta_parameter_mode: add
+  - name: obdeect
 ---
 title: Schema for primary_mirror_segmentation model parameter
 schema_version: 0.1.0

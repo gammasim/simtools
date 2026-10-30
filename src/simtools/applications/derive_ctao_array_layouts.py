@@ -23,7 +23,6 @@ _ARGUMENTS = (
         help="Repository branch to use for CTAO common identifiers.",
         type=str,
         default="main",
-        required=False,
     ),
 )
 
@@ -36,12 +35,12 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.PARAMETER_VERSION,
         cli.UPDATED_PARAMETER_VERSION,
-        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
         cli.SITE,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
@@ -68,6 +67,7 @@ def main():
         array_layouts=merge_array_layouts(model_layouts["array_layouts"], ctao_array_layouts),
         args_dict=app_context.args,
         associated_data=associated_data,
+        context=app_context,
     )
 
 

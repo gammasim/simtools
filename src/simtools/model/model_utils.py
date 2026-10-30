@@ -4,13 +4,12 @@
 import json
 import math
 
-from simtools import settings
-from simtools.application.model_reader import require_model_reader
+from simtools.context import RunContext
 from simtools.io import ascii_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.utils import names
+from simtools.simulation.configuration import export_model_files
 
 
 def initialize_simulation_models(
@@ -22,6 +21,7 @@ def initialize_simulation_models(
     calibration_device_type=None,
     model_reader=None,
     model_directory=None,
+    context=None,
 ):
     """
     Initialize simulation models for a single telescope, site, and calibration device model.
@@ -48,13 +48,15 @@ def initialize_simulation_models(
     Tuple
         Tuple containing the telescope site, (optional) calibration device model.
     """
-    overwrite_model_parameter_dict = read_overwrite_model_parameter_dict()
+    context = context or RunContext.from_environment()
+    overwrite_model_parameter_dict = read_overwrite_model_parameter_dict(context=context)
     common = {
         "site": site,
         "model_version": model_version,
         "label": label,
         "overwrite_model_parameter_dict": overwrite_model_parameter_dict,
-        "model_reader": require_model_reader(model_reader),
+        "model_reader": model_reader or context.model_reader,
+        "context": context,
     }
     if model_directory is not None:
         common["model_directory"] = model_directory
@@ -72,11 +74,11 @@ def initialize_simulation_models(
     else:
         calibration_model = None
     for model in tel_model, site_model:
-        model.export_model_files()
+        export_model_files(model)
     return tel_model, site_model, calibration_model
 
 
-def read_overwrite_model_parameter_dict(overwrite_model_parameters=None):
+def read_overwrite_model_parameter_dict(overwrite_model_parameters=None, context=None):
     """
     Read overwrite model parameters dictionary.
 
@@ -90,9 +92,9 @@ def read_overwrite_model_parameter_dict(overwrite_model_parameters=None):
     dict
         Dictionary with model parameters to overwrite.
     """
-    overwrite_model_parameters = overwrite_model_parameters or settings.config.args.get(
-        "overwrite_model_parameters"
-    )
+    if overwrite_model_parameters is None:
+        context = context or RunContext.from_environment()
+        overwrite_model_parameters = context.args.get("overwrite_model_parameters")
     if overwrite_model_parameters is None:
         return {}
 
@@ -153,27 +155,9 @@ def compute_telescope_transmission(pars: list[float], off_axis: float) -> float:
     return pars[0] / (1.0 + pars[2] * t ** pars[4])
 
 
-def is_two_mirror_telescope(telescope_model_name: str) -> bool:
-    """
-    Determine if the telescope model is a two-mirror telescope.
-
-    Parameters
-    ----------
-    telescope_model_name: str
-        Name of the telescope model.
-
-    Returns
-    -------
-    bool
-        True if it is a two-mirror telescope.
-    """
-    tel_type = names.get_array_element_type_from_name(telescope_model_name)
-    if "SST" in tel_type or "SCT" in tel_type:
-        return True
-    return False
-
-
-def get_array_elements_for_layout(layout_name, site=None, model_version=None, model_reader=None):
+def get_array_elements_for_layout(
+    layout_name, site=None, model_version=None, model_reader=None, context=None
+):
     """
     Get array elements for a given array layout.
 
@@ -194,11 +178,13 @@ def get_array_elements_for_layout(layout_name, site=None, model_version=None, mo
     if not layout_name or (isinstance(layout_name, list) and len(layout_name) > 1):
         raise ValueError("Single array layout name must be provided.")
     layout_name = layout_name[0] if isinstance(layout_name, list) else layout_name
+    context = context or RunContext.from_environment()
     site_model = SiteModel(
-        site=site or settings.config.args.get("site"),
-        model_version=model_version or settings.config.args.get("model_version"),
+        site=site or context.args.get("site"),
+        model_version=model_version or context.args.get("model_version"),
         label="label",
-        overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(),
-        model_reader=require_model_reader(model_reader),
+        overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(context=context),
+        model_reader=model_reader or context.model_reader,
+        context=context,
     )
     return site_model.get_array_elements_for_layout(layout_name)

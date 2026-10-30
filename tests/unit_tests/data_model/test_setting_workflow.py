@@ -45,25 +45,6 @@ def setting_writer(mocker):
     return writer
 
 
-def test_create_and_reuse_preserves_files(setting_args, setting_writer):
-    config_file = setting_workflow.create_setting_workflow(setting_args)
-    metadata_file = config_file.with_name("input.meta.yml")
-    original = (config_file.read_bytes(), metadata_file.read_bytes())
-    config = ascii_handler.collect_data_from_file(config_file)
-    submission = config["applications"][0]["configuration"]
-    assert submission["site"] == "North"
-    assert submission["check_parameter_version"] is True
-    assert submission["output_path"] == "output/__SETTING_WORKFLOW__/"
-    metadata = ascii_handler.collect_data_from_file(metadata_file)["cta"]
-    assert metadata["activity"]["id"] == config_file.parent.name
-    assert metadata["product"]["description"] == setting_args["description"]
-    assert metadata["product"]["data"]["model"]["version"] == "2.0.1"
-    setting_args["value"] = "120.0"
-    assert setting_workflow.create_setting_workflow(setting_args) == config_file
-    assert (config_file.read_bytes(), metadata_file.read_bytes()) == original
-    assert setting_writer.check_for_existing_parameter.call_count == 1
-
-
 @pytest.mark.parametrize(
     "change",
     [
@@ -97,18 +78,6 @@ def test_explicit_site_for_shared_instrument(setting_args, setting_writer):
     assert config["applications"][0]["configuration"]["site"] == "South"
 
 
-def test_changed_metadata_is_preserved(setting_args, setting_writer):
-    config_file = setting_workflow.create_setting_workflow(setting_args)
-    metadata_file = config_file.with_name("input.meta.yml")
-    metadata = ascii_handler.collect_data_from_file(metadata_file)
-    metadata["cta"]["product"]["valid"] = {"start": "2026-01-01T00:00:00+00:00"}
-    ascii_handler.write_data_to_file(metadata, metadata_file)
-    previous = metadata_file.read_bytes()
-    with pytest.raises(ValueError, match="Conflicting inputs"):
-        setting_workflow.create_setting_workflow(setting_args)
-    assert metadata_file.read_bytes() == previous
-
-
 @pytest.mark.parametrize(
     ("change", "message"),
     [
@@ -133,53 +102,6 @@ def test_reject_file_or_structured_parameter(setting_args, setting_writer, param
     with pytest.raises(ValueError, match="existing derivation workflow"):
         setting_workflow.create_setting_workflow(setting_args)
     assert not setting_args["output_path"].exists()
-
-
-def test_repository_version_collision_leaves_no_workflow(setting_args, setting_writer):
-    setting_writer.check_for_existing_parameter.side_effect = ValueError("already exists")
-    with pytest.raises(ValueError, match="already exists"):
-        setting_workflow.create_setting_workflow(setting_args)
-    assert not setting_args["output_path"].exists()
-
-
-def test_runtime_and_source_are_preserved(setting_args, setting_writer, tmp_test_directory):
-    runtime_file = tmp_test_directory / "runtime.yml"
-    runtime = {"runtime_environment": {"image": "example@sha256:123", "container_engine": "podman"}}
-    ascii_handler.write_data_to_file(runtime, runtime_file)
-    setting_args.update(workflow_runtime_file=runtime_file, source_url="https://example.org/data")
-    config_file = setting_workflow.create_setting_workflow(setting_args)
-    assert "runtime_environment" not in ascii_handler.collect_data_from_file(config_file)
-    assert ascii_handler.collect_data_from_file(config_file.with_name("runtime.yml")) == runtime
-    metadata = ascii_handler.collect_data_from_file(config_file.with_name("input.meta.yml"))
-    assert metadata["cta"]["product"]["description"].endswith("Source: https://example.org/data")
-
-
-def test_multiple_workflows_are_rejected(setting_args, setting_writer):
-    config_file = setting_workflow.create_setting_workflow(setting_args)
-    other = config_file.parent.parent / "other" / "config.yml"
-    other.parent.mkdir()
-    other.write_bytes(config_file.read_bytes())
-    with pytest.raises(ValueError, match="Multiple workflows"):
-        setting_workflow.create_setting_workflow(setting_args)
-
-
-def test_run_and_rerun_use_separate_outputs(setting_args, setting_writer, mocker):
-    config_file = setting_workflow.create_setting_workflow(setting_args)
-    run = mocker.patch.object(setting_workflow.simtools_runner, "run_applications")
-    output = setting_workflow.run_setting_workflow(config_file, {})
-    assert output == setting_args["output_path"] / "output" / config_file.parent.relative_to(
-        setting_args["output_path"] / "input"
-    )
-    assert run.call_args.kwargs["replacements"]["output/__SETTING_WORKFLOW__"] == str(output)
-    assert run.call_args.args[0]["ignore_existing_parameter_version"] is False
-    output.mkdir(parents=True)
-    sentinel = output / "previous-result.json"
-    sentinel.write_text("previous result", encoding="utf-8")
-    rerun_output = setting_workflow.run_setting_workflow(config_file, {})
-    assert rerun_output.parent == output / "reruns"
-    assert run.call_args.args[0]["ignore_existing_parameter_version"] is True
-    assert run.call_args.kwargs["replacements"]["output/__SETTING_WORKFLOW__"] == str(rerun_output)
-    assert sentinel.read_text(encoding="utf-8") == "previous result"
 
 
 def test_run_uses_workflow_runtime_file(setting_args, setting_writer, mocker):

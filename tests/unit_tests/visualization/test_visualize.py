@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from astropy.table import Table
+from PIL import Image
 
 from simtools.visualization import visualize
 
@@ -147,12 +148,12 @@ def test_save_figure_closes_when_requested(io_handler, mocker):
     mock_close.assert_called_once_with(fig)
 
 
-def test_save_figure_uses_configured_dpi_for_png_only(tmp_test_directory, mocker):
+def test_save_figure_uses_configured_dpi_for_png_only(tmp_test_directory, mocker, run_context):
     fig = mocker.Mock()
-    mocker.patch.object(visualize, "config").args = {"figure_dpi": 123}
+    context = run_context.replace(args={"figure_dpi": 123})
     output_file = Path(tmp_test_directory) / "figure"
 
-    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"], dpi=150)
+    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"], dpi=150, context=context)
 
     assert fig.savefig.call_args_list == [
         mocker.call(output_file.with_suffix(".pdf"), format="pdf", bbox_inches="tight", dpi=150),
@@ -344,34 +345,106 @@ def test_plot_ratio_difference():
     plt.close(fig4)
 
 
-@pytest.mark.parametrize("figure_container", [list, iter])
-def test_save_figures_to_single_document(tmp_test_directory, figure_container):
+def test_pdf_report_writes_pages_and_closes_figures(tmp_test_directory):
     fig1, ax1 = plt.subplots()
     ax1.plot([0, 1], [0, 1])
     fig2, ax2 = plt.subplots()
     ax2.plot([1, 0], [0, 1])
     output_pdf = tmp_test_directory / "test_multi_fig.pdf"
-    visualize.save_figures_to_single_document(
-        figure_container([fig1, fig2]), output_pdf, close=True
-    )
+    with visualize.pdf_report(output_pdf) as report:
+        report.add(fig1)
+        report.add(fig2)
+        assert len(report) == 2
     assert output_pdf.exists()
     assert not plt.fignum_exists(fig1.number)
     assert not plt.fignum_exists(fig2.number)
     plt.close("all")
 
 
-def test_save_figures_to_single_document_closes_pdf_after_generator_error(
-    tmp_test_directory, mocker
-):
-    mock_pdf = mocker.patch("simtools.visualization.visualize.pdf_backend.PdfPages")
-    figure = mocker.Mock()
+def test_pdf_report_closes_pdf_after_error(tmp_test_directory):
+    output_pdf = Path(tmp_test_directory) / "images.pdf"
+    figure, axis = plt.subplots()
+    axis.plot([0, 1], [0, 1])
 
-    def figures():
-        yield figure
-        raise RuntimeError("Cannot create figure")
+    def fail_while_writing_report():
+        with visualize.pdf_report(output_pdf) as report:
+            report.add(figure)
+            raise RuntimeError("failure")
 
-    with pytest.raises(RuntimeError, match="Cannot create figure"):
-        visualize.save_figures_to_single_document(figures(), tmp_test_directory / "images.pdf")
+    with pytest.raises(RuntimeError, match="failure"):
+        fail_while_writing_report()
+    assert not plt.fignum_exists(figure.number)
+    assert output_pdf.read_bytes().rstrip().endswith(b"%%EOF")
 
-    mock_pdf.return_value.__enter__.return_value.savefig.assert_called_once_with(figure)
-    mock_pdf.return_value.__exit__.assert_called_once()
+
+@pytest.mark.parametrize(
+    ("output_name", "expected_name"),
+    [
+        ("psf_za20.0deg_d10.0km", "psf_za20.0deg_d10.0km.png"),
+        ("psf_za20.0deg_d10.0km.pdf", "psf_za20.0deg_d10.0km.png"),
+    ],
+)
+def test_save_figure_keeps_decimal_points_in_name(tmp_test_directory, output_name, expected_name):
+    figure, _ = plt.subplots()
+    visualize.save_figure(
+        figure, tmp_test_directory / output_name, figure_format=["png"], close=True
+    )
+    assert (tmp_test_directory / expected_name).exists()
+
+
+def test_save_figure_converts_png_to_palette_if_configured(tmp_test_directory, mocker, run_context):
+    context = run_context.replace(args={"figure_png_palette": True})
+    convert = mocker.patch.object(visualize, "convert_png_to_palette")
+    fig = mocker.Mock()
+    output_file = Path(tmp_test_directory) / "figure"
+
+    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"], context=context)
+
+    convert.assert_called_once_with(output_file.with_suffix(".png"))
+
+
+def test_save_figure_keeps_png_without_palette_option(tmp_test_directory, mocker, run_context):
+    convert = mocker.patch.object(visualize, "convert_png_to_palette")
+
+    visualize.save_figure(mocker.Mock(), Path(tmp_test_directory) / "figure", context=run_context)
+
+    convert.assert_not_called()
+
+
+@pytest.mark.parametrize("mode", ["RGBA", "RGB"])
+def test_convert_png_to_palette(tmp_test_directory, mode):
+    png_file = Path(tmp_test_directory) / f"figure_{mode}.png"
+    # Smooth color gradient with noise (true-color image; savefig is stubbed in unit tests)
+    rng = np.random.default_rng(seed=1)
+    gradient = np.linspace(0, 255, 200 * 200).reshape(200, 200)
+    pixels = np.stack([gradient, gradient.T, rng.integers(0, 4, (200, 200)) * 60], axis=-1)
+    Image.fromarray(pixels.astype(np.uint8)).convert(mode).save(png_file)
+    original_size = png_file.stat().st_size
+
+    visualize.convert_png_to_palette(png_file)
+
+    with Image.open(png_file) as image:
+        assert image.mode == "P"
+    assert png_file.stat().st_size < original_size
+
+
+def test_convert_png_to_palette_keeps_smaller_original(tmp_test_directory):
+    png_file = Path(tmp_test_directory) / "tiny.png"
+    Image.new("P", (1, 1)).save(png_file)
+    original = png_file.read_bytes()
+
+    visualize.convert_png_to_palette(png_file)
+
+    assert png_file.read_bytes() == original
+
+
+def test_save_figure_uses_configured_figure_output(tmp_test_directory):
+    visualize.configure_figure_output({"figure_format": ["pdf", "png"]})
+    try:
+        fig = plt.figure()
+        visualize.save_figure(fig, Path(tmp_test_directory) / "configured.png")
+        assert (Path(tmp_test_directory) / "configured.pdf").exists()
+        assert (Path(tmp_test_directory) / "configured.png").exists()
+    finally:
+        visualize.configure_figure_output({})
+        plt.close("all")

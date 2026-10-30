@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import Mapping
+from functools import partial
 from numbers import Real
 from pathlib import Path
 
@@ -9,26 +10,56 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.io.file_type import _get_product_filename
-from simtools.production_configuration.job_metadata import get_sim_telarray_event_counts
+from simtools.io.file_type import product_filename
 from simtools.production_configuration.production_file_selection import (
-    _resolve_relative_manifest_path,
     discover_manifests,
     filter_manifests,
+    resolve_relative_manifest_path,
 )
+from simtools.production_configuration.production_metadata import get_sim_telarray_event_counts
 
+_BASELINE = "baseline"
+_CANDIDATE = "candidate"
+_PRODUCTION_LABEL = "production_label"
+_JOB_ID = "job_id"
+_MESSAGE = "message"
+_ENCODING = "utf-8"
+_RECORD_ENVIRONMENTS = "_record_environments"
 _ROLES = ("corsika", "sim_telarray")
-_SUMMARY_STATISTICS = ("mean", "median", "std", "min", "max", "p05", "p95")
-_OUTPUT_TYPES = (
-    "corsika",
-    "sim_telarray",
-    "reduced_event_data",
-    "sim_telarray_histogram",
+_UNKNOWN = "unknown"
+_ENVIRONMENT_COLUMNS = ("cpu_model", "logical_cpu_count", "available_cpu_count", "container_image")
+_ENVIRONMENT_GROUP_COLUMNS = (_PRODUCTION_LABEL, "role", *_ENVIRONMENT_COLUMNS)
+_COVERAGE_DIMENSIONS = (
+    "role",
+    "primary",
+    "site",
+    "array_layout_name",
+    "model_version",
+    "energy_min_gev",
+    "energy_max_gev",
+    "zenith_angle_deg",
+)
+_STATISTIC_FUNCTIONS = {
+    "mean": np.mean,
+    "median": np.median,
+    "std": np.std,
+    "min": np.min,
+    "max": np.max,
+    "p05": partial(np.percentile, q=5),
+    "p95": partial(np.percentile, q=95),
+}
+_STORAGE_OUTPUT_TYPES = ("sim_telarray", "reduced_event_data", "sim_telarray_histogram")
+_OUTPUT_TYPES = ("corsika", *_STORAGE_OUTPUT_TYPES)
+_COMPACT_METRICS = (
+    ("wall_time_seconds_per_event", "Wall time (s/event)"),
+    ("cpu_time_seconds_per_event", "CPU time (s/event)"),
+    ("peak_rss_bytes", "Peak RSS (bytes)"),
+    ("sim_telarray_storage_bytes_per_event", "Storage (bytes/event)"),
 )
 
 
 def collect_resource_requirements(
-    production_path, selections=None, label="baseline", comparison_role=None
+    production_path, selections=None, label=_BASELINE, comparison_role=None
 ):
     """Collect one resource row per recorded simulation process.
 
@@ -61,11 +92,11 @@ def collect_resource_requirements(
             except (AttributeError, OSError, TypeError, ValueError) as exc:
                 diagnostics.append(
                     {
-                        "production_label": label,
-                        "job_id": manifest.data.get("job_id"),
+                        _PRODUCTION_LABEL: label,
+                        _JOB_ID: manifest.data.get(_JOB_ID),
                         "run_number": manifest.run_number,
                         "role": role,
-                        "message": str(exc),
+                        _MESSAGE: str(exc),
                     }
                 )
     if not rows:
@@ -93,8 +124,6 @@ def write_resource_requirements(args_dict, output_directory, plotter):
         Paths of the ECSV, JSON, Markdown, and plot outputs plus diagnostics.
     """
     output_directory = Path(output_directory)
-    baseline_label = args_dict.get("baseline_label") or "baseline"
-    candidate_label = args_dict.get("candidate_label") or "candidate"
     selections = list(args_dict.get("select") or [])
     layouts = args_dict.get("array_layout_name") or []
     if len(layouts) > 1:
@@ -104,19 +133,20 @@ def write_resource_requirements(args_dict, output_directory, plotter):
     rows, diagnostics = collect_resource_requirements(
         args_dict["baseline_path"],
         selections,
-        label=baseline_label,
-        comparison_role="baseline",
+        label=args_dict.get("baseline_label") or _BASELINE,
+        comparison_role=_BASELINE,
     )
     if args_dict.get("candidate_path"):
         candidate_rows, candidate_diagnostics = collect_resource_requirements(
             args_dict["candidate_path"],
             selections,
-            label=candidate_label,
-            comparison_role="candidate",
+            label=args_dict.get("candidate_label") or _CANDIDATE,
+            comparison_role=_CANDIDATE,
         )
         rows.extend(candidate_rows)
         diagnostics.extend(candidate_diagnostics)
-        _validate_resource_coverage(rows)
+        _validate_resource_coverage(rows, diagnostics)
+
     report_mode = args_dict.get("report_mode", "diagnostic")
     table_file = None
     if report_mode == "compact":
@@ -125,7 +155,8 @@ def write_resource_requirements(args_dict, output_directory, plotter):
         table_file = output_directory / "resource_requirements.ecsv"
         resource_table(rows).write(table_file, format="ascii.ecsv", overwrite=True)
         summary = summarize_resource_requirements(rows)
-    json_file = output_directory / _get_product_filename("resource_requirements")
+    environments = _execution_environments(rows)
+    json_file = output_directory / product_filename("resource_requirements")
     json_file.write_text(
         json.dumps(
             {
@@ -135,23 +166,25 @@ def write_resource_requirements(args_dict, output_directory, plotter):
                 "summary": summary,
                 "diagnostics": diagnostics,
                 "configurations": _configuration_resource_summary(rows),
+                "execution_environments": environments,
             },
             indent=2,
             allow_nan=False,
         )
         + "\n",
-        encoding="utf-8",
+        encoding=_ENCODING,
     )
     report_file = output_directory / "resource_requirements.md"
     if report_mode == "compact":
         _write_compact_markdown_report(summary, diagnostics, report_file)
     else:
         write_markdown_report(summary, diagnostics, report_file)
+    _append_environment_report(environments, report_file)
     plot_files = plotter(
         rows,
         output_directory,
         figure_format=args_dict.get("figure_format"),
-        report_mode=args_dict.get("report_mode", "diagnostic"),
+        report_mode=report_mode,
     )
     return {
         "table_file": table_file,
@@ -164,29 +197,30 @@ def write_resource_requirements(args_dict, output_directory, plotter):
 
 def resource_table(rows):
     """Return resource rows as an ECSV-compatible Astropy table."""
-    return Table(rows=rows)
+    return Table(
+        rows=[
+            {key: value for key, value in row.items() if key != _RECORD_ENVIRONMENTS}
+            for row in rows
+        ]
+    )
+
+
+def _group_rows(rows, group_columns):
+    """Group rows by the requested columns."""
+    grouped = {}
+    for row in rows:
+        grouped.setdefault(tuple(row[column] for column in group_columns), []).append(row)
+    return grouped
 
 
 def _summarize_compact_resource_requirements(rows):
     """Summarize key resource metrics across each production and process role."""
-    metrics = (
-        "wall_time_seconds_per_event",
-        "cpu_time_seconds_per_event",
-        "peak_rss_bytes",
-        "sim_telarray_storage_bytes_per_event",
-    )
-    grouped = {}
-    for row in rows:
-        key = (row["production_label"], row["role"])
-        grouped.setdefault(key, []).append(row)
     summary = []
-    for (production_label, role), group_rows in sorted(grouped.items()):
-        item = {
-            "production_label": production_label,
-            "role": role,
-            "job_count": len(group_rows),
-        }
-        for metric in metrics:
+    for (production_label, role), group_rows in sorted(
+        _group_rows(rows, (_PRODUCTION_LABEL, "role")).items()
+    ):
+        item = {_PRODUCTION_LABEL: production_label, "role": role, "job_count": len(group_rows)}
+        for metric, _ in _COMPACT_METRICS:
             values = [row[metric] for row in group_rows if row[metric] is not None]
             item[f"{metric}_median"] = float(np.median(values)) if values else None
             item[f"{metric}_p05"] = float(np.percentile(values, 5)) if values else None
@@ -195,14 +229,22 @@ def _summarize_compact_resource_requirements(rows):
     return summary
 
 
+def _skipped_records_lines(diagnostics):
+    """Return the Markdown lines listing skipped resource records."""
+    if not diagnostics:
+        return []
+    return [
+        "",
+        "## Skipped records",
+        "",
+        "| Job | Role | Reason |",
+        "| --- | --- | --- |",
+        *(f"| {item[_JOB_ID]} | {item['role']} | {item[_MESSAGE]} |" for item in diagnostics),
+    ]
+
+
 def _write_compact_markdown_report(summary, diagnostics, output_file):
     """Write a short resource summary for release review."""
-    metric_labels = (
-        ("wall_time_seconds_per_event", "Wall time (s/event)"),
-        ("cpu_time_seconds_per_event", "CPU time (s/event)"),
-        ("peak_rss_bytes", "Peak RSS (bytes)"),
-        ("sim_telarray_storage_bytes_per_event", "Storage (bytes/event)"),
-    )
     lines = [
         "# Production resource requirements",
         "",
@@ -216,29 +258,14 @@ def _write_compact_markdown_report(summary, diagnostics, output_file):
         "| --- | --- | ---: | --- | ---: | ---: | ---: |",
     ]
     for item in summary:
-        for metric, label in metric_labels:
-            values = [
-                _format_value(item[f"{metric}_{statistic}"])
-                for statistic in ("median", "p05", "p95")
-            ]
+        for metric, label in _COMPACT_METRICS:
+            values = [_format_value(item[f"{metric}_{name}"]) for name in ("median", "p05", "p95")]
             lines.append(
-                f"| {item['production_label']} | {item['role']} | {item['job_count']} "
+                f"| {item[_PRODUCTION_LABEL]} | {item['role']} | {item['job_count']} "
                 f"| {label} | " + " | ".join(values) + " |"
             )
-    if diagnostics:
-        lines.extend(
-            [
-                "",
-                "## Skipped records",
-                "",
-                "| Job | Role | Reason |",
-                "| --- | --- | --- |",
-            ]
-        )
-        lines.extend(
-            f"| {item['job_id']} | {item['role']} | {item['message']} |" for item in diagnostics
-        )
-    Path(output_file).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    lines.extend(_skipped_records_lines(diagnostics))
+    Path(output_file).write_text("\n".join(lines) + "\n", encoding=_ENCODING)
 
 
 def summarize_resource_requirements(rows):
@@ -248,7 +275,7 @@ def summarize_resource_requirements(rows):
     preserve separate CORSIKA and sim_telarray values.
     """
     group_columns = (
-        "production_label",
+        _PRODUCTION_LABEL,
         "role",
         "primary",
         "site",
@@ -284,45 +311,22 @@ def summarize_resource_requirements(rows):
         "sim_telarray_storage_bytes_per_event",
         "sim_telarray_storage_bytes_per_triggered_event",
     )
-    grouped = _group_rows(rows, group_columns)
-    summary = [
-        _summarize_group(key, grouped_rows, group_columns, metric_columns)
-        for key, grouped_rows in grouped.items()
-    ]
+    summary = []
+    for key, group_rows in _group_rows(rows, group_columns).items():
+        item = dict(zip(group_columns, key, strict=True))
+        item["job_count"] = len(group_rows)
+        for metric in metric_columns:
+            item.update(_metric_statistics(metric, group_rows))
+        summary.append(item)
     return sorted(summary, key=lambda item: tuple(str(item[column]) for column in group_columns))
 
 
-def _group_rows(rows, group_columns):
-    """Group rows by the requested configuration columns."""
-    grouped = {}
-    for row in rows:
-        key = tuple(row[column] for column in group_columns)
-        grouped.setdefault(key, []).append(row)
-    return grouped
-
-
-def _summarize_group(key, rows, group_columns, metric_columns):
-    """Build summary statistics for one resource group."""
-    result = dict(zip(group_columns, key, strict=True))
-    result["job_count"] = len(rows)
-    for metric in metric_columns:
-        result.update(_metric_statistics(metric, rows))
-    return result
-
-
 def _metric_statistics(metric, rows):
-    """Return aggregate statistics for one metric."""
+    """Return aggregate statistics for one metric (``None`` when no values)."""
     values = [row[metric] for row in rows if row[metric] is not None]
-    if not values:
-        return {f"{metric}_{statistic}": None for statistic in _SUMMARY_STATISTICS}
     return {
-        f"{metric}_mean": float(np.mean(values)),
-        f"{metric}_median": float(np.median(values)),
-        f"{metric}_std": float(np.std(values)),
-        f"{metric}_min": float(np.min(values)),
-        f"{metric}_max": float(np.max(values)),
-        f"{metric}_p05": float(np.percentile(values, 5)),
-        f"{metric}_p95": float(np.percentile(values, 95)),
+        f"{metric}_{name}": float(func(values)) if values else None
+        for name, func in _STATISTIC_FUNCTIONS.items()
     }
 
 
@@ -330,7 +334,7 @@ def write_markdown_report(summary, diagnostics, output_file):
     """Write a compact human-readable resource requirements report."""
     output_file = Path(output_file)
     dimension_specs = (
-        ("production_label", "Production"),
+        (_PRODUCTION_LABEL, "Production"),
         ("role", "Role"),
         ("primary", "Primary"),
         ("site", "Site"),
@@ -347,7 +351,7 @@ def write_markdown_report(summary, diagnostics, output_file):
     dimensions = tuple(
         key
         for key, _ in dimension_specs
-        if key in varying_dimensions or key in {"production_label", "role", "job_count"}
+        if key in varying_dimensions or key in {_PRODUCTION_LABEL, "role", "job_count"}
     )
     metrics = (
         ("wall_time_seconds", "Wall time (s/run)"),
@@ -389,27 +393,21 @@ def write_markdown_report(summary, diagnostics, output_file):
     ]
     for item in summary:
         values = [
-            item[dimension]
-            if dimension not in {"energy_midpoint_gev", "zenith_angle_deg"}
-            else _format_value(item[dimension])
+            _format_value(item[dimension])
+            if dimension in {"energy_midpoint_gev", "zenith_angle_deg"}
+            else item[dimension]
             for dimension in dimensions
         ]
         values.extend(_format_statistic(item, metric) for metric, _ in metrics)
         lines.append("| " + " | ".join(str(value) for value in values) + " |")
-    if diagnostics:
-        lines.extend(
-            ["", "## Skipped records", "", "| Job | Role | Reason |", "| --- | --- | --- |"]
-        )
-        lines.extend(
-            f"| {item['job_id']} | {item['role']} | {item['message']} |" for item in diagnostics
-        )
-    output_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    lines.extend(_skipped_records_lines(diagnostics))
+    output_file.write_text("\n".join(lines) + "\n", encoding=_ENCODING)
 
 
 def _resource_row(manifest, role, label, comparison_role=None):
     """Build one validated normalized resource row."""
     record_paths = _resource_record_paths(manifest, role)
-    records = [json.loads(path.read_text(encoding="utf-8")) for path in record_paths]
+    records = [json.loads(path.read_text(encoding=_ENCODING)) for path in record_paths]
     for record, record_path in zip(records, record_paths, strict=True):
         _validate_record(record, record_path, manifest.run_number, role)
     record = _combine_records(records)
@@ -418,8 +416,7 @@ def _resource_row(manifest, role, label, comparison_role=None):
     energy_min = _quantity_value(configuration["energy_min"], u.GeV)
     energy_max = _quantity_value(configuration["energy_max"], u.GeV)
     output_sizes = _output_sizes(manifest, role)
-    statistics = manifest.data.get("statistics", {})
-    triggered_events = _event_count(statistics.get("triggered_events"))
+    triggered_events = _event_count(manifest.data.get("statistics", {}).get("triggered_events"))
     if role == "sim_telarray" and triggered_events is None:
         event_counts = get_sim_telarray_event_counts(manifest.directory, manifest.data["files"])
         triggered_events = _event_count(
@@ -428,25 +425,28 @@ def _resource_row(manifest, role, label, comparison_role=None):
     if role != "sim_telarray":
         triggered_events = None
     cpu_time = _sum_or_none(record.get("user_cpu_seconds"), record.get("system_cpu_seconds"))
-    storage_components = [
-        size
-        for key, size in output_sizes.items()
-        if key in {"sim_telarray", "reduced_event_data", "sim_telarray_histogram"}
-        and size is not None
-    ]
-    storage_size = sum(storage_components) if storage_components else None
+    storage_sizes = [output_sizes[key] for key in _STORAGE_OUTPUT_TYPES]
+    storage_size = (
+        sum(size for size in storage_sizes if size is not None)
+        if any(size is not None for size in storage_sizes)
+        else None
+    )
+    wall_time = record.get("wall_time_seconds")
+    corsika, sim_tel, reduced, histogram = (
+        output_sizes[key] for key in ("corsika", *_STORAGE_OUTPUT_TYPES)
+    )
     return {
-        "production_label": label,
+        _PRODUCTION_LABEL: label,
         "comparison_role": comparison_role or label,
-        "job_id": manifest.data["job_id"],
+        _JOB_ID: manifest.data[_JOB_ID],
         "run_number": manifest.run_number,
         "role": role,
-        "production_id": manifest.data.get("production_id") or "unknown",
+        "production_id": manifest.data.get("production_id") or _UNKNOWN,
         "primary": configuration["primary"],
         "site": configuration["site"],
         "array_layout_name": _layout_name(configuration["array_layout_name"]),
         "model_version": str(configuration["model_version"]),
-        "simtools_version": record.get("simtools_version") or "unknown",
+        "simtools_version": record.get("simtools_version") or _UNKNOWN,
         "energy_min_gev": energy_min,
         "energy_max_gev": energy_max,
         "energy_midpoint_gev": (
@@ -456,7 +456,7 @@ def _resource_row(manifest, role, label, comparison_role=None):
         "azimuth_angle_deg": _quantity_value(configuration["azimuth_angle"], u.deg),
         "showers_per_run": showers,
         "triggered_events": triggered_events,
-        "wall_time_seconds": record.get("wall_time_seconds"),
+        "wall_time_seconds": wall_time,
         "cpu_time_seconds": cpu_time,
         "peak_rss_bytes": record.get("peak_rss_bytes"),
         "user_cpu_seconds": record.get("user_cpu_seconds"),
@@ -465,39 +465,40 @@ def _resource_row(manifest, role, label, comparison_role=None):
         "end_time": record.get("end_time"),
         "measurement_method": record.get("measurement_method"),
         "platform": record.get("platform"),
-        "wall_time_seconds_per_event": _per_event(record.get("wall_time_seconds"), showers),
+        **_execution_environment(record),
+        _RECORD_ENVIRONMENTS: [_execution_environment(item) for item in records],
+        "wall_time_seconds_per_event": _per_event(wall_time, showers),
         "cpu_time_seconds_per_event": _per_event(cpu_time, showers),
-        "wall_time_seconds_per_triggered_event": _per_event(
-            record.get("wall_time_seconds"), triggered_events
-        ),
+        "wall_time_seconds_per_triggered_event": _per_event(wall_time, triggered_events),
         "cpu_time_seconds_per_triggered_event": _per_event(cpu_time, triggered_events),
-        "corsika_output_bytes": output_sizes["corsika"],
-        "sim_telarray_output_bytes": output_sizes["sim_telarray"],
-        "reduced_event_data_bytes": output_sizes["reduced_event_data"],
-        "sim_telarray_histogram_bytes": output_sizes["sim_telarray_histogram"],
-        "corsika_output_bytes_per_event": _per_event(output_sizes["corsika"], showers),
-        "sim_telarray_output_bytes_per_event": _per_event(output_sizes["sim_telarray"], showers),
-        "sim_telarray_output_bytes_per_triggered_event": _per_event(
-            output_sizes["sim_telarray"], triggered_events
-        ),
-        "reduced_event_data_bytes_per_event": _per_event(
-            output_sizes["reduced_event_data"], showers
-        ),
-        "reduced_event_data_bytes_per_triggered_event": _per_event(
-            output_sizes["reduced_event_data"], triggered_events
-        ),
-        "sim_telarray_histogram_bytes_per_event": _per_event(
-            output_sizes["sim_telarray_histogram"], showers
-        ),
-        "sim_telarray_histogram_bytes_per_triggered_event": _per_event(
-            output_sizes["sim_telarray_histogram"], triggered_events
-        ),
+        "corsika_output_bytes": corsika,
+        "sim_telarray_output_bytes": sim_tel,
+        "reduced_event_data_bytes": reduced,
+        "sim_telarray_histogram_bytes": histogram,
+        "corsika_output_bytes_per_event": _per_event(corsika, showers),
+        "sim_telarray_output_bytes_per_event": _per_event(sim_tel, showers),
+        "sim_telarray_output_bytes_per_triggered_event": _per_event(sim_tel, triggered_events),
+        "reduced_event_data_bytes_per_event": _per_event(reduced, showers),
+        "reduced_event_data_bytes_per_triggered_event": _per_event(reduced, triggered_events),
+        "sim_telarray_histogram_bytes_per_event": _per_event(histogram, showers),
+        "sim_telarray_histogram_bytes_per_triggered_event": _per_event(histogram, triggered_events),
         "sim_telarray_storage_bytes": storage_size,
         "sim_telarray_storage_bytes_per_event": _per_event(storage_size, showers),
         "sim_telarray_storage_bytes_per_triggered_event": _per_event(
             storage_size, triggered_events
         ),
         "resource_record": ";".join(str(path) for path in record_paths),
+    }
+
+
+def _execution_environment(record):
+    """Return host, processor, and container identity from a resource record."""
+    return {
+        "hostname": record.get("hostname") or _UNKNOWN,
+        "cpu_model": record.get("cpu_model") or _UNKNOWN,
+        "logical_cpu_count": record.get("logical_cpu_count"),
+        "available_cpu_count": record.get("available_cpu_count"),
+        "container_image": record.get("container_image") or _UNKNOWN,
     }
 
 
@@ -535,11 +536,6 @@ def _validate_record(record, record_path, run_number, role):
     """Validate resource-record fields required by this report."""
     if not isinstance(record, Mapping):
         raise ValueError(f"Malformed resource record in {record_path}: expected a mapping.")
-    if (
-        record.get("schema_name") != "process_resource_record"
-        or record.get("schema_version") != "1.0.0"
-    ):
-        raise ValueError(f"Unsupported resource record schema in {record_path}.")
     if record.get("role") != role:
         raise ValueError(f"Resource record role mismatch in {record_path}: {record.get('role')!r}.")
     if str(record.get("run_id")) != str(run_number):
@@ -573,14 +569,12 @@ def _output_sizes(manifest, role):
     """Return output sizes attributable to a CORSIKA or sim_telarray process."""
     sizes = {}
     for output_type in _OUTPUT_TYPES:
-        if role == "corsika" and output_type != "corsika":
-            sizes[output_type] = None
-            continue
-        if role == "sim_telarray" and output_type == "corsika":
+        belongs_to_role = (output_type == "corsika") == (role == "corsika")
+        if not belongs_to_role:
             sizes[output_type] = None
             continue
         files = manifest.data["files"].get(output_type, [])
-        paths = [_resolve_relative_manifest_path(manifest.directory, path) for path in files]
+        paths = [resolve_relative_manifest_path(manifest.directory, path) for path in files]
         sizes[output_type] = sum(path.stat().st_size for path in paths) if paths else None
     return sizes
 
@@ -618,13 +612,13 @@ def _per_event(value, event_count):
 
 
 def _format_value(value):
-    """Format an optional report value."""
+    """Format an optional numeric report value."""
     return "-" if value is None else f"{value:.6g}"
 
 
 def _format_statistic(summary, metric):
     """Format all aggregate statistics for one metric in the Markdown report."""
-    statistics = {name: summary[f"{metric}_{name}"] for name in _SUMMARY_STATISTICS}
+    statistics = {name: summary[f"{metric}_{name}"] for name in _STATISTIC_FUNCTIONS}
     if statistics["median"] is None:
         return "-"
     return "; ".join(f"{name}={value:.6g}" for name, value in statistics.items())
@@ -641,68 +635,137 @@ def _configuration_resource_summary(rows):
         "energy_midpoint_gev",
         "zenith_angle_deg",
     )
-    metrics = (
-        "wall_time_seconds_per_event",
-        "cpu_time_seconds_per_event",
-        "peak_rss_bytes",
-        "sim_telarray_storage_bytes_per_event",
-    )
+    metrics = [metric for metric, _ in _COMPACT_METRICS]
     groups = {}
     for row in rows:
         key = tuple(row.get(name) for name in dimensions)
-        role = row.get("comparison_role") or row["production_label"]
+        role = row.get("comparison_role") or row[_PRODUCTION_LABEL]
         groups.setdefault(key, {}).setdefault(role, []).append(row)
     output = []
     for key, productions in sorted(groups.items(), key=lambda item: str(item[0])):
-        item = dict(zip(dimensions, key))
-        item["productions"] = {}
-        for production, samples in productions.items():
-            values = {"count": len(samples)}
-            for metric in metrics:
-                observations = [row[metric] for row in samples if row.get(metric) is not None]
-                if observations:
-                    values[metric] = {
-                        "median": float(np.median(observations)),
-                        "p95": float(np.percentile(observations, 95)),
-                    }
-            item["productions"][production] = values
-        if {"baseline", "candidate"} <= productions.keys():
-            item["ratios"] = _resource_median_ratios(item["productions"], metrics)
+        item = dict(zip(dimensions, key, strict=True))
+        item["productions"] = {
+            production: _summarize_production_samples(samples, metrics)
+            for production, samples in productions.items()
+        }
+        if {_BASELINE, _CANDIDATE} <= productions.keys():
+            item["ratios"] = _baseline_candidate_ratios(
+                item["productions"][_BASELINE], item["productions"][_CANDIDATE], metrics
+            )
         output.append(item)
     return output
 
 
-def _resource_median_ratios(productions, metrics):
-    """Return comparable positive median ratios with missing values left explicit."""
+def _summarize_production_samples(samples, metrics):
+    """Return the sample count and median/p95 per metric for one production."""
+    values = {"count": len(samples)}
+    for metric in metrics:
+        observations = [row[metric] for row in samples if row.get(metric) is not None]
+        if observations:
+            values[metric] = {
+                "median": float(np.median(observations)),
+                "p95": float(np.percentile(observations, 95)),
+            }
+    return values
+
+
+def _baseline_candidate_ratios(baseline, candidate, metrics):
+    """Return candidate/baseline median ratios per metric."""
     ratios = {}
     for metric in metrics:
-        baseline = productions["baseline"].get(metric, {}).get("median")
-        candidate = productions["candidate"].get(metric, {}).get("median")
-        ratios[metric] = candidate / baseline if baseline and candidate is not None else None
+        base_median = baseline.get(metric, {}).get("median")
+        cand_median = candidate.get(metric, {}).get("median")
+        ratios[metric] = (
+            cand_median / base_median if base_median and cand_median is not None else None
+        )
     return ratios
 
 
-def _validate_resource_coverage(rows):
+def _validate_resource_coverage(rows, diagnostics=None):
     """Reject omitted configuration/role pairs instead of silently intersecting them."""
-    dimensions = (
-        "role",
-        "primary",
-        "site",
-        "array_layout_name",
-        "model_version",
-        "energy_min_gev",
-        "energy_max_gev",
-        "zenith_angle_deg",
-    )
     keys = {
         role: {
-            tuple(row.get(key) for key in dimensions)
+            tuple(row.get(key) for key in _COVERAGE_DIMENSIONS)
             for row in rows
             if row.get("comparison_role") == role
         }
-        for role in ("baseline", "candidate")
+        for role in (_BASELINE, _CANDIDATE)
     }
-    if keys["baseline"] != keys["candidate"]:
-        raise ValueError(
-            "Resource configuration/role coverage differs between baseline and candidate."
+    if keys[_BASELINE] == keys[_CANDIDATE]:
+        return
+    details = [
+        f"{role} only: {_format_coverage_keys(keys[role] - keys[other])}"
+        for role, other in ((_BASELINE, _CANDIDATE), (_CANDIDATE, _BASELINE))
+        if keys[role] - keys[other]
+    ]
+    if diagnostics:
+        details.append(
+            "skipped records: "
+            + "; ".join(
+                f"{item[_PRODUCTION_LABEL]} {item[_JOB_ID]} {item['role']}: {item[_MESSAGE]}"
+                for item in diagnostics
+            )
         )
+    raise ValueError(
+        "Resource configuration/role coverage differs between baseline and candidate ("
+        + "; ".join(details)
+        + ")."
+    )
+
+
+def _format_coverage_keys(keys):
+    """Format configuration/role coverage keys for an error message."""
+    return ", ".join(
+        "{"
+        + ", ".join(
+            f"{name}={value}" for name, value in zip(_COVERAGE_DIMENSIONS, key, strict=True)
+        )
+        + "}"
+        for key in sorted(keys, key=str)
+    )
+
+
+def _execution_environments(rows):
+    """Count resource records and hosts per production, role, and execution environment."""
+    groups = {}
+    for row in rows:
+        for record_environment in row.get(_RECORD_ENVIRONMENTS, [row]):
+            environment_row = {**row, **record_environment}
+            key = tuple(environment_row.get(column) for column in _ENVIRONMENT_GROUP_COLUMNS)
+            groups.setdefault(key, []).append(environment_row)
+    environments = []
+    for key, group_rows in sorted(groups.items(), key=lambda item: str(item[0])):
+        environment = dict(zip(_ENVIRONMENT_GROUP_COLUMNS, key, strict=True))
+        environment["host_count"] = len({row.get("hostname") for row in group_rows})
+        environment["record_count"] = len(group_rows)
+        environments.append(environment)
+    return environments
+
+
+def _append_environment_report(environments, output_file):
+    """Append the execution environments behind the reported measurements."""
+    headers = (
+        "Production",
+        "Role",
+        "CPU model",
+        "Logical CPUs",
+        "Available CPUs",
+        "Container",
+        "Hosts",
+        "Records",
+    )
+    columns = (*_ENVIRONMENT_GROUP_COLUMNS, "host_count", "record_count")
+    lines = [
+        "",
+        "## Execution environments",
+        "",
+        "Timing comparisons are only meaningful between matching environments.",
+        "",
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+    ]
+    for item in environments:
+        values = ("-" if item[column] is None else str(item[column]) for column in columns)
+        lines.append("| " + " | ".join(values) + " |")
+    with Path(output_file).open("a", encoding=_ENCODING) as report:
+        report.write("\n".join(lines) + "\n")

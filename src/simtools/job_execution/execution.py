@@ -2,16 +2,124 @@
 
 import json
 import logging
+import subprocess
+import time
 from pathlib import Path
 
 import yaml
 
-from simtools.io.file_type import _get_product_filename
+from simtools.context import RunContext
+from simtools.io.file_type import product_filename
 from simtools.job_execution.backends.registry import get_backend
-from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
-from simtools.settings import config
+from simtools.job_execution.job import (
+    CommandOptions,
+    ExecutionOptions,
+    JobResult,
+    JobSpec,
+    SubmissionHandle,
+)
+from simtools.job_execution.log_inspector import get_log_excerpt
+from simtools.job_execution.worker import execute_command
 
 logger = logging.getLogger(__name__)
+
+
+class JobExecutionError(RuntimeError):
+    """Raised when a command job fails."""
+
+
+def run_command(
+    command,
+    *,
+    stdin=None,
+    stdout=None,
+    stderr=None,
+    env=None,
+    runtime_environment=None,
+    configuration=None,
+    application_log=None,
+    check=True,
+    capture_output=True,
+):
+    """
+    Run one command synchronously through the execution worker.
+
+    Parameters
+    ----------
+    command : str or list[str] or Path
+        Command (a string or script path runs through the shell) or argument list.
+    stdin : file object or str or Path, optional
+        Standard input: an open file, or a file path that is opened for reading.
+    stdout, stderr : str or Path, optional
+        Files receiving standard output and standard error.
+    env : dict, optional
+        Environment variables added to the current environment.
+    runtime_environment : str or list[str], optional
+        Command prefix running the command in a container.
+    configuration : dict, optional
+        Application configuration appended as command-line arguments.
+    application_log : str or Path, optional
+        Application log; an excerpt is added to the error message on failure.
+    check : bool, optional
+        Raise ``JobExecutionError`` on a non-zero return code.
+    capture_output : bool, optional
+        Capture standard output and error that are not written to files; otherwise they are
+        inherited.
+
+    Returns
+    -------
+    JobResult
+        Return code, wall-clock runtime and the captured output (``output``) and error
+        output (``error_output``).
+
+    Raises
+    ------
+    JobExecutionError
+        If the command fails and ``check`` is True; the message contains the return code,
+        the captured standard error and excerpts from the log files.
+    """
+    job = JobSpec(
+        job_id="command",
+        index=0,
+        command=tuple(command) if isinstance(command, list) else command,
+        options=CommandOptions(
+            stdin=stdin,
+            stdout=Path(stdout) if stdout is not None else None,
+            stderr=Path(stderr) if stderr is not None else None,
+            env=dict(env or {}),
+            runtime_environment=runtime_environment,
+            configuration=configuration,
+            application_log=Path(application_log) if application_log else None,
+            check=check,
+            capture_output=capture_output,
+        ),
+    )
+    try:
+        return_code, runtime, output, error_output = execute_command(job)
+    except subprocess.CalledProcessError as exc:
+        _raise_command_error(exc, job)
+    return JobResult(
+        job_id=job.job_id,
+        index=job.index,
+        return_code=return_code,
+        runtime=runtime,
+        output=output,
+        error_output=error_output,
+    )
+
+
+def _raise_command_error(exc, job):
+    """Raise a command error with the return code, captured stderr and log excerpts."""
+    details = [f"Command failed with return code {exc.returncode}."]
+    if exc.stderr:
+        details.append(f"Standard error:\n{exc.stderr}")
+    for label, path in (("Output", job.options.stdout), ("Error", job.options.stderr)):
+        if path is not None:
+            details.append(f"{label} log excerpt from {path}:\n{get_log_excerpt(path)}")
+    log = job.options.application_log
+    if log and log.exists() and (time.time() - log.stat().st_mtime) / 60 < 5:
+        details.append(f"Application log excerpt from {log}:\n{get_log_excerpt(log)}")
+    raise JobExecutionError("\n".join(details)) from exc
 
 
 def execute_jobs(job_specs, options=None):
@@ -55,7 +163,7 @@ def submit_jobs(job_specs, options=None):
                 "Submitted %d job(s) with backend %s; manifest: %s",
                 len(jobs),
                 options.backend,
-                submission.work_dir / _get_product_filename("submission_manifest"),
+                submission.work_dir / product_filename("submission_manifest"),
             )
         else:
             logger.info(
@@ -190,14 +298,10 @@ def map_ordered(
     initargs=(),
     mp_start_method="fork",
     work_dir=None,
+    context=None,
 ):
     """Apply ``function`` to items and return values in input order."""
-    runtime_args = dict(config.args) if backend != "local" else None
-    model_source_config = (
-        dict(config.model_reader.source_config)
-        if backend != "local" and config.model_reader is not None
-        else None
-    )
+    context = context or RunContext.from_environment()
     job_specs = [
         JobSpec(
             job_id=f"job-{index:06d}",
@@ -206,8 +310,7 @@ def map_ordered(
             item=item,
             initializer=initializer if backend != "local" else None,
             initargs=tuple(initargs) if backend != "local" else (),
-            runtime_args=runtime_args,
-            model_source_config=model_source_config,
+            context_spec=context.to_spec(),
         )
         for index, item in enumerate(items)
     ]
@@ -257,7 +360,7 @@ def _load_backend_config(config_value):
 def _write_manifest(submission):
     """Write a durable submission manifest."""
     submission.work_dir.mkdir(parents=True, exist_ok=True)
-    manifest = submission.work_dir / _get_product_filename("submission_manifest")
+    manifest = submission.work_dir / product_filename("submission_manifest")
     temporary = manifest.with_suffix(".tmp")
     temporary.write_text(
         json.dumps(submission.as_dict(), indent=2, default=str) + "\n",

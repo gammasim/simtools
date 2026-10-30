@@ -8,43 +8,6 @@ from simtools.reporting.docs_auto_report_generator import ReportGenerator
 GET_SITE_FROM_NAME_PATH = "simtools.utils.names.get_site_from_array_element_name"
 
 
-def test__add_design_models_to_telescopes(io_handler):
-    args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
-
-    telescopes = ["LSTN-01", "LSTN-02"]
-    model_version = "6.0.0"
-
-    # Mocking the design model responses
-    report_generator.model_reader.get_design_model = MagicMock()
-    report_generator.model_reader.get_design_model.side_effect = ["LSTN-design", None]
-
-    result = report_generator._add_design_models_to_telescopes(model_version, telescopes)
-
-    assert len(result) == 3  # Original telescopes + one design model
-    assert "LSTN-design" in result
-    assert "LSTN-01" in result
-    assert "LSTN-02" in result
-
-
-def test__filter_telescopes_by_site(io_handler):
-    args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
-
-    telescopes = ["LSTN-01", "LSTN-02", "MSTS-01", "MSTN-01"]
-    selected_sites = {"North"}
-
-    with patch(GET_SITE_FROM_NAME_PATH) as mock_get_site:
-        mock_get_site.side_effect = [["North"], ["North"], ["South"], ["North"]]
-        result = report_generator._filter_telescopes_by_site(telescopes, selected_sites)
-
-    assert len(result) == 3
-    assert "MSTS-01" not in result
-    assert all(tel in result for tel in ["LSTN-01", "LSTN-02", "MSTN-01"])
-
-
 @pytest.mark.parametrize(
     "test_case",
     [
@@ -106,8 +69,10 @@ def test__filter_telescopes_by_site(io_handler):
         },
     ],
 )
-def test__generate_array_element_report_combinations(io_handler, test_case):
-    report_generator = ReportGenerator(test_case["args"], io_handler.get_output_directory())
+def test__generate_array_element_report_combinations(run_context, test_case):
+    report_generator = ReportGenerator(
+        test_case["args"], run_context.paths.get_output_directory(), context=run_context
+    )
 
     with (
         patch.multiple(
@@ -138,61 +103,7 @@ def test__generate_array_element_report_combinations(io_handler, test_case):
             assert all(combo[2] == test_case["args"]["site"] for combo in result)
 
 
-def test__get_telescopes_from_layout(io_handler):
-    test_cases = [
-        # Test case 1: all_telescopes=True
-        {
-            "args": {"all_telescopes": True, "site": "North"},
-            "mock_layouts": {
-                "6.0.0": {
-                    "array_layouts": {
-                        "value": [
-                            {"name": "hyper_array", "elements": ["LSTN-01", "LSTN-02"]},
-                            {"name": "other_layout", "elements": ["MSTN-01"]},
-                        ]
-                    }
-                }
-            },
-            "mock_design_model": "LSTN-design",
-            "expected_telescopes": {"LSTN-01", "LSTN-02", "LSTN-design"},
-        },
-        # Test case 2: all_telescopes=False
-        {
-            "args": {"all_telescopes": False, "site": "North", "telescope": "LSTN-01"},
-            "mock_layouts": {},  # Not used in this case
-            "mock_design_model": None,  # Not used in this case
-            "expected_telescopes": {"LSTN-01"},
-        },
-    ]
-
-    for case in test_cases:
-        output_path = io_handler.get_output_directory()
-        report_generator = ReportGenerator(case["args"], output_path)
-
-        with patch.multiple(
-            report_generator.model_reader,
-            get_model_parameters_for_all_model_versions=MagicMock(
-                return_value=case["mock_layouts"]
-            ),
-            get_design_model=MagicMock(return_value=case["mock_design_model"]),
-        ):
-            result = report_generator._get_telescopes_from_layout("North")
-
-            # Verify the result
-            assert result == case["expected_telescopes"]
-
-            # Verify model repository methods were called correctly based on all_telescopes flag
-            if case["args"]["all_telescopes"]:
-                report_generator.model_reader.get_model_parameters_for_all_model_versions.assert_called_once()
-                assert len(result) == len(case["expected_telescopes"])
-            else:
-                # Verify model repository methods were not called when all_telescopes=False
-                report_generator.model_reader.get_model_parameters_for_all_model_versions.assert_not_called()
-                report_generator.model_reader.get_design_model.assert_not_called()
-                assert result == {case["args"]["telescope"]}
-
-
-def test__generate_parameter_report_combinations(io_handler):
+def test__generate_parameter_report_combinations(run_context):
 
     test_cases = [
         # Test case 1: Specific telescope (all_telescopes=False)
@@ -217,8 +128,8 @@ def test__generate_parameter_report_combinations(io_handler):
     ]
 
     for case in test_cases:
-        output_path = io_handler.get_output_directory()
-        report_generator = ReportGenerator(case["args"], output_path)
+        output_path = run_context.paths.get_output_directory()
+        report_generator = ReportGenerator(case["args"], output_path, context=run_context)
 
         with (
             patch(
@@ -252,11 +163,212 @@ def test__generate_parameter_report_combinations(io_handler):
                 assert all(combo[0] == case["args"]["telescope"] for combo in result)
 
 
-def test_auto_generate_array_element_reports(io_handler):
+def test__generate_observatory_report_combinations(run_context):
+    test_cases = [
+        # Case 1: All sites and all model versions
+        {
+            "args": {
+                "all_sites": True,
+                "all_model_versions": True,
+            },
+            "mock_model_versions": ["5.0.0", "6.0.0"],
+            "expected_combinations": [
+                ("North", "5.0.0"),
+                ("North", "6.0.0"),
+                ("South", "5.0.0"),
+                ("South", "6.0.0"),
+            ],
+        },
+        # Case 2: Specific site and all model version
+        {
+            "args": {
+                "all_model_versions": True,
+                "site": "North",
+            },
+            "mock_model_versions": ["5.0.0", "6.0.0"],
+            "expected_combinations": [("North", "5.0.0"), ("North", "6.0.0")],
+        },
+    ]
+
+    for case in test_cases:
+        report_generator = ReportGenerator(
+            case["args"], run_context.paths.get_output_directory(), context=run_context
+        )
+
+        with patch.object(
+            report_generator.model_reader,
+            "get_model_versions",
+            return_value=case["mock_model_versions"],
+        ):
+            result = report_generator._generate_observatory_report_combinations()
+            assert set(result) == set(case["expected_combinations"])
+
+
+def test__process_calibration_devices_for_version_no_devices(run_context):
+    args = {"all_telescopes": True, "all_sites": True}
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
+
+    # Test case 1: Empty calibration elements list
+    with patch.object(
+        report_generator.model_reader, "get_array_elements", return_value=[]
+    ) as mock_get_elements:
+        with patch(
+            "simtools.reporting.docs_auto_report_generator.ReadParameters"
+        ) as mock_read_params_class:
+            report_generator._process_calibration_devices_for_version("5.0.0")
+
+            # Verify that get_array_elements was called
+            mock_get_elements.assert_called_once_with("5.0.0", collection="calibration_devices")
+
+            # Verify that ReadParameters was NOT instantiated since no devices exist
+            mock_read_params_class.assert_not_called()
+
+    # Test case 2: ValueError for a missing calibration_devices production table
+    mock_error = ValueError("No production table for calibration_devices in model version 5.0.0")
+
+    with patch.object(report_generator.model_reader, "get_array_elements", side_effect=mock_error):
+        # Should not raise an exception, should log and return
+        report_generator._process_calibration_devices_for_version("5.0.0")
+
+
+def test__process_calibration_devices_for_version_unexpected_error(run_context):
+    args = {"all_telescopes": True, "all_sites": True}
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
+
+    # Mock unexpected ValueError
+    mock_error = ValueError("Some unexpected error")
+
+    with patch.object(report_generator.model_reader, "get_array_elements", side_effect=mock_error):
+        # Should re-raise unexpected ValueError
+        with pytest.raises(ValueError, match="Some unexpected error"):
+            report_generator._process_calibration_devices_for_version("5.0.0")
+
+
+def test_auto_generate_calibration_reports(run_context):
+    args = {"all_model_versions": True}
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
+
+    mock_model_versions = ["5.0.0", "6.0.0"]
+
+    with (
+        patch.object(
+            report_generator.model_reader, "get_model_versions", return_value=mock_model_versions
+        ),
+        patch(
+            "simtools.reporting.docs_auto_report_generator.ReadParameters"
+        ) as mock_read_params_class,
+    ):
+        mock_read_params = MagicMock()
+        mock_read_params_class.return_value = mock_read_params
+
+        report_generator.auto_generate_calibration_reports()
+
+        # Verify ReadParameters was called for each model version
+        assert mock_read_params_class.call_count == len(mock_model_versions)
+
+        # Verify produce_calibration_reports was called for each version
+        assert mock_read_params.produce_calibration_reports.call_count == len(mock_model_versions)
+
+
+def test__add_design_models_to_telescopes(run_context):
+    args = {"site": "North", "telescope": "LSTN-01"}
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
+
+    telescopes = ["LSTN-01", "LSTN-02"]
+    model_version = "6.0.0"
+
+    # Mocking the design model responses
+    report_generator.model_reader.get_design_model = MagicMock()
+    report_generator.model_reader.get_design_model.side_effect = ["LSTN-design", None]
+
+    result = report_generator._add_design_models_to_telescopes(model_version, telescopes)
+
+    assert len(result) == 3  # Original telescopes + one design model
+    assert "LSTN-design" in result
+    assert "LSTN-01" in result
+    assert "LSTN-02" in result
+
+
+def test__filter_telescopes_by_site(run_context):
+    args = {"site": "North", "telescope": "LSTN-01"}
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
+
+    telescopes = ["LSTN-01", "LSTN-02", "MSTS-01", "MSTN-01"]
+    selected_sites = {"North"}
+
+    with patch(GET_SITE_FROM_NAME_PATH) as mock_get_site:
+        mock_get_site.side_effect = [["North"], ["North"], ["South"], ["North"]]
+        result = report_generator._filter_telescopes_by_site(telescopes, selected_sites)
+
+    assert len(result) == 3
+    assert "MSTS-01" not in result
+    assert all(tel in result for tel in ["LSTN-01", "LSTN-02", "MSTN-01"])
+
+
+def test__get_telescopes_from_layout(run_context):
+    test_cases = [
+        # Test case 1: all_telescopes=True
+        {
+            "args": {"all_telescopes": True, "site": "North"},
+            "mock_layouts": {
+                "6.0.0": {
+                    "array_layouts": {
+                        "value": [
+                            {"name": "hyper_array", "elements": ["LSTN-01", "LSTN-02"]},
+                            {"name": "other_layout", "elements": ["MSTN-01"]},
+                        ]
+                    }
+                }
+            },
+            "mock_design_model": "LSTN-design",
+            "expected_telescopes": {"LSTN-01", "LSTN-02", "LSTN-design"},
+        },
+        # Test case 2: all_telescopes=False
+        {
+            "args": {"all_telescopes": False, "site": "North", "telescope": "LSTN-01"},
+            "mock_layouts": {},  # Not used in this case
+            "mock_design_model": None,  # Not used in this case
+            "expected_telescopes": {"LSTN-01"},
+        },
+    ]
+
+    for case in test_cases:
+        output_path = run_context.paths.get_output_directory()
+        report_generator = ReportGenerator(case["args"], output_path, context=run_context)
+
+        with patch.multiple(
+            report_generator.model_reader,
+            get_model_parameters_for_all_model_versions=MagicMock(
+                return_value=case["mock_layouts"]
+            ),
+            get_design_model=MagicMock(return_value=case["mock_design_model"]),
+        ):
+            result = report_generator._get_telescopes_from_layout("North")
+
+            # Verify the result
+            assert result == case["expected_telescopes"]
+
+            # Verify model repository methods were called correctly based on all_telescopes flag
+            if case["args"]["all_telescopes"]:
+                report_generator.model_reader.get_model_parameters_for_all_model_versions.assert_called_once()
+                assert len(result) == len(case["expected_telescopes"])
+            else:
+                # Verify model repository methods were not called when all_telescopes=False
+                report_generator.model_reader.get_model_parameters_for_all_model_versions.assert_not_called()
+                report_generator.model_reader.get_design_model.assert_not_called()
+                assert result == {case["args"]["telescope"]}
+
+
+def test_auto_generate_array_element_reports(run_context):
     # Test observatory path with all options enabled
     args = {"observatory": True, "all_sites": True, "all_model_versions": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     # Mock the observatory reports method
     with patch.object(
@@ -274,7 +386,7 @@ def test_auto_generate_array_element_reports(io_handler):
 
     # Test regular array element report generation
     args = {"all_telescopes": True, "all_sites": True, "all_model_versions": True}
-    report_generator = ReportGenerator(args, output_path)
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     # Mock parameters that would be returned for different sites and telescopes
     mock_params = [
@@ -304,10 +416,10 @@ def test_auto_generate_array_element_reports(io_handler):
         )
 
 
-def test_auto_generate_parameter_reports(io_handler):
+def test_auto_generate_parameter_reports(run_context):
     args = {"all_telescopes": True, "all_sites": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     # Mock telescope-site combinations that would be returned
     mock_combinations = [
@@ -346,10 +458,10 @@ def test_auto_generate_parameter_reports(io_handler):
         mock_calibration_reports.assert_called_once()
 
 
-def test_auto_generate_parameter_reports_no_all_telescopes(io_handler):
+def test_auto_generate_parameter_reports_no_all_telescopes(run_context):
     args = {"all_telescopes": False, "telescope": "LSTN-01", "site": "North"}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     # Mock telescope-site combinations that would be returned
     mock_combinations = [("LSTN-01", "North")]
@@ -379,11 +491,11 @@ def test_auto_generate_parameter_reports_no_all_telescopes(io_handler):
         mock_calibration_reports.assert_not_called()
 
 
-def test__generate_single_array_element_report(io_handler):
+def test__generate_single_array_element_report(run_context):
     # Initialize ReportGenerator with basic args
     args = {"all_telescopes": True, "all_sites": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     # Test parameters
     model_version = "6.0.0"
@@ -411,17 +523,20 @@ def test__generate_single_array_element_report(io_handler):
         expected_output_path = Path(output_path) / str(model_version)
 
         mock_read_params_class.assert_called_once_with(
-            expected_args, expected_output_path, report_generator.model_reader
+            expected_args,
+            expected_output_path,
+            report_generator.model_reader,
+            context=report_generator.context,
         )
 
         # Verify produce_array_element_report was called
         mock_read_params.produce_array_element_report.assert_called_once()
 
 
-def test__get_valid_sites_for_telescope(io_handler):
+def test__get_valid_sites_for_telescope(run_context):
     args = {"all_telescopes": True, "all_sites": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     test_cases = [
         # Test single site telescope (LST North)
@@ -453,49 +568,10 @@ def test__get_valid_sites_for_telescope(io_handler):
             assert isinstance(result, list)
 
 
-def test__generate_observatory_report_combinations(io_handler):
-    test_cases = [
-        # Case 1: All sites and all model versions
-        {
-            "args": {
-                "all_sites": True,
-                "all_model_versions": True,
-            },
-            "mock_model_versions": ["5.0.0", "6.0.0"],
-            "expected_combinations": [
-                ("North", "5.0.0"),
-                ("North", "6.0.0"),
-                ("South", "5.0.0"),
-                ("South", "6.0.0"),
-            ],
-        },
-        # Case 2: Specific site and all model version
-        {
-            "args": {
-                "all_model_versions": True,
-                "site": "North",
-            },
-            "mock_model_versions": ["5.0.0", "6.0.0"],
-            "expected_combinations": [("North", "5.0.0"), ("North", "6.0.0")],
-        },
-    ]
-
-    for case in test_cases:
-        report_generator = ReportGenerator(case["args"], io_handler.get_output_directory())
-
-        with patch.object(
-            report_generator.model_reader,
-            "get_model_versions",
-            return_value=case["mock_model_versions"],
-        ):
-            result = report_generator._generate_observatory_report_combinations()
-            assert set(result) == set(case["expected_combinations"])
-
-
-def test__generate_single_observatory_report(io_handler):
+def test__generate_single_observatory_report(run_context):
     args = {"site": "North", "model_version": "6.0.0"}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     mock_read_params = MagicMock()
 
@@ -514,17 +590,20 @@ def test__generate_single_observatory_report(io_handler):
         expected_output_path = Path(output_path) / str(args["model_version"])
 
         mock_read_params_class.assert_called_once_with(
-            expected_args, expected_output_path, report_generator.model_reader
+            expected_args,
+            expected_output_path,
+            report_generator.model_reader,
+            context=report_generator.context,
         )
 
         # Verify produce_observatory_report was called
         mock_read_params.produce_observatory_report.assert_called_once()
 
 
-def test_auto_generate_observatory_reports(io_handler):
+def test_auto_generate_observatory_reports(run_context):
     args = {"all_sites": True, "all_model_versions": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     # Mock combinations that would be returned
     mock_combinations = [
@@ -557,10 +636,10 @@ def test_auto_generate_observatory_reports(io_handler):
         )
 
 
-def test__generate_calibration_device_parameter_reports(io_handler):
+def test__generate_calibration_device_parameter_reports(run_context):
     args = {"all_telescopes": True, "all_sites": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     mock_model_versions = ["5.0.0", "6.0.0", "6.1.0"]
 
@@ -579,10 +658,10 @@ def test__generate_calibration_device_parameter_reports(io_handler):
         mock_process_version.assert_has_calls([call(version) for version in mock_model_versions])
 
 
-def test__process_calibration_devices_for_version_with_devices(io_handler):
+def test__process_calibration_devices_for_version_with_devices(run_context):
     args = {"all_telescopes": True, "all_sites": True, "model_version": "6.0.0"}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     mock_calibration_elements = ["ILLN-01", "ILLS-01"]
     mock_design_model = "ILLN-design"
@@ -625,52 +704,10 @@ def test__process_calibration_devices_for_version_with_devices(io_handler):
         assert report_generator.args == original_args
 
 
-def test__process_calibration_devices_for_version_no_devices(io_handler):
-    args = {"all_telescopes": True, "all_sites": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
-
-    # Test case 1: Empty calibration elements list
-    with patch.object(
-        report_generator.model_reader, "get_array_elements", return_value=[]
-    ) as mock_get_elements:
-        with patch(
-            "simtools.reporting.docs_auto_report_generator.ReadParameters"
-        ) as mock_read_params_class:
-            report_generator._process_calibration_devices_for_version("5.0.0")
-
-            # Verify that get_array_elements was called
-            mock_get_elements.assert_called_once_with("5.0.0", collection="calibration_devices")
-
-            # Verify that ReadParameters was NOT instantiated since no devices exist
-            mock_read_params_class.assert_not_called()
-
-    # Test case 2: ValueError for a missing calibration_devices production table
-    mock_error = ValueError("No production table for calibration_devices in model version 5.0.0")
-
-    with patch.object(report_generator.model_reader, "get_array_elements", side_effect=mock_error):
-        # Should not raise an exception, should log and return
-        report_generator._process_calibration_devices_for_version("5.0.0")
-
-
-def test__process_calibration_devices_for_version_unexpected_error(io_handler):
-    args = {"all_telescopes": True, "all_sites": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
-
-    # Mock unexpected ValueError
-    mock_error = ValueError("Some unexpected error")
-
-    with patch.object(report_generator.model_reader, "get_array_elements", side_effect=mock_error):
-        # Should re-raise unexpected ValueError
-        with pytest.raises(ValueError, match="Some unexpected error"):
-            report_generator._process_calibration_devices_for_version("5.0.0")
-
-
-def test_auto_generate_simulation_configuration_reports(io_handler):
+def test_auto_generate_simulation_configuration_reports(run_context):
     args = {"all_model_versions": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     mock_model_versions = ["5.0.0", "6.0.0"]
 
@@ -700,10 +737,10 @@ def test_auto_generate_simulation_configuration_reports(io_handler):
             assert report_generator.args["model_version"] in mock_model_versions
 
 
-def test_auto_generate_simulation_configuration_reports_single_version(io_handler):
+def test_auto_generate_simulation_configuration_reports_single_version(run_context):
     args = {"all_model_versions": False, "model_version": "6.0.0"}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     with patch(
         "simtools.reporting.docs_auto_report_generator.ReadParameters"
@@ -723,37 +760,10 @@ def test_auto_generate_simulation_configuration_reports_single_version(io_handle
         assert report_generator.args["model_version"] == "6.0.0"
 
 
-def test_auto_generate_calibration_reports(io_handler):
+def test_auto_generate_calibration_reports_with_valueerror(run_context):
     args = {"all_model_versions": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
-
-    mock_model_versions = ["5.0.0", "6.0.0"]
-
-    with (
-        patch.object(
-            report_generator.model_reader, "get_model_versions", return_value=mock_model_versions
-        ),
-        patch(
-            "simtools.reporting.docs_auto_report_generator.ReadParameters"
-        ) as mock_read_params_class,
-    ):
-        mock_read_params = MagicMock()
-        mock_read_params_class.return_value = mock_read_params
-
-        report_generator.auto_generate_calibration_reports()
-
-        # Verify ReadParameters was called for each model version
-        assert mock_read_params_class.call_count == len(mock_model_versions)
-
-        # Verify produce_calibration_reports was called for each version
-        assert mock_read_params.produce_calibration_reports.call_count == len(mock_model_versions)
-
-
-def test_auto_generate_calibration_reports_with_valueerror(io_handler):
-    args = {"all_model_versions": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     mock_model_versions = ["5.0.0", "6.0.0"]
 
@@ -786,10 +796,10 @@ def test_auto_generate_calibration_reports_with_valueerror(io_handler):
         assert mock_read_params.produce_calibration_reports.call_count == len(mock_model_versions)
 
 
-def test_auto_generate_calibration_reports_unexpected_valueerror(io_handler):
+def test_auto_generate_calibration_reports_unexpected_valueerror(run_context):
     args = {"all_model_versions": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(args, output_path)
+    output_path = run_context.paths.get_output_directory()
+    report_generator = ReportGenerator(args, output_path, context=run_context)
 
     mock_model_versions = ["6.0.0"]
 

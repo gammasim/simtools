@@ -1,7 +1,5 @@
 """Comprehensive unit tests for plot_camera module."""
 
-from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import matplotlib.pyplot as plt
@@ -15,10 +13,9 @@ from simtools.visualization.camera_plot_utils import (
 )
 from simtools.visualization.plot_camera import (
     _color_normalization,
-    _parse_pixel_ids_to_print,
     _plot_axes_def,
     _plot_one_axis_def,
-    plot_camera_pixel_layout_from_args,
+    parse_pixel_ids_to_print,
     plot_pixel_layout,
     plot_pixel_layout_with_image,
 )
@@ -163,33 +160,13 @@ def test_plot_layout_with_image_axes(camera_square):
 
 def test_plot_one_axis_no_invert():
     plt_mock = MagicMock()
-    _plot_one_axis_def(
-        plt_mock,
-        x_title="X",
-        y_title="Y",
-        x_pos=0.7,
-        y_pos=0.12,
-        rotate_angle=0.0,
-        fc="black",
-        ec="black",
-        invert_yaxis=False,
-    )
+    _plot_one_axis_def(plt_mock, "X", "Y", 0.7, 0.12, 0.0, "black", False)
     assert plt_mock.gca.return_value.annotate.call_count == 2
 
 
 def test_plot_one_axis_with_invert():
     plt_mock = MagicMock()
-    _plot_one_axis_def(
-        plt_mock,
-        x_title="X",
-        y_title="Y",
-        x_pos=0.8,
-        y_pos=0.12,
-        rotate_angle=np.pi / 2,
-        fc="blue",
-        ec="blue",
-        invert_yaxis=True,
-    )
+    _plot_one_axis_def(plt_mock, "X", "Y", 0.8, 0.12, np.pi / 2, "blue", True)
     assert plt_mock.gca.return_value.annotate.call_count == 2
 
 
@@ -269,87 +246,36 @@ def _mock_camera(n_pixels=1855):
 
 def test_parse_pixel_ids_to_print_integer():
     camera = _mock_camera()
-    assert _parse_pixel_ids_to_print(50, camera) == 50
+    assert parse_pixel_ids_to_print(50, camera) == 50
 
 
 def test_parse_pixel_ids_to_print_zero_returns_minus_one():
     camera = _mock_camera()
-    assert _parse_pixel_ids_to_print(0, camera) == -1
+    assert parse_pixel_ids_to_print(0, camera) == -1
 
 
 def test_parse_pixel_ids_to_print_all():
     camera = _mock_camera(n_pixels=1855)
-    assert _parse_pixel_ids_to_print("All", camera) == 1855
+    assert parse_pixel_ids_to_print("All", camera) == 1855
 
 
 def test_parse_pixel_ids_to_print_invalid_raises():
     camera = _mock_camera()
     with pytest.raises(ValueError, match="must be integer or 'All'"):
-        _parse_pixel_ids_to_print("invalid", camera)
+        parse_pixel_ids_to_print("invalid", camera)
 
 
-@pytest.mark.parametrize(
-    ("patch_ids", PIXEL), [(None, None), ([0, 1, 2], None), (None, 0), ([0, 1], 0)]
-)
-def test_plot_camera_pixel_layout_from_args(tmp_test_directory, patch_ids, pixel):
-    args_dict = {
-        "site": "North",
-        "telescope": "LSTN-01",
-        "model_version": "5.0.0",
-        "camera_in_sky_coor": False,
-        "print_pixels_id": 10,
-        "trigger_patches": patch_ids,
-        TRIGGER_PIXEL: pixel,
-    }
-    io_handler = MagicMock()
-    io_handler.get_output_directory.return_value = Path(str(tmp_test_directory))
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler, model_reader=MagicMock())
+def _pixel_patches(telescope, pixel_id, camera_pixels):
+    """Look up trigger patches for a pixel from a mock telescope's membership table."""
+    members = telescope.get_parameter_table("camera_trigger_members")
+    return camera_plot.trigger_patches_for_pixel(members, pixel_id, camera_pixels)
 
-    mock_camera = _mock_camera()
-    mock_tel_model = MagicMock()
-    mock_tel_model.name = "LSTN-01"
-    mock_tel_model.camera = mock_camera
-    mock_tel_model.get_telescope_effective_focal_length.return_value = 2800.0
 
-    with (
-        patch(
-            "simtools.visualization.plot_camera.TelescopeModel", return_value=mock_tel_model
-        ) as mock_tm,
-        patch("simtools.visualization.plot_camera.plot_pixel_layout") as mock_plot,
-        patch("simtools.visualization.plot_camera.save_figure") as mock_save,
-        patch.object(camera_plot, "_read_selected_trigger_patches") as mock_read,
-        patch.object(camera_plot, "_plot_selected_trigger_patches") as mock_patches,
-        patch.object(
-            camera_plot, "_trigger_patches_for_pixel", return_value=[0, 1, 2]
-        ) as mock_pixel,
-    ):
-        if patch_ids is not None and pixel is not None:
-            with pytest.raises(ValueError, match="not both"):
-                plot_camera_pixel_layout_from_args(app_context)
-            mock_save.assert_not_called()
-            return
-        plot_camera_pixel_layout_from_args(app_context)
-
-        mock_tm.assert_called_once_with(
-            site="North",
-            telescope_name="LSTN-01",
-            model_version="5.0.0",
-            label="plot_camera_pixel_layout",
-            model_reader=app_context.model_reader,
-        )
-        mock_tel_model.export_model_files.assert_called_once()
-        mock_camera.calc_fov.assert_called_once()
-        if patch_ids is None and pixel is None:
-            mock_plot.assert_called_once_with(mock_camera, False, 10)
-            mock_read.assert_not_called()
-        else:
-            selected_ids = patch_ids if pixel is None else mock_pixel.return_value
-            mock_read.assert_called_once_with(
-                mock_tel_model, selected_ids, set(mock_camera.pixels[PIXEL_IDS])
-            )
-            mock_patches.assert_called_once_with(mock_camera, mock_read.return_value, False)
-            mock_plot.assert_not_called()
-        mock_save.assert_called_once()
+def _read_selected(model, patch_ids, camera_pixels):
+    """Resolve selected trigger patches from a mock model's group and member tables."""
+    definitions = model.get_parameter_table("camera_trigger_groups")
+    members = model.get_parameter_table("camera_trigger_members")
+    return camera_plot.read_selected_trigger_patches(definitions, members, patch_ids, camera_pixels)
 
 
 @pytest.mark.parametrize(PIXEL, [0, 75])
@@ -358,7 +284,7 @@ def test_trigger_patches_for_pixel(pixel):
     telescope.get_parameter_table.return_value = Table(
         {GROUP_ID: [8, 3, 8, 9], PIXEL_ID: [pixel, pixel, pixel, 99]}
     )
-    assert camera_plot._trigger_patches_for_pixel(telescope, pixel, {pixel, 99}) == [3, 8]
+    assert _pixel_patches(telescope, pixel, {pixel, 99}) == [3, 8]
 
 
 @pytest.mark.parametrize((PIXEL, MESSAGE), [(999, "not in the camera"), (75, "no trigger patches")])
@@ -366,7 +292,7 @@ def test_trigger_patches_for_pixel_invalid(pixel, message):
     telescope = MagicMock()
     telescope.get_parameter_table.return_value = Table({GROUP_ID: [0], PIXEL_ID: [0]})
     with pytest.raises(ValueError, match=message):
-        camera_plot._trigger_patches_for_pixel(telescope, pixel, {0, 75})
+        _pixel_patches(telescope, pixel, {0, 75})
 
 
 @pytest.mark.parametrize("sky", [False, True])
@@ -374,7 +300,7 @@ def test_selected_patch_layout(simple_camera, sky):
     simple_camera.telescope_name = LST_DESIGN
     groups = {7: {0, 1}, 12: {1, 2}, 20: {2}}
     original_y = list(simple_camera.pixels["y"])
-    fig = camera_plot._plot_selected_trigger_patches(simple_camera, groups, sky)
+    fig = camera_plot.plot_selected_trigger_patches(simple_camera, groups, sky)
     overview, zoom = fig.axes
     assert len(overview.collections) == 4
     overlap_colours = overview.collections[1].get_facecolors()
@@ -410,7 +336,7 @@ def test_read_selected_trigger_patches(ids):
         Table({GROUP_ID: [7, 12, 20, 21, 22, 23]}),
         Table({GROUP_ID: [7, 7, 12, 20, 21, 22, 23], PIXEL_ID: [0, 1, 0, 0, 0, 0, 0]}),
     ]
-    groups = camera_plot._read_selected_trigger_patches(model, ids, {0, 1, 2})
+    groups = _read_selected(model, ids, {0, 1, 2})
     assert list(groups) == ids
     assert groups[7] == {0, 1}
 
@@ -426,7 +352,7 @@ def test_selected_trigger_patch_count_invalid(ids, message):
         Table({GROUP_ID: list(range(6)), PIXEL_ID: [0] * 6}),
     ]
     with pytest.raises(ValueError, match=message):
-        camera_plot._read_selected_trigger_patches(model, ids, {0})
+        _read_selected(model, ids, {0})
 
 
 def test_maximum_patch_membership_ignores_duplicate_entries():
@@ -438,7 +364,7 @@ def test_maximum_patch_membership_ignores_duplicate_entries():
 @pytest.mark.parametrize("count", [6, 7])
 def test_many_patch_stripes(simple_camera, count):
     simple_camera.telescope_name = LST_DESIGN
-    fig = camera_plot._plot_selected_trigger_patches(
+    fig = camera_plot.plot_selected_trigger_patches(
         simple_camera, {i: {0} for i in range(count)}, False
     )
     assert len({tuple(c) for c in fig.axes[1].collections[0].get_facecolors()}) == count
@@ -460,4 +386,4 @@ def test_selected_trigger_patch_members_invalid(members, ids, message):
         Table({GROUP_ID: [7] * len(members), PIXEL_ID: members}),
     ]
     with pytest.raises(ValueError, match=message):
-        camera_plot._read_selected_trigger_patches(model, ids, {0})
+        _read_selected(model, ids, {0})

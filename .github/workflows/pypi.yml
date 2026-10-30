@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           python --version
-          pip install -U build
+          bash .github/scripts/install_python_dependencies.sh --upgrade build
           python -m build
 
       - name: Publish package

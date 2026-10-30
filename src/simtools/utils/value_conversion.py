@@ -1,13 +1,12 @@
 """Value and quantity conversion."""
 
 import collections.abc
+import json
 import logging
 import re
 
 import numpy as np
 from astropy import units as u
-
-import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
 
@@ -199,7 +198,7 @@ def _split_value_is_string(value, is_integer=False):
             raise ValueError
         return (int(quantity.value), unit) if is_integer else (quantity.value, unit)
     except ValueError:
-        return _split_value_is_list(gen.convert_string_to_list(value), is_integer)
+        return _split_value_is_list(convert_string_to_list(value), is_integer)
     except TypeError:  # string value (not numerical)
         return value, None
 
@@ -298,8 +297,434 @@ def get_value_in_unit(value, unit=None):
     return value
 
 
-def format_quantity(value, unit):
-    """Format a scalar or Quantity in the requested unit."""
-    if isinstance(value, u.Quantity):
-        value = value.to_value(unit)
-    return f"{value}"
+def ensure_list(value):
+    """
+    Return input value as list.
+
+    Parameters
+    ----------
+    value: any
+        Input value to be converted to a list.
+
+    Returns
+    -------
+    list
+        Converted value as list.
+    """
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, (tuple, set)):
+        return list(value)
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.startswith("["):
+            try:
+                return json.loads(stripped)
+            except json.JSONDecodeError:
+                pass
+        return [stripped]
+    return [value]
+
+
+def ensure_string_lists(value):
+    """
+    Ensure the input value is returned as a list of strings.
+
+    Parameters
+    ----------
+    value : any
+        Input value to convert to a list of strings.
+
+    Returns
+    -------
+    list or None
+        List of strings or None if the input is None.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return [value]
+    return list(value)
+
+
+def parse_typed_sequence(value, cast=float):
+    """Parse scalar or sequence input into a list of typed values.
+
+    Parameters
+    ----------
+    value : any
+        Input value to parse. Supported forms are ``None``, scalar values,
+        ``list``/``tuple``, or comma-separated strings.
+    cast : callable, optional
+        Conversion callable applied to each parsed item. Defaults to ``float``.
+
+    Returns
+    -------
+    list
+        List of converted values. Returns an empty list when ``value`` is ``None``.
+    """
+
+    def _cast_item(item):
+        if cast is int:
+            try:
+                return int(item)
+            except (TypeError, ValueError) as exc:
+                float_value = float(item)
+                if not float_value.is_integer():
+                    raise ValueError(
+                        f"Cannot safely cast non-integer value '{item}' to int"
+                    ) from exc
+                return int(float_value)
+        return cast(item)
+
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [_cast_item(item) for item in value]
+    if isinstance(value, str) and "," in value:
+        return [_cast_item(item.strip()) for item in value.split(",") if item.strip()]
+    return [_cast_item(value)]
+
+
+def _process_dict_keys(input_dict, case_func):
+    """
+    Process dictionary keys recursively.
+
+    Parameters
+    ----------
+    input_dict: dict
+        Dictionary to be processed.
+    case_func: function
+        Function to change case of keys (e.g., str.lower, str.upper).
+
+    Returns
+    -------
+    dict
+        Processed dictionary with keys changed.
+    """
+    output_dict = {}
+    for key, value in input_dict.items():
+        processed_key = case_func(key)
+        if isinstance(value, dict):
+            output_dict[processed_key] = _process_dict_keys(value, case_func)
+        elif isinstance(value, list):
+            processed_list = [
+                _process_dict_keys(item, case_func) if isinstance(item, dict) else item
+                for item in value
+            ]
+            output_dict[processed_key] = processed_list
+        else:
+            output_dict[processed_key] = value
+    return output_dict
+
+
+def change_dict_keys_case(data_dict, lower_case=True):
+    """
+    Change keys of a dictionary to lower or upper case recursively.
+
+    Parameters
+    ----------
+    data_dict: dict
+        Dictionary to be converted.
+    lower_case: bool
+        Change keys to lower (upper) case if True (False).
+
+    Returns
+    -------
+    dict
+        Dictionary with keys converted to lower or upper case.
+    """
+    # Determine which case function to use
+    case_func = str.lower if lower_case else str.upper
+
+    try:
+        return _process_dict_keys(data_dict, case_func)
+    except AttributeError as exc:
+        _logger.error(f"Input is not a proper dictionary: {data_dict}")
+        raise AttributeError from exc
+
+
+def remove_substring_recursively_from_dict(data_dict, substring="\n"):
+    """
+    Remove substrings from all strings in a dictionary.
+
+    Recursively crawls through the dictionary This e.g., allows to remove all newline characters
+    from a dictionary.
+
+    Parameters
+    ----------
+    data_dict: dict
+        Dictionary to be converted.
+    substring: str
+        Substring to be removed.
+
+    Raises
+    ------
+    AttributeError:
+        if input is not a proper dictionary.
+    """
+    try:
+        for key, value in data_dict.items():
+            if isinstance(value, str):
+                data_dict[key] = value.replace(substring, "")
+            elif isinstance(value, list):
+                modified_items = [
+                    item.replace(substring, "") if isinstance(item, str) else item for item in value
+                ]
+                modified_items = [
+                    (
+                        remove_substring_recursively_from_dict(item, substring)
+                        if isinstance(item, dict)
+                        else item
+                    )
+                    for item in modified_items
+                ]
+                data_dict[key] = modified_items
+            elif isinstance(value, dict):
+                data_dict[key] = remove_substring_recursively_from_dict(value, substring)
+    except AttributeError:
+        _logger.debug(f"Input is not a dictionary: {data_dict}")
+    return data_dict
+
+
+def _get_value_dtype(value):
+    """
+    Get the data type of the given value.
+
+    Parameters
+    ----------
+        Value to determine the data type.
+
+    Returns
+    -------
+    type:
+        Data type of the value.
+    """
+    if isinstance(value, (list | np.ndarray)):
+        value = np.array(value)
+        return value.dtype
+
+    return type(value)
+
+
+def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=True):
+    """
+    Validate data type of value or type object against a reference data type.
+
+    Allow to check for exact data type or allow subtypes (e.g. uint is accepted for int).
+    Take into account 'file' type as used in the model parameter repository.
+
+    Parameters
+    ----------
+    reference_dtype: str
+        Reference data type to be checked against.
+    value: any, optional
+        Value to be checked (if dtype is None).
+    dtype: type, optional
+        Type object to be checked (if value is None).
+    allow_subtypes: bool, optional
+        If True, allow subtypes to be accepted.
+
+    Returns
+    -------
+    bool:
+        True if the data type is valid.
+    """
+    if value is None and dtype is None:
+        raise ValueError("Either value or dtype must be given.")
+
+    if value is not None and dtype is None:
+        dtype = _get_value_dtype(value)
+
+    # Strict comparison
+    if not allow_subtypes:
+        return np.issubdtype(dtype, reference_dtype)
+
+    # Allow any sub-type of integer or float for success
+    if (np.issubdtype(dtype, np.str_) or np.issubdtype(dtype, "object")) and reference_dtype in (
+        "string",
+        "str",
+        "file",
+    ):
+        return True
+
+    if reference_dtype in ("boolean", "bool"):
+        return _is_valid_boolean_type(dtype, value)
+
+    if reference_dtype == "dict":
+        return isinstance(value, dict)
+
+    if reference_dtype == "list":
+        return isinstance(value, list)
+
+    return _is_valid_numeric_type(dtype, reference_dtype)
+
+
+def _is_valid_boolean_type(dtype, value):
+    """Check if dtype or value is a valid boolean type."""
+    if value in {0, 1}:
+        return True
+    return np.issubdtype(dtype, np.bool_)
+
+
+def _is_valid_numeric_type(dtype, reference_dtype):
+    """Check if dtype is a valid numeric type compared to reference_dtype."""
+    # Handle string reference_dtype (not numeric types)
+    if reference_dtype in ("string", "str", "file"):
+        return False
+
+    if np.issubdtype(dtype, np.integer):
+        return np.issubdtype(reference_dtype, np.integer) or np.issubdtype(
+            reference_dtype, np.floating
+        )
+
+    if np.issubdtype(dtype, np.floating):
+        return np.issubdtype(reference_dtype, np.floating)
+
+    return False
+
+
+def convert_list_to_string(data, comma_separated=False, shorten_list=False, collapse_list=False):
+    """
+    Convert arrays to string (if required).
+
+    Parameters
+    ----------
+    data: object
+        Object of data to convert (e.g., double or list)
+    comma_separated: bool
+        If True, returns elements as a comma-separated string (default is space-separated).
+    shorten_list: bool
+        If True and all elements in the list are identical, returns a summary string
+        like "all: value".  This is useful to make the configuration files more readable.
+    collapse_list: bool
+        If True and all elements in the list are identical, returns a single value
+        instead of the entire list.
+
+    Returns
+    -------
+    object or str:
+        Converted data as string (if required)
+
+    """
+    if data is None or not isinstance(data, list | np.ndarray):
+        return data
+    if shorten_list and len(data) > 10 and all(np.isclose(item, data[0]) for item in data):
+        return f"all: {data[0]}"
+    if collapse_list and len(sorted(set(data))) == 1:
+        data = [data[0]]
+    if comma_separated:
+        return ", ".join(str(item) for item in data)
+    return " ".join(str(item) for item in data)
+
+
+def convert_string_to_list(data_string, is_float=True, force_comma_separation=False):
+    """
+    Convert string (as used e.g. in sim_telarray) to list.
+
+    Allow coma or space separated strings.
+
+    Parameters
+    ----------
+    data_string: object
+        String to be converted
+    is_float: bool
+        If True, convert to float, otherwise to int.
+    force_comma_separation: bool
+        If True, force comma separation.
+
+    Returns
+    -------
+    list, str
+        Converted data from string (if required).
+        Return data_string if conversion fails.
+
+    """
+    try:
+        if is_float:
+            return [float(v) for v in data_string.split()]
+        return [int(v) for v in data_string.split()]
+    except ValueError:
+        pass
+    if "," in data_string:
+        result = data_string.split(",")
+        return [item.strip() for item in result]
+    if " " in data_string and not force_comma_separation:
+        return data_string.split()
+    return data_string
+
+
+def convert_keys_in_dict_to_lowercase(data):
+    """
+    Recursively convert all dictionary keys to lowercase.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary to be converted.
+
+    Returns
+    -------
+    dict
+        Dictionary with all keys converted to lowercase.
+    """
+    if isinstance(data, dict):
+        return {k.lower(): convert_keys_in_dict_to_lowercase(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [convert_keys_in_dict_to_lowercase(i) for i in data]
+    return data
+
+
+def remove_key_from_dict(data, key_to_remove):
+    """
+    Remove a specific key from a dictionary recursively.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary to be processed.
+    key_to_remove: str
+        Key to be removed from the dictionary.
+
+    Returns
+    -------
+    dict
+        Dictionary with the specified key removed.
+    """
+    if isinstance(data, dict):
+        return {
+            k: remove_key_from_dict(v, key_to_remove) for k, v in data.items() if k != key_to_remove
+        }
+    if isinstance(data, list):
+        return [remove_key_from_dict(i, key_to_remove) for i in data]
+    return data
+
+
+def replace_placeholders_recursively(data, replacements):
+    """Replace placeholders recursively in strings nested in dicts/lists.
+
+    Parameters
+    ----------
+    data : dict, list, str, or object
+        Input structure to process.
+    replacements : dict
+        Mapping of placeholder strings to replacement strings.
+
+    Returns
+    -------
+    dict, list, str, or object
+        Processed copy with placeholders replaced in string values.
+    """
+    if isinstance(data, dict):
+        return {
+            key: replace_placeholders_recursively(value, replacements)
+            for key, value in data.items()
+        }
+    if isinstance(data, list):
+        return [replace_placeholders_recursively(item, replacements) for item in data]
+    if isinstance(data, str):
+        for placeholder, replacement in replacements.items():
+            data = data.replace(placeholder, replacement)
+    return data

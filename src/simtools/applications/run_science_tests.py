@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 """Run the reusable release science-test catalogue."""
 
-from pathlib import Path
-
 from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import argument_helpers
 from simtools.configuration import arguments as cli
 from simtools.science_tests.campaign import run_release, setup_release
 
@@ -23,17 +22,43 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
     arguments=(
-        cli.ArgumentDefinition(RELEASE_DIR, type=str, required=True),
-        cli.ArgumentDefinition(CONTEXT_FILE, type=str),
-        cli.ArgumentDefinition(TEMPLATE_DIR, type=str),
+        cli.ArgumentDefinition(
+            RELEASE_DIR,
+            type=str,
+            required=True,
+            help="Release directory containing release.yml and the site suites.",
+        ),
+        cli.ArgumentDefinition(
+            CONTEXT_FILE,
+            type=str,
+            help=(
+                "Context file with candidate, baseline, and production paths "
+                "(default: <release_dir>/context.yml)."
+            ),
+        ),
+        cli.ArgumentDefinition(
+            TEMPLATE_DIR,
+            type=str,
+            help="Shared template directory (default: discovered above the release directory).",
+        ),
         cli.ArgumentDefinition(
             BASELINE_VERSION, type=str, help="Baseline release label to write during --setup."
         ),
-        cli.ArgumentDefinition("site", action="append", help="Select a required site."),
+        cli.ArgumentDefinition(
+            "site",
+            action="extend",
+            nargs="+",
+            type=argument_helpers.site,
+            help="Select one or more required sites; can be repeated.",
+        ),
         cli.ArgumentDefinition(
             "test",
-            action="append",
-            help="Select tests to execute; prerequisites must be selected explicitly.",
+            action="extend",
+            nargs="+",
+            help=(
+                "Select one or more tests to execute; can be repeated. Prerequisites must be "
+                "selected explicitly."
+            ),
         ),
         cli.ArgumentDefinition(
             "overwrite",
@@ -57,11 +82,9 @@ APPLICATION = ApplicationDefinition.for_module(
             help="Create a new release directory from the shared setup templates and exit.",
         ),
     ),
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
-    initialize_model_reader=False,
     excluded_standard_arguments=("test",),
     post_parse=_post_parse,
+    needs=(),
 )
 
 
@@ -77,10 +100,9 @@ def main():
             simulation_models_git_revision=args.get("simulation_models_git_revision"),
         )
         return
-    context_file = args.get(CONTEXT_FILE) or str(Path(args[RELEASE_DIR]) / "context.yml")
     run_release(
         args[RELEASE_DIR],
-        context_file=context_file,
+        context_file=args.get(CONTEXT_FILE),
         template_dir=args.get(TEMPLATE_DIR),
         sites=args.get("site"),
         tests=args.get("test"),

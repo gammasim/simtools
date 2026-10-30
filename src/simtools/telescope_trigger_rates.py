@@ -10,8 +10,10 @@ from ctao_cr_spectra.definitions import IRFDOC_ELECTRON_SPECTRUM, IRFDOC_PROTON_
 from ctao_cr_spectra.spectral import LogParabola, PowerLaw, PowerLawWithExponentialGaussian
 from scipy import integrate
 
-from simtools.io import ascii_handler, io_handler
-from simtools.layout.array_layout_utils import get_array_elements_from_model_repository
+from simtools.context import RunContext
+from simtools.histogram.histogram import Histogram
+from simtools.io import ascii_handler
+from simtools.layout.array_layout_sources import get_array_elements_from_model_repository
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 
@@ -31,7 +33,7 @@ _SPECTRUM_TYPES = {
 }
 
 
-def telescope_trigger_rates(args_dict):
+def telescope_trigger_rates(args_dict, context=None):
     """
     Calculate trigger rates for single telescopes or arrays of telescopes.
 
@@ -48,6 +50,7 @@ def telescope_trigger_rates(args_dict):
         Dictionary with array names as keys and trigger rates (astropy.units.Quantity) as values.
         Example: {"array_name": 1234.5 * u.Hz}
     """
+    context = context or RunContext.from_environment()
     layout_name = args_dict.get("array_layout_name") or args_dict.get("telescope")
 
     if layout_name:
@@ -56,6 +59,7 @@ def telescope_trigger_rates(args_dict):
             layout_names,
             args_dict.get("site"),
             args_dict.get("model_version"),
+            context=context,
         )
     else:
         telescope_configs = ascii_handler.collect_data_from_file(
@@ -80,7 +84,7 @@ def telescope_trigger_rates(args_dict):
         if args_dict.get("plot_histograms"):
             plot_simtel_event_histograms.plot(
                 histograms.histograms,
-                output_path=io_handler.IOHandler().get_output_directory(),
+                output_path=context.paths.get_output_directory(),
                 array_name=array_name,
             )
 
@@ -101,8 +105,8 @@ def _calculate_trigger_rates(histograms, array_name, cr_spectrum_file=None):
         Path to a YAML file describing the cosmic-ray spectrum. If None, the spectrum
         is selected automatically based on the primary particle in the simulation data.
     """
-    efficiency = histograms.histograms.get("energy_eff", {}).get("histogram")
-    energy_axis = histograms.histograms.get("energy_eff", {}).get("bin_edges")
+    efficiency = histograms.histograms.get("energy_eff")
+    energy_axis = efficiency.edges[0]
 
     primary_particle = histograms.file_info.get("primary_particle")
     cr_spectrum = get_cosmic_ray_spectrum(primary_particle, cr_spectrum_file)
@@ -122,26 +126,18 @@ def _calculate_trigger_rates(histograms, array_name, cr_spectrum_file=None):
         * histograms.file_info["solid_angle"].to("sr").value
         * u.Hz
     )
-    trigger_rates = efficiency * cr_rates
+    trigger_rates = efficiency.values * cr_rates
     trigger_rate = np.sum(trigger_rates, axis=0)
 
     _logger.info(f"Scatter area from MC: {histograms.file_info['scatter_area'].to('m2')}")
     _logger.info(f"Solid angle from MC: {histograms.file_info['solid_angle']}")
     _logger.info(f"Trigger rate for {array_name} array: {trigger_rate.to('Hz')}")
 
-    histograms.histograms["cr_rates_mc"] = histograms.get_histogram_definition(
-        histogram=cr_rates.value,
-        bin_edges=energy_axis,
-        title="Cosmic Ray Rates (MC)",
-        axis_titles=["Energy (TeV)", "Cosmic Ray Rate (Hz)"],
-        plot_scales={"x": "log", "y": "log"},
+    histograms.histograms["cr_rates_mc"] = Histogram.from_edges(
+        [energy_axis], cr_rates.value, axis_names=["energy"], axis_units=["TeV"]
     )
-    histograms.histograms["trigger_rates"] = histograms.get_histogram_definition(
-        histogram=trigger_rates.value,
-        bin_edges=energy_axis,
-        title="Trigger Rates (MC)",
-        axis_titles=["Energy (TeV)", "Trigger Rate (Hz)"],
-        plot_scales={"x": "log", "y": "log"},
+    histograms.histograms["trigger_rates"] = Histogram.from_edges(
+        [energy_axis], trigger_rates.value, axis_names=["energy"], axis_units=["TeV"]
     )
 
     return cr_rates, trigger_rates, trigger_rate

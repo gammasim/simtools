@@ -1,16 +1,49 @@
 #!/usr/bin/python3
 
-"""Validate the optical model parameters through ray tracing simulations of the whole telescope."""
+"""Validate the optical model through ray tracing simulations of the whole telescope.
+
+Validation type ``optics`` (default) scans field angles and derives the PSF (D80), effective mirror
+area and effective focal length. Validation type ``cumulative_psf`` compares the simulated
+cumulative PSF with measured PSF data (``--data``).
+"""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.ray_tracing.optics_validation import validate_optics
+from simtools.ray_tracing.optics_validation import validate_cumulative_psf, validate_optics
+from simtools.ray_tracing.ray_tracing import DEFAULT_MAX_WORKERS
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "type",
+        help=(
+            "Validation type: optics (field-angle scan) "
+            "or cumulative_psf (measured PSF comparison)."
+        ),
+        type=str,
+        choices=["optics", "cumulative_psf"],
+        default="optics",
+    ),
+    cli.DATA(
+        help="Measured cumulative PSF data file (required for type cumulative_psf).",
+        required=False,
+    ),
+    cli.DATA_SEARCH_PATH,
     cli.SOURCE_DISTANCE,
     cli.RAY_TRACING_ZENITH_ANGLE,
     cli.MAX_OFFSET,
     cli.OFFSET_STEP,
+    cli.ArgumentDefinition(
+        "number_of_photons",
+        help="Total photons per offset; omitted values retain backend sampling defaults.",
+        type=int,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "max_workers",
+        help="Maximum concurrent ray-tracing simulations (positive integer).",
+        type=int,
+        default=DEFAULT_MAX_WORKERS,
+    ),
     cli.ArgumentDefinition(
         "offset_file",
         help=(
@@ -62,14 +95,23 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        *cli.RAY_TRACING_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
+
+
+def _run_validation(app_context):
+    """Run the validation selected with the ``type`` argument."""
+    if app_context.args["type"] == "cumulative_psf":
+        validate_cumulative_psf(app_context)
+    else:
+        validate_optics(app_context)
 
 
 def main():
     """See CLI description."""
-    app_context = APPLICATION.start()
-    validate_optics(app_context)
+    _run_validation(APPLICATION.start())
 
 
 if __name__ == "__main__":

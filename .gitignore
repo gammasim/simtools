@@ -40,3 +40,4 @@ database_scripts/mongo-data
 # VS Code settings
 .vscode
 simtools.code-workspace
+.import_linter_cache/

@@ -1,7 +1,5 @@
 """Tests for PSF parameter optimization backend dispatch."""
 
-from types import SimpleNamespace
-
 import pytest
 
 from simtools.applications import derive_psf_parameters as app
@@ -18,7 +16,7 @@ def test_worker_argument(workers):
     assert parser.parse_args(arguments).max_workers == workers
 
 
-def test_main_keeps_controller_local(mocker, tmp_test_directory):
+def test_main_keeps_controller_local(mocker, tmp_test_directory, run_context):
     args = {
         "site": "North",
         "telescope": "LSTN-01",
@@ -27,15 +25,14 @@ def test_main_keeps_controller_local(mocker, tmp_test_directory):
         "backend_config": "backend.yml",
         "max_workers": 4,
     }
-    context = SimpleNamespace(
-        args=args,
-        io_handler=SimpleNamespace(get_output_directory=lambda: tmp_test_directory),
-    )
+    context = run_context.replace(args=args)
     mocker.patch.object(type(app.APPLICATION), "start", return_value=context)
     workflow = mocker.patch.object(psf_opt, "run_psf_optimization_job")
 
     app.main()
 
-    workflow.assert_called_once_with(psf_opt.PSFOptimizationJob(args, tmp_test_directory))
+    workflow.assert_called_once_with(
+        psf_opt.PSFOptimizationJob(args, context.paths.get_output_directory(), context)
+    )
     assert workflow.call_args.args[0].args is not args
     assert all(argument in app.APPLICATION.arguments for argument in cli.BACKEND_ARGUMENTS)

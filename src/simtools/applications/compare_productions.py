@@ -4,18 +4,17 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.configuration.argument_helpers import telescope
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.production_configuration.production_comparison import write_production_comparison
-from simtools.production_configuration.resource_requirements import write_resource_requirements
-from simtools.sim_events.production_comparison import (
+from simtools.production_configuration.comparison import (
     collect_signal_metrics,
     parse_production_arguments,
+    write_production_comparison,
 )
+from simtools.production_configuration.resource_requirements import write_resource_requirements
 from simtools.visualization import (
+    plot_production_comparison,
     plot_resource_requirements,
-    plot_signal_level_production_comparison,
 )
 
 _ARGUMENTS = (
@@ -24,7 +23,6 @@ _ARGUMENTS = (
         action="append",
         nargs="+",
         metavar=("LABEL", "INPUT_FILE_PATTERNS"),
-        required=False,
         help=(
             "Production descriptor for event or signal comparison: --production <label> "
             "<comma-separated input file patterns>. Repeat for each production; the first "
@@ -35,25 +33,21 @@ _ARGUMENTS = (
         "baseline_path",
         help="Production directory containing baseline metadata manifests.",
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "candidate_path",
         help="Optional candidate production directory containing metadata manifests.",
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "baseline_label",
         help="Display label for the baseline production in computing comparisons.",
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "candidate_label",
         help="Display label for the candidate production in computing comparisons.",
         type=str,
-        required=False,
     ),
     cli.SELECT,
     cli.ArgumentDefinition(
@@ -74,21 +68,12 @@ _ARGUMENTS = (
         default="diagnostic",
         help="Render compact PDF panels, full diagnostics, or no figures while retaining metrics.",
     ),
-    cli.ArgumentDefinition(
-        "array_layout_name",
-        nargs="+",
+    cli.ARRAY_LAYOUT_NAME(
+        aliases=("telescope_name",),
         help=(
             "Restrict event-level comparison to selected array layout name(s), or signal-level "
             "comparison to selected telescope name(s)."
         ),
-        required=False,
-    ),
-    cli.ArgumentDefinition(
-        "telescope_name",
-        nargs="+",
-        type=telescope,
-        help="Restrict signal-level comparison to the selected telescope name(s).",
-        required=False,
     ),
 )
 
@@ -142,10 +127,9 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_output=False,
-    initialize_model_reader=False,
-    excluded_standard_arguments=("test", "ignore_existing_parameter_version"),
+    excluded_standard_arguments=("test",),
     post_parse=_post_parse,
+    needs=("corsika",),
 )
 
 
@@ -156,7 +140,7 @@ def main():
     if comparison_level == "events":
         write_production_comparison(
             app_context.args,
-            app_context.io_handler.get_output_directory(),
+            app_context.paths.get_output_directory(),
         )
         return
     if comparison_level == "signal":
@@ -164,7 +148,7 @@ def main():
     elif comparison_level == "computing":
         write_resource_requirements(
             app_context.args,
-            app_context.io_handler.get_output_directory(),
+            app_context.paths.get_output_directory(),
             plot_resource_requirements.plot,
         )
         return
@@ -172,35 +156,29 @@ def main():
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
     for output_file, array_layout_name in output_files:
-        _dump_comparison_metadata(app_context.args, output_file, array_layout_name)
+        _dump_comparison_metadata(app_context, output_file, array_layout_name)
 
 
 def _run_signal_comparison(app_context):
     """Run signal-level comparison and return generated statistics files."""
-    array_layout_names = app_context.args.get("array_layout_name")
-    telescope_names = app_context.args.get("telescope_name")
-    if array_layout_names and telescope_names:
-        raise ValueError(
-            "Use only one of --array_layout_name and --telescope_name for signal comparison."
-        )
     production_descriptors = parse_production_arguments(app_context.args["production"])
     metrics_by_telescope = collect_signal_metrics(
         production_descriptors,
-        telescope_names=array_layout_names or telescope_names,
+        telescope_names=app_context.args.get("array_layout_name"),
     )
     return [
         (statistics_file, None)
-        for statistics_file in plot_signal_level_production_comparison.plot(
+        for statistics_file in plot_production_comparison.plot_signal_level_comparison(
             metrics_by_telescope,
-            output_path=app_context.io_handler.get_output_directory(),
+            output_path=app_context.paths.get_output_directory(),
             figure_format=app_context.args.get("figure_format"),
         )
     ]
 
 
-def _dump_comparison_metadata(args, output_file, array_layout_name=None):
+def _dump_comparison_metadata(app_context, output_file, array_layout_name=None):
     """Write comparison metadata for one generated statistics file."""
-    metadata_args = dict(args)
+    metadata_args = dict(app_context.args)
     if array_layout_name is not None:
         metadata_args["array_layout_name"] = array_layout_name
     metadata_args.update(
@@ -211,7 +189,7 @@ def _dump_comparison_metadata(args, output_file, array_layout_name=None):
             "schema_file": str(SCHEMA_PATH / "production_comparison_statistics.schema.yml"),
         }
     )
-    MetadataCollector.dump(metadata_args, output_file)
+    MetadataCollector.dump(metadata_args, output_file, context=app_context)
 
 
 if __name__ == "__main__":

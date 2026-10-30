@@ -14,17 +14,17 @@ from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
-from simtools.production_configuration.compatibility import _prepare_jobs
-from simtools.production_configuration.job_grid_io import (
-    _resolve_job_grid_arguments,
+from simtools.production_configuration.compatibility import prepare_jobs
+from simtools.production_configuration.jobs_io import (
     build_simulate_prod_job_specs,
+    resolve_job_grid_arguments,
 )
-from simtools.production_configuration.job_metadata import build_production_job_manifest
 from simtools.production_configuration.production_file_selection import (
     ProductionManifest,
     check_manifest,
     validate_required_production_outputs,
 )
+from simtools.production_configuration.production_metadata import build_production_job_manifest
 from simtools.simulator import Simulator
 
 logger = logging.getLogger(__name__)
@@ -45,20 +45,23 @@ _ARGUMENTS = (
             "Path to the CORSIKA input file (only relevant for simulation software 'sim_telarray')."
         ),
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "grid_output_path",
         help="Directory for output files for registering on the grid.",
         type=str,
-        required=False,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "production_id",
+        help="Production identifier written to sim_telarray metadata and the job manifest.",
+        type=str,
         default=None,
     ),
     cli.ArgumentDefinition(
         "save_file_lists",
         help="Save lists of output and log files.",
         action="store_true",
-        required=False,
         default=False,
     ),
     cli.ArgumentDefinition(
@@ -68,7 +71,6 @@ _ARGUMENTS = (
             "(only relevant for simulation software 'corsika_sim_telarray')."
         ),
         action="store_true",
-        required=False,
         default=False,
     ),
     cli.ArgumentDefinition(
@@ -78,7 +80,6 @@ _ARGUMENTS = (
             "Saved with the same name as the sim_telarray output file (different extension). "
         ),
         action=argparse.BooleanOptionalAction,
-        required=False,
         default=True,
     ),
     cli.ArgumentDefinition(
@@ -105,7 +106,6 @@ _ARGUMENTS = (
             "combined with manual production arguments such as '--zenith_angle'."
         ),
         type=str,
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
@@ -116,7 +116,6 @@ _ARGUMENTS = (
             "otherwise row 1 is used."
         ),
         type=int,
-        required=False,
         default=1,
     ),
     cli.ArgumentDefinition(
@@ -149,7 +148,7 @@ def _post_parse(args_dict, config_sources, parser):
     """Apply simulate-prod validations after configuration sources are merged."""
     if args_dict["list_available_corsika_models"]:
         _list_available_corsika_models(args_dict, parser)
-    _resolve_job_grid_arguments(args_dict, config_sources, parser)
+    resolve_job_grid_arguments(args_dict, config_sources, parser)
     _validate_single_interaction_models(args_dict, parser)
     args_dict["_defer_simulation_dependency_validation"] = bool(
         args_dict.get("backend", "local") != "local" and args_dict.get("_job_grid_rows")
@@ -168,7 +167,7 @@ def _execute_job_grid(args_dict):
         args_dict,
         work_dir=Path(args_dict["output_path"]),
     )
-    job_specs = _prepare_jobs(job_specs, args_dict, options)
+    job_specs = prepare_jobs(job_specs, args_dict, options)
     if args_dict.get("wait", False):
         execute_jobs(job_specs, options)
     else:
@@ -208,10 +207,9 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         *cli.CORSIKA_PATH_ARGUMENTS,
     ),
-    setup_io_handler=False,
-    validate_simulation_dependencies=True,
     post_parse=_post_parse,
     defer_required_validation=True,
+    needs=("model", "sim_telarray", "corsika"),
 )
 
 
@@ -228,7 +226,7 @@ def main():
         # Fall back to single row processing
         logger.warning("Job grid file detected but _job_grid_rows not set")
 
-    simulator = Simulator(label=app_context.args.get("label"))
+    simulator = Simulator(label=app_context.args.get("label"), context=app_context)
 
     simulator.simulate()
     if app_context.args["reduced_event_lists"]:

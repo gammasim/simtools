@@ -11,27 +11,22 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "array_element_positions_file", help="List of array element positions.", required=True
     ),
-    cli.ArgumentDefinition(
-        "input_meta", help="meta data file associated to input data", type=str, required=False
-    ),
+    cli.ArgumentDefinition("input_meta", help="meta data file associated to input data", type=str),
     cli.ArgumentDefinition(
         "print",
         help="print list of positions in requested coordinate system",
-        required=False,
         default="",
         choices=["ground", "utm", "mercator"],
     ),
     cli.ArgumentDefinition(
         "export",
         help="export array element list to file (in requested coordinate system)",
-        required=False,
         default=None,
         choices=["ground", "utm", "mercator"],
     ),
     cli.ArgumentDefinition(
         "select_assets",
         help="select a subset of assets (e.g., MSTN, LSTN)",
-        required=False,
         default=None,
         nargs="+",
     ),
@@ -39,7 +34,6 @@ _ARGUMENTS = (
         "skip_input_validation",
         help="skip input data validation against schema",
         default=False,
-        required=False,
         action="store_true",
     ),
 )
@@ -57,7 +51,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
@@ -70,7 +64,9 @@ def main():
         metadata, validate_schema_file = None, None
     else:
         metadata = MetadataCollector(
-            args_dict=app_context.args, model_parameter_name="array_coordinates"
+            args_dict=app_context.args,
+            model_parameter_name="array_coordinates",
+            context=app_context,
         )
         site = metadata.get_site(from_input_meta=True) or app_context.args.get("site")
         validate_schema_file = metadata.get_data_model_schema_file_name()
@@ -81,6 +77,7 @@ def main():
         telescope_list_file=app_context.args["array_element_positions_file"],
         telescope_list_metadata_file=app_context.args["input_meta"],
         validate=not app_context.args["skip_input_validation"],
+        context=app_context,
     )
     layout.select_assets(app_context.args["select_assets"])
     layout.convert_coordinates()
@@ -100,6 +97,7 @@ def main():
             metadata=metadata,
             product_data=product_data,
             validate_schema_file=validate_schema_file,
+            context=app_context,
         )
     else:
         layout.print_telescope_list(

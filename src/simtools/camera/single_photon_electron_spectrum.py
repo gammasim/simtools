@@ -10,10 +10,10 @@ from scipy.optimize import curve_fit
 
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import MODEL_PARAMETER_SCHEMA_URL, SCHEMA_PATH
+from simtools.context import RunContext
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.table_asset import get_simtel_serialization
-from simtools.io import io_handler
 
 ECSV_SUFFIX = ".ecsv"
 
@@ -46,17 +46,18 @@ class SinglePhotonElectronSpectrum:
     output_parameter = "pm_photoelectron_spectrum"
     output_schema = schema.get_model_parameter_schema_file(output_parameter)
 
-    def __init__(self, args_dict):
+    def __init__(self, args_dict, *, context=None):
         """Initialize SinglePhotonElectronSpectrum class."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize SinglePhotonElectronSpectrum class.")
 
-        self.args_dict = args_dict
+        self.context = context or RunContext.from_environment()
+        self.args_dict = dict(args_dict)
         # default output is of ecsv format
         self.args_dict["output_file"] = str(
             Path(self.args_dict["output_file"]).with_suffix(ECSV_SUFFIX)
         )
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
         self.data = ""  # Single photon electron spectrum data (as string)
         self.args_dict["metadata_product_data_name"] = self.output_parameter
         self.args_dict["metadata_product_data_url"] = (
@@ -64,7 +65,7 @@ class SinglePhotonElectronSpectrum:
         )
         metadata_args = dict(self.args_dict)
         metadata_args["output_file"] = Path(self.args_dict["output_file"]).name
-        self.metadata = MetadataCollector(args_dict=metadata_args)
+        self.metadata = MetadataCollector(args_dict=metadata_args, context=context)
 
     def derive_single_pe_spectrum(self):
         """Derive single photon electron spectrum."""
@@ -109,6 +110,7 @@ class SinglePhotonElectronSpectrum:
             product_data=table,
             validate_schema_file=self.output_schema,
             metadata_output_file=metadata_output_file.with_suffix(ECSV_SUFFIX),
+            context=self.context,
         )
 
     @classmethod

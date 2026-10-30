@@ -75,6 +75,7 @@ simulation_software:
       row_sort_keys: [altitude]
       float_format: ".12g"
       write_comments: false
+  - name: obdeect
 plot_configuration:
   - type: density_vs_altitude
     title: Atmospheric density profile

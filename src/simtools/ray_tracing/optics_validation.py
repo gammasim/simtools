@@ -73,7 +73,7 @@ def validate_cumulative_psf(app_context):
     Parameters
     ----------
     app_context : object
-        Application context with ``args`` and ``io_handler`` attributes.
+        Application context with ``args`` and ``paths`` attributes.
 
     Raises
     ------
@@ -81,7 +81,7 @@ def validate_cumulative_psf(app_context):
         If measured PSF data is not provided.
     """
     args_dict = app_context.args
-    io_handler = app_context.io_handler
+    io_handler = app_context.paths
     if not args_dict.get("data"):
         raise ValueError("Measured PSF data is required to compute the cumulative PSF.")
     label = args_dict.get("label") or Path("validate_cumulative_psf").stem
@@ -91,6 +91,7 @@ def validate_cumulative_psf(app_context):
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],
         model_version=args_dict["model_version"],
+        context=app_context,
     )
 
     ray = RayTracing(
@@ -100,6 +101,7 @@ def validate_cumulative_psf(app_context):
         zenith_angle=args_dict["zenith_angle"],
         source_distance=args_dict["source_distance"],
         off_axis_angle=[0.0] * u.deg,
+        context=app_context,
     )
 
     ray.simulate(test=args_dict["test"], force=False)
@@ -144,10 +146,10 @@ def validate_optics(app_context):
     Parameters
     ----------
     app_context : object
-        Application context with ``args`` and ``io_handler`` attributes.
+        Application context with ``args`` and ``paths`` attributes.
     """
     args_dict = app_context.args
-    io_handler = app_context.io_handler
+    io_handler = app_context.paths
 
     label = args_dict.get("label") or Path("validate_optics").stem
 
@@ -156,6 +158,7 @@ def validate_optics(app_context):
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],
         model_version=args_dict["model_version"],
+        context=app_context,
     )
 
     logger.info(
@@ -178,8 +181,9 @@ def validate_optics(app_context):
         off_axis_angle=np.linspace(0, max_offset, offset_steps) * u.deg,
         offset_file=args_dict.get("offset_file"),
         offset_directions=offset_directions,
+        context=app_context,
     )
-    ray.simulate(test=args_dict["test"], force=False)
+    ray.simulate(test=args_dict["test"], force=False, max_workers=args_dict.get("max_workers"))
     ray.analyze(force=True, save_photons=args_dict.get("save_photons", False))
 
     _plot_psf_summary(ray, label, tel_model.name, io_handler)
@@ -191,6 +195,7 @@ def validate_optics(app_context):
         parameter_version=args_dict.get("parameter_version"),
         output_directory=io_handler.get_output_directory(),
         metadata_input_dict=args_dict,
+        context=app_context,
     )
 
     if args_dict["plot_images"]:
@@ -263,7 +268,9 @@ def _plot_psf_images(ray, telescope_name, plot_file, plot_in_degrees=False):
     max_extent_rounded = _max_image_extent(images_dict)
 
     figures = _iter_psf_image_figures(images_dict, telescope_name, max_extent_rounded, eff_flen_cm)
-    visualize.save_figures_to_single_document(figures, plot_file, close=True)
+    with visualize.pdf_report(plot_file) as report:
+        for figure in figures:
+            report.add(figure)
 
 
 def _iter_psf_image_figures(images_dict, telescope_name, max_extent_rounded, eff_flen_cm):
@@ -403,6 +410,7 @@ def _export_effective_focal_length_model_parameter(
     parameter_version,
     output_directory,
     metadata_input_dict,
+    context,
 ):
     """Export effective_focal_length as a model parameter JSON and metadata YAML."""
     results = getattr(ray, "_results", None)
@@ -425,6 +433,7 @@ def _export_effective_focal_length_model_parameter(
         metadata_input_dict=metadata_input_dict,
         unit=["cm", "cm", "cm", "cm", "cm"],
         check_for_existing_parameter=False,
+        context=context,
     )
     logger.info(
         "Exported effective_focal_length model parameter (%s) to %s",

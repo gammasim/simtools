@@ -5,7 +5,7 @@ import pickle
 import time
 from multiprocessing import get_context
 from pathlib import Path
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import numpy as np
 import pytest
@@ -29,11 +29,19 @@ SOURCE_CONFIG = {"kind": "test"}
 
 
 @pytest.fixture
-def optimizer(mocker, tmp_test_directory):
+def optimizer(mocker, tmp_test_directory, run_context):
     args = {"site": "North", "telescope": "LSTN-01", "model_version": "6.0.0"}
-    mocker.patch.object(evaluation, "config", SimpleNamespace(args=args, model_reader=None))
+    context = run_context.replace(
+        args=MappingProxyType(args), model_reader=SimpleNamespace(source_config=SOURCE_CONFIG)
+    )
     return psf.PSFParameterOptimizer(
-        object(), object(), args, {"measured": [1.0]}, np.array([1.0]), Path(tmp_test_directory)
+        object(),
+        object(),
+        args,
+        {"measured": [1.0]},
+        np.array([1.0]),
+        Path(tmp_test_directory),
+        context=context,
     )
 
 
@@ -59,26 +67,9 @@ def test_failed_batch_result_is_not_cached(optimizer, mocker):
     assert optimizer.simulation_cache == {}
 
 
-def test_uncached_repetitions_remain_independent(optimizer, mocker):
-    params = {SIGMA: 1.0}
-    values = [(1.0, 2.0, None, None), (3.0, 4.0, None, None)]
-    dispatch = mocker.patch.object(optimizer, DISPATCH_METHOD, return_value=values)
-    assert optimizer._run_parameter_batch([params, params], False) == values
-    dispatch.assert_called_once_with([params, params])
-    assert optimizer.simulation_cache == {}
-    assert optimizer.cache_misses == 0
-
-
-def test_empty_batch_does_not_submit(optimizer, mocker):
-    dispatch = mocker.patch.object(optimizer, DISPATCH_METHOD)
-    assert optimizer._run_parameter_batch([], True) == []
-    dispatch.assert_not_called()
-
-
 @pytest.mark.parametrize(BACKEND, ["local", "htcondor"])
 def test_dispatch_serializable_jobs_with_unique_paths(optimizer, mocker, backend):
     optimizer.args_dict.update({BACKEND: backend, "backend_config": {}})
-    evaluation.config.model_reader = SimpleNamespace(source_config=SOURCE_CONFIG)
     execute = mocker.patch.object(
         evaluation, EXECUTE, return_value=[JobResult("first", 0, 2.0), JobResult("second", 1, 3.0)]
     )
@@ -92,8 +83,8 @@ def test_dispatch_serializable_jobs_with_unique_paths(optimizer, mocker, backend
     for job in jobs:
         restored = pickle.loads(pickle.dumps(job))
         assert restored.item.parameters == job.item.parameters
-        assert restored.runtime_args == optimizer.args_dict
-        assert restored.model_source_config == SOURCE_CONFIG
+        assert restored.context_spec["args"] == optimizer.args_dict
+        assert restored.context_spec["model_source"] == SOURCE_CONFIG
     previous_paths = [job.item.output_dir for job in jobs]
     optimizer._dispatch_parameter_evaluations([{SIGMA: 3}])
     assert execute.call_args.args[0][0].item.output_dir not in previous_paths
@@ -106,18 +97,16 @@ def test_backend_failure_is_not_treated_as_simulation_failure(optimizer, mocker)
 
 
 @pytest.mark.parametrize("fails", [False, True])
-def test_worker_isolates_models_and_restores_paths(optimizer, mocker, fails):
-    handler = psf.IOHandler()
-    before_paths, before_model = dict(handler.output_path), handler.model_path
+def test_worker_isolates_models_and_paths(optimizer, mocker, fails, run_context):
     output_dir = optimizer.output_dir / "evaluation"
-    args = optimizer.args_dict | {psf.CLEANUP: True, psf.KS_STATISTIC: True}
+    args = optimizer.args_dict | {"cleanup": True, psf.KS_STATISTIC: True}
     job = evaluation._PSFEvaluationJob(args, {}, {}, np.array([1.0]), output_dir)
     telescope, site = object(), object()
     initialize = mocker.patch.object(psf, INITIALIZE_MODELS, return_value=(telescope, site, None))
     expected = (3.0, 0.2, 0.7, None)
 
     def simulate(*args, **kwargs):
-        assert handler.output_path["default"] == output_dir
+        assert kwargs["context"].paths.get_output_directory() == output_dir
         assert args[:2] == (telescope, site)
         assert kwargs["use_ks_statistic"] is True
         if fails:
@@ -126,22 +115,11 @@ def test_worker_isolates_models_and_restores_paths(optimizer, mocker, fails):
 
     mocker.patch.object(psf, SIMULATE, side_effect=simulate)
     cleanup = mocker.patch.object(psf.gen, "cleanup_intermediate_files")
-    result = psf._run_psf_evaluation(job)
+    result = psf._run_psf_evaluation(job, context=run_context)
     assert result == (None if fails else expected)
     assert initialize.call_args.kwargs["model_directory"] == output_dir / "model"
-    assert handler.output_path == before_paths
-    assert handler.model_path == before_model
+    assert initialize.call_args.kwargs["context"].paths.get_output_directory() == output_dir
     cleanup.assert_not_called()
-
-
-def test_worker_restores_paths_after_unexpected_failure(optimizer, mocker):
-    handler = psf.IOHandler()
-    before_paths = dict(handler.output_path)
-    mocker.patch.object(psf, INITIALIZE_MODELS, side_effect=OSError(ERROR_MESSAGE))
-    job = evaluation._PSFEvaluationJob(optimizer.args_dict, {}, {}, None, optimizer.output_dir)
-    with pytest.raises(OSError, match=ERROR_MESSAGE):
-        psf._run_psf_evaluation(job)
-    assert handler.output_path == before_paths
 
 
 def test_monte_carlo_aggregates_successes_in_order(optimizer, mocker):
@@ -157,11 +135,6 @@ def test_monte_carlo_aggregates_successes_in_order(optimizer, mocker):
     assert result[2] == [4.0, 8.0]
     assert result[6] == pytest.approx(4.0)
     assert result[8] == [2.0, 6.0]
-
-
-@pytest.mark.parametrize("values", [[], [1.0]])
-def test_sample_deviation_with_insufficient_data(values):
-    assert np.isnan(psf._sample_standard_deviation(values))
 
 
 def test_real_local_workers_overlap(optimizer, monkeypatch):
@@ -205,6 +178,34 @@ def test_serial_and_parallel_gradient_match_analytic_result(optimizer, monkeypat
     gradient = optimizer.calculate_gradient({SIGMA: 2.0, OTHER_PARAMETER: 0.0}, 6.0)
     assert gradient[SIGMA] == pytest.approx(3.0)
     assert gradient[OTHER_PARAMETER] == pytest.approx(0.0)
+
+
+def test_uncached_repetitions_remain_independent(optimizer, mocker):
+    params = {SIGMA: 1.0}
+    values = [(1.0, 2.0, None, None), (3.0, 4.0, None, None)]
+    dispatch = mocker.patch.object(optimizer, DISPATCH_METHOD, return_value=values)
+    assert optimizer._run_parameter_batch([params, params], False) == values
+    dispatch.assert_called_once_with([params, params])
+    assert optimizer.simulation_cache == {}
+    assert optimizer.cache_misses == 0
+
+
+def test_empty_batch_does_not_submit(optimizer, mocker):
+    dispatch = mocker.patch.object(optimizer, DISPATCH_METHOD)
+    assert optimizer._run_parameter_batch([], True) == []
+    dispatch.assert_not_called()
+
+
+def test_worker_propagates_unexpected_failure(optimizer, mocker, run_context):
+    mocker.patch.object(psf, INITIALIZE_MODELS, side_effect=OSError(ERROR_MESSAGE))
+    job = evaluation._PSFEvaluationJob(optimizer.args_dict, {}, {}, None, optimizer.output_dir)
+    with pytest.raises(OSError, match=ERROR_MESSAGE):
+        psf._run_psf_evaluation(job, context=run_context)
+
+
+@pytest.mark.parametrize("values", [[], [1.0]])
+def test_sample_deviation_with_insufficient_data(values):
+    assert np.isnan(psf._sample_standard_deviation(values))
 
 
 @pytest.mark.parametrize(("workers", "expected"), [(None, 4), (1, 1), (7, 7), (0, 8), (-1, 8)])

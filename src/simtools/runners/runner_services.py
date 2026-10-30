@@ -1,9 +1,10 @@
 """Base service methods for simulation runners."""
 
 import logging
+from collections.abc import Mapping
 
-from simtools.io import io_handler
-from simtools.io.file_type import _get_product_value
+from simtools.context import RunContext
+from simtools.io.file_type import product_value
 from simtools.simulation.parameters import SimulationParameters
 
 _logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ _RUNNER_FILE_PLACEMENT = {
 _RUNNER_PRODUCT_IDS = {"sim_telarray_histogram": _SIM_TELARRAY_HISTOGRAM_PRODUCT}
 FILES_AND_PATHS = {
     file_type: {
-        _FILE_SUFFIX: _get_product_value(
+        _FILE_SUFFIX: product_value(
             _RUNNER_PRODUCT_IDS.get(file_type, file_type), "default_suffix"
         ),
         _SUB_DIRECTORY_TYPE: directory_type,
@@ -113,13 +114,14 @@ class RunnerServices:
         Label.
     """
 
-    def __init__(self, config, run_type, label=None, array_model=None):
+    def __init__(self, config, run_type, label=None, array_model=None, context=None):
         """Initialize RunnerServices."""
         self._logger = logging.getLogger(__name__)
         self.label = label
         self.array_model = array_model or getattr(config, "array_model", None)
         self.config = getattr(config, "simulation_parameters", config)
         self.run_type = run_type
+        self.context = context or RunContext.from_environment()
         self.directory = self.load_data_directory()
 
     def load_data_directory(self):
@@ -131,8 +133,7 @@ class RunnerServices:
         Path
             Path to the created directory.
         """
-        ioh = io_handler.IOHandler()
-        directory = ioh.get_output_directory(self.run_type)
+        directory = self.context.paths.get_output_directory(self.run_type)
         self._logger.debug(f"Data directories for {self.run_type}: {directory}")
 
         return directory
@@ -179,7 +180,7 @@ class RunnerServices:
         """
         if isinstance(self.config, SimulationParameters):
             return self._get_file_base_name_from_simulation_parameters(run_number, is_multi_pipe)
-        if isinstance(self.config, dict):
+        if isinstance(self.config, Mapping):
             return self._get_file_base_name_from_core_config()
         raise ValueError(f"Invalid configuration type: {type(self.config)}")
 

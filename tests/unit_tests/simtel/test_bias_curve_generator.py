@@ -1,5 +1,6 @@
 """Unit tests for bias_curve_generator."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -9,10 +10,12 @@ from astropy.table import Table
 
 from simtools.simtel import bias_curve_generator
 
+PARAMETER_NAME = "parameter_name"
+
 
 def _base_args(tmp_path):
     return {
-        "data_dir": tmp_path,
+        "event_data_directory": tmp_path,
         "figure_file": tmp_path / "bias_curve.png",
         "site": "North",
         "model_version": "7.0.0",
@@ -31,15 +34,15 @@ def _write_file_info_hdf5(file_path, file_name):
     )
 
 
-def test_calculate_time_window_requires_telescope(tmp_path):
+def test_calculate_time_window_requires_telescope(tmp_path, run_context):
     args = _base_args(tmp_path)
     args["telescope"] = ""
 
     with pytest.raises(ValueError, match="telescope must be provided"):
-        bias_curve_generator._calculate_time_window(args)
+        bias_curve_generator._calculate_time_window(args, run_context)
 
 
-def test_calculate_time_window_reads_telescope_model(tmp_path):
+def test_calculate_time_window_reads_telescope_model(tmp_path, run_context):
     args = _base_args(tmp_path)
 
     telescope_model = MagicMock()
@@ -48,7 +51,7 @@ def test_calculate_time_window_reads_telescope_model(tmp_path):
     with (
         patch("simtools.simtel.bias_curve_generator.TelescopeModel", return_value=telescope_model),
     ):
-        time_window = bias_curve_generator._calculate_time_window(args)
+        time_window = bias_curve_generator._calculate_time_window(args, run_context)
 
     assert time_window == pytest.approx(68 / (1024 * 1e6))
 
@@ -107,7 +110,7 @@ def test_group_hdf5_files_by_threshold_and_run_rejects_duplicates(tmp_path):
         bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
 
 
-def test_extract_proton_rates_raises_when_no_files(tmp_path):
+def test_extract_proton_rates_raises_when_no_files(tmp_path, run_context):
     args = _base_args(tmp_path)
 
     with patch(
@@ -118,10 +121,10 @@ def test_extract_proton_rates_raises_when_no_files(tmp_path):
             FileNotFoundError,
             match="No proton HDF5 files with threshold labels found",
         ):
-            bias_curve_generator._extract_proton_rates(args)
+            bias_curve_generator._extract_proton_rates(args, run_context)
 
 
-def test_extract_proton_rates_calculates_statistics_per_threshold(tmp_path):
+def test_extract_proton_rates_calculates_statistics_per_threshold(tmp_path, run_context):
     args = _base_args(tmp_path)
     grouped_files = {
         240: {2: tmp_path / "run2.hdf5"},
@@ -141,25 +144,27 @@ def test_extract_proton_rates_calculates_statistics_per_threshold(tmp_path):
             ],
         ) as mock_calc,
     ):
-        stats = bias_curve_generator._extract_proton_rates(args)
+        stats = bias_curve_generator._extract_proton_rates(args, run_context)
 
     assert stats == {
         220: {"runs": {1: 10.0, 3: 12.0}, "rate_hz": 11.0, "error_hz": 1.0, "num_runs": 2},
         240: {"runs": {2: 5.0}, "rate_hz": 5.0, "error_hz": 0.0, "num_runs": 1},
     }
     assert mock_calc.call_count == 2
-    assert mock_calc.call_args_list[0].args == (grouped_files[220], args)
-    assert mock_calc.call_args_list[1].args == (grouped_files[240], args)
+    assert mock_calc.call_args_list[0].args == (grouped_files[220], args, run_context)
+    assert mock_calc.call_args_list[1].args == (grouped_files[240], args, run_context)
 
 
-def test_calculate_proton_statistics_for_threshold_uses_non_none_rates(tmp_path):
+def test_calculate_proton_statistics_for_threshold_uses_non_none_rates(tmp_path, run_context):
     files = {1: tmp_path / "run1.hdf5", 2: tmp_path / "run2.hdf5", 3: tmp_path / "run3.hdf5"}
 
     with patch(
         "simtools.simtel.bias_curve_generator._calculate_proton_rate_for_file",
         side_effect=[10.0, None, 20.0],
     ):
-        stats = bias_curve_generator._calculate_proton_statistics_for_threshold(files, {})
+        stats = bias_curve_generator._calculate_proton_statistics_for_threshold(
+            files, {}, run_context
+        )
 
     assert stats["runs"] == {1: 10.0, 3: 20.0}
     assert stats["rate_hz"] == pytest.approx(15.0)
@@ -167,13 +172,13 @@ def test_calculate_proton_statistics_for_threshold_uses_non_none_rates(tmp_path)
     assert stats["num_runs"] == 2
 
 
-def test_calculate_proton_statistics_for_threshold_returns_nan_when_no_rates(tmp_path):
+def test_calculate_proton_statistics_for_threshold_returns_nan_when_no_rates(tmp_path, run_context):
     with patch(
         "simtools.simtel.bias_curve_generator._calculate_proton_rate_for_file",
         return_value=None,
     ):
         stats = bias_curve_generator._calculate_proton_statistics_for_threshold(
-            {1: tmp_path / "run1.hdf5"}, {}
+            {1: tmp_path / "run1.hdf5"}, {}, run_context
         )
 
     assert stats["runs"] == {}
@@ -182,7 +187,7 @@ def test_calculate_proton_statistics_for_threshold_returns_nan_when_no_rates(tmp
     assert stats["num_runs"] == 0
 
 
-def test_calculate_proton_rate_for_file_with_array_layout(tmp_path):
+def test_calculate_proton_rate_for_file_with_array_layout(tmp_path, run_context):
     args = _base_args(tmp_path)
 
     with patch(
@@ -190,12 +195,16 @@ def test_calculate_proton_rate_for_file_with_array_layout(tmp_path):
         return_value={"array": 5 * u.Hz},
     ):
         assert (
-            bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", args)
+            bias_curve_generator._calculate_proton_rate_for_file(
+                tmp_path / "events.hdf5", args, run_context
+            )
             == 5
         )
 
 
-def test_calculate_proton_rate_for_file_returns_zero_for_missing_trigger_histograms(tmp_path):
+def test_calculate_proton_rate_for_file_returns_zero_for_missing_trigger_histograms(
+    tmp_path, run_context
+):
     args = _base_args(tmp_path)
 
     with patch(
@@ -203,27 +212,21 @@ def test_calculate_proton_rate_for_file_returns_zero_for_missing_trigger_histogr
         side_effect=TypeError("'NoneType' object is not subscriptable"),
     ):
         assert (
-            bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", args)
+            bias_curve_generator._calculate_proton_rate_for_file(
+                tmp_path / "events.hdf5", args, run_context
+            )
             == 0
         )
 
 
-def test_calculate_proton_rate_for_file_returns_none_for_other_errors(tmp_path):
-    args = _base_args(tmp_path)
-
-    with patch(
-        "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=ValueError("bad file"),
-    ):
-        assert (
-            bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", args)
-            is None
-        )
-
-
-def test_calculate_proton_rate_for_file_returns_none_without_telescope_config(tmp_path):
+def test_calculate_proton_rate_for_file_returns_none_without_telescope_config(
+    tmp_path, run_context
+):
     assert (
-        bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", {}) is None
+        bias_curve_generator._calculate_proton_rate_for_file(
+            tmp_path / "events.hdf5", {}, run_context
+        )
+        is None
     )
 
 
@@ -338,16 +341,14 @@ def test_calculate_trigger_threshold_success():
         280: {"rate_hz": 400.0, "error_hz": 20.0},  # Lower NSB to ensure sign change
     }
     proton_stats = {
-        220: {"rate_hz": 1100.0, "error_hz": 40.0},
-        250: {"rate_hz": 740.0, "error_hz": 25.0},
-        280: {"rate_hz": 370.0, "error_hz": 15.0},
+        220: {"rate_hz": 11000.0, "error_hz": 40.0},
+        250: {"rate_hz": 7400.0, "error_hz": 25.0},
+        280: {"rate_hz": 3700.0, "error_hz": 15.0},
     }
 
     args = {"scaling_factor": 1.35}
     threshold = bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
-    # Should find intersection between 250 and 280
-    assert threshold is not None
-    assert 250 <= threshold <= 280
+    assert threshold == pytest.approx(231.81755150982445)
 
 
 def test_calculate_trigger_threshold_no_valid_points():
@@ -356,7 +357,7 @@ def test_calculate_trigger_threshold_no_valid_points():
     nsb_stats = {}
     proton_stats = {}
 
-    with pytest.raises(ValueError, match="No valid threshold points with both NSB and proton data"):
+    with pytest.raises(ValueError, match="At least two finite positive rates"):
         bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
 
 
@@ -389,9 +390,9 @@ def test_calculate_trigger_threshold_with_nan_values():
         280: {"rate_hz": 400.0, "error_hz": 20.0},  # Valid - adjusted to create sign change
     }
     proton_stats = {
-        220: {"rate_hz": 700.0, "error_hz": 40.0},
-        250: {"rate_hz": 740.0, "error_hz": 25.0},
-        280: {"rate_hz": 370.0, "error_hz": 15.0},
+        220: {"rate_hz": 7000.0, "error_hz": 40.0},
+        250: {"rate_hz": 7400.0, "error_hz": 25.0},
+        280: {"rate_hz": 3700.0, "error_hz": 15.0},
     }
 
     # Should work with the valid points (250, 280) and find intersection
@@ -403,7 +404,7 @@ def test_calculate_trigger_threshold_with_nan_values():
     assert 250 <= threshold <= 280
 
 
-def test_export_trigger_threshold_as_model_parameter(tmp_path):
+def test_export_trigger_threshold_as_model_parameter(run_context):
     """Test successful export of trigger threshold as model parameter."""
     args = {
         "telescope": "LSTN-01",
@@ -412,23 +413,22 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
         "parameter_version": "1.0.0",
     }
 
-    with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_path
+    with patch(
+        "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
+    ) as mock_write:
+        with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
+            mock_model = MagicMock()
+            mock_model.get_parameter_value.return_value = "DigitalSum"
+            mock_tel.return_value = mock_model
 
-        with patch(
-            "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write:
-            with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
-                mock_model = MagicMock()
-                mock_model.get_parameter_value.return_value = "DigitalSum"
-                mock_tel.return_value = mock_model
-
-                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
+            bias_curve_generator._export_trigger_threshold_as_model_parameter(
+                args, 250.0, context=run_context
+            )
 
         # Verify the model parameter was written with correct values
         mock_write.assert_called_once()
         call_kwargs = mock_write.call_args.kwargs
-        assert call_kwargs["parameter_name"] == "dsum_threshold"
+        assert call_kwargs[PARAMETER_NAME] == "dsum_threshold"
         assert call_kwargs["value"] == 250  # int for DigitalSum
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
@@ -436,8 +436,12 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
         assert call_kwargs["check_for_existing_parameter"] is False
 
 
-def test_export_trigger_threshold_uses_asum_for_analog_sum(tmp_path):
-    """Test that asum_threshold is used when default_trigger is AnalogSum."""
+@pytest.mark.parametrize(
+    ("default_trigger", PARAMETER_NAME),
+    [("AnalogSum", "asum_threshold"), ("Majority", "discriminator_threshold")],
+)
+def test_export_trigger_threshold_in_millivolts(default_trigger, parameter_name, run_context):
+    """Export rounded floating-point thresholds for AnalogSum and Majority."""
     args = {
         "telescope": "LSTN-01",
         "site": "North",
@@ -445,42 +449,41 @@ def test_export_trigger_threshold_uses_asum_for_analog_sum(tmp_path):
         "parameter_version": "1.0.0",
     }
 
-    with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_path
+    with patch(
+        "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
+    ) as mock_write:
+        with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
+            mock_model = MagicMock()
+            mock_model.get_parameter_value.return_value = default_trigger
+            mock_tel.return_value = mock_model
 
-        with patch(
-            "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write:
-            with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
-                mock_model = MagicMock()
-                mock_model.get_parameter_value.return_value = "AnalogSum"
-                mock_tel.return_value = mock_model
+            bias_curve_generator._export_trigger_threshold_as_model_parameter(
+                args, 250.567, context=run_context
+            )
 
-                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.5)
-
-        # Verify the model parameter was written with correct values for AnalogSum
+        # Verify the parameter, unit, type, and rounding for each trigger.
         mock_write.assert_called_once()
         call_kwargs = mock_write.call_args.kwargs
-        assert call_kwargs["parameter_name"] == "asum_threshold"
-        assert call_kwargs["value"] == pytest.approx(250.5, rel=0.01)  # Float for AnalogSum
+        assert call_kwargs[PARAMETER_NAME] == parameter_name
+        assert isinstance(call_kwargs["value"], float)
+        assert call_kwargs["value"] == pytest.approx(250.57, abs=1e-9)
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
         assert call_kwargs["unit"] == "mV"
         assert call_kwargs["check_for_existing_parameter"] is False
 
 
-def test_export_trigger_threshold_handles_missing_telescope(tmp_path):
+def test_export_trigger_threshold_handles_missing_telescope(run_context):
     """Test that missing telescope name defaults to 'unknown' and function returns early."""
     args = {"parameter_version": "1.0.0"}  # No telescope, no site, no model_version
 
-    with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_path
-
-        with patch(
-            "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write:
-            with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
-                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
+    with patch(
+        "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
+    ) as mock_write:
+        with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
+            bias_curve_generator._export_trigger_threshold_as_model_parameter(
+                args, 250.0, context=run_context
+            )
 
         # Should warn about missing telescope and then fail when trying to create TelescopeModel
         assert mock_logger.warning.call_count >= 1
@@ -488,7 +491,7 @@ def test_export_trigger_threshold_handles_missing_telescope(tmp_path):
         mock_write.assert_not_called()
 
 
-def test_export_trigger_threshold_handles_exception(tmp_path):
+def test_export_trigger_threshold_handles_exception(run_context):
     """Test that exceptions during export are caught and logged."""
     args = {
         "telescope": "LSTN-01",
@@ -497,21 +500,20 @@ def test_export_trigger_threshold_handles_exception(tmp_path):
         "model_version": "7.0.0",
     }
 
-    with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_path
+    with patch(
+        "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
+    ) as mock_write:
+        mock_write.side_effect = OSError("Disk full")
 
-        with patch(
-            "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write:
-            mock_write.side_effect = OSError("Disk full")
+        with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
+            mock_model = MagicMock()
+            mock_model.get_parameter_value.return_value = "DigitalSum"
+            mock_tel.return_value = mock_model
 
-            with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
-                mock_model = MagicMock()
-                mock_model.get_parameter_value.return_value = "DigitalSum"
-                mock_tel.return_value = mock_model
-
-                with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
-                    bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
+            with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
+                bias_curve_generator._export_trigger_threshold_as_model_parameter(
+                    args, 250.0, context=run_context
+                )
 
             # Should catch the exception and log warning
             mock_logger.warning.assert_called_once_with(
@@ -588,7 +590,7 @@ def test_run_nsb_trigger_derivation(tmp_path):
     )
 
 
-def test_calculate_proton_statistics_single_run(tmp_path):
+def test_calculate_proton_statistics_single_run(tmp_path, run_context):
     """Test _calculate_proton_statistics_for_threshold with a single run."""
     files = {1: tmp_path / "run1.hdf5"}
 
@@ -596,7 +598,9 @@ def test_calculate_proton_statistics_single_run(tmp_path):
         "simtools.simtel.bias_curve_generator._calculate_proton_rate_for_file",
         return_value=10.0,
     ):
-        stats = bias_curve_generator._calculate_proton_statistics_for_threshold(files, {})
+        stats = bias_curve_generator._calculate_proton_statistics_for_threshold(
+            files, {}, run_context
+        )
 
     assert stats["runs"] == {1: 10.0}
     assert stats["rate_hz"] == pytest.approx(10.0)
@@ -604,58 +608,18 @@ def test_calculate_proton_statistics_single_run(tmp_path):
     assert stats["num_runs"] == 1
 
 
-def test_calculate_proton_rate_for_file_handles_oserror(tmp_path):
-    """Test _calculate_proton_rate_for_file handles OSError."""
+@pytest.mark.parametrize(
+    "error", [OSError("missing"), KeyError("missing"), ValueError("bad"), AttributeError("missing")]
+)
+def test_calculate_proton_rate_for_file_returns_none_for_errors(tmp_path, run_context, error):
     args = _base_args(tmp_path)
 
     with patch(
         "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=OSError("File not found"),
+        side_effect=error,
     ):
         result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args
-        )
-        assert result is None
-
-
-def test_calculate_proton_rate_for_file_handles_keyerror(tmp_path):
-    """Test _calculate_proton_rate_for_file handles KeyError."""
-    args = _base_args(tmp_path)
-
-    with patch(
-        "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=KeyError("missing_key"),
-    ):
-        result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args
-        )
-        assert result is None
-
-
-def test_calculate_proton_rate_for_file_handles_valueerror(tmp_path):
-    """Test _calculate_proton_rate_for_file handles ValueError."""
-    args = _base_args(tmp_path)
-
-    with patch(
-        "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=ValueError("Invalid value"),
-    ):
-        result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args
-        )
-        assert result is None
-
-
-def test_calculate_proton_rate_for_file_handles_attributeerror(tmp_path):
-    """Test _calculate_proton_rate_for_file handles AttributeError."""
-    args = _base_args(tmp_path)
-
-    with patch(
-        "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=AttributeError("Missing attribute"),
-    ):
-        result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args
+            tmp_path / "events.hdf5", args, run_context
         )
         assert result is None
 
@@ -684,3 +648,36 @@ def test_group_hdf5_files_skips_missing_metadata(tmp_test_directory):
 
     result = bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
     assert result == {}  # File skipped due to missing threshold/run
+
+
+@pytest.mark.parametrize("scaling_factor", [1.0, 1.35, 2.0])
+def test_trigger_threshold_matches_scaled_fitted_curves(scaling_factor):
+    nsb = {t: {"rate_hz": 100 * 10 ** (-(t - 7))} for t in (7, 7.2, 7.4, 8, 9)}
+    proton = {t: {"rate_hz": 100.0} for t in (7.1, 7.3, 8.1, 9.1)}
+    threshold = bias_curve_generator._calculate_trigger_threshold(
+        {"scaling_factor": scaling_factor}, nsb, proton
+    )
+    assert threshold == pytest.approx(8 - np.log10(scaling_factor))
+
+
+def test_group_proton_files_preserves_decimal_thresholds(tmp_test_directory):
+    tmp_test_directory = Path(tmp_test_directory)
+    expected = {}
+    for threshold in (7, 7.2, 7.4, 8, 9):
+        file_path = tmp_test_directory / f"proton_asum{threshold}.reduced_event_data.hdf5"
+        _write_file_info_hdf5(file_path, f"proton_run000001_asum{threshold}.simtel.zst")
+        expected[threshold] = {1: file_path}
+    assert (
+        bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_test_directory) == expected
+    )
+
+
+def test_trigger_threshold_extrapolates_intersection_outside_data_range():
+    nsb = {220: {"rate_hz": 1000}, 230: {"rate_hz": 100}}
+    proton_rate = 10 / (1.35 * bias_curve_generator.plot_tables.PROTON_INTERSECTION_FRACTION)
+    proton = {220: {"rate_hz": proton_rate}, 230: {"rate_hz": proton_rate}}
+
+    threshold = bias_curve_generator._calculate_trigger_threshold({}, nsb, proton)
+
+    assert threshold == pytest.approx(240)
+    assert threshold > 230

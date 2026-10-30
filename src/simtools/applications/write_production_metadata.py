@@ -17,7 +17,6 @@ _ARGUMENTS = (
         "job_grid_file",
         help="Authoritative job grid used to reconstruct resolved production configuration.",
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "check",
@@ -46,15 +45,15 @@ def _post_parse(args_dict, _config_sources, parser):
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=_ARGUMENTS,
-    initialize_output=False,
     post_parse=_post_parse,
+    needs=("corsika",),
 )
 
 
 def main():
     """Run the production metadata writer/checker."""
     app_context = APPLICATION.start()
-    write_production_metadata(app_context.args)
+    write_production_metadata(app_context.args, context=app_context)
 
 
 if __name__ == "__main__":

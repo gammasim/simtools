@@ -23,7 +23,7 @@ from pathlib import Path
 import yaml
 from packaging.requirements import InvalidRequirement, Requirement
 
-from simtools import settings
+from simtools import context as run_context
 from simtools.configuration import defaults
 from simtools.io import ascii_handler
 from simtools.utils import general as gen
@@ -58,7 +58,7 @@ _CORSIKA_TABLE_MANIFEST_SCHEMA_MAJOR = 1
 _GIT_LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1\n"
 
 
-def validate_simulation_dependencies(simulation_software):
+def validate_simulation_dependencies(simulation_software, context=None):
     """Validate external software and data required by a simulation.
 
     Parameters
@@ -73,6 +73,7 @@ def validate_simulation_dependencies(simulation_software):
         If the selection or CORSIKA interaction-table manifest is invalid, or
         if a required dependency is unavailable.
     """
+    context = context or run_context.RunContext.from_environment()
     try:
         required = defaults.SIMULATION_SOFTWARE_DEPENDENCIES[simulation_software]
     except KeyError as exc:
@@ -80,15 +81,15 @@ def validate_simulation_dependencies(simulation_software):
 
     errors = []
     if "sim_telarray" in required:
-        _collect_dependency_error(errors, "sim_telarray", lambda: settings.config.sim_telarray_exe)
+        _collect_dependency_error(errors, "sim_telarray", lambda: context.software.sim_telarray_exe)
     if "corsika" in required:
-        geometry = "curved" if _uses_curved_atmosphere() else "flat"
+        geometry = "curved" if _uses_curved_atmosphere(context) else "flat"
         _collect_dependency_error(
-            errors, f"CORSIKA ({geometry})", lambda: _corsika_executable(geometry)
+            errors, f"CORSIKA ({geometry})", lambda: _corsika_executable(geometry, context)
         )
         try:
-            table_path = settings.config.corsika_interaction_table_path
-            errors.extend(_validate_corsika_interaction_tables(table_path))
+            table_path = context.software.corsika_interaction_table_path
+            errors.extend(_validate_corsika_interaction_tables(table_path, context))
         except (FileNotFoundError, PermissionError, TypeError, ValueError) as exc:
             errors.append(f"CORSIKA interaction tables: {exc}")
 
@@ -105,10 +106,11 @@ def _collect_dependency_error(errors, name, getter):
         errors.append(f"{name}: {exc}")
 
 
-def _uses_curved_atmosphere():
+def _uses_curved_atmosphere(context=None):
     """Return whether the configured zenith angle selects curved CORSIKA."""
     try:
-        args = settings.config.args
+        context = context or run_context.RunContext.from_environment()
+        args = context.args
         return args.get("zenith_angle").to_value("deg") >= args[
             "curved_atmosphere_min_zenith_angle"
         ].to_value("deg")
@@ -116,14 +118,15 @@ def _uses_curved_atmosphere():
         return False
 
 
-def _corsika_executable(geometry):
+def _corsika_executable(geometry, context=None):
     """Return the configured CORSIKA executable for an atmosphere geometry."""
+    context = context or run_context.RunContext.from_environment()
     if geometry == "curved":
-        return settings.config.corsika_exe_curved
-    return settings.config.corsika_exe
+        return context.software.corsika_exe_curved
+    return context.software.corsika_exe
 
 
-def _validate_corsika_interaction_tables(table_path):
+def _validate_corsika_interaction_tables(table_path, context=None):
     """Return errors for the selected CORSIKA interaction-table files."""
     manifest_path = Path(table_path) / "manifest.yaml"
     try:
@@ -133,7 +136,8 @@ def _validate_corsika_interaction_tables(table_path):
         raise ValueError(f"cannot read manifest {manifest_path}: {exc}") from exc
 
     _validate_table_manifest_structure(manifest, manifest_path)
-    he_model, le_model = settings.config.corsika_interaction_models
+    context = context or run_context.RunContext.from_environment()
+    he_model, le_model = context.software.corsika_interaction_models
     entries = [
         *_manifest_entries(manifest, "common"),
         *_manifest_entries(manifest, "electromagnetic", "egs4"),
@@ -258,7 +262,7 @@ def _is_git_lfs_pointer(path):
         return False
 
 
-def get_version_string(run_time=None, include_software_versions=True):
+def get_version_string(run_time=None, include_software_versions=True, context=None):
     """
     Print the versions of the dependencies.
 
@@ -276,6 +280,7 @@ def get_version_string(run_time=None, include_software_versions=True):
         String containing the versions of the dependencies.
 
     """
+    context = context or run_context.RunContext.from_environment()
     simtel_version = None
     corsika_version = None
     simtel_exe = None
@@ -289,18 +294,18 @@ def get_version_string(run_time=None, include_software_versions=True):
             return None
 
     if include_software_versions:
-        simtel_version = get_sim_telarray_version(run_time)
-        corsika_version = get_corsika_version(run_time)
-        simtel_exe = _safe_get_executable(lambda: settings.config.sim_telarray_exe)
-        corsika_exe = _safe_get_executable(lambda: settings.config.corsika_exe)
+        simtel_version = get_sim_telarray_version(run_time, context)
+        corsika_version = get_corsika_version(run_time, context)
+        simtel_exe = _safe_get_executable(lambda: context.software.sim_telarray_exe)
+        corsika_exe = _safe_get_executable(lambda: context.software.corsika_exe)
 
     build_options = None
     if include_software_versions:
-        build_options = get_build_options(run_time)
+        build_options = get_build_options(run_time, context)
 
     return (
         f"simtools version: {__version__}\n"
-        f"Model source: {_get_model_source_info()}\n"
+        f"Model source: {_get_model_source_info(context)}\n"
         f"sim_telarray version: {simtel_version}\n"
         f"sim_telarray exe: {simtel_exe if simtel_exe else 'None'}\n"
         f"CORSIKA version: {corsika_version}\n"
@@ -310,7 +315,7 @@ def get_version_string(run_time=None, include_software_versions=True):
     )
 
 
-def get_dependency_manifest(run_time=None):
+def get_dependency_manifest(run_time=None, context=None):
     """Return the installed dependency manifest or a discovered fallback.
 
     Parameters
@@ -330,13 +335,14 @@ def get_dependency_manifest(run_time=None):
     ValueError
         If the manifest contains invalid JSON.
     """
+    context = context or run_context.RunContext.from_environment()
     manifest_path = Path(os.getenv("SIMTOOLS_DEPENDENCY_MANIFEST", str(DEPENDENCY_MANIFEST_PATH)))
     try:
         return _read_dependency_manifest(manifest_path, run_time)
     except FileNotFoundError:
         if run_time is not None:
             raise
-    return build_dependency_manifest()
+    return build_dependency_manifest(context)
 
 
 def _read_dependency_manifest(manifest_path, run_time=None):
@@ -360,7 +366,7 @@ def _read_dependency_manifest(manifest_path, run_time=None):
         raise ValueError("Invalid dependency manifest in container.") from exc
 
 
-def build_dependency_manifest():
+def build_dependency_manifest(context=None):
     """Build a deterministic manifest from the active runtime environment.
 
     Returns
@@ -368,8 +374,9 @@ def build_dependency_manifest():
     dict
         Discovered dependency manifest.
     """
+    context = context or run_context.RunContext.from_environment()
     try:
-        build_options = get_build_options()
+        build_options = get_build_options(context=context)
     except FileNotFoundError, TypeError, ValueError:
         build_options = {}
     return {
@@ -409,6 +416,8 @@ def _sanitize_build_options(build_options):
 def get_direct_python_dependency_versions():
     """Return installed versions of direct simtools Python dependencies.
 
+    Includes optional dependencies (extras) that are installed.
+
     Returns
     -------
     dict
@@ -423,9 +432,6 @@ def get_direct_python_dependency_versions():
         try:
             parsed_requirement = Requirement(requirement)
         except InvalidRequirement:
-            continue
-        marker = parsed_requirement.marker
-        if marker is not None and "extra" in str(marker) and not marker.evaluate({"extra": ""}):
             continue
         name = parsed_requirement.name.lower().replace("_", "-")
         installed_version = _distribution_version(name)
@@ -474,13 +480,13 @@ def canonical_manifest_bytes(manifest):
     ).encode("utf-8")
 
 
-def get_dependency_manifest_digest(run_time=None):
+def get_dependency_manifest_digest(run_time=None, context=None):
     """Return the SHA-256 digest of the dependency manifest."""
-    manifest = get_dependency_manifest(run_time)
+    manifest = get_dependency_manifest(run_time, context)
     return hashlib.sha256(canonical_manifest_bytes(manifest)).hexdigest()
 
 
-def write_dependency_manifest(output_file):
+def write_dependency_manifest(output_file, context=None):
     """Write the active dependency manifest and its SHA-256 file.
 
     Parameters
@@ -488,7 +494,7 @@ def write_dependency_manifest(output_file):
     output_file : str or Path
         JSON manifest output path.
     """
-    _write_manifest(build_dependency_manifest(), output_file)
+    _write_manifest(build_dependency_manifest(context), output_file)
 
 
 def write_development_dependency_manifest(output_file, project_file, build_option_files):
@@ -530,9 +536,12 @@ def write_development_dependency_manifest(output_file, project_file, build_optio
 
 
 def _project_dependency_versions(project_file):
-    """Return installed versions of direct dependencies declared by a project file."""
+    """Return installed versions of direct (and installed optional) dependencies of a project."""
     with Path(project_file).open("rb") as file:
-        requirements = tomllib.load(file)["project"]["dependencies"]
+        project = tomllib.load(file)["project"]
+    requirements = list(project["dependencies"])
+    for optional in project.get("optional-dependencies", {}).values():
+        requirements.extend(optional)
     versions = {}
     for requirement in requirements:
         match = re.match(r"^([A-Za-z0-9_.-]+)", requirement)
@@ -568,9 +577,9 @@ def _write_manifest(manifest, output_file):
     )
 
 
-def get_dependency_summary(run_time=None):
+def get_dependency_summary(run_time=None, context=None):
     """Return a compact human-readable dependency summary."""
-    manifest = get_dependency_manifest(run_time)
+    manifest = get_dependency_manifest(run_time, context)
     build_options = manifest.get("build_options", {})
     simtools_info = manifest.get("simtools", {})
     runtime = manifest.get("runtime", {})
@@ -585,9 +594,9 @@ def get_dependency_summary(run_time=None):
     )
 
 
-def get_dependency_metadata():
+def get_dependency_metadata(context=None):
     """Return compact scalar provenance values for simulation metadata."""
-    manifest = get_dependency_manifest()
+    manifest = get_dependency_manifest(context=context)
     values = {
         "simtools_dependency_manifest_sha256": hashlib.sha256(
             canonical_manifest_bytes(manifest)
@@ -598,7 +607,7 @@ def get_dependency_metadata():
     return {key: value for key, value in values.items() if value is not None}
 
 
-def get_software_version(software):
+def get_software_version(software, context=None):
     """
     Return the version of the specified software package.
 
@@ -617,21 +626,22 @@ def get_software_version(software):
 
     try:
         version_call = f"get_{software.lower()}_version"
-        return globals()[version_call]()
+        return globals()[version_call](context=context)
     except KeyError as exc:
         raise ValueError(f"Unknown software: {software}") from exc
 
 
-def _get_model_source_info():
+def _get_model_source_info(context=None):
     """Return the configured model-source selection for provenance output."""
-    model_reader = getattr(settings.config, "model_reader", None)
+    context = context or run_context.RunContext.from_environment()
+    model_reader = context.model_reader
     source_config = getattr(model_reader, "source_config", None)
     if isinstance(source_config, dict):
         return dict(source_config)
     return None
 
 
-def get_sim_telarray_version(run_time=None):
+def get_sim_telarray_version(run_time=None, context=None):
     """
     Get the version of the sim_telarray package using 'sim_telarray --version'.
 
@@ -647,13 +657,14 @@ def get_sim_telarray_version(run_time=None):
     str
         Version of the sim_telarray package.
     """
-    if settings.config.sim_telarray_exe is None:
+    context = context or run_context.RunContext.from_environment()
+    if context.software.sim_telarray_exe is None:
         _logger.warning("sim_telarray environment not configured.")
         return None
     if run_time is None:
-        command = [str(settings.config.sim_telarray_exe), "--version"]
+        command = [str(context.software.sim_telarray_exe), "--version"]
     else:
-        command = [*run_time, str(settings.config.sim_telarray_exe), "--version"]
+        command = [*run_time, str(context.software.sim_telarray_exe), "--version"]
 
     _logger.debug(f"Running command: {command}")
     result = subprocess.run(command, capture_output=True, text=True, check=False)
@@ -668,7 +679,7 @@ def get_sim_telarray_version(run_time=None):
     raise ValueError(f"sim_telarray release not found in {result.stdout}")
 
 
-def get_corsika_version(run_time=None):
+def get_corsika_version(run_time=None, context=None):
     """
     Get the version of the CORSIKA package.
 
@@ -684,14 +695,15 @@ def get_corsika_version(run_time=None):
     str
         Version of the CORSIKA package.
     """
-    if settings.config.corsika_exe is None:
+    context = context or run_context.RunContext.from_environment()
+    if context.software.corsika_exe is None:
         _logger.warning("CORSIKA environment not configured.")
         return None
 
     if run_time is None:
-        command = [str(settings.config.corsika_exe)]
+        command = [str(context.software.corsika_exe)]
     else:
-        command = [*run_time, str(settings.config.corsika_exe)]
+        command = [*run_time, str(context.software.corsika_exe)]
 
     process = subprocess.Popen(  # pylint: disable=consider-using-with
         command,
@@ -716,7 +728,7 @@ def get_corsika_version(run_time=None):
     if version and re.match(r"\d+\.\d+", version):
         return version
     try:
-        build_opts = get_build_options(run_time)
+        build_opts = get_build_options(run_time, context)
     except FileNotFoundError, TypeError, ValueError:
         _logger.warning("Could not get CORSIKA version.")
         return None
@@ -724,7 +736,7 @@ def get_corsika_version(run_time=None):
     return build_opts.get("corsika_build_id")
 
 
-def get_build_options(run_time=None):
+def get_build_options(run_time=None, context=None):
     """
     Return CORSIKA / sim_telarray config and build options.
 
@@ -745,9 +757,10 @@ def get_build_options(run_time=None):
     dict
         CORSIKA / sim_telarray build options.
     """
+    context = context or run_context.RunContext.from_environment()
     build_opts = {}
     for package in ["corsika", "sim_telarray"]:
-        path = _get_package_path(package)
+        path = _get_package_path(package, context)
         if not path:
             continue
         try:
@@ -777,9 +790,10 @@ def _normalize_build_options(build_options):
     return normalized
 
 
-def _get_package_path(package):
+def _get_package_path(package, context=None):
     """Get the package path from settings or environment variables."""
-    path = getattr(settings.config, f"{package}_path")
+    context = context or run_context.RunContext.from_environment()
+    path = getattr(context.software, f"{package}_path")
     if path is None:
         path = gen.load_environment_variables().get(f"{package}_path")
     return Path(path) if path else None
@@ -806,7 +820,7 @@ def _get_build_options_from_file(build_opts_path, run_time=None):
         raise ValueError(f"Error parsing build_opts.yml from container: {exc}") from exc
 
 
-def export_build_info(output_file, run_time=None):
+def export_build_info(output_file, run_time=None, context=None):
     """
     Export build and version information to a file.
 
@@ -818,11 +832,11 @@ def export_build_info(output_file, run_time=None):
         Runtime environment command (e.g., Docker).
     """
     try:
-        build_options = get_build_options(run_time)
+        build_options = get_build_options(run_time, context)
     except FileNotFoundError:
         build_options = {}
-    manifest = get_dependency_manifest(run_time)
-    model_source = _get_model_source_info()
+    manifest = get_dependency_manifest(run_time, context)
+    model_source = _get_model_source_info(context)
     build_info = {
         "schema_version": DEPENDENCY_MANIFEST_SCHEMA_VERSION,
         "dependency_manifest": manifest,

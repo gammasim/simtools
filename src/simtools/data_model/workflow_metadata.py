@@ -4,9 +4,9 @@ import logging
 from copy import deepcopy
 from pathlib import Path
 
-import simtools.utils.general as gen
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler
+from simtools.utils import value_conversion
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ def build_workflow_activity_metadata(
     workflow_end,
     runtime_environment,
     workflow_context,
+    context=None,
 ):
     """Build workflow activity metadata from workflow execution context.
 
@@ -50,7 +51,7 @@ def build_workflow_activity_metadata(
     metadata_args["site"] = workflow_context.get("site")
     metadata_args["instrument"] = workflow_context.get("instrument")
 
-    collector = MetadataCollector(metadata_args, clean_meta=False)
+    collector = MetadataCollector(metadata_args, clean_meta=False, context=context)
     activity = collector.get_top_level_metadata().get("cta", {}).get("activity", {})
     if runtime_environment is not None:
         activity["runtime_environment"] = deepcopy(runtime_environment)
@@ -84,7 +85,7 @@ def update_model_parameter_metadata_file(
         return
 
     metadata = ascii_handler.collect_data_from_file(metadata_path)
-    metadata = gen.change_dict_keys_case(metadata, True)
+    metadata = value_conversion.change_dict_keys_case(metadata, True)
     cta_meta = metadata.get("cta", {})
     cta_meta["activity"] = deepcopy(workflow_activity)
 

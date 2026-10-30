@@ -121,49 +121,6 @@ def test_get_trace_data_uses_high_gain_and_shared_windows():
 
 
 # ============================================================================
-# find_signal_peaks tests - parametrized
-# ============================================================================
-@pytest.mark.parametrize(
-    ("waveform_desc", "expected_peaks", "prominence"),
-    [
-        ("single_peak", [10], None),
-        ("multiple_peaks", [5, 15, 25], None),
-        ("negative_peak", [4], None),
-        ("flat_trace", [0], None),
-        ("prominence_filter", [3], 1.5),
-    ],
-)
-def test_find_signal_peaks(waveform_desc, expected_peaks, prominence):
-    if waveform_desc == "single_peak":
-        waveform = np.zeros(20)
-        waveform[10] = 5
-    elif waveform_desc == "multiple_peaks":
-        waveform = np.zeros(30)
-        waveform[[5, 15, 25]] = [3, 7, 2]
-    elif waveform_desc == "negative_peak":
-        waveform = np.zeros(10)
-        waveform[4] = -5
-    elif waveform_desc == "flat_trace":
-        waveform = np.full(8, 2.0)
-    elif waveform_desc == "prominence_filter":
-        waveform = np.array([0, 1, 0, 2, 0, 1, 0])
-
-    if prominence:
-        peaks = trace.find_signal_peaks(waveform, prominence=prominence)
-    else:
-        peaks = trace.find_signal_peaks(waveform)
-
-    assert set(peaks) == set(expected_peaks)
-
-
-def test_find_signal_peaks_no_peaks_returns_max():
-    waveform = np.array([1, 1, 1, 1])
-    peaks = trace.find_signal_peaks(waveform)
-    assert peaks.size == 1
-    assert peaks[0] == 0
-
-
-# ============================================================================
 # get_time_axis tests - parametrized
 # ============================================================================
 @pytest.mark.parametrize(

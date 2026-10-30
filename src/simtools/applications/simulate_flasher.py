@@ -4,11 +4,14 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.configuration.argument_helpers import scientific_int, telescope
+from simtools.configuration.argument_helpers import scientific_int
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
-from simtools.utils import general
+from simtools.utils import value_conversion
+
+_LIGHT_SOURCE_GROUP = "light source"
+_TARGET_GROUP = "target"
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -17,45 +20,29 @@ _ARGUMENTS = (
         type=str,
         choices=["direct_injection", "full_simulation"],
         required=True,
-        default="direct_injection",
     ),
     cli.ArgumentDefinition(
         "light_source",
-        exclusive_group="group",
+        exclusive_group=_LIGHT_SOURCE_GROUP,
         exclusive_group_required=True,
         help="Flasher device associated with a specific telescope, i.e. MSFx-FlashCam",
         type=str,
     ),
     cli.ArgumentDefinition(
         "light_source_type",
-        exclusive_group="group",
+        exclusive_group=_LIGHT_SOURCE_GROUP,
         exclusive_group_required=True,
         help="Type of the light source (e.g. flat_fielding)",
         type=str,
     ),
-    cli.ArgumentDefinition(
-        "telescopes",
-        exclusive_group="target group",
-        exclusive_group_required=True,
-        help="One or more telescopes (e.g. LSTN-01, MSTN-04, SSTS-04)",
-        type=telescope,
-        nargs="+",
-    ),
-    cli.ArgumentDefinition(
-        "array_layout_name",
-        exclusive_group="target group",
-        exclusive_group_required=True,
-        help="Array layout name(s) (e.g. alpha, subsystem_msts)",
-        nargs="+",
-        type=str,
-    ),
+    cli.TELESCOPES(exclusive_group=_TARGET_GROUP, exclusive_group_required=True),
+    cli.ARRAY_LAYOUT_NAME(exclusive_group=_TARGET_GROUP, exclusive_group_required=True),
     cli.ArgumentDefinition(
         "number_of_events",
         help="Number of flasher events to simulate",
         type=int,
         default=1,
         nargs="+",
-        required=False,
     ),
     cli.ArgumentDefinition(
         "flasher_photons",
@@ -65,7 +52,6 @@ _ARGUMENTS = (
         ),
         type=scientific_int,
         nargs="+",
-        required=False,
     ),
 )
 
@@ -82,8 +68,9 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        cli.RAY_TRACING_BACKEND,
     ),
-    validate_simulation_dependencies=True,
+    needs=("model", "sim_telarray", "corsika"),
 )
 
 
@@ -107,10 +94,12 @@ def main():
     if app_context.args["run_mode"] == "full_simulation":
         telescopes = (
             get_array_elements_for_layout(
-                app_context.args["array_layout_name"], model_reader=app_context.model_reader
+                app_context.args["array_layout_name"],
+                model_reader=app_context.model_reader,
+                context=app_context,
             )
             if app_context.args.get("array_layout_name") is not None
-            else general.ensure_list(app_context.args["telescopes"])
+            else value_conversion.ensure_list(app_context.args["telescopes"])
         )
         for tel in telescopes:
             light_source = SimulatorLightEmission(
@@ -118,11 +107,14 @@ def main():
                 telescope=tel,
                 label=app_context.args.get("label"),
                 model_reader=app_context.model_reader,
+                context=app_context,
             )
             light_source.simulate()
             light_source.validate_simulations()
     elif app_context.args["run_mode"] == "direct_injection":
-        Simulator.simulate_direct_injection_sequence(label=app_context.args.get("label"))
+        Simulator.simulate_direct_injection_sequence(
+            label=app_context.args.get("label"), context=app_context
+        )
     else:
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 

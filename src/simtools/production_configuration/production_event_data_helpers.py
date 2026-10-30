@@ -1,88 +1,17 @@
 """Shared helpers for production workflows based on reduced event-data files."""
 
-import re
 from collections import Counter, defaultdict
-from pathlib import Path
 
 import numpy as np
 
-from simtools.layout.array_layout_utils import (
-    get_array_elements_from_model_repository,
-    resolve_array_layout_name,
-)
+from simtools.layout.array_layout_sources import get_array_elements_from_model_repository
+from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.utils import names
-from simtools.utils.general import get_uuid
 from simtools.utils.names import normalize_array_element_identifier_container
 
 
-def get_production_directory_name(production_pattern, existing_names=None):
-    """
-    Generate a readable, filesystem-safe production directory name.
-
-    Parameters
-    ----------
-    production_pattern : str
-        Glob pattern identifying one production input.
-    existing_names : set[str] or None
-        Existing directory names already assigned in this run.
-
-    Returns
-    -------
-    str
-        Safe directory name.
-    """
-
-    def _sanitize(name):
-        name = re.sub(r"[^A-Za-z0-9]+", "_", name)
-        return re.sub(r"_+", "_", name).strip("_")
-
-    pattern_path = Path(production_pattern)
-    stem_name = _sanitize(pattern_path.stem)
-    parent_name = _sanitize(pattern_path.parent.name) if pattern_path.parent.name != "." else ""
-    readable_name = stem_name or parent_name or "production"
-    base_name = f"production_{readable_name}"
-
-    if existing_names is None:
-        return base_name
-    if base_name not in existing_names:
-        return base_name
-
-    candidate_name = f"{base_name}_{get_uuid()}"
-    while candidate_name in existing_names:
-        candidate_name = f"{base_name}_{get_uuid()}"
-    return candidate_name
-
-
-def build_production_subdirectories(production_patterns, output_dir):
-    """
-    Build and create per-production output subdirectories when needed.
-
-    Parameters
-    ----------
-    production_patterns : list[str]
-        Ordered production patterns processed by the workflow.
-    output_dir : pathlib.Path
-        Root output directory.
-
-    Returns
-    -------
-    dict[str, pathlib.Path]
-        Mapping of production pattern to output subdirectory.
-    """
-    production_subdirs = {}
-    used_subdir_names = set()
-    for production_pattern in production_patterns:
-        subdir_name = get_production_directory_name(production_pattern, used_subdir_names)
-        used_subdir_names.add(subdir_name)
-        output_subdir = output_dir / subdir_name
-        Path(output_subdir).mkdir(parents=True, exist_ok=True)
-        production_subdirs[production_pattern] = output_subdir
-
-    return production_subdirs
-
-
-def resolve_telescope_configs(args_dict):
+def resolve_telescope_configs(args_dict, context=None):
     """
     Resolve telescope configurations from supported input options.
 
@@ -102,37 +31,27 @@ def resolve_telescope_configs(args_dict):
         If no supported telescope selector is provided.
     """
     if args_dict.get("array_layout_name"):
-        model_version = _single_model_version(args_dict.get("model_version"))
-        layouts = resolve_array_layout_name(
-            args_dict["array_layout_name"],
-            model_version,
-        )
-        if not isinstance(layouts, list):
-            layouts = [layouts]
+        model_version = args_dict.get("model_version")
+        if isinstance(model_version, list):
+            if len(model_version) != 1:
+                raise ValueError(
+                    "Telescope layout resolution requires exactly one model version, "
+                    f"got {model_version}."
+                )
+            model_version = model_version[0]
+        layouts = resolve_array_layout_name(args_dict["array_layout_name"], model_version)
         return get_array_elements_from_model_repository(
-            layouts,
+            layouts if isinstance(layouts, list) else [layouts],
             args_dict.get("site"),
             model_version,
+            context=context,
         )
     if args_dict.get("array_element_list"):
         return {"array_element_list": args_dict["array_element_list"]}
-
     raise ValueError(
         "No telescope configuration provided. Use one of --array_layout_name "
         "or --array_element_list."
     )
-
-
-def _single_model_version(model_version):
-    """Return the scalar model version required for layout resolution."""
-    if isinstance(model_version, list):
-        if len(model_version) != 1:
-            raise ValueError(
-                "Telescope layout resolution requires exactly one model version, "
-                f"got {model_version}."
-            )
-        return model_version[0]
-    return model_version
 
 
 def normalize_telescope_configs(telescope_configs):
@@ -149,20 +68,17 @@ def normalize_telescope_configs(telescope_configs):
     list[dict]
         List of dictionaries with ``array_name`` and normalized ``telescope_ids``.
     """
-    if isinstance(telescope_configs, dict):
-        return [
-            {
-                "array_name": array_name,
-                "telescope_ids": normalize_array_element_identifier_container(telescope_ids_raw),
-            }
-            for array_name, telescope_ids_raw in telescope_configs.items()
-        ]
+    pairs = (
+        telescope_configs.items()
+        if isinstance(telescope_configs, dict)
+        else [(config["array_name"], config["telescope_ids"]) for config in telescope_configs]
+    )
     return [
         {
-            "array_name": config["array_name"],
-            "telescope_ids": normalize_array_element_identifier_container(config["telescope_ids"]),
+            "array_name": array_name,
+            "telescope_ids": normalize_array_element_identifier_container(telescope_ids),
         }
-        for config in telescope_configs
+        for array_name, telescope_ids in pairs
     ]
 
 
@@ -200,35 +116,38 @@ def accumulate_histograms_by_telescope_config(
         Skip malformed event-data files instead of aborting the run.
     fill_efficiency_histogram : bool, optional
         Whether to finalize with efficiency histograms enabled.
+    collect_trigger_topology : bool, optional
+        Whether to also collect trigger topology summaries.
     minimum_triggered_telescopes : int, optional
         Minimum number of triggered telescopes within each telescope configuration.
 
     Returns
     -------
-    list[tuple[dict, EventDataHistograms]]
-        One finalized histogram accumulator per telescope configuration.
+    list[tuple]
+        One finalized ``(config, histograms)`` pair per telescope configuration, with
+        a trigger-topology accumulator appended when ``collect_trigger_topology`` is set.
     """
+    histogram_options = {
+        "energy_bins_per_decade": energy_bins_per_decade,
+        "angular_distance_bin_count": angular_distance_bin_count,
+        "angular_distance_bin_width": angular_distance_bin_width,
+        "core_distance_bin_width": core_distance_bin_width,
+    }
     event_source = EventDataHistograms(
         file_path,
-        energy_bins_per_decade=energy_bins_per_decade,
-        angular_distance_bin_count=angular_distance_bin_count,
-        angular_distance_bin_width=angular_distance_bin_width,
-        core_distance_bin_width=core_distance_bin_width,
         skip_invalid_event_data_files=skip_invalid_event_data_files,
         require_triggered_data=True,
+        **histogram_options,
     )
     accumulators = [
         EventDataHistograms.create_accumulator(
             array_name=config["array_name"],
             telescope_list=config["telescope_ids"],
-            energy_bins_per_decade=energy_bins_per_decade,
-            angular_distance_bin_count=angular_distance_bin_count,
-            angular_distance_bin_width=angular_distance_bin_width,
-            core_distance_bin_width=core_distance_bin_width,
+            **histogram_options,
         )
         for config in telescope_configs
     ]
-    topology_accumulators = (
+    topology = (
         [_initialize_trigger_topology_accumulator() for _ in telescope_configs]
         if collect_trigger_topology
         else None
@@ -236,40 +155,34 @@ def accumulate_histograms_by_telescope_config(
 
     for reader, values in event_source.iter_event_data():
         file_info_table, shower_data, triggered_shower, triggered_data = values
-        for config_index, (config, histograms) in enumerate(zip(telescope_configs, accumulators)):
+        for index, (config, histograms) in enumerate(zip(telescope_configs, accumulators)):
             if config["telescope_ids"]:
-                filtered_triggered_data, filtered_triggered_shower = reader.filter_by_telescopes(
+                filtered_data, filtered_shower = reader.filter_by_telescopes(
                     triggered_data,
                     triggered_shower,
                     telescope_list=config["telescope_ids"],
                     minimum_triggered_telescopes=minimum_triggered_telescopes,
                 )
             else:
-                filtered_triggered_data = triggered_data
-                filtered_triggered_shower = triggered_shower
-            histograms.accumulate(
-                file_info_table,
-                shower_data,
-                filtered_triggered_shower,
-                filtered_triggered_data,
-            )
+                filtered_data, filtered_shower = triggered_data, triggered_shower
+            histograms.accumulate(file_info_table, shower_data, filtered_shower, filtered_data)
             if collect_trigger_topology:
                 _accumulate_trigger_topology(
-                    filtered_triggered_shower,
-                    filtered_triggered_data,
-                    topology_accumulators[config_index],
+                    filtered_shower,
+                    filtered_data,
+                    topology[index],
                     allowed_telescopes=config["telescope_ids"],
                 )
 
     for histograms in accumulators:
         histograms.finalize(fill_efficiency_histogram=fill_efficiency_histogram)
     if collect_trigger_topology:
-        return list(zip(telescope_configs, accumulators, topology_accumulators))
+        return list(zip(telescope_configs, accumulators, topology))
     return list(zip(telescope_configs, accumulators))
 
 
 def _initialize_trigger_topology_accumulator():
-    """Initialize counters and quantity buffers for trigger topology summaries."""
+    """Return empty counters and quantity buffers for trigger topology summaries."""
     return {
         "trigger_multiplicity": Counter(),
         "trigger_combinations": Counter(),
@@ -289,39 +202,29 @@ def _accumulate_trigger_topology(
     """Accumulate trigger topology counters and per-subset triggered quantities."""
     if triggered_shower_data is None or triggered_data is None:
         return
-
-    allowed_telescope_set = set(allowed_telescopes or [])
+    allowed = set(allowed_telescopes or [])
     energies = np.asarray(triggered_shower_data.simulated_energy)
     core_distances = np.asarray(triggered_shower_data.core_distance_shower)
     angular_distances = np.asarray(triggered_shower_data.angular_distance)
     for event_index, telescope_list in enumerate(triggered_data.telescope_list):
-        telescopes = _normalize_trigger_telescopes(telescope_list, allowed_telescope_set)
+        telescopes = _normalize_trigger_telescopes(telescope_list, allowed)
         if not telescopes:
             continue
-        multiplicity = len(telescopes)
-        accumulator["trigger_multiplicity"][multiplicity] += 1
+        accumulator["trigger_multiplicity"][len(telescopes)] += 1
         accumulator["trigger_combinations"][",".join(telescopes)] += 1
         for telescope in set(telescopes):
             accumulator["telescope_participation"][telescope] += 1
-
-        for subset_name, subset_multiplicity in _subset_counts_for_trigger(telescopes).items():
-            accumulator["subset_multiplicity"][subset_name][subset_multiplicity] += 1
-            accumulator["subset_values"]["energy"][subset_name].append(float(energies[event_index]))
-            accumulator["subset_values"]["core_distance"][subset_name].append(
-                float(core_distances[event_index])
-            )
-            accumulator["subset_values"]["angular_distance"][subset_name].append(
-                float(angular_distances[event_index])
-            )
+        for subset_name, multiplicity in _subset_counts_for_trigger(telescopes).items():
+            accumulator["subset_multiplicity"][subset_name][multiplicity] += 1
+            values = accumulator["subset_values"]
+            values["energy"][subset_name].append(float(energies[event_index]))
+            values["core_distance"][subset_name].append(float(core_distances[event_index]))
+            values["angular_distance"][subset_name].append(float(angular_distances[event_index]))
 
 
 def _subset_counts_for_trigger(telescopes):
     """Return per-type and special subset multiplicities for one trigger."""
-    type_counts = Counter()
-    for telescope in telescopes:
-        tel_type = names.get_array_element_type_from_name(telescope)
-        type_counts[tel_type] += 1
-
+    type_counts = Counter(names.get_array_element_type_from_name(tel) for tel in telescopes)
     subset_counts = {tel_type: count for tel_type, count in type_counts.items() if count >= 2}
     if len(telescopes) == 1:
         subset_counts["single_telescope"] = 1
@@ -330,17 +233,16 @@ def _subset_counts_for_trigger(telescopes):
     return subset_counts
 
 
-def _normalize_trigger_telescopes(telescope_list, allowed_telescope_set=None):
-    """Return sorted valid telescope names for topology summaries."""
-    allowed_telescope_set = allowed_telescope_set or set()
+def _normalize_trigger_telescopes(telescope_list, allowed_telescopes=None):
+    """Return sorted valid telescope names, restricted to ``allowed_telescopes`` if given."""
     normalized = []
     for telescope in telescope_list:
-        telescope_name = str(telescope)
-        if allowed_telescope_set and telescope_name not in allowed_telescope_set:
+        name = str(telescope)
+        if allowed_telescopes and name not in allowed_telescopes:
             continue
         try:
-            names.get_array_element_type_from_name(telescope_name)
+            names.get_array_element_type_from_name(name)
         except ValueError:
             continue
-        normalized.append(telescope_name)
+        normalized.append(name)
     return tuple(sorted(normalized))

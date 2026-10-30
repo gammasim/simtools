@@ -3,15 +3,11 @@
 import logging
 from pathlib import Path
 
-from simtools.application.model_reader import (
-    create_model_reader_from_source_config,
-    require_model_reader,
-)
+from simtools.context import RunContext
 from simtools.job_execution.execution import map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
-from simtools.settings import config as runtime_config
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
-from simtools.utils import general
+from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -58,7 +54,8 @@ def _simulate_illuminator_telescope_pair(job_spec):
     telescope = job_spec["telescope"]
     config = job_spec["config"].copy()
     try:
-        model_reader = _get_worker_model_reader(job_spec)
+        context = RunContext.from_spec(job_spec["context"])
+        model_reader = context.model_reader
 
         # Update configuration for this specific pair
         config["telescope"] = telescope
@@ -72,6 +69,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
             telescope=telescope,
             label=label,
             model_reader=model_reader,
+            context=context,
         )
 
         simulator.simulate()
@@ -96,19 +94,6 @@ def _simulate_illuminator_telescope_pair(job_spec):
             "success": False,
             "error": str(exc),
         }
-
-
-def _get_worker_model_reader(job_spec):
-    """Select the model reader in a worker without relying on global state."""
-    source_config = job_spec.get("model_source")
-    configured_reader = runtime_config.model_reader
-    if configured_reader is not None:
-        configured_source = getattr(configured_reader, "source_config", None)
-        if source_config is None or configured_source == source_config:
-            return configured_reader
-    if source_config:
-        return create_model_reader_from_source_config(source_config)
-    return require_model_reader()
 
 
 class MultiIlluminatorSimulator:
@@ -148,14 +133,21 @@ class MultiIlluminatorSimulator:
         backend="local",
         backend_config=None,
         model_reader=None,
+        context=None,
     ):
         """Initialize the multi-illuminator simulator."""
         self._logger = logging.getLogger(__name__)
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
+        if self.model_reader is None:
+            raise ValueError("A simulation model reader is required for illuminator simulations.")
+        self.context = self.context.replace(model_reader=self.model_reader)
 
         # Load visibility table from provided data or from the site model
         if visibility_data is None:
-            visibility_data = self._load_visibility_from_site_model(config, self.model_reader)
+            visibility_data = self._load_visibility_from_site_model(
+                config, self.model_reader, context=self.context
+            )
 
         self.visibility = IlluminatorTelescopeVisibility(visibility_data)
 
@@ -169,7 +161,7 @@ class MultiIlluminatorSimulator:
         self._logger.info("Using execution backend %s", self.backend)
 
     @staticmethod
-    def _load_visibility_from_site_model(config, model_reader=None):
+    def _load_visibility_from_site_model(config, model_reader=None, *, context):
         """
         Load visibility data from the model repository.
 
@@ -187,7 +179,10 @@ class MultiIlluminatorSimulator:
         from simtools.model.site_model import SiteModel  # pylint: disable=import-outside-toplevel
 
         site_model = SiteModel(
-            site=config["site"], model_version=config["model_version"], model_reader=model_reader
+            site=config["site"],
+            model_version=config["model_version"],
+            model_reader=model_reader,
+            context=context,
         )
         return site_model.get_parameter_value("illuminator_telescope_visibility")
 
@@ -235,9 +230,9 @@ class MultiIlluminatorSimulator:
 
         # Determine wavelengths: explicit param > config > model
         if wavelengths is not None:
-            wavelengths = general.ensure_list(wavelengths)
+            wavelengths = value_conversion.ensure_list(wavelengths)
         elif "wavelength" in self.base_config and self.base_config["wavelength"] is not None:
-            wavelengths = general.ensure_list(self.base_config["wavelength"])
+            wavelengths = value_conversion.ensure_list(self.base_config["wavelength"])
         else:
             # Fetch from model using a sample pair
             self._logger.info("No wavelength specified, fetching from model")
@@ -248,7 +243,7 @@ class MultiIlluminatorSimulator:
             config_for_query["light_source"] = sample_illuminator
 
             wavelengths = SimulatorLightEmission.get_available_wavelengths_from_config(
-                config_for_query, model_reader=self.model_reader
+                config_for_query, model_reader=self.model_reader, context=self.context
             )
             self._logger.info(
                 f"Using {len(wavelengths)} wavelengths from model: "
@@ -278,7 +273,7 @@ class MultiIlluminatorSimulator:
                     "site": self.base_config.get("site"),
                     "label": self.label,
                     "config": config_with_wl,
-                    "model_source": model_source,
+                    "context": self.context.to_spec(),
                 }
                 job_specs.append(job_spec)
 
@@ -294,6 +289,7 @@ class MultiIlluminatorSimulator:
             backend=self.backend,
             max_workers=self.max_workers,
             backend_config=self.backend_config,
+            context=self.context,
         )
 
         # Log summary
@@ -305,73 +301,3 @@ class MultiIlluminatorSimulator:
         )
 
         return self.results
-
-    def get_summary(self):
-        """
-        Get a summary of simulation results.
-
-        Returns
-        -------
-        dict
-            Summary containing:
-            - total: int - total number of pairs simulated
-            - successful: int - number of successful simulations
-            - failed: int - number of failed simulations
-            - success_rate: float - fraction of successful simulations
-
-        Raises
-        ------
-        RuntimeError
-            If simulations have not been run yet.
-        """
-        if self.results is None:
-            raise RuntimeError(_NO_RESULTS_MSG)
-
-        total = len(self.results)
-        successful = sum(1 for r in self.results if r["success"])
-        failed = total - successful
-
-        return {
-            "total": total,
-            "successful": successful,
-            "failed": failed,
-            "success_rate": successful / total if total > 0 else 0.0,
-        }
-
-    def get_failed_pairs(self):
-        """
-        Get list of illuminator-telescope pairs that failed simulation.
-
-        Returns
-        -------
-        list of tuple
-            List of (illuminator, telescope) tuples for failed simulations.
-
-        Raises
-        ------
-        RuntimeError
-            If simulations have not been run yet.
-        """
-        if self.results is None:
-            raise RuntimeError(_NO_RESULTS_MSG)
-
-        return [(r["illuminator"], r["telescope"]) for r in self.results if not r["success"]]
-
-    def get_failed_results(self):
-        """
-        Get detailed results for failed simulations.
-
-        Returns
-        -------
-        list of dict
-            List of result dictionaries for failed simulations only.
-
-        Raises
-        ------
-        RuntimeError
-            If simulations have not been run yet.
-        """
-        if self.results is None:
-            raise RuntimeError(_NO_RESULTS_MSG)
-
-        return [r for r in self.results if not r["success"]]

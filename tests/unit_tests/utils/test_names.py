@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
+from simtools.data_model import parameter_catalog as catalog
 from simtools.utils import names
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -19,13 +20,8 @@ def invalid_name():
 
 
 def test_site_parameters():
-    assert isinstance(names.site_parameters(), dict)
-    assert "altitude" in names.site_parameters()
-
-
-def test_telescope_parameters():
-    assert isinstance(names.telescope_parameters(), dict)
-    assert "focal_length" in names.telescope_parameters()
+    assert isinstance(catalog.site_parameters(), dict)
+    assert "altitude" in catalog.site_parameters()
 
 
 def test_get_list_of_array_element_types():
@@ -61,27 +57,27 @@ def test_get_list_of_array_element_types():
 
 
 def test_instrument_class_key_to_collection():
-    assert "telescopes" == names.instrument_class_key_to_collection("Telescope")
-    assert "calibration_devices" == names.instrument_class_key_to_collection("Calibration")
-    assert "sites" == names.instrument_class_key_to_collection("Site")
-    assert "configuration_sim_telarray" == names.instrument_class_key_to_collection(
+    assert "telescopes" == catalog.instrument_class_key_to_collection("Telescope")
+    assert "calibration_devices" == catalog.instrument_class_key_to_collection("Calibration")
+    assert "sites" == catalog.instrument_class_key_to_collection("Site")
+    assert "configuration_sim_telarray" == catalog.instrument_class_key_to_collection(
         "configuration_sim_telarray"
     )
-    assert "configuration_corsika" == names.instrument_class_key_to_collection(
+    assert "configuration_corsika" == catalog.instrument_class_key_to_collection(
         "configuration_corsika"
     )
 
     with pytest.raises(ValueError, match=r"^Class Not_a_class not found"):
-        names.instrument_class_key_to_collection("Not_a_class")
+        catalog.instrument_class_key_to_collection("Not_a_class")
 
 
 def test_get_collection_name_from_parameter_name_uses_parameter_schema():
-    assert names.get_collection_name_from_parameter_name("atmospheric_profile") == "sites"
+    assert catalog.get_collection_name_from_parameter_name("atmospheric_profile") == "sites"
 
 
 def test_get_collection_name_from_parameter_name_rejects_unknown_parameter():
     with pytest.raises(KeyError, match=r"Parameter Not_a_parameter without schema definition"):
-        names.get_collection_name_from_parameter_name("Not_a_parameter")
+        catalog.get_collection_name_from_parameter_name("Not_a_parameter")
 
 
 def test_validate_array_element_id_name(caplog):
@@ -122,22 +118,22 @@ def test_get_site_from_array_element_name(invalid_name):
 
 def test_model_parameter_scope_and_simtelarray_scopes():
     assert (
-        names.get_model_parameter_scope(
+        catalog.get_model_parameter_scope(
             "configuration_sim_telarray", "LSTN-design", "iobuf_maximum"
         )
         == "global"
     )
     assert (
-        names.get_model_parameter_scope("telescopes", "LSTN-design", "camera_body_diameter")
+        catalog.get_model_parameter_scope("telescopes", "LSTN-design", "camera_body_diameter")
         == "LSTN-design"
     )
-    assert names.get_sim_telarray_parameter_scopes("LSTN-01", "LSTN-design") == [
+    assert catalog.get_sim_telarray_parameter_scopes("LSTN-01", "LSTN-design") == [
         "global",
         "LSTN-design",
         "LSTN-01",
     ]
     with pytest.raises(KeyError, match="Missing design model"):
-        names.get_sim_telarray_parameter_scopes("LSTN-01")
+        catalog.get_sim_telarray_parameter_scopes("LSTN-01")
 
 
 def test_get_collection_name_from_array_element_name():
@@ -154,18 +150,6 @@ def test_get_collection_name_from_array_element_name():
 
     with pytest.raises(ValueError, match=r"Invalid array element name Not_a_collection"):
         names.get_collection_name_from_array_element_name("Not_a_collection", False)
-
-
-def test_sanitize_name(caplog):
-    assert names.sanitize_name("y_edges unit") == "y_edges_unit"
-    assert names.sanitize_name("Y_EDGES UNIT") == "y_edges_unit"
-    assert names.sanitize_name("123name") == "_123name"
-    assert names.sanitize_name("na!@#$%^&*()me") == "na__________me"
-    assert names.sanitize_name("!validName") == "_validname"
-    assert names.sanitize_name(None) is None
-
-    with pytest.raises(ValueError, match=r"^The string  could not be sanitized."):
-        names.sanitize_name("")
 
 
 def test_get_array_element_id_from_name(invalid_name):
@@ -332,66 +316,79 @@ def test_generate_file_name_ray_tracing(kwargs, expected):
 def test_get_simulation_software_name_from_parameter_name():
     sim_telarray = "sim_telarray"
     assert (
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
             "focal_length", software_name=sim_telarray
         )
         == "focal_length"
     )
     assert (
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
             "telescope_axis_height", software_name=sim_telarray
         )
         is None
     )
     assert (
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
             "atmospheric_profile", software_name=sim_telarray
         )
         is None
     )
     assert (
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
             "corsika_observation_level", software_name=sim_telarray
         )
         == "altitude"
     )
+    # Read by obdeect only, never written to the sim_telarray configuration.
     assert (
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
+            "telescope_structure", software_name=sim_telarray
+        )
+        is None
+    )
+    assert (
+        catalog.get_simulation_software_name_from_parameter_name(
+            "telescope_structure", software_name="obdeect"
+        )
+        == "telescope_structure"
+    )
+    assert (
+        catalog.get_simulation_software_name_from_parameter_name(
             "corsika_observation_level", software_name="corsika"
         )
         == "OBSLEV"
     )
     assert (
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
             "reference_point_longitude", software_name=sim_telarray
         )
         == "longitude"
     )
     assert (
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
             "reference_point_longitude", software_name="corsika"
         )
         == "reference_point_longitude"
     )
     with pytest.raises(KeyError, match=r"Parameter Not_a_parameter without schema definition"):
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
             "Not_a_parameter", software_name=sim_telarray
         )
     assert (
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
             "corsika_observation_level",
             software_name=None,
         )
         is None
     )
     assert (
-        names.get_simulation_software_name_from_parameter_name(
+        catalog.get_simulation_software_name_from_parameter_name(
             "reference_point_longitude", software_name=sim_telarray
         )
         == "longitude"
     )
     assert (
-        names.get_simulation_software_meta_parameter_mode(
+        catalog.get_simulation_software_meta_parameter_mode(
             "reference_point_longitude", software_name=sim_telarray
         )
         == "set"
@@ -413,14 +410,16 @@ def test_get_simulation_software_name_from_parameter_name():
     ],
 )
 def test_sim_telarray_configuration_parameters_have_explicit_mappings(parameter_name):
-    assert names.get_simulation_software_name_from_parameter_name(parameter_name) == parameter_name
+    assert (
+        catalog.get_simulation_software_name_from_parameter_name(parameter_name) == parameter_name
+    )
 
 
 def test_nsb_correction_is_not_a_sim_telarray_configuration_parameter():
     parameter = "correct_nsb_spectrum_to_telescope_altitude"
-    assert names.get_simulation_software_name_from_parameter_name(parameter) is None
+    assert catalog.get_simulation_software_name_from_parameter_name(parameter) is None
     assert (
-        names.get_simulation_software_name_from_parameter_name(parameter, "simtools") == parameter
+        catalog.get_simulation_software_name_from_parameter_name(parameter, "simtools") == parameter
     )
 
 
@@ -437,10 +436,10 @@ def test_file_name_with_version():
 
 
 def test_collection_to_instrument_class_key():
-    assert names.collection_to_instrument_class_key() == ["Structure", "Camera", "Telescope"]
+    assert catalog.collection_to_instrument_class_key() == ["Structure", "Camera", "Telescope"]
 
     with pytest.raises(KeyError, match="Invalid collection name no_collection"):
-        names.collection_to_instrument_class_key("no_collection")
+        catalog.collection_to_instrument_class_key("no_collection")
 
 
 def test_array_element_common_identifiers():
@@ -502,3 +501,17 @@ def test_normalize_array_element_identifier_container():
 
     with pytest.raises(ValueError, match="Invalid JSON list string"):
         names.normalize_array_element_identifier_container("[1, 12")
+
+
+@pytest.mark.parametrize(
+    ("telescope_name", "expected"),
+    [
+        ("LSTN-01", False),
+        ("MSTN-01", False),
+        ("MSTS-01", False),
+        ("SSTS-01", True),
+        ("SCTS-25", True),
+    ],
+)
+def test_is_two_mirror_telescope(telescope_name, expected):
+    assert names.is_two_mirror_telescope(telescope_name) == expected

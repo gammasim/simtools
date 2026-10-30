@@ -1,6 +1,7 @@
 ---
 applications:
 - application: simtools-derive-photon-electron-spectrum
+  differential_test: true
   docs:
     title: Derive an LST photoelectron spectrum
     summary: >-

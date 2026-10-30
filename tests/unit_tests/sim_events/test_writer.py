@@ -67,7 +67,7 @@ def validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope
 
 
 @patch("simtools.sim_events.formats.eventio_reader.EventIOFile", autospec=True)
-def test_process_files(
+def test_iter_table_chunks(
     mock_eventio_class,
     lookup_table_generator,
     mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
@@ -83,7 +83,7 @@ def test_process_files(
         eventio_objects["array_event"](),  # Array event matching shower 1
     ]
 
-    tables = lookup_table_generator.process_files()
+    tables = list(lookup_table_generator.iter_table_chunks())[-1]
 
     assert mock_eventio_class.call_count == 1
     # Verify tables structure and content
@@ -123,7 +123,7 @@ def test_max_files_rejects_negative_values():
         EventDataWriter(["input"], max_files=-1)
 
 
-def test_chunked_output_matches_non_chunked_output(
+def test_chunked_output_matches_output_with_smaller_chunks(
     lookup_table_generator,
     mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
     mock_read_sim_telarray_metadata,
@@ -143,8 +143,8 @@ def test_chunked_output_matches_non_chunked_output(
         eventio_objects["array_event"](),
     ]
 
-    reference_tables = EventDataWriter([input_file]).process_files()
-    table_handler.write_tables(reference_tables, reference_file)
+    reference_writer = EventDataWriter([input_file])
+    table_handler.write_table_chunks(reference_writer.iter_table_chunks(), reference_file)
     chunked_writer = EventDataWriter([input_file])
     table_handler.write_table_chunks(
         chunked_writer.iter_table_chunks(chunk_size=3),
@@ -189,85 +189,6 @@ def test_create_chunk_rejects_unset_shower_fields(lookup_table_generator):
         lookup_table_generator._create_chunk("SHOWERS", [shower])
 
 
-@pytest.fixture
-def example_reader(monkeypatch):
-    """A second format supplying known physical values without eventio objects."""
-    from types import SimpleNamespace
-
-    from simtools.sim_events.formats import registry
-
-    shower = {
-        "shower_id": 9,
-        "event_id": 901,
-        "simulated_energy": 2.5,
-        "x_core": 10.0,
-        "y_core": -20.0,
-        "shower_azimuth": 180.0,
-        "shower_altitude": 70.0,
-        "area_weight": 0.5,
-    }
-    run = {
-        "file_name": "input.example",
-        "run_number": 7,
-        "particle_id": 1,
-        "spectral_index": -2.0,
-        "energy_min": 1.0,
-        "energy_max": 10.0,
-        "viewcone_min": 0.0,
-        "viewcone_max": 5.0,
-        "core_scatter_min": 0.0,
-        "core_scatter_max": 200.0,
-        "zenith": 20.0,
-        "azimuth": 180.0,
-        "nsb_level": 0.24,
-    }
-    monkeypatch.setattr(registry, "_READERS", registry._READERS.copy())
-
-    def factory(file):
-        return SimpleNamespace(
-            iter_records=lambda file_id: iter(
-                [
-                    ("SHOWERS", {**shower, "file_id": file_id}),
-                    ("FILE_INFO", {**run, "file_name": str(file), "file_id": file_id}),
-                ]
-            ),
-            read_metadata=lambda: {"software": "example", "file_name": str(file)},
-        )
-
-    registry.register_reader("example", factory)
-    return factory
-
-
-def test_second_format_preserves_common_tables(example_reader):
-    generator = EventDataWriter(["first.example", "second.example"], file_format="example")
-    tables = generator.process_files()
-    showers, triggers, files = tables
-    assert list(showers["file_id"]) == [0, 1]
-    assert list(showers["shower_id"]) == [9, 9]
-    assert list(showers["simulated_energy"]) == pytest.approx([2.5, 2.5])
-    assert str(showers["simulated_energy"].unit) == "TeV"
-    assert list(showers["x_core"]) == pytest.approx([10, 10])
-    assert str(showers["x_core"].unit) == "m"
-    assert len(triggers) == 0
-    assert list(files["run_number"]) == [7, 7]
-    assert list(files["file_name"]) == ["first.example", "second.example"]
-    assert generator.get_simulation_input_metadata() == [
-        {"software": "example", "file_name": "first.example"},
-        {"software": "example", "file_name": "second.example"},
-    ]
-
-
-def test_selected_format_chunk_size(example_reader):
-    generator = EventDataWriter(["input.example"], file_format="example")
-    chunks = list(generator.iter_table_chunks(chunk_size=1))
-    assert all(len(table) <= 1 for chunk in chunks for table in chunk)
-    assert (
-        sum(len(table) for chunk in chunks for table in chunk if table.meta["EXTNAME"] == "SHOWERS")
-        == 1
-    )
-    assert generator.shower_data == generator.file_info == []
-
-
 @pytest.mark.parametrize("chunk_size", [0, -1])
 def test_invalid_chunk_size(chunk_size):
     with pytest.raises(ValueError, match="chunk_size must be greater"):
@@ -283,4 +204,4 @@ def test_reader_with_incomplete_file(rows, mocker):
         return_value=SimpleNamespace(iter_records=lambda file_id: iter(rows)),
     )
     with pytest.raises(ValueError, match="Incomplete reduced event data"):
-        EventDataWriter(["input"]).process_files()
+        list(EventDataWriter(["input"]).iter_table_chunks())

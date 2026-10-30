@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-import simtools.utils.value_conversion as value_conversion
+from simtools.utils import value_conversion
 
 
 def test_extract_type_of_value() -> None:
@@ -167,9 +167,3 @@ def test_unit_as_string():
 def test_get_value_in_unit_raises_for_non_numeric_with_unit():
     with pytest.raises(TypeError, match="Expected Quantity or numeric scalar"):
         value_conversion.get_value_in_unit("5", "deg")
-
-
-def test_format_quantity():
-    assert float(value_conversion.format_quantity(5 * u.TeV, u.GeV)) == pytest.approx(5000.0)
-    assert float(value_conversion.format_quantity(100 * u.cm, u.m)) == pytest.approx(1.0)
-    assert value_conversion.format_quantity(42, u.GeV) == "42"

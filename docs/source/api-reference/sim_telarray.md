@@ -33,12 +33,22 @@ configuration files is not supported.
    :members:
 ```
 
-## simtel_validate_metadata
+## sim_telarray_metadata
+
+The CTAO DataProducts metadata bridge maps resolved production settings to the installed model's
+FITS keywords; the module also validates sim_telarray metadata against the meta-parameter registry.
 
 (simtel-validate-metadata-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_validate_metadata
+.. automodule:: simtel.sim_telarray_metadata
+   :members:
+```
+
+## metadata_reader
+
+```{eval-rst}
+.. automodule:: simtel.metadata_reader
    :members:
 ```
 
@@ -56,6 +66,13 @@ configuration files is not supported.
 
 ```{eval-rst}
 .. automodule:: simtel.segmentation
+   :members:
+```
+
+## photon_bunch_file
+
+```{eval-rst}
+.. automodule:: simtel.photon_bunch_file
    :members:
 ```
 
@@ -88,6 +105,13 @@ incomplete contracts and invalid matrix grids before creating a configuration.
    :members:
 ```
 
+## file_inspector
+
+```{eval-rst}
+.. automodule:: simtel.file_inspector
+   :members:
+```
+
 ## simtel_event_reader
 
 (simtel-event-reader-1)=
@@ -97,15 +121,6 @@ incomplete contracts and invalid matrix grids before creating a configuration.
    :members:
 ```
 
-
-## simtel_output_validator
-
-(simtel-output-validator-1)=
-
-```{eval-rst}
-.. automodule:: simtel.simtel_output_validator
-   :members:
-```
 
 ## multi_illuminator_simulator
 

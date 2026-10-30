@@ -9,15 +9,16 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.data_model.model_data_writer as writer
-from simtools import settings
-from simtools.atmosphere import AtmosphereProfile
+from simtools.atmosphere.atmosphere import AtmosphereProfile
 from simtools.camera.camera_efficiency_calculator import (
     RESULT_COLUMN_DESCRIPTIONS,
     CameraEfficiencyCalculator,
 )
-from simtools.io import ascii_handler, io_handler
+from simtools.context import RunContext
+from simtools.io import ascii_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 from simtools.visualization import visualize
 
@@ -59,19 +60,31 @@ class CameraEfficiency:
         Reuse an initialized site model.
     """
 
-    def __init__(self, label, config_data, efficiency_type, telescope_model=None, site_model=None):
+    def __init__(
+        self,
+        label,
+        config_data,
+        efficiency_type,
+        telescope_model=None,
+        site_model=None,
+        *,
+        context=None,
+    ):
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
+        self.context = context or RunContext.from_environment()
         self.label = label
 
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
         if telescope_model is None or site_model is None:
             initialized_telescope_model, initialized_site_model, _ = initialize_simulation_models(
                 label=self.label,
                 model_version=config_data["model_version"],
                 site=config_data["site"],
                 telescope_name=config_data["telescope"],
+                model_reader=self.context.model_reader,
+                context=self.context,
             )
             self.telescope_model = (
                 initialized_telescope_model if telescope_model is None else telescope_model
@@ -134,7 +147,7 @@ class CameraEfficiency:
     def _load_files(self):
         """Define the camera-efficiency result file name."""
         file_name = names.generate_file_name(
-            file_type="camera_efficiency",
+            file_type="telescope_throughput",
             suffix=ECSV_SUFFIX,
             site=self.telescope_model.site,
             telescope_model_name=self.telescope_model.name,
@@ -149,7 +162,9 @@ class CameraEfficiency:
         self._logger.info("Simulating CameraEfficiency")
 
         if not self.config.get("skip_correction_to_nsb_spectrum", False):
-            self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
+            get_model_writer(
+                self.telescope_model
+            ).export_nsb_spectrum_to_telescope_altitude_correction_file(
                 model_directory=self.telescope_model.config_file_directory
             )
 
@@ -619,12 +634,12 @@ class CameraEfficiency:
 
     def dump_nsb_pixel_rate(self):
         """Write NSB pixel rate parameter file."""
-        cfg = settings.config.args
+        cfg = self.context.args
 
         writer.ModelDataWriter.write_model_parameter(
             parameter_name="nsb_pixel_rate",
             value=self.get_nsb_pixel_rate(
-                reference_conditions=settings.config.args.get(
+                reference_conditions=self.context.args.get(
                     "write_reference_nsb_rate_as_parameter", False
                 )
             ),
@@ -632,6 +647,7 @@ class CameraEfficiency:
             parameter_version=cfg.get("parameter_version") or "0.0.0",
             output_file=Path(f"nsb_pixel_rate-{cfg.get('parameter_version', '0.0.0')}.json"),
             output_path=self.output_dir / cfg.get("telescope") / "nsb_pixel_rate",
+            context=self.context,
         )
 
     def _get_x_max_for_efficiency_type(self):
@@ -653,7 +669,7 @@ class CameraEfficiency:
                 atmospheric_profile = get_simtel_table_file_name(parameter_data) or (
                     f"atmospheric_profile-{Path(self.telescope_model.config_file_path).stem}.dat"
                 )
-                self.site_model.export_model_parameter_as_simtel_file(
+                get_model_writer(self.site_model).export_model_parameter_as_simtel_file(
                     "atmospheric_profile",
                     self.telescope_model.config_file_directory,
                     table_format="plain",

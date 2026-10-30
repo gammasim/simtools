@@ -1,4 +1,4 @@
-"""Validation of data using schema."""
+"""Validation of data using schema (types, ranges, allowed values and required columns)."""
 
 import logging
 import os
@@ -9,12 +9,65 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
+from jsonschema import Draft202012Validator
 
-import simtools.utils.general as gen
 from simtools.data_model import schema, schema_loader
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
 from simtools.version import is_valid_semantic_version
+
+_JSON_TYPE_BY_KIND = {
+    "b": "boolean",
+    "i": "integer",
+    "u": "integer",
+    "f": "number",
+    "U": "string",
+    "S": "string",
+    "O": "object",
+}
+_STRING_TYPES = ("string", "str", "file")
+_BOOLEAN_TYPES = ("boolean", "bool")
+
+
+def _errors(instance, json_schema):
+    """Return jsonschema error messages (empty list if valid)."""
+    return [error.message for error in Draft202012Validator(json_schema).iter_errors(instance)]
+
+
+def _type_schema(reference_type, exact):
+    """Return the jsonschema for a reference data type (instance: json_type, dtype, value)."""
+    if exact and reference_type not in (*_STRING_TYPES, "dict", "list"):
+        name = "bool" if reference_type in _BOOLEAN_TYPES else np.dtype(reference_type).name
+        return {"properties": {"dtype": {"const": name}}}
+    if reference_type in _BOOLEAN_TYPES:  # 0 and 1 are accepted as booleans
+        return {
+            "anyOf": [
+                {"properties": {"json_type": {"const": "boolean"}}},
+                {"properties": {"value": {"enum": [0, 1]}}, "required": ["value"]},
+            ]
+        }
+    if reference_type in _STRING_TYPES:
+        json_types = ["string", "object", "null"]
+    elif reference_type in ("dict", "list"):
+        json_types = ["object" if reference_type == "dict" else "array"]
+    elif np.issubdtype(reference_type, np.integer):
+        json_types = ["integer"]
+    else:  # floating point references also accept integers
+        json_types = ["integer", "number"]
+    return {"properties": {"json_type": {"enum": json_types}}}
+
+
+def _type_matches(reference_type, value=None, dtype=None, exact=False):
+    """Return True if a value (or dtype) matches the reference data type."""
+    dtype = np.asarray(value).dtype if dtype is None else np.dtype(dtype)
+    if isinstance(value, dict | list):
+        json_type = "object" if isinstance(value, dict) else "array"
+    elif value is None and dtype.kind == "O":
+        json_type = "null"
+    else:
+        json_type = _JSON_TYPE_BY_KIND.get(dtype.kind)
+    instance = {"json_type": json_type, "dtype": dtype.name, "value": value}
+    return Draft202012Validator(_type_schema(reference_type, exact)).is_valid(instance)
 
 
 class DataValidator:
@@ -35,7 +88,6 @@ class DataValidator:
         Input data dict.
     check_exact_data_type: bool
         Check for exact data type (default: True).
-
     """
 
     def __init__(
@@ -46,9 +98,8 @@ class DataValidator:
         data_dict=None,
         check_exact_data_type=True,
     ):
-        """Initialize validation class and read required reference data columns."""
+        """Initialize validation class."""
         self.logger = logging.getLogger(__name__)
-
         self.data_file_name = data_file
         self.schema_file_name = schema_file
         self._data_description = None
@@ -58,25 +109,19 @@ class DataValidator:
 
     def validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
         """
-        Validate data and data file.
+        Validate data (and data file) and return the validated dict or table.
 
         Parameters
         ----------
         is_model_parameter: bool
-            This is a model parameter (add some data preparation)
+            This is a model parameter (add some data preparation).
         lists_as_strings: bool
-            Convert lists to strings (as needed for model parameters)
-
-        Returns
-        -------
-        data: dict or astropy.table
-            Data dict or table
+            Convert lists to strings (as needed for model parameters).
 
         Raises
         ------
         TypeError
-            if no data or data table is available
-
+            if no data or data table is available.
         """
         if self.data_file_name:
             self.validate_data_file(is_model_parameter)
@@ -88,16 +133,7 @@ class DataValidator:
         raise TypeError
 
     def validate_data_file(self, is_model_parameter=None):
-        """
-        Open data file and read data from file.
-
-        Doing this successfully is understood as file validation.
-
-        Parameters
-        ----------
-        is_model_parameter: bool
-            This is a model parameter file.
-        """
+        """Read the data file (successful reading counts as file validation)."""
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
                 self.data_dict = ascii_handler.collect_data_from_file(self.data_file_name)
@@ -111,47 +147,35 @@ class DataValidator:
             self.validate_parameter_and_file_name()
 
     def validate_parameter_and_file_name(self):
-        """
-        Validate model parameter file name.
-
-        Expect that the following convention is used:
-
-        - file name starts with the parameter name
-        - file name ends with parameter version string
-
-        """
+        """Check that the file name starts with the parameter and ends with its version."""
         file_stem = Path(self.data_file_name).stem
         param = self.data_dict.get("parameter")
         param_version = self.data_dict.get("parameter_version")
         if not file_stem.startswith(param):
             raise ValueError(f"Mismatch: parameter '{param}' vs. file '{file_stem}'.")
-
         if param_version and not file_stem.endswith(param_version):
             raise ValueError(f"Mismatch: version '{param_version}' vs. file '{file_stem}'.")
-
         if param_version is None:
             self.logger.warning(f"File '{file_stem}' has no parameter version defined.")
 
     @staticmethod
     def validate_model_parameter(par_dict, par_name=None):
         """
-        Validate a simulation model parameter (static method).
+        Validate a simulation model parameter.
 
         Parameters
         ----------
         par_dict: dict
-            Data dictionary
+            Data dictionary.
         par_name: str
-            Parameter name (optional, needed when not given in par_dict)
+            Parameter name (default: 'parameter' entry of par_dict).
 
         Returns
         -------
         dict
-            Validated data dictionary
+            Validated data dictionary.
         """
-        if par_name is None:
-            par_name = par_dict.get("parameter")
-
+        par_name = par_dict.get("parameter") if par_name is None else par_name
         data_validator = DataValidator(
             schema_file=schema.get_model_parameter_schema_file(f"{par_name}"),
             data_dict=par_dict,
@@ -173,13 +197,15 @@ class DataValidator:
         Parameters
         ----------
         file_directory: str or Path
-            Directory with files to be validated.
+            Directory with files to be validated (JSON files, searched recursively).
         file_name: str or Path
             Name of the file to be validated.
         is_model_parameter: bool
             This is a model parameter (add some data preparation).
         check_exact_data_type: bool
             Require exact data type for validation.
+        schema_file: str or Path
+            Schema file used for all files (default: from parameter name or file metadata).
         """
         if file_directory:
             file_list = sorted(Path(file_directory).rglob("*.json"))
@@ -191,12 +217,10 @@ class DataValidator:
         for data_file in file_list:
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", data_file.stem)
             schema_path = schema_file or (
-                schema.get_model_parameter_schema_file(f"{parameter_name}")
+                schema.get_model_parameter_schema_file(parameter_name)
                 if is_model_parameter
-                else (
-                    schema.get_schema_file_from_file_metadata(data_file)
-                    or schema.get_model_parameter_schema_file(f"{parameter_name}")
-                )
+                else schema.get_schema_file_from_file_metadata(data_file)
+                or schema.get_model_parameter_schema_file(parameter_name)
             )
             data_validator = DataValidator(
                 schema_file=schema_path,
@@ -207,34 +231,13 @@ class DataValidator:
             data_validator.logger.info(f"Validated data file {data_file} with schema {schema_path}")
 
     def _validate_data_dict(self, is_model_parameter=False, lists_as_strings=False):
-        """
-        Validate values in a dictionary.
-
-        Handles different types of naming in data dicts (using 'name' or 'parameter'
-        keys for name fields).
-
-        Parameters
-        ----------
-        is_model_parameter: bool
-            This is a model parameter (add some data preparation)
-        lists_as_strings: bool
-            Convert lists to strings (as needed for model parameters)
-
-        Raises
-        ------
-        KeyError
-            if data dict does not contain a 'name' or 'parameter' key.
-
-        """
+        """Validate values in a dictionary (names from 'name' or 'parameter' keys)."""
         if is_model_parameter:
             self._prepare_model_parameter()
-
+        # use 0.1.0 as default; this corresponds to the first definition of the schema
         self._data_description = self._read_validation_schema(
-            self.schema_file_name,
-            # use 0.1.0 as default; this corresponds to the first definition of the schema
-            self.data_dict.get("model_parameter_schema_version", "0.1.0"),
+            self.schema_file_name, self.data_dict.get("model_parameter_schema_version", "0.1.0")
         )
-
         self._validate_and_assign_values(is_model_parameter)
 
         if self.data_dict.get("instrument"):
@@ -253,23 +256,18 @@ class DataValidator:
 
         if lists_as_strings:
             self._convert_results_to_model_format()
-
         return self.data_dict
 
     def _validate_and_assign_values(self, is_model_parameter):
         """Validate and assign values/units for homogeneous and heterogeneous lists."""
         value_as_list, unit_as_list = self._get_value_and_units_as_lists()
-        use_per_element_validation = self._uses_per_element_type_validation(is_model_parameter)
+        per_element = self._uses_per_element_type_validation(is_model_parameter)
+        kind = "heterogeneous list" if per_element else "dictionary"
         expected_types = self._get_expected_types_for_values(value_as_list, is_model_parameter)
-
         try:
             self._validate_list_types(value_as_list, expected_types)
         except (TypeError, ValueError) as ex:
-            if use_per_element_validation:
-                raise TypeError(
-                    f"Error validating heterogeneous list using {self.schema_file_name}"
-                ) from ex
-            raise TypeError(f"Error validating dictionary using {self.schema_file_name}") from ex
+            raise TypeError(f"Error validating {kind} using {self.schema_file_name}") from ex
 
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
             try:
@@ -277,14 +275,8 @@ class DataValidator:
                     value, unit, index
                 )
             except TypeError as ex:
-                if use_per_element_validation:
-                    raise TypeError(
-                        f"Error validating heterogeneous element {index} "
-                        f"using {self.schema_file_name}"
-                    ) from ex
-                raise TypeError(
-                    f"Error validating dictionary using {self.schema_file_name}"
-                ) from ex
+                kind = f"heterogeneous element {index}" if per_element else "dictionary"
+                raise TypeError(f"Error validating {kind} using {self.schema_file_name}") from ex
 
         self._assign_validated_values(value_as_list, unit_as_list)
 
@@ -293,135 +285,87 @@ class DataValidator:
         """Validate list elements against per-element expected data types."""
         if not expected_types:
             return
-
         if len(value_list) != len(expected_types):
             raise ValueError(
                 f"Length mismatch: parameter has {len(value_list)} elements "
                 f"but type specification has {len(expected_types)} elements."
             )
-
         for i, (value, expected_type) in enumerate(zip(value_list, expected_types)):
-            if not gen.validate_data_type(
-                reference_dtype=expected_type,
-                value=value,
-                dtype=None,
-                allow_subtypes=True,
-            ):
+            if not _type_matches(expected_type, value=value):
                 raise TypeError(
                     f"Element {i}: expected type '{expected_type}', got {type(value).__name__}"
                 )
 
     def _get_expected_types_for_values(self, value_as_list, is_model_parameter):
-        """Return expected per-element data types for list validation."""
-        expected_types = []
-        should_validate = (
+        """Return expected per-element data types (empty if no list validation applies)."""
+        if not (
             is_model_parameter
             and self._data_description
             and isinstance(value_as_list, list)
-            and len(value_as_list) > 0
+            and value_as_list
             and value_as_list[0] is not None
+        ):
+            return []
+        if self._uses_per_element_type_validation(is_model_parameter):
+            return self._get_schema_type_list()
+        expected_type = self._data_description[0].get("type")
+        if len(value_as_list) > 1 and expected_type and not isinstance(expected_type, list):
+            return [expected_type] * len(value_as_list)
+        return []
+
+    def _uses_per_element_type_validation(self, is_model_parameter=False):
+        """Return True if an explicit type list (positional types) applies to a model parameter."""
+        if not is_model_parameter or not isinstance(self._data_description, list):
+            return False
+        if isinstance(self.data_dict.get("type"), list):
+            return True
+        return len(set(self._get_schema_type_list())) > 1
+
+    def _get_schema_type_list(self):
+        """Return the schema types as a flat list."""
+        if not self._data_description:
+            return []
+        first_type = self._data_description[0].get("type")
+        return (
+            first_type
+            if isinstance(first_type, list)
+            else [e.get("type") for e in self._data_description]
         )
 
-        if should_validate and self._uses_per_element_type_validation(is_model_parameter):
-            expected_types = self._get_schema_type_list()
-        elif should_validate and len(value_as_list) > 1:
-            expected_type = self._data_description[0].get("type")
-            if expected_type and not isinstance(expected_type, list):
-                expected_types = [expected_type] * len(value_as_list)
-
-        return expected_types
-
-    def _get_unit_list_for_values(self, value_as_list):
-        """Return a per-value unit list from current data dict unit entry."""
-        if isinstance(self.data_dict.get("unit"), list):
-            return self.data_dict.get("unit", [])
-        return [self.data_dict.get("unit")] * len(value_as_list)
-
     def _assign_validated_values(self, value_as_list, unit_as_list):
-        """Assign validated value/unit as scalar or list depending on list length."""
-        if len(value_as_list) == 1:
+        """Assign validated value/unit; a list value of a 'dict' parameter stays a list."""
+        is_json_array = self._get_data_description(0).get("type") == "dict" and isinstance(
+            self.data_dict["value"], list
+        )
+        if is_json_array:
+            self.data_dict["value"] = value_as_list
+            self.data_dict["unit"] = unit_as_list[0] if unit_as_list else self.data_dict["unit"]
+        elif len(value_as_list) == 1:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
-            return
-        self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
+        else:
+            self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 
     def _validate_value_and_unit(self, value, unit, index):
-        """
-        Validate value, unit, and perform type checking and conversions.
-
-        Take into account different data types and allow to use json_schema for testing.
-        """
-        if self._get_data_description(index).get("type", None) == "dict":
+        """Validate type, allowed values, NaN and ranges of one value and convert its unit."""
+        entry = self._get_data_description(index)
+        if entry.get("type") == "dict":
             schema.validate_dict_using_schema(
-                data=self.data_dict["value"],
-                json_schema=self._get_data_description(index).get("json_schema"),
+                data=self.data_dict["value"], json_schema=entry.get("json_schema")
             )
         else:
             self._check_data_type(np.array(value).dtype, index, value)
 
-        if self._get_data_description(index).get("type", None) not in ("string", "dict", "file"):
+        if entry.get("type") not in ("string", "dict", "file"):
             self._check_for_not_a_number(value, index)
             value, unit = self._check_and_convert_units(value, unit, index)
             for range_type in ("allowed_range", "required_range"):
                 self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
         return value, unit
 
-    def _uses_per_element_type_validation(self, is_model_parameter=False):
-        """
-        Check if list validation should use per-element type specifications.
-
-        For model parameters, an explicit list in the ``type`` field is treated as
-        positional type information. This can represent truly heterogeneous content,
-        but it may also represent homogeneous content where all listed types are equal.
-        In both cases, this method returns ``True`` so validation follows the
-        per-element checks.
-
-        Parameters
-        ----------
-        is_model_parameter: bool
-            True if this is a model parameter validation.
-
-        Returns
-        -------
-        bool
-            True if per-element list typing applies, False otherwise.
-        """
-        if not is_model_parameter or not isinstance(self._data_description, list):
-            return False
-
-        if isinstance(self.data_dict.get("type"), list):
-            return True
-
-        type_list = self._get_schema_type_list()
-        return len(set(type_list)) > 1
-
-    def _get_schema_type_list(self):
-        """Return schema types as a flat list for model parameter validation."""
-        if not self._data_description:
-            return []
-
-        first_item_type = self._data_description[0].get("type")
-        if isinstance(first_item_type, list):
-            return first_item_type
-
-        return [item.get("type") for item in self._data_description]
-
     def _get_value_and_units_as_lists(self):
-        """
-        Convert value and unit to lists if required.
-
-        Ignore unit field in data_dict if value is a astropy.Quantity.
-        Note the complications from astropy.Units, where a single value is of np.ndarray type.
-
-        Returns
-        -------
-        list
-            value as list
-        list
-            unit as list
-        """
+        """Return value and unit as lists (value scaled to the target unit, if required)."""
         target_unit = self.data_dict["unit"]
         value, unit = value_conversion.split_value_and_unit(self.data_dict["value"])
-
         if not isinstance(value, list | np.ndarray):
             value, unit = [value], [unit]
         if not isinstance(target_unit, list | np.ndarray):
@@ -433,7 +377,7 @@ class DataValidator:
         ]
         try:
             return [
-                v * c if not isinstance(v, bool) and not isinstance(v, dict) else v
+                v * c if not isinstance(v, bool | dict) else v
                 for v, c in zip(value, conversion_factor)
             ], target_unit
         except TypeError:
@@ -456,18 +400,7 @@ class DataValidator:
         return self.data_table
 
     def _validate_data_columns(self):
-        """
-        Validate that data columns.
-
-        This includes:
-
-        - required data columns are available
-        - columns are in the correct units (if necessary apply a unit conversion)
-        - ranges (minimum, maximum) are correct.
-
-        This is not applied to columns of type 'string'.
-
-        """
+        """Validate required columns, allowed values, types, NaN, units and ranges."""
         self._check_required_columns()
 
         for col_name in self.data_table.colnames:
@@ -479,311 +412,150 @@ class DataValidator:
             self._check_for_not_a_number(col.data, col_name)
             self._check_data_type(col.dtype, col_name)
             converted_col, _ = self._check_and_convert_units(
-                col,
-                unit=getattr(col, "unit", None),
-                col_name=col_name,
+                col, unit=getattr(col, "unit", None), col_name=col_name
             )
             self.data_table[col_name] = converted_col
             if len(converted_col) == 0:
                 if self._get_data_description(col_name).get("required_range"):
                     raise ValueError(f"Empty column '{col_name}' cannot cover its required range.")
                 continue
-            self._check_range(
-                col_name,
-                np.nanmin(converted_col.data),
-                np.nanmax(converted_col.data),
-                "allowed_range",
-            )
-            self._check_range(
-                col_name,
-                np.nanmin(converted_col.data),
-                np.nanmax(converted_col.data),
-                "required_range",
-            )
+            for range_type in ("allowed_range", "required_range"):
+                self._check_range(
+                    col_name,
+                    np.nanmin(converted_col.data),
+                    np.nanmax(converted_col.data),
+                    range_type,
+                )
 
     def _check_required_columns(self):
-        """
-        Check that all required data columns are available in the input data table.
-
-        Raises
-        ------
-        KeyError
-            if a required data column is missing
-
-        """
-        for entry in self._data_description:
-            if entry.get("required", False):
-                if entry["name"] in self.data_table.columns:
-                    self.logger.debug(f"Found required data column {entry['name']}")
-                else:
-                    raise KeyError(f"Missing required column {entry['name']}")
+        """Check that all required data columns are available (KeyError otherwise)."""
+        required = [entry["name"] for entry in self._data_description if entry.get("required")]
+        columns = dict.fromkeys(self.data_table.colnames)
+        if not Draft202012Validator({"required": required}).is_valid(columns):
+            missing = [name for name in required if name not in columns]
+            raise KeyError(f"Missing required column {', '.join(missing)}")
 
     def _sort_data(self):
-        """
-        Sort data according to one data column (if required by any column attribute).
-
-        Data is either sorted or reverse sorted.
-
-        Raises
-        ------
-        AttributeError
-            if no table is defined for sorting
-
-        """
-        _columns_by_which_to_sort = []
-        _columns_by_which_to_reverse_sort = []
-        for entry in self._data_description:
-            if "input_processing" in entry:
-                if "sort" in entry["input_processing"]:
-                    _columns_by_which_to_sort.append(entry["name"])
-                elif "reversesort" in entry["input_processing"]:
-                    _columns_by_which_to_reverse_sort.append(entry["name"])
-
-        if len(_columns_by_which_to_sort) > 0:
-            self.logger.debug(f"Sorting data columns: {_columns_by_which_to_sort}")
-            try:
-                self.data_table.sort(_columns_by_which_to_sort)
-            except AttributeError:
-                self.logger.error("No data table defined for sorting")
-                raise
-        elif len(_columns_by_which_to_reverse_sort) > 0:
-            self.logger.debug(f"Reverse sorting data columns: {_columns_by_which_to_reverse_sort}")
-            try:
-                self.data_table.sort(_columns_by_which_to_reverse_sort, reverse=True)
-            except AttributeError:
-                self.logger.error("No data table defined for reverse sorting")
-                raise
+        """Sort the table by columns with 'sort' (or reverse sort with 'reversesort')."""
+        ascending = [
+            e["name"] for e in self._data_description if "sort" in e.get("input_processing", [])
+        ]
+        descending = [
+            e["name"]
+            for e in self._data_description
+            if "reversesort" in e.get("input_processing", [])
+        ]
+        if not (ascending or descending):
+            return
+        try:
+            self.data_table.sort(ascending or descending, reverse=not ascending)
+        except AttributeError:
+            self.logger.error("No data table defined for sorting")
+            raise
 
     def _check_data_for_duplicates(self):
-        """
-        Remove duplicates from data columns as defined in the data columns description.
-
-        Raises
-        ------
-            if row values are different for those rows with duplications in the data columns to be
-            checked for unique values.
-
-        """
-        _column_with_unique_requirement = self._get_unique_column_requirement()
-        if len(_column_with_unique_requirement) == 0:
-            self.logger.debug("No data columns with unique value requirement")
+        """Remove duplicates of the 'remove_duplicates' columns (ValueError if they conflict)."""
+        keys = [
+            e["name"]
+            for e in self._data_description
+            if "remove_duplicates" in e.get("input_processing", [])
+        ]
+        if not keys:
             return
-        _data_table_unique_for_key_column = unique(
-            self.data_table, keys=_column_with_unique_requirement
-        )
-        _data_table_unique_for_all_columns = unique(self.data_table, keys=None)
         with open(os.devnull, "w", encoding="utf-8") as devnull:
             if report_diff_values(
-                _data_table_unique_for_key_column,
-                _data_table_unique_for_all_columns,
-                fileobj=devnull,
+                unique(self.data_table, keys=keys), unique(self.data_table), fileobj=devnull
             ):
                 self.data_table = unique(self.data_table)
             else:
-                raise ValueError(
-                    "Failed removal of duplication for column "
-                    f"{_column_with_unique_requirement}, values are not unique"
-                )
+                raise ValueError(f"Failed removal of duplication for column {keys}, values differ")
 
-    def _get_unique_column_requirement(self):
-        """
-        Return data column name with unique value requirement.
-
-        Returns
-        -------
-        list
-            list of data column with unique value requirement
-
-        """
-        _unique_required_column = []
-
-        for entry in self._data_description:
-            if "input_processing" in entry and "remove_duplicates" in entry["input_processing"]:
-                self.logger.debug(f"Removing duplicates for column {entry['name']}")
-                _unique_required_column.append(entry["name"])
-
-        self.logger.debug(f"Unique required columns: {_unique_required_column}")
-        return _unique_required_column
-
-    def _get_reference_unit(self, column_name):
-        """
-        Return reference column unit. Includes correct treatment of dimensionless units.
-
-        Parameters
-        ----------
-        column_name: str
-            column name of reference data column
-
-        Returns
-        -------
-        astro.unit
-            unit for reference column
-
-        Raises
-        ------
-        KeyError
-            if column name is not found in reference data columns
-
-        """
-        reference_unit = self._get_data_description(column_name).get("unit", None)
-        if value_conversion.is_dimensionless_unit(reference_unit):
-            return u.dimensionless_unscaled
-
-        return u.Unit(reference_unit)
+    def _get_data_description(self, column_name=None, status_test=False):
+        """Return the schema entry of a column (name, 'colN' or index); IndexError if missing."""
+        description = self._data_description
+        if isinstance(column_name, int):
+            if column_name < len(description):
+                entry = description[column_name]
+            else:
+                entry = description[0] if len(description) == 1 else None
+        elif re.fullmatch(r"col\d", column_name) and int(column_name[3:]) < len(description):
+            entry = description[int(column_name[3:])]
+        else:
+            entry = next((item for item in description if item["name"] == column_name), None)
+        if status_test:
+            return entry is not None
+        if entry is None:
+            self.logger.error(
+                f"Data column '{column_name}' not found in reference column definition"
+            )
+            raise IndexError(f"Data column '{column_name}' not found")
+        return entry
 
     def _check_data_type(self, dtype, column_name, value=None):
-        """
-        Check column data type.
-
-        Parameters
-        ----------
-        dtype: numpy.dtype
-            data type
-        column_name: str
-            column name
-        value: value
-            value to be tested (optional)
-
-        Raises
-        ------
-        TypeError
-            if data type is not correct
-
-        """
-        reference_dtype = self._get_data_description(column_name).get("type", None)
-        if not gen.validate_data_type(
-            reference_dtype=reference_dtype,
-            value=value,
-            dtype=dtype,
-            allow_subtypes=(not self.check_exact_data_type),
+        """Check the data type of a column against the schema (TypeError if not matching)."""
+        reference_type = self._get_data_description(column_name).get("type")
+        if not _type_matches(
+            reference_type, value=value, dtype=dtype, exact=self.check_exact_data_type
         ):
             self.logger.error(
                 f"Invalid data type in column '{column_name}'. "
-                f"Expected type '{reference_dtype}', found '{dtype}' "
+                f"Expected type '{reference_type}', found '{dtype}' "
                 f"(exact type: {self.check_exact_data_type})"
             )
             raise TypeError
 
     def _check_for_not_a_number(self, data, col_name):
-        """
-        Check that column values are finite and not NaN.
-
-        Parameters
-        ----------
-        data: value or numpy.ndarray
-            data to be tested
-        col_name: str
-            column name
-
-        Returns
-        -------
-        bool
-            if at least one column value is NaN or Inf.
-
-        Raises
-        ------
-        ValueError
-            if at least one column value is NaN or Inf.
-
-        """
+        """Check for NaN or Inf values (ValueError unless 'allow_nan'); True if present."""
         if isinstance(data, str):
             return True
-        if not isinstance(data, np.ndarray):
-            data = np.array(data)
-
-        if np.isnan(data).any():
+        data = data if isinstance(data, np.ndarray) else np.array(data)
+        has_nan, has_inf = bool(np.isnan(data).any()), bool(np.isinf(data).any())
+        if has_nan:
             self.logger.info(f"Column {col_name} contains NaN.")
-        if np.isinf(data).any():
+        if has_inf:
             self.logger.info(f"Column {col_name} contains infinite value.")
-
-        entry = self._get_data_description(col_name)
-        if "allow_nan" in entry.get("input_processing", {}):
-            return np.isnan(data).any() or np.isinf(data).any()
-
-        if np.isnan(data).any() or np.isinf(data).any():
+        if "allow_nan" in self._get_data_description(col_name).get("input_processing", {}):
+            return has_nan or has_inf
+        if has_nan or has_inf:
             raise ValueError("NaN or Inf values found in data")
-
         return False
-
-    @staticmethod
-    def _is_dimensionless(unit):
-        """
-        Check if unit is dimensionless, None, or empty.
-
-        Parameters
-        ----------
-        unit: str
-            unit of data column
-
-        Returns
-        -------
-        bool
-            True if unit is dimensionless, None, or empty
-        """
-        return value_conversion.is_dimensionless_unit(unit)
 
     def _check_and_convert_units(self, data, unit, col_name):
         """
-        Check that input data have an allowed unit.
+        Convert data to the reference unit of the column.
 
-        Convert to reference unit (e.g., Angstrom to nm).
-
-        Parameters
-        ----------
-        data: astropy.column, Quantity, list, value
-            data to be converted
-        unit: str
-            unit of data column (read from column or Quantity if possible)
-        col_name: str
-            column name
-
-        Returns
-        -------
-        data: astropy.column, Quantity, list, value
-            unit-converted data
-        unit: str or None
-            Converted unit as a string. Dimensionless units are normalized to None.
-
-        Raises
-        ------
-        u.core.UnitConversionError
-            If unit conversions fails
-
+        Returns the converted data and the reference unit (None if dimensionless).
+        Raises u.core.UnitConversionError if the conversion fails.
         """
-        self._rate_limited_logger(col_name, f"Checking data column '{col_name}'")
-
+        ref = self._get_data_description(col_name).get("unit", None)
         reference_unit = value_conversion.normalize_dimensionless_unit(
-            (self._get_reference_unit(col_name)).to_string()
+            (
+                u.dimensionless_unscaled
+                if value_conversion.is_dimensionless_unit(ref)
+                else u.Unit(ref)
+            ).to_string()
         )
-        conversion_reference_unit = reference_unit or u.dimensionless_unscaled
-        try:
-            column_unit = data.unit
-        except AttributeError:
-            column_unit = unit
-
-        column_unit = value_conversion.normalize_dimensionless_unit(column_unit)
-
-        if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
+        target = reference_unit or u.dimensionless_unscaled
+        column_unit = value_conversion.normalize_dimensionless_unit(getattr(data, "unit", unit))
+        if value_conversion.is_dimensionless_unit(column_unit) and (
+            value_conversion.is_dimensionless_unit(reference_unit)
+        ):
             return data, None
-
-        self._rate_limited_logger(
-            col_name,
-            f"Data column '{col_name}' with reference unit "
-            f"'{reference_unit}' and data unit '{column_unit}'",
-        )
         try:
             if isinstance(data, u.Quantity | Column):
-                return data.to(conversion_reference_unit), reference_unit
-
+                return data.to(target), reference_unit
             if isinstance(data, list | np.ndarray):
-                return self._check_and_convert_units_for_list(data, column_unit, reference_unit)
-
-            # ensure that the data type is preserved (e.g., integers)
-            conversion_column_unit = column_unit or u.dimensionless_unscaled
-            return (
-                type(data)(u.Unit(conversion_column_unit).to(conversion_reference_unit) * data),
-                reference_unit,
-            )
+                return [
+                    (
+                        d
+                        if value_conversion.is_dimensionless_unit(to_unit)
+                        else u.Unit(to_unit).to(target) * d
+                    )
+                    for d, to_unit in zip(data, column_unit)
+                ], reference_unit
+            # keep the data type (e.g., integers)
+            conversion_unit = column_unit or u.dimensionless_unscaled
+            return type(data)(u.Unit(conversion_unit).to(target) * data), reference_unit
         except (u.core.UnitConversionError, ValueError) as exc:
             self.logger.error(
                 f"Invalid unit in data column '{col_name}'. "
@@ -791,309 +563,82 @@ class DataValidator:
             )
             raise u.core.UnitConversionError(str(exc)) from exc
 
-    def _check_and_convert_units_for_list(self, data, column_unit, reference_unit):
-        """
-        Check and convert units data in a list or or numpy array.
-
-        Takes into account that data can be dimensionless (with unit 'None', 'dimensionless'
-        or '').
-
-        Parameters
-        ----------
-        data: list
-            list of data
-        column_unit: str
-            unit of data column
-        reference_unit: str
-            reference unit
-
-        Returns
-        -------
-        list
-            converted data
-
-        """
-        conversion_reference_unit = reference_unit or u.dimensionless_unscaled
-        return [
-            (
-                u.Unit(_to_unit).to(conversion_reference_unit) * d
-                if not value_conversion.is_dimensionless_unit(_to_unit)
-                else d
-            )
-            for d, _to_unit in zip(data, column_unit)
-        ], reference_unit
-
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
-        Check that column data is within allowed range or required range.
+        Check the data minimum and maximum against the allowed or required range.
 
-        Assumes that column and ranges have the same units.
-
-        Parameters
-        ----------
-        col_name: string
-            column name
-        col_min: float
-            minimum value of data column
-        col_max: float
-            maximum value of data column
-        range_type: string
-            column range type (either 'allowed_range' or 'required_range')
-
-        Raises
-        ------
-        ValueError
-            if columns are not in the required range
-        KeyError
-            if requested columns cannot be found or
-            if there is now defined of required or allowed
-            range columns
-
+        The allowed range must contain the data; the required range must be spanned by it.
+        Raises ValueError if the check fails.
         """
-        self._rate_limited_logger(
-            col_name, f"Checking data in column '{col_name}' for '{range_type}'"
-        )
-
-        if range_type not in ("allowed_range", "required_range"):
-            raise KeyError("Allowed range types are 'allowed_range', 'required_range'")
-
-        _entry = self._get_data_description(col_name)
-        if range_type not in _entry:
+        bounds = self._get_data_description(col_name).get(range_type)
+        if bounds is None:
             return
-
-        if not self._interval_check(
-            (col_min, col_max),
-            (_entry[range_type].get("min", -np.inf), _entry[range_type].get("max", np.inf)),
-            range_type,
-        ):
+        low, high = (
+            ("minimum", "maximum") if range_type == "allowed_range" else ("maximum", "minimum")
+        )
+        properties = {}
+        if "min" in bounds:
+            properties["min"] = {low: bounds["min"]}
+        if "max" in bounds:
+            properties["max"] = {high: bounds["max"]}
+        if _errors({"min": col_min, "max": col_max}, {"properties": properties}):
             raise ValueError(
                 f"Value for column '{col_name}' out of range. "
                 f"([{col_min}, {col_max}], {range_type}: "
-                f"[{_entry[range_type].get('min', -np.inf)}, "
-                f"{_entry[range_type].get('max', np.inf)}])"
+                f"[{bounds.get('min', -np.inf)}, {bounds.get('max', np.inf)}])"
             )
 
-    def _rate_limited_logger(self, col_name, message, max_logs=10):
-        """
-        Log debug messages at a limited rate defined by a numerical column name.
-
-        Parameters
-        ----------
-        col_name: str or int
-            Column name or index to limit the rate of logging.
-        message: str
-            Message to log.
-        max_logs: int
-            Maximum number of logging messages to be printed.
-        """
-        try:
-            col_index = int(col_name)
-            if col_index < max_logs:
-                self.logger.debug(message)
-        except ValueError, TypeError:
-            self.logger.debug(message)
-
-    @staticmethod
-    def _interval_check(data, axis_range, range_type):
-        """
-        Range checking for a given set of data.
-
-        Check that values are inside allowed range or interval. This(range_type='allowed_range')
-        or span at least the given interval (range_type='required_range').
-
-        Parameters
-        ----------
-        data: tuple
-            min and max of data
-        axis_range: tuple
-            allowed or required min max
-        range_type: string
-            column range type (either 'allowed_range' or 'required_range')
-
-        Returns
-        -------
-        boolean
-            True if range test is passed
-
-        """
-        if range_type == "allowed_range":
-            if data[0] >= axis_range[0] and data[1] <= axis_range[1]:
-                return True
-        if range_type == "required_range":
-            if data[0] <= axis_range[0] and data[1] >= axis_range[1]:
-                return True
-
-        return False
-
     def _read_validation_schema(self, schema_file, schema_version=None):
-        """
-        Read validation schema from file.
-
-        The schema file can be a yaml file with several documents, each document
-        describing a different schema version. Returns first document if no
-        schema version is requested.
-
-        Parameters
-        ----------
-        schema_file: Path
-            Schema file describing input data.
-        schema_version: str
-            Version of the schema to be used.
-
-        Returns
-        -------
-        dict
-           validation schema
-
-        Raises
-        ------
-        KeyError
-            if 'data' can not be read from dict in schema file
-        ValueError
-            if schema version is not found in schema file
-        """
+        """Read the validation schema (first document, or the given schema version)."""
         if schema_file is None:
             raise TypeError("No validation schema file provided")
         schema_data = schema_loader.load_schema(schema_file, schema_version or "latest")
         if schema_version and schema_data.get("schema_version") != schema_version:
             raise ValueError(
-                f"Schema version {schema_version} not found in schema file {schema_file}. "
+                f"Schema version {schema_version} not found in schema file {schema_file}."
             )
         try:
             return schema_data["data"]
         except KeyError as exc:
             raise KeyError(f"Error reading validation schema from {schema_file}") from exc
 
-    def _get_data_description(self, column_name=None, status_test=False):
-        """
-        Return data description as provided by the schema file.
-
-        For tables (type: 'data_table'), return the description of
-        the column named 'column_name'. For other types, return
-        all data descriptions.
-        For columns named 'colX' return the Xth column in the reference data.
-
-        Parameters
-        ----------
-        column_name: str
-            Column name.
-        status_test: bool
-            Test if reference column exists.
-
-        Returns
-        -------
-        dict
-            Reference schema column (for status_test==False).
-        bool
-            True if reference column exists (for status_test==True).
-
-        Raises
-        ------
-        IndexError
-            If data column is not found.
-
-        """
-        self._rate_limited_logger(
-            column_name,
-            f"Getting reference data column {column_name} from schema {self._data_description}",
-        )
-        try:
-            return (
-                self._data_description[column_name]
-                if not status_test
-                else (
-                    self._data_description[column_name] is not None
-                    and len(self._data_description) > 0
-                )
-            )
-        except IndexError as exc:
-            if len(self._data_description) == 1:  # all columns are described by the same schema
-                return self._data_description[0]
-            self.logger.error(
-                f"Data column '{column_name}' not found in reference column definition"
-            )
-            raise exc
-        except TypeError:
-            pass  # column_name is not an integer
-
-        _index = 0
-        if bool(re.match(r"^col\d$", column_name)):
-            _index = int(column_name[3:])
-            _entry = self._data_description
-        else:
-            _entry = [item for item in self._data_description if item["name"] == column_name]
-        if status_test:
-            return len(_entry) > 0
-        try:
-            return _entry[_index]
-        except IndexError:
-            self.logger.error(
-                f"Data column '{column_name}' not found in reference column definition"
-            )
-            raise
-
     def _prepare_model_parameter(self):
-        """
-        Apply data preparation for model parameters.
-
-        Converts strings to numerical values or lists of values, if required.
-
-        """
+        """Convert string values to numbers and string units to lists (model parameters)."""
         self.data_dict["value"], _ = value_conversion.split_value_and_unit(
-            self.data_dict["value"],
-            "int" in self.data_dict.get("type", "float"),
+            self.data_dict["value"], "int" in self.data_dict.get("type", "float")
         )
         if isinstance(self.data_dict["unit"], str):
             normalized = value_conversion.normalize_dimensionless_unit(
                 self.data_dict["unit"].strip()
             )
-            if normalized is None:
-                self.data_dict["unit"] = None
-            else:
-                self.data_dict["unit"] = gen.convert_string_to_list(
+            self.data_dict["unit"] = (
+                None
+                if normalized is None
+                else value_conversion.convert_string_to_list(
                     normalized, force_comma_separation=True
                 )
+            )
 
     def _convert_results_to_model_format(self):
-        """
-        Convert results to model format.
-
-        Convert lists to strings (as needed for model parameters).
-        """
-        value = self.data_dict["value"]
-        if isinstance(value, list):
-            self.data_dict["value"] = gen.convert_list_to_string(value)
-        if isinstance(self.data_dict["unit"], list):
-            self.data_dict["unit"] = gen.convert_list_to_string(self.data_dict["unit"])
+        """Convert lists to strings (as needed for model parameters)."""
+        for key in ("value", "unit"):
+            if isinstance(self.data_dict[key], list):
+                self.data_dict[key] = value_conversion.convert_list_to_string(self.data_dict[key])
 
     def _check_site_and_array_element_consistency(self, instrument, site):
-        """
-        Check that site and array element names are consistent.
-
-        An example for an inconsistency is 'LSTN' at site 'South'
-        """
+        """Check that site and array element names agree (e.g., 'LSTN' is not at 'South')."""
         if not (instrument and site):
             return
-
         instruments = [instrument] if isinstance(instrument, str) else instrument
         if any(inst.startswith("OBS") for inst in instruments):
             return
-
-        def to_sorted_list(value):
-            """Return value as sorted list."""
-            return [value] if isinstance(value, str) else sorted(value)
-
-        instrument_sites = [names.get_site_from_array_element_name(inst) for inst in instruments]
-        # names.get_site_from_array_element_name might return a list
-        flat_sites = [
-            s
-            for sublist in instrument_sites
-            for s in (sublist if isinstance(sublist, list) else [sublist])
-        ]
-        instrument_site = to_sorted_list(set(flat_sites))
-        site = to_sorted_list(site)
-
-        if instrument_site != site:
+        instrument_sites = set()
+        for inst in instruments:
+            found = names.get_site_from_array_element_name(inst)
+            instrument_sites.update(found if isinstance(found, list) else [found])
+        site_list = [site] if isinstance(site, str) else sorted(site)
+        if sorted(instrument_sites) != site_list:
             raise ValueError(
-                f"Site '{site}' and instrument site '{instrument_site}' are inconsistent."
+                f"Site '{site_list}' and instrument site "
+                f"'{sorted(instrument_sites)}' are inconsistent."
             )

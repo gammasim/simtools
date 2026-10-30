@@ -15,7 +15,7 @@ def test_main_writes_registry_using_output_file_suffix(tmp_test_directory, mocke
             "source_type": "generated",
             "schema_version": None,
         },
-        io_handler=SimpleNamespace(get_output_file=lambda _: output_file),
+        paths=SimpleNamespace(get_output_file=lambda _: output_file),
         logger=SimpleNamespace(info=lambda _: None),
     )
     mocker.patch(
@@ -24,7 +24,7 @@ def test_main_writes_registry_using_output_file_suffix(tmp_test_directory, mocke
     )
     get_registry = mocker.patch(
         "simtools.applications.export_sim_telarray_metadata_schema."
-        "simtel_validate_metadata.get_meta_parameter_registry",
+        "sim_telarray_metadata.get_meta_parameter_registry",
         return_value=registry,
     )
 

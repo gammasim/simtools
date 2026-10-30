@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import yaml
 from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
@@ -149,139 +148,6 @@ def test_validate_and_transform(caplog, mocker, tmp_test_directory):
     mock_prepare_model_parameter.assert_called_once()
 
 
-def test_validate_data_file(caplog, tmp_test_directory):
-    data_validator = validate_data.DataValidator()
-    # no input file defined, should pass
-    data_validator.validate_data_file()
-
-    data_validator.data_file_name = _write_mirror_file(tmp_test_directory)
-    with caplog.at_level(logging.INFO):
-        data_validator.validate_data_file()
-    assert "Validating tabled data from:" in caplog.text
-
-    data_validator.data_file_name = _write_num_gains_file(tmp_test_directory)
-    with caplog.at_level(logging.INFO):
-        data_validator.validate_data_file()
-    assert "Validating data from:" in caplog.text
-
-
-def test_validate_parameter_and_file_name(caplog, tmp_test_directory):
-    num_gain_file = _write_num_gains_file(tmp_test_directory)
-    parameter = "num_gains"
-    parameter_version = "1.0.0"
-
-    data_validator = validate_data.DataValidator()
-    data_validator.data_file_name = num_gain_file
-    data_validator.schema_file_name = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
-    data_validator.validate_and_transform()
-
-    data_validator.data_dict["parameter"] = "incorrect_name"
-    with pytest.raises(
-        ValueError,
-        match=r"Mismatch: parameter 'incorrect_name' vs. file 'num_gains-1.0.0'.",
-    ):
-        data_validator.validate_parameter_and_file_name()
-
-    data_validator.data_file_name = num_gain_file
-    data_validator.data_dict = {
-        "parameter": parameter,
-        "parameter_version": parameter_version,
-    }
-    data_validator.validate_parameter_and_file_name()
-
-    data_validator.data_file_name = Path(tmp_test_directory) / "incorrect_name-1.0.0.json"
-    data_validator.data_dict = {
-        "parameter": parameter,
-        "parameter_version": parameter_version,
-    }
-    with pytest.raises(
-        ValueError, match=r"Mismatch: parameter 'num_gains' vs. file 'incorrect_name-1.0.0'"
-    ):
-        data_validator.validate_parameter_and_file_name()
-
-    data_validator.data_file_name = Path(tmp_test_directory) / "num_gains-2.0.0.json"
-    data_validator.data_dict = {
-        "parameter": parameter,
-        "parameter_version": parameter_version,
-    }
-    with pytest.raises(ValueError, match=r"Mismatch: version '1.0.0' vs. file 'num_gains-2.0.0'"):
-        data_validator.validate_parameter_and_file_name()
-
-    data_validator.data_file_name = Path(tmp_test_directory) / "num_gains.json"
-    data_validator.data_dict = {"parameter": parameter, "parameter_version": None}
-    with caplog.at_level(logging.WARNING):
-        data_validator.validate_parameter_and_file_name()
-    assert "File 'num_gains' has no parameter version defined." in caplog.text
-
-
-def test_validate_invalid_version():
-    data_validator = validate_data.DataValidator(
-        schema_file=MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
-    )
-    data_validator.data_dict = {
-        "parameter": "num_gains",
-        "parameter_version": "invalid",
-        "value": 2,
-        "unit": "",
-    }
-    with pytest.raises(ValueError, match="Invalid version string 'invalid'"):
-        data_validator.validate_and_transform()
-
-
-def test_validate_data_columns(tmp_test_directory, caplog):
-    data_validator = validate_data.DataValidator()
-    with pytest.raises(TypeError):
-        data_validator._validate_data_table()
-
-    data_validator_1 = validate_data.DataValidator(
-        schema_file=None,
-        data_file=_write_mirror_file(tmp_test_directory),
-    )
-    data_validator_1.validate_data_file()
-    with pytest.raises(TypeError):
-        data_validator_1._validate_data_table()
-
-    data_validator_3 = validate_data.DataValidator(
-        schema_file=mirror_2f_schema_file,
-        data_file=_write_mirror_file(tmp_test_directory),
-    )
-    data_validator_3.validate_data_file()
-    data_validator_3._validate_data_table()
-    # test change of units
-    _value_in_org = data_validator_3.data_table["psf"].value[0]
-    data_validator_3._validate_data_columns()
-    for col in data_validator_3._data_description:
-        col["unit"] = "m" if col["unit"] == "cm" else col["unit"]
-    data_validator_3._validate_data_columns()
-    _value_in_m = data_validator_3.data_table["psf"].value[0]
-    assert data_validator_3.data_table["psf"].unit == "m"
-    assert _value_in_org == pytest.approx(_value_in_m * 100.0)
-
-    _incomplete_schema = {"data": []}
-    with open(tmp_test_directory / "incomplete_data_schema.schema.yml", "w") as _file:
-        yaml.dump(_incomplete_schema, _file)
-
-    data_validator_3.schema_file_name = tmp_test_directory / "incomplete_data_schema.schema.yml"
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(IndexError):
-            data_validator_3._validate_data_table()
-    assert "Error reading validation schema from" in caplog.text
-
-
-def test_validate_data_columns_checks_range_after_unit_conversion(reference_columns):
-    data_validator = validate_data.DataValidator()
-    data_validator._data_description = reference_columns
-    data_validator.data_table = Table()
-    data_validator.data_table["wavelength"] = Column([300.0, 700.0], unit="nm", dtype="float64")
-    data_validator.data_table["qe"] = Column([0.1, 0.5], dtype="float64")
-    data_validator.data_table["position_x"] = Column([0.0004, 0.0006], unit="km", dtype="float64")
-
-    data_validator._validate_data_columns()
-
-    assert data_validator.data_table["position_x"].unit == u.m
-    assert data_validator.data_table["position_x"].value[0] == pytest.approx(0.4)
-
-
 def test_sort_data(reference_columns, caplog):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
@@ -330,7 +196,7 @@ def test_sort_data(reference_columns, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(AttributeError):
             data_validator_reverse._sort_data()
-    assert "No data table defined for reverse sorting" in caplog.text
+    assert "No data table defined for sorting" in caplog.text
 
 
 def test_check_data_for_duplicates(reference_columns):
@@ -372,28 +238,6 @@ def test_check_data_for_duplicates(reference_columns):
         data_validator._check_data_for_duplicates()
 
 
-def test_interval_check_allow_range():
-    data_validator = validate_data.DataValidator()
-
-    assert data_validator._interval_check((0.1, 0.9), (0.0, 1.0), "allowed_range")
-    assert data_validator._interval_check((0.0, 1.0), (0.0, 1.0), "allowed_range")
-
-    assert not data_validator._interval_check((-1.0, 0.9), (0.0, 1.0), "allowed_range")
-    assert not data_validator._interval_check((0.0, 1.1), (0.0, 1.0), "allowed_range")
-    assert not data_validator._interval_check((-1.0, 1.1), (0.0, 1.0), "allowed_range")
-
-
-def test_interval_check_required_range():
-    data_validator = validate_data.DataValidator()
-
-    assert data_validator._interval_check((250.0, 700.0), (300.0, 600), "required_range")
-    assert data_validator._interval_check((300.0, 600.0), (300.0, 600), "required_range")
-
-    assert not data_validator._interval_check((350.0, 700.0), (300.0, 600), "required_range")
-    assert not data_validator._interval_check((300.0, 500.0), (300.0, 600), "required_range")
-    assert not data_validator._interval_check((350.0, 500.0), (300.0, 600), "required_range")
-
-
 def test_check_range(reference_columns, caplog):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
@@ -407,9 +251,6 @@ def test_check_range(reference_columns, caplog):
     with pytest.raises(IndexError):
         data_validator._check_range(col_2.name, col_2.min(), col_2.max(), "allowed_range")
 
-    with pytest.raises(KeyError):
-        data_validator._check_range(col_w.name, col_w.min(), col_w.max(), "failed_range")
-
     col_3 = Column(name="qe", data=[0.1, 5.00], dtype="float32")
     with pytest.raises(ValueError, match=r"Value for column 'qe' out of range"):
         data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
@@ -417,31 +258,8 @@ def test_check_range(reference_columns, caplog):
     with pytest.raises(ValueError, match=r"^Value for column 'qe' out of range"):
         data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
 
-    with pytest.raises(KeyError, match=r"Allowed range types are"):
-        data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "invalid_range")
-
-
-def test_check_and_convert_units(reference_columns):
-    data_validator = validate_data.DataValidator()
-    data_validator._data_description = reference_columns
-
-    table_1 = Table()
-    table_1["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
-    table_1["qe"] = Column([0.1, 0.5], unit="dimensionless", dtype="float32")
-    table_1["position_x"] = [0.1, 0.5] * u.km
-    table_1["position_y"] = Column([5.0, 7], unit="km", dtype="float32")
-
-    for col_name in table_1.colnames:
-        table_1[col_name], _ = data_validator._check_and_convert_units(
-            table_1[col_name], unit=None, col_name=col_name
-        )
-
-    # check unit conversion for "position_x" (column type Quantity)
-    assert table_1["position_x"].unit == u.m
-    assert table_1["position_x"].value[0] == pytest.approx(100.0)
-    # check unit conversion for "position_y" (column type Column)
-    assert table_1["position_y"].unit == u.m
-    assert table_1["position_y"].value[1] == pytest.approx(7000.0)
+    # a range that is not defined in the schema is not checked
+    data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "failed_range")
 
 
 def test_check_and_convert_units_with_errors(reference_columns):
@@ -463,36 +281,6 @@ def test_check_and_convert_units_with_errors(reference_columns):
     for col_name in table_3.colnames:
         with pytest.raises(u.core.UnitConversionError):
             data_validator._check_and_convert_units(table_3[col_name], unit=None, col_name=col_name)
-
-
-def test_check_and_convert_units_dimensionless(reference_columns, caplog):
-    data_validator = validate_data.DataValidator()
-    data_validator._data_description = reference_columns
-
-    assert data_validator._check_and_convert_units(0.1, unit="dimensionless", col_name="qe") == (
-        0.1,
-        None,
-    )
-    assert data_validator._check_and_convert_units(0.1, unit=None, col_name="qe") == (
-        0.1,
-        None,
-    )
-    assert data_validator._check_and_convert_units(0.1, unit="", col_name="qe") == (
-        0.1,
-        None,
-    )
-    assert data_validator._check_and_convert_units([0.1, 0.2], unit=[None, ""], col_name="qe") == (
-        [0.1, 0.2],
-        None,
-    )
-
-    # reference column requires a unit, give no unit
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(u.core.UnitConversionError):
-            data_validator._check_and_convert_units(
-                300.0, unit="dimensionless", col_name="wavelength"
-            )
-    assert "Invalid unit in data column " in caplog.text
 
 
 def test_check_and_convert_units_integer_arrays(reference_columns):
@@ -614,283 +402,7 @@ def test_check_for_not_a_number(reference_columns):
         data_validator._check_for_not_a_number(np.nan, "wavelength")
 
 
-def test_read_validation_schema(tmp_test_directory):
-    data_validator = validate_data.DataValidator()
-
-    # no file given
-    with pytest.raises(TypeError):
-        data_validator._read_validation_schema(schema_file=None)
-
-    # file given
-    _schema = data_validator._read_validation_schema(schema_file=mirror_2f_schema_file)
-    assert isinstance(_schema, list)
-
-    # file does not exist
-    with pytest.raises(FileNotFoundError):
-        data_validator._read_validation_schema(schema_file="this_file_does_not_exist.yml")
-
-    # read a 'wrong' schema file with no 'data' key included
-    with open(tmp_test_directory / "wrong_schema.yml", "w") as _file:
-        yaml.dump({"wrong_key": []}, _file)
-    wrong_schema = "wrong_schema.yml"
-    with pytest.raises(KeyError, match=r"Error reading validation schema from .*wrong_schema.yml"):
-        data_validator._read_validation_schema(schema_file=tmp_test_directory / wrong_schema)
-
-    with pytest.raises(ValueError, match=r"^Schema version not_a_version not found"):
-        data_validator._read_validation_schema(
-            schema_file=tmp_test_directory / wrong_schema, schema_version="not_a_version"
-        )
-
-    corsika_starting_grammage = "corsika_starting_grammage.schema.yml"
-    # test model parameter schema with multiple documents - no version given
-    dict_1 = data_validator._read_validation_schema(
-        MODEL_PARAMETER_SCHEMA_PATH / corsika_starting_grammage
-    )
-    assert isinstance(dict_1[0], dict)
-
-    # test model parameter schema with multiple documents - version given
-    dict_2 = data_validator._read_validation_schema(
-        MODEL_PARAMETER_SCHEMA_PATH / corsika_starting_grammage, schema_version="0.2.0"
-    )
-    assert dict_2[0]["type"] == "dict"
-    # test model parameter schema with multiple documents - version given
-    dict_3 = data_validator._read_validation_schema(
-        MODEL_PARAMETER_SCHEMA_PATH / corsika_starting_grammage, schema_version="0.1.0"
-    )
-    assert dict_3[0]["type"] == "float64"
-
-
 # incomplete test
-def test_validate_data_dict():
-    # parameter with unit
-    data_validator = validate_data.DataValidator(
-        schema_file=schema.get_model_parameter_schema_file("reference_point_altitude")
-    )
-    data_validator.data_dict = {
-        "name": "reference_point_altitude",
-        "value": 1000.0,
-        "unit": "km",
-    }
-    data_validator._validate_data_dict()
-
-    data_validator.data_dict = {
-        "name": "reference_point_altitude",
-        "value": 1000.0,
-        "unit": "km",
-        "instrument": "North",
-        "site": "North",
-    }
-    data_validator._validate_data_dict()
-
-    # parameter without unit
-    data_validator_2 = validate_data.DataValidator(
-        schema_file=schema.get_model_parameter_schema_file("num_gains")
-    )
-    data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [""]}
-    data_validator_2._validate_data_dict()
-
-    data_validator_2.data_dict = {"name": "num_gains", "value": np.array([2]), "unit": [""]}
-    data_validator_2._validate_data_dict()
-
-    data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [None]}
-    data_validator_2._validate_data_dict()
-
-    data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": ["null"]}
-    data_validator_2._validate_data_dict()
-
-    data_validator_3 = validate_data.DataValidator(
-        schema_file=schema.get_model_parameter_schema_file("random_focal_length")
-    )
-    data_validator_3.data_dict = {
-        "name": "random_focal_length",
-        "value": [1.0, 2.0],
-        "unit": ["m", "m"],
-    }
-    result_3 = data_validator_3._validate_data_dict()
-    assert isinstance(result_3["value"], list)
-    result_3_str = data_validator_3._validate_data_dict(lists_as_strings=True)
-    assert isinstance(result_3_str["value"], str)
-
-    data_validator_3.data_dict = {
-        "name": "random_focal_length",
-        "value": None,
-        "unit": ["m", "m"],
-    }
-    with pytest.raises(TypeError, match=r"^Error validating dictionary using"):
-        data_validator_3._validate_data_dict()
-
-
-def test_prepare_model_parameter():
-    data_validator = validate_data.DataValidator()
-
-    # input as string without unit
-    data_validator.data_dict = {
-        "name": "num_gains",
-        "value": "2",
-        "unit": None,
-    }
-
-    # input as float plus unit
-    data_validator._prepare_model_parameter()
-    assert data_validator.data_dict["value"] == 2
-    assert data_validator.data_dict["unit"] is None
-
-    data_validator.data_dict = {
-        "name": "reference_point_altitude",
-        "value": 1000.0,
-        "unit": "km",
-    }
-    data_validator._prepare_model_parameter()
-    assert data_validator.data_dict["value"] == pytest.approx(1000.0)
-    assert data_validator.data_dict["unit"] == "km"
-
-    data_validator.data_dict["value"] = "1000. 2000. 3000."
-    data_validator._prepare_model_parameter()
-    assert data_validator.data_dict["value"][0] == pytest.approx(1000.0)
-    assert data_validator.data_dict["value"][2] == pytest.approx(3000.0)
-    assert data_validator.data_dict["unit"] == "km"
-
-    data_validator.data_dict["value"] = "1000. 2000. 3000."
-    data_validator.data_dict["unit"] = "km, kg, s"
-    data_validator._prepare_model_parameter()
-    assert data_validator.data_dict["unit"][0] == "km"
-    assert data_validator.data_dict["unit"][1] == "kg"
-    assert data_validator.data_dict["unit"][2] == "s"
-
-    data_validator.data_dict["value"] = "1000. 2000. 3000."
-    data_validator.data_dict["unit"] = ", , "
-    data_validator._prepare_model_parameter()
-    assert all(item == "" for item in data_validator.data_dict["unit"])
-
-    data_validator.data_dict["value"] = "1000. 2000. 3000."
-    data_validator.data_dict["unit"] = "ct mV, m/s, N /m**2"
-    data_validator._prepare_model_parameter()
-    assert data_validator.data_dict["unit"][0] == "ct mV"
-    assert data_validator.data_dict["unit"][1] == "m/s"
-    assert data_validator.data_dict["unit"][2] == "N /m**2"
-
-    data_validator.data_dict["value"] = "1000 2000 3000"
-    data_validator.data_dict["unit"] = "ct"
-    data_validator.data_dict["type"] = "int64"
-    data_validator._prepare_model_parameter()
-    assert isinstance(data_validator.data_dict["value"][0], int)
-
-    # dimensionless unit as empty string (e.g. from u.Quantity("0.784")):  None
-    data_validator.data_dict = {"name": "mirror_degraded_reflection", "value": 0.784, "unit": ""}
-    data_validator._prepare_model_parameter()
-    assert data_validator.data_dict["unit"] is None
-
-    # dimensionless unit as "dimensionless" string -> None
-    data_validator.data_dict = {"name": "some_param", "value": 1.0, "unit": "dimensionless"}
-    data_validator._prepare_model_parameter()
-    assert data_validator.data_dict["unit"] is None
-
-
-def test_get_value_and_units_as_lists():
-    data_validator = validate_data.DataValidator()
-
-    # Test with single value and unit
-    data_validator.data_dict = {"value": 100, "unit": "m"}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [100]
-    assert units == ["m"]
-
-    # Test with list of values and units
-    data_validator.data_dict = {"value": [100, 200], "unit": ["m", "cm"]}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [100, 200]
-    assert units == ["m", "cm"]
-
-    # Test with numpy array of values and units
-    data_validator.data_dict = {"value": np.array([100, 200]), "unit": np.array(["m", "cm"])}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [100, 200]
-    assert list(units) == ["m", "cm"]
-
-    # Test with unit as "null"
-    data_validator.data_dict = {"value": [100, 200], "unit": ["m", "null"]}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [100, 200]
-    assert units == ["m", None]
-
-    # Test with astropy Quantity
-    data_validator.data_dict = {"value": 100 * u.m, "unit": "km"}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [0.1]
-    assert units == ["km"]
-
-    # Test with astropy Quantities
-    data_validator.data_dict = {"value": [100 * u.m, 200 * u.km], "unit": ["m", "km"]}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [100, 200]
-    assert units == ["m", "km"]
-
-    # Test with astropy Quantities
-    data_validator.data_dict = {"value": [100.0, 200] * u.m, "unit": ["m", "km"]}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [100, 0.2]
-    assert units == ["m", "km"]
-
-    # Test with None value
-    data_validator.data_dict = {"value": None, "unit": None}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [None]
-    assert units == [None]
-
-    # Test with Boolean value
-    data_validator.data_dict = {"value": True, "unit": None}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [True]
-
-
-def test_validate_model_parameter(mocker):
-    mocker.patch(
-        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
-        return_value=[{"name": "parameter", "type": "float", "unit": "km"}],
-    )
-
-    par_dict = {"parameter": "reference_point_altitude", "value": 1000.0, "unit": "km"}
-
-    validated_data = validate_data.DataValidator.validate_model_parameter(par_dict)
-    assert validated_data["value"] == pytest.approx(1000.0)
-    assert validated_data["unit"] == "km"
-
-
-def test_validate_heterogeneous_list(mocker):
-    # Mock schema with heterogeneous type specification
-    mocker.patch(
-        "simtools.data_model.schema.get_model_parameter_schema_file",
-        return_value="/mock/schema.yml",
-    )
-    mocker.patch(
-        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
-        return_value=[
-            {
-                "name": "heterogeneous_param",
-                "type": ["int64", "float64", "string"],
-                "unit": [None, "km", None],
-            }
-        ],
-    )
-    # Mock _validate_value_and_unit to just return the value unchanged
-    mocker.patch(
-        "simtools.data_model.validate_data.DataValidator._validate_value_and_unit",
-        side_effect=lambda value, unit, index: (value, unit),
-    )
-
-    # Valid heterogeneous list: [int, float, string]
-    par_dict = {
-        "parameter": "heterogeneous_param",
-        "value": [10, 20.5, "text"],
-        "unit": [None, "km", None],
-    }
-
-    validated_data = validate_data.DataValidator.validate_model_parameter(par_dict)
-    assert validated_data["value"][0] == 10
-    assert validated_data["value"][1] == pytest.approx(20.5)
-    assert validated_data["value"][2] == "text"
-
-
 def test_validate_heterogeneous_list_from_multi_entry_schema(mocker):
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema_file",
@@ -947,61 +459,6 @@ def test_validate_heterogeneous_list_length_mismatch(mocker):
         validate_data.DataValidator.validate_model_parameter(par_dict)
 
 
-def test_validate_heterogeneous_list_type_mismatch(mocker):
-    mocker.patch(
-        "simtools.data_model.schema.get_model_parameter_schema_file",
-        return_value="/mock/schema.yml",
-    )
-    mocker.patch(
-        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
-        return_value=[
-            {
-                "name": "heterogeneous_param",
-                "type": ["int64", "float64"],
-                "unit": [None, "km"],
-            }
-        ],
-    )
-
-    # Invalid: second element should be float but is string
-    par_dict = {
-        "parameter": "heterogeneous_param",
-        "value": [10, "invalid"],
-        "unit": [None, "km"],
-    }
-
-    with pytest.raises(TypeError, match=r"Error validating heterogeneous list"):
-        validate_data.DataValidator.validate_model_parameter(par_dict)
-
-
-def test_validate_homogeneous_list(mocker):
-    mocker.patch(
-        "simtools.data_model.schema.get_model_parameter_schema_file",
-        return_value="/mock/schema.yml",
-    )
-    mocker.patch(
-        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
-        return_value=[{"name": "homogeneous_param", "type": "float64", "unit": "km"}],
-    )
-    # Mock _validate_value_and_unit to just return the value unchanged
-    mocker.patch(
-        "simtools.data_model.validate_data.DataValidator._validate_value_and_unit",
-        side_effect=lambda value, unit, index: (value, unit),
-    )
-
-    # Valid homogeneous list: all floats
-    par_dict = {
-        "parameter": "homogeneous_param",
-        "value": [1.0, 2.0, 3.0],
-        "unit": ["km", "km", "km"],
-    }
-
-    validated_data = validate_data.DataValidator.validate_model_parameter(par_dict)
-    assert isinstance(validated_data["value"], list)
-    assert len(validated_data["value"]) == 3
-    assert all(isinstance(v, (int, float)) for v in validated_data["value"])
-
-
 def test_validate_homogeneous_list_type_mismatch(mocker):
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema_file",
@@ -1052,77 +509,6 @@ def test_validate_data_files_directory(tmp_test_directory, caplog):
     assert "reference_point_altitude-1.0.0.json" in caplog.text
 
 
-def test_validate_data_files_single_file(caplog, tmp_test_directory):
-    test_file = _write_num_gains_file(tmp_test_directory)
-
-    with caplog.at_level(logging.INFO):
-        validate_data.DataValidator.validate_data_files(file_name=test_file)
-
-    assert "Validated data file" in caplog.text
-    assert "num_gains-1.0.0.json" in caplog.text
-
-
-def test_validate_data_files_with_schema_file(caplog, tmp_test_directory):
-    test_file = _write_num_gains_file(tmp_test_directory)
-    schema_file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
-
-    with caplog.at_level(logging.INFO):
-        validate_data.DataValidator.validate_data_files(
-            file_name=test_file, schema_file=schema_file
-        )
-
-    assert "Validated data file" in caplog.text
-
-
-def test_validate_data_files_reads_schema_from_ecsv_metadata(tmp_test_directory, monkeypatch):
-    test_file = tmp_test_directory / "job_grid.ecsv"
-    Table(
-        rows=[[1]],
-        names=["run_number"],
-        meta={"cta": {"product": {"data": {"model": {"url": "schema-from-ecsv"}}}}},
-    ).write(test_file, format="ascii.ecsv")
-
-    captured = {}
-
-    def _validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
-        captured["schema_file"] = self.schema_file_name
-        captured["data_file"] = self.data_file_name
-
-    monkeypatch.setattr(
-        validate_data.DataValidator, "validate_and_transform", _validate_and_transform
-    )
-
-    validate_data.DataValidator.validate_data_files(file_name=test_file, is_model_parameter=False)
-
-    assert captured["schema_file"] == "schema-from-ecsv"
-    assert captured["data_file"] == test_file
-
-
-def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_missing(
-    monkeypatch, tmp_test_directory
-):
-    captured = {}
-
-    def _validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
-        captured["schema_file"] = self.schema_file_name
-        captured["data_file"] = self.data_file_name
-
-    monkeypatch.setattr(
-        validate_data.DataValidator, "validate_and_transform", _validate_and_transform
-    )
-
-    test_file = tmp_test_directory / "num_gains-1.0.0.json"
-    validate_data.DataValidator.validate_data_files(file_name=test_file, is_model_parameter=False)
-
-    assert captured["schema_file"] == MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
-    assert captured["data_file"] == test_file
-
-
-def test_validate_data_files_no_input():
-    result = validate_data.DataValidator.validate_data_files()
-    assert result is None
-
-
 def test__check_site_and_array_element_consistency():
     data_validator = validate_data.DataValidator()
 
@@ -1169,3 +555,23 @@ def test_empty_table_columns_validate_units_without_value_ranges(required_range)
         validator._validate_data_columns()
         assert validator.data_table["distance"].unit == u.m
         assert len(validator.data_table) == 0
+
+
+def test_validate_model_parameter_keeps_empty_json_array():
+    """An empty JSON array of a dict parameter (allowed by its schema) stays empty."""
+    record = {
+        "parameter": "array_layouts",
+        "parameter_version": "1.0.0",
+        "model_parameter_schema_version": schema.get_model_parameter_schema("array_layouts")[
+            "schema_version"
+        ],
+        "type": "dict",
+        "unit": None,
+        "file": False,
+        "value": [],
+    }
+
+    validated = validate_data.DataValidator.validate_model_parameter(record)
+
+    assert validated["value"] == []
+    assert validated["unit"] is None

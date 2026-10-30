@@ -25,13 +25,29 @@ repos:
     entry: pylint
     language: system
     types: [python]
-    exclude: ^tests/|^simtools/applications/db_development_tools/
+    exclude: ^tests/
     args:
       [
         "-rn",  # Only display messages
         "-sn",  # Don't display the score
         "--init-hook=import sys; sys.path.insert(0, 'src')",
+        "--source-roots=src",
       ]
+  - id: import-linter
+    name: import-linter
+    entry: lint-imports
+    language: system
+    pass_filenames: false
+  - id: vulture
+    name: vulture
+    entry: vulture
+    language: system
+    pass_filenames: false
+  - id: internal-patch-count
+    name: internal patch count
+    entry: python .github/scripts/count_internal_patches.py --max 1267
+    language: system
+    pass_filenames: false
 # https://github.com/pre-commit/pre-commit-hooks
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v6.0.0
@@ -68,7 +84,7 @@ repos:
   - id: codespell
     args: [
       "--skip=tests/resources/example_non_utf-8_file.lis",
-      "--ignore-words-list=als,hel",
+      "--ignore-words-list=als,hel,referenc",
     ]
 # markdownlint
 - repo: https://github.com/igorshubovych/markdownlint-cli
