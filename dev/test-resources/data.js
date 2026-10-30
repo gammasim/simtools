@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793351763570,
+  "lastUpdate": 1793352546688,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -34040,6 +34040,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 477.90234375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9609314d7fdf3726f8ea888774f15c1a805fc2bf",
+          "message": "Shrink large modules (W6) (#2729)\n\n* Shrink large modules; split reporting, PSF reports and array-layout sources\n\nNo library module in the wave's scope exceeds 800 lines. Dead helpers removed,\nduplicated code merged; outputs checked identical against the previous code.\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Fix SonarQube S7517 in trigger line grouping\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Add news fragment\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T10:14:54+01:00",
+          "tree_id": "6255c2f710a982fda06f97a46f0e81f9788f96f4",
+          "url": "https://github.com/gammasim/simtools/commit/9609314d7fdf3726f8ea888774f15c1a805fc2bf"
+        },
+        "date": 1793352528631,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 69.07275458000001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 71.19,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 473.109375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
