@@ -67,22 +67,6 @@ def test_failed_batch_result_is_not_cached(optimizer, mocker):
     assert optimizer.simulation_cache == {}
 
 
-def test_uncached_repetitions_remain_independent(optimizer, mocker):
-    params = {SIGMA: 1.0}
-    values = [(1.0, 2.0, None, None), (3.0, 4.0, None, None)]
-    dispatch = mocker.patch.object(optimizer, DISPATCH_METHOD, return_value=values)
-    assert optimizer._run_parameter_batch([params, params], False) == values
-    dispatch.assert_called_once_with([params, params])
-    assert optimizer.simulation_cache == {}
-    assert optimizer.cache_misses == 0
-
-
-def test_empty_batch_does_not_submit(optimizer, mocker):
-    dispatch = mocker.patch.object(optimizer, DISPATCH_METHOD)
-    assert optimizer._run_parameter_batch([], True) == []
-    dispatch.assert_not_called()
-
-
 @pytest.mark.parametrize(BACKEND, ["local", "htcondor"])
 def test_dispatch_serializable_jobs_with_unique_paths(optimizer, mocker, backend):
     optimizer.args_dict.update({BACKEND: backend, "backend_config": {}})
@@ -138,13 +122,6 @@ def test_worker_isolates_models_and_paths(optimizer, mocker, fails, run_context)
     cleanup.assert_not_called()
 
 
-def test_worker_propagates_unexpected_failure(optimizer, mocker, run_context):
-    mocker.patch.object(psf, INITIALIZE_MODELS, side_effect=OSError(ERROR_MESSAGE))
-    job = evaluation._PSFEvaluationJob(optimizer.args_dict, {}, {}, None, optimizer.output_dir)
-    with pytest.raises(OSError, match=ERROR_MESSAGE):
-        psf._run_psf_evaluation(job, context=run_context)
-
-
 def test_monte_carlo_aggregates_successes_in_order(optimizer, mocker):
     params = {SIGMA: 1.0}
     mocker.patch.object(optimizer, "get_initial_parameters", return_value=params)
@@ -158,11 +135,6 @@ def test_monte_carlo_aggregates_successes_in_order(optimizer, mocker):
     assert result[2] == [4.0, 8.0]
     assert result[6] == pytest.approx(4.0)
     assert result[8] == [2.0, 6.0]
-
-
-@pytest.mark.parametrize("values", [[], [1.0]])
-def test_sample_deviation_with_insufficient_data(values):
-    assert np.isnan(psf._sample_standard_deviation(values))
 
 
 def test_real_local_workers_overlap(optimizer, monkeypatch):
@@ -206,6 +178,34 @@ def test_serial_and_parallel_gradient_match_analytic_result(optimizer, monkeypat
     gradient = optimizer.calculate_gradient({SIGMA: 2.0, OTHER_PARAMETER: 0.0}, 6.0)
     assert gradient[SIGMA] == pytest.approx(3.0)
     assert gradient[OTHER_PARAMETER] == pytest.approx(0.0)
+
+
+def test_uncached_repetitions_remain_independent(optimizer, mocker):
+    params = {SIGMA: 1.0}
+    values = [(1.0, 2.0, None, None), (3.0, 4.0, None, None)]
+    dispatch = mocker.patch.object(optimizer, DISPATCH_METHOD, return_value=values)
+    assert optimizer._run_parameter_batch([params, params], False) == values
+    dispatch.assert_called_once_with([params, params])
+    assert optimizer.simulation_cache == {}
+    assert optimizer.cache_misses == 0
+
+
+def test_empty_batch_does_not_submit(optimizer, mocker):
+    dispatch = mocker.patch.object(optimizer, DISPATCH_METHOD)
+    assert optimizer._run_parameter_batch([], True) == []
+    dispatch.assert_not_called()
+
+
+def test_worker_propagates_unexpected_failure(optimizer, mocker, run_context):
+    mocker.patch.object(psf, INITIALIZE_MODELS, side_effect=OSError(ERROR_MESSAGE))
+    job = evaluation._PSFEvaluationJob(optimizer.args_dict, {}, {}, None, optimizer.output_dir)
+    with pytest.raises(OSError, match=ERROR_MESSAGE):
+        psf._run_psf_evaluation(job, context=run_context)
+
+
+@pytest.mark.parametrize("values", [[], [1.0]])
+def test_sample_deviation_with_insufficient_data(values):
+    assert np.isnan(psf._sample_standard_deviation(values))
 
 
 @pytest.mark.parametrize(("workers", "expected"), [(None, 4), (1, 1), (7, 7), (0, 8), (-1, 8)])

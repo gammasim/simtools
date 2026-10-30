@@ -11,7 +11,7 @@ def test_application_does_not_initialize_model_reader():
     assert "model" not in validate_file_using_schema.APPLICATION.needs
 
 
-@patch("simtools.applications.validate_file_using_schema.output_validator")
+@patch("simtools.applications.validate_file_using_schema.validate_run_outputs")
 @patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_validates_reduced_event_data(mock_start, mock_output_validator):
     logger = Mock()
@@ -36,7 +36,7 @@ def test_main_validates_reduced_event_data(mock_start, mock_output_validator):
     )
 
 
-@patch("simtools.applications.validate_file_using_schema.output_validator")
+@patch("simtools.applications.validate_file_using_schema.validate_run_outputs")
 @patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_validates_trigger_histograms(mock_start, mock_output_validator):
     logger = Mock()

@@ -80,7 +80,7 @@ def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
     mock_telescope_model.site = "North"
     mock_telescope_model.name = "LSTN-01"
     mock_telescope_model.label = "ray_tracing"
-    mock_telescope_model.write_sim_telarray_config_file = mocker.Mock()
+    mock_telescope_model.configuration_writers = {"sim_telarray": mocker.Mock()}
     mock_telescope_model.mirrors.get_single_mirror_parameters = mocker.Mock(
         return_value=(0, 0, 2600.0, 0, 0)
     )
@@ -110,7 +110,6 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north, run_context):
 
 @pytest.fixture
 def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_north, run_context):
-    telescope_model_lst_mock.write_sim_telarray_config_file()
     return RayTracing(
         telescope_model=telescope_model_lst_mock,
         site_model=site_model_north,
@@ -145,7 +144,6 @@ def test_ray_tracing_init(telescope_model_lst_mock, site_model_north, caplog, ru
 def test_ray_tracing_single_mirror_mode(
     telescope_model_lst_mock, site_model_north, caplog, run_context
 ):
-    telescope_model_lst_mock.write_sim_telarray_config_file()
 
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
@@ -168,32 +166,6 @@ def test_ray_tracing_single_mirror_mode(
     assert len(ray.mirrors) == telescope_model_lst_mock.mirrors.number_of_mirrors
 
 
-def test_ray_tracing_single_mirror_mode_mirror_numbers(
-    telescope_model_lst_mock, site_model_north, mocker, run_context
-):
-    telescope_model_lst_mock.write_sim_telarray_config_file()
-    ray = RayTracing(
-        telescope_model=telescope_model_lst_mock,
-        site_model=site_model_north,
-        label=telescope_model_lst_mock.label,
-        source_distance=10 * u.km,
-        zenith_angle=30 * u.deg,
-        off_axis_angle=[0, 2] * u.deg,
-        single_mirror_mode=True,
-        mirror_numbers=[1, 2, 3],
-        context=run_context,
-    )
-
-    assert list(ray.mirrors.keys()) == [1, 2, 3]
-
-    mocker.patch.object(
-        ray.telescope_model.mirrors, "get_single_mirror_parameters", return_value=(0, 0, 0, 0, 0)
-    )
-    mocker.patch.object(ray, "_get_mirror_panel_focal_length", return_value=0)
-    with pytest.raises(ValueError, match=r"Focal length is invalid \(NaN or close to zero\)"):
-        ray._initialize_single_mirror_mode([1, 2, 3])
-
-
 def test_export_results(ray_tracing_lst, caplog, mocker):
 
     ray = copy.deepcopy(ray_tracing_lst)
@@ -209,13 +181,6 @@ def test_export_results(ray_tracing_lst, caplog, mocker):
     mock_write.assert_called_once_with(
         ray._results, ray._file_results, format="ecsv", overwrite=True
     )
-
-
-def test_ray_tracing_no_images(ray_tracing_lst, caplog):
-
-    with caplog.at_level("WARNING"):
-        assert ray_tracing_lst.images() is None
-    assert "No image found" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -244,32 +209,6 @@ def test_analyze(ray_tracing_lst, mocker, export, force, read_called, store_call
     assert mock_export_results.called == export_called
 
 
-@pytest.mark.parametrize("cached_backend", [None, "obdeect"])
-def test_analyze_rejects_results_from_another_backend(ray_tracing_lst, mocker, cached_backend):
-    cached = QTable({CACHED_COLUMN: [True]})
-    if cached_backend is not None:
-        cached.meta[BACKEND_METADATA] = cached_backend
-    cached.write(ray_tracing_lst._file_results, format="ascii.ecsv")
-    mocker.patch.object(ray_tracing_lst, PROCESS_IMAGES, return_value=_example_rows())
-
-    ray_tracing_lst.analyze(export=False)
-
-    assert CACHED_COLUMN not in ray_tracing_lst._results.colnames
-    assert BACKEND_METADATA in ray_tracing_lst._results.meta
-
-
-def test_images_with_psf_images(ray_tracing_lst, mocker):
-    mock_psf_image = mocker.Mock()
-    # off_axis_angle with offset_directions=["N"] results in [(0.0, 0.0)] since it's (0, 1*0) = (0, 0)
-    ray_tracing_lst.psf_images = {(0.0, 0.0): mock_psf_image}
-
-    images = ray_tracing_lst.images()
-
-    assert images is not None
-    assert len(images) == 1
-    assert images[0] == mock_psf_image
-
-
 def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_axis_string):
     _rows = _example_rows()
     ray_tracing_lst._store_results(_rows)
@@ -293,42 +232,6 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
     _rows = _example_rows_single_mirror()
     ray_tracing_lst_single_mirror_mode._store_results(_rows)
     assert len(ray_tracing_lst_single_mirror_mode._results) == len(_rows)
-
-
-def test_get_mirror_panel_focal_length_with_random_normal(ray_tracing_lst, mocker):
-    mock_get_parameter_value = mocker.patch.object(
-        ray_tracing_lst.telescope_model, "get_parameter_value", side_effect=[10.0, [1.0, 0.0]]
-    )
-    mock_rng = mocker.patch("numpy.random.default_rng")
-    mock_rng_instance = mock_rng.return_value
-    mock_rng_instance.normal.return_value = 2.0
-    ray_tracing_lst.use_random_focal_length = True
-
-    focal_length = ray_tracing_lst._get_mirror_panel_focal_length()
-
-    assert focal_length == pytest.approx(12.0)
-    mock_get_parameter_value.assert_has_calls(
-        [call("mirror_focal_length"), call("random_focal_length")]
-    )
-    mock_rng_instance.normal.assert_called_once_with(loc=0, scale=1.0)
-
-
-def test_get_mirror_panel_focal_length_with_random_uniform(ray_tracing_lst, mocker):
-    mock_get_parameter_value = mocker.patch.object(
-        ray_tracing_lst.telescope_model, "get_parameter_value", side_effect=[10.0, [0.0, 1.0]]
-    )
-    mock_rng = mocker.patch("numpy.random.default_rng")
-    mock_rng_instance = mock_rng.return_value
-    mock_rng_instance.uniform.return_value = 0.5
-    ray_tracing_lst.use_random_focal_length = True
-
-    focal_length = ray_tracing_lst._get_mirror_panel_focal_length()
-
-    assert focal_length == pytest.approx(10.5)
-    mock_get_parameter_value.assert_has_calls(
-        [call("mirror_focal_length"), call("random_focal_length")]
-    )
-    mock_rng_instance.uniform.assert_called_once_with(low=-1.0, high=1.0)
 
 
 @pytest.mark.parametrize("max_workers", [0, -1])
@@ -387,38 +290,6 @@ def test_analyze_image(ray_tracing_lst, mocker):
     mock_image.get_effective_area.assert_called_once_with(tel_transmission)
 
 
-def test_analyze_image_zero_theta_offset(ray_tracing_lst, mocker):
-    mock_image = mocker.Mock()
-    mock_image.get_psf.side_effect = [5.0, 0.1]
-    mock_image.get_effective_area.return_value = 100.0
-    mock_image.centroid_x = 0.5
-    mock_image.centroid_y = 0.2
-    mock_image.centroid_x_error = 0.05
-    mock_image.centroid_y_error = 0.02
-
-    result = ray_tracing_lst._analyze_image(
-        image=mock_image,
-        off_x=0.0,
-        off_y=0.0,
-        theta_offset=0.0,
-        containment_fraction=0.8,
-        tel_transmission=0.9,
-    )
-
-    assert np.isnan(result[-2])
-    assert np.isnan(result[-1])
-
-
-def test_read_results(ray_tracing_lst, mocker):
-    mock_read = mocker.patch("astropy.io.ascii.read", return_value=QTable())
-    ray_tracing_lst._file_results = Path("dummy_path.ecsv")
-
-    ray_tracing_lst._read_results()
-
-    mock_read.assert_called_once_with(ray_tracing_lst._file_results, format="ecsv")
-    assert isinstance(ray_tracing_lst._results, QTable)
-
-
 def test_get_psf_mm_raises_when_no_results(ray_tracing_lst):
     ray = copy.deepcopy(ray_tracing_lst)
     ray._results = None
@@ -434,47 +305,6 @@ def test_get_psf_mm_returns_mm_for_quantity(ray_tracing_lst):
         }
     )
     assert pytest.approx(ray.get_psf_mm()) == 15
-
-
-def test_get_psf_mm_returns_mm_for_plain_float(ray_tracing_lst):
-    ray = copy.deepcopy(ray_tracing_lst)
-    ray._results = QTable(
-        {
-            "psf_cm": [1.5],
-        }
-    )
-    assert pytest.approx(ray.get_psf_mm()) == 15
-
-
-def test_plot_histogram_valid_key(ray_tracing_lst, mocker):
-    mock_plot_histogram = mocker.patch("simtools.ray_tracing.ray_tracing.visualize.plot_histogram")
-
-    ray_tracing_lst._results = QTable(
-        {
-            "psf_cm": [4.256768651160611, 4.356768651160611],
-            "psf_deg": [0.1, 0.2],
-            "eff_area": [100.0, 110.0],
-            "eff_flen": [200.0, 210.0],
-        }
-    )
-
-    ray_tracing_lst.plot_histogram(key="psf_cm", bins=10)
-
-    mock_plot_histogram.assert_called_once_with(ray_tracing_lst._results["psf_cm"], bins=10)
-
-
-def test_plot_histogram_invalid_key(ray_tracing_lst):
-    ray_tracing_lst._results = QTable(
-        {
-            "psf_cm": [4.256768651160611, 4.356768651160611],
-            "psf_deg": [0.1, 0.2],
-            "eff_area": [100.0, 110.0],
-            "eff_flen": [200.0, 210.0],
-        }
-    )
-
-    with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
-        ray_tracing_lst.plot_histogram(key="invalid_key", bins=10)
 
 
 def test_plot_valid_key(ray_tracing_lst, mocker):
@@ -501,46 +331,6 @@ def test_plot_valid_key(ray_tracing_lst, mocker):
         extra_label="psf_cm",
     )
     assert ray_tracing_lst.output_directory.joinpath("figures", "plot_file.pdf").exists()
-
-
-def test_plot_effective_focal_length_includes_error_column(ray_tracing_lst, mocker):
-    mock_plot_1d = mocker.patch("simtools.ray_tracing.ray_tracing.visualize.plot_1d")
-    ray_tracing_lst._results = QTable(
-        {
-            "off axis angle": [0.0, 2.0],
-            "eff_flen": [200.0, 210.0],
-            "eff_flen_err": [2.0, 3.0],
-        }
-    )
-
-    ray_tracing_lst.plot(
-        key="eff_flen",
-        error_type="errorbar",
-        error_label="Uncertainty",
-        no_legend=False,
-    )
-
-    data = mock_plot_1d.call_args.args[0]
-    table = data["Effective focal length"]
-    assert table.colnames == ["off axis angle", "eff_flen", "eff_flen_err"]
-    assert mock_plot_1d.call_args.kwargs["error_type"] == "errorbar"
-    assert mock_plot_1d.call_args.kwargs["error_label"] == "Uncertainty"
-    assert mock_plot_1d.call_args.kwargs["no_legend"] is False
-
-
-def test_plot_invalid_key(ray_tracing_lst, off_axis_string):
-    ray_tracing_lst._results = QTable(
-        {
-            off_axis_string: [0.0, 2.0],
-            "psf_cm": [4.256768651160611, 4.356768651160611],
-            "psf_deg": [0.1, 0.2],
-            "eff_area": [100.0, 110.0],
-            "eff_flen": [200.0, 210.0],
-        }
-    )
-
-    with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
-        ray_tracing_lst.plot(key="invalid_key", save=True)
 
 
 def test_plot_save_writes_psf_images_and_cumulative(ray_tracing_lst, mocker):
@@ -631,19 +421,6 @@ x y
     assert ray_tracing.off_axis_angle[2] == (2.0, 1.5)
 
 
-def test_load_offset_file_not_found(telescope_model_lst_mock, site_model_north, run_context):
-    with pytest.raises(FileNotFoundError, match="Offset file not found"):
-        RayTracing(
-            telescope_model=telescope_model_lst_mock,
-            site_model=site_model_north,
-            label="test",
-            zenith_angle=20 * u.deg,
-            source_distance=10 * u.km,
-            offset_file="/nonexistent/path/offsets.ecsv",
-            context=run_context,
-        )
-
-
 def test_load_offset_file_missing_columns(
     tmp_test_directory, telescope_model_lst_mock, site_model_north, run_context
 ):
@@ -668,24 +445,6 @@ x
             offset_file=offset_file,
             context=run_context,
         )
-
-
-def test_process_offset_angles_unknown_direction(
-    telescope_model_lst_mock, site_model_north, caplog, run_context
-):
-    ray = RayTracing(
-        telescope_model=telescope_model_lst_mock,
-        site_model=site_model_north,
-        label="test",
-        zenith_angle=20 * u.deg,
-        source_distance=10 * u.km,
-        context=run_context,
-    )
-    with caplog.at_level(logging.WARNING):
-        result = ray._process_offset_angles([1.0] * u.deg, ["N", "X"])
-    assert len(result) == 1
-    assert result[0] == (0.0, 1.0)
-    assert "Unknown direction X" in caplog.text
 
 
 @pytest.fixture
@@ -734,38 +493,6 @@ def test_simulate_requests(
         assert request.parameter_changes == {}
 
 
-@pytest.mark.parametrize("photon_count", [0, -1, True, 1.5])
-def test_simulate_rejects_invalid_photon_count(ray_tracing_lst, backend, photon_count):
-    _set_context_args(ray_tracing_lst, {"number_of_photons": photon_count})
-    with pytest.raises(ValueError, match="positive integer"):
-        ray_tracing_lst.simulate()
-
-
-def test_simulate_single_mirror_requests(ray_tracing_lst_single_mirror_mode, mocker):
-    ray_tracing = ray_tracing_lst_single_mirror_mode
-    backend = ray_tracing._backend = mocker.Mock()
-    _set_context_args(ray_tracing, {"instrument_seed": 5, "simulation_seed": [7]})
-    ray_tracing.telescope_model.get_single_mirror_list_file.return_value = Path("mirror.dat")
-
-    ray_tracing.simulate()
-
-    requests = backend.simulate.call_args.args[0]
-    for request, (number, mirror_data) in zip(requests, ray_tracing.mirrors.items(), strict=True):
-        assert request.mirror_number == number
-        assert request.photons_per_instance == 100000
-        # One instance; each mirror has its own seeds, derived from the configured ones.
-        assert request.seeds == (
-            tuple(
-                random.seeds(fixed_seed=(seed, number + 1), max_seed=SIMTEL_MAX_SEED)
-                for seed in (5, 7)
-            ),
-        )
-        assert request.parameter_changes["mirror_list"] == "mirror.dat"
-        assert request.parameter_changes["focal_length"] == pytest.approx(
-            mirror_data["source_distance"] * 1.0e5
-        )
-
-
 @pytest.mark.parametrize("do_analyze", [True, False])
 @pytest.mark.parametrize("keep_images", [True, False])
 def test_process_off_axis_and_mirror(ray_tracing_lst, backend, mocker, do_analyze, keep_images):
@@ -788,6 +515,98 @@ def test_process_off_axis_and_mirror(ray_tracing_lst, backend, mocker, do_analyz
     assert len(ray_tracing_lst.psf_images) == (1 if keep_images else 0)
 
 
+def test_ray_tracing_no_images(ray_tracing_lst, caplog):
+
+    with caplog.at_level("WARNING"):
+        assert ray_tracing_lst.images() is None
+    assert "No image found" in caplog.text
+
+
+@pytest.mark.parametrize("cached_backend", [None, "obdeect"])
+def test_analyze_rejects_results_from_another_backend(ray_tracing_lst, mocker, cached_backend):
+    cached = QTable({CACHED_COLUMN: [True]})
+    if cached_backend is not None:
+        cached.meta[BACKEND_METADATA] = cached_backend
+    cached.write(ray_tracing_lst._file_results, format="ascii.ecsv")
+    mocker.patch.object(ray_tracing_lst, PROCESS_IMAGES, return_value=_example_rows())
+
+    ray_tracing_lst.analyze(export=False)
+
+    assert CACHED_COLUMN not in ray_tracing_lst._results.colnames
+    assert BACKEND_METADATA in ray_tracing_lst._results.meta
+
+
+def test_images_with_psf_images(ray_tracing_lst, mocker):
+    mock_psf_image = mocker.Mock()
+    # off_axis_angle with offset_directions=["N"] results in [(0.0, 0.0)] since it's (0, 1*0) = (0, 0)
+    ray_tracing_lst.psf_images = {(0.0, 0.0): mock_psf_image}
+
+    images = ray_tracing_lst.images()
+
+    assert images is not None
+    assert len(images) == 1
+    assert images[0] == mock_psf_image
+
+
+def test_get_psf_mm_returns_mm_for_plain_float(ray_tracing_lst):
+    ray = copy.deepcopy(ray_tracing_lst)
+    ray._results = QTable(
+        {
+            "psf_cm": [1.5],
+        }
+    )
+    assert pytest.approx(ray.get_psf_mm()) == 15
+
+
+def test_plot_histogram_invalid_key(ray_tracing_lst):
+    ray_tracing_lst._results = QTable(
+        {
+            "psf_cm": [4.256768651160611, 4.356768651160611],
+            "psf_deg": [0.1, 0.2],
+            "eff_area": [100.0, 110.0],
+            "eff_flen": [200.0, 210.0],
+        }
+    )
+
+    with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
+        ray_tracing_lst.plot_histogram(key="invalid_key", bins=10)
+
+
+def test_plot_invalid_key(ray_tracing_lst, off_axis_string):
+    ray_tracing_lst._results = QTable(
+        {
+            off_axis_string: [0.0, 2.0],
+            "psf_cm": [4.256768651160611, 4.356768651160611],
+            "psf_deg": [0.1, 0.2],
+            "eff_area": [100.0, 110.0],
+            "eff_flen": [200.0, 210.0],
+        }
+    )
+
+    with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
+        ray_tracing_lst.plot(key="invalid_key", save=True)
+
+
+def test_load_offset_file_not_found(telescope_model_lst_mock, site_model_north, run_context):
+    with pytest.raises(FileNotFoundError, match="Offset file not found"):
+        RayTracing(
+            telescope_model=telescope_model_lst_mock,
+            site_model=site_model_north,
+            label="test",
+            zenith_angle=20 * u.deg,
+            source_distance=10 * u.km,
+            offset_file="/nonexistent/path/offsets.ecsv",
+            context=run_context,
+        )
+
+
+@pytest.mark.parametrize("photon_count", [0, -1, True, 1.5])
+def test_simulate_rejects_invalid_photon_count(ray_tracing_lst, backend, photon_count):
+    _set_context_args(ray_tracing_lst, {"number_of_photons": photon_count})
+    with pytest.raises(ValueError, match="positive integer"):
+        ray_tracing_lst.simulate()
+
+
 @pytest.mark.parametrize("traced_structure", [False, True])
 def test_traced_structure_replaces_telescope_transmission(
     ray_tracing_lst, backend, mocker, traced_structure
@@ -799,17 +618,3 @@ def test_traced_structure_replaces_telescope_transmission(
     ray_tracing_lst._process_off_axis_and_mirror([0.5, 0, 0, 0], True, False, 0.8, False)
 
     assert analyze_image.call_args.args[-1] == pytest.approx(1.0 if traced_structure else 0.5)
-
-
-def test_backend_is_selected_by_configuration(ray_tracing_lst, mocker):
-    backend_class = mocker.patch("simtools.ray_tracing.ray_tracing.interface.get_backend")
-    assert ray_tracing_lst._get_backend() is backend_class.return_value.return_value
-    assert ray_tracing_lst._get_backend() is backend_class.return_value.return_value
-    backend_class.return_value.assert_called_once_with(
-        ray_tracing_lst.telescope_model,
-        ray_tracing_lst.site_model,
-        ray_tracing_lst.label,
-        ray_tracing_lst.zenith_angle,
-        False,
-        context=ray_tracing_lst.context,
-    )

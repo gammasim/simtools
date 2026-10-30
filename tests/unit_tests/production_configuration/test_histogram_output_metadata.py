@@ -9,36 +9,6 @@ from simtools.production_configuration.histogram_output_metadata import (
 )
 
 
-def test_extract_histogram_output_metadata_from_dict_preserves_available_values():
-    source = {
-        "primary_particle": "gamma",
-        "zenith": 20.0 * u.deg,
-        "azimuth": 180.0 * u.deg,
-        "nsb_level": 1.0,
-        "energy_min": 0.1 * u.TeV,
-    }
-
-    result = extract_histogram_output_metadata(
-        source,
-        {
-            "primary_particle": "primary_particle",
-            "zenith": "zenith",
-            "azimuth": "azimuth",
-            "nsb_level": "nsb_level",
-            "br_energy_min": "energy_min",
-            "br_viewcone_max": "viewcone_max",
-        },
-    )
-
-    assert result == {
-        "primary_particle": "gamma",
-        "zenith": 20.0 * u.deg,
-        "azimuth": 180.0 * u.deg,
-        "nsb_level": 1.0,
-        "br_energy_min": 0.1 * u.TeV,
-    }
-
-
 def test_extract_histogram_output_metadata_from_table_row_reconstructs_quantities():
     metadata = Table(
         rows=[

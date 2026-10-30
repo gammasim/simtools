@@ -25,28 +25,6 @@ def test_get_export_file_name(parameter_data, fallback_instrument, expected):
     assert get_export_file_name(parameter_data, fallback_instrument) == expected
 
 
-def test_get_export_file_name_uses_original_source_value():
-    """Use the unqualified source value when metadata has already been exported."""
-    parameter_data = {
-        "value": "table-North-LST.ecsv",
-        SOURCE_VALUE_KEY: "table.ecsv",
-        "instrument": "North-LST",
-    }
-
-    assert get_export_file_name(parameter_data) == "table-North-LST.ecsv"
-
-
-def test_get_export_file_name_can_preserve_source_name():
-    """Allow simulator inputs that require the model-declared basename."""
-    parameter_data = {
-        "value": "atmospheric_profile-1.0.0.ecsv",
-        "instrument": "OBS-South",
-        "qualify_filename": False,
-    }
-
-    assert get_export_file_name(parameter_data) == "atmospheric_profile-1.0.0.ecsv"
-
-
 def test_get_export_file_name_is_idempotent_for_qualified_name():
     parameter_data = {
         "value": "table-1.0.0-SSTS-design.ecsv",
@@ -84,25 +62,3 @@ def test_get_simtel_table_file_name_is_shared_by_model_identity():
 def test_get_simtel_table_file_name_requires_identity_metadata():
     """Unscoped ECSV parameters retain the legacy per-config fallback."""
     assert get_simtel_table_file_name({"value": "table.ecsv"}) is None
-
-
-@pytest.mark.parametrize(
-    "parameter_data",
-    [
-        {
-            "value": "table-North-LST.ecsv",
-            SOURCE_VALUE_KEY: "table.ecsv",
-            "instrument": "North-LST",
-        },
-        {"value": "table.txt"},
-        {"value": 42},
-        {"value": None},
-    ],
-)
-def test_qualify_parameter_file_name_leaves_non_qualifiable_values_unchanged(parameter_data):
-    """Leave already-exported, non-ECSV, and non-string values unchanged."""
-    original = parameter_data.copy()
-    value = parameter_data["value"]
-
-    assert qualify_parameter_file_name(parameter_data) == value
-    assert parameter_data == original

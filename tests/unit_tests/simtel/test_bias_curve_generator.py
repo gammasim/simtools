@@ -219,21 +219,6 @@ def test_calculate_proton_rate_for_file_returns_zero_for_missing_trigger_histogr
         )
 
 
-def test_calculate_proton_rate_for_file_returns_none_for_other_errors(tmp_path, run_context):
-    args = _base_args(tmp_path)
-
-    with patch(
-        "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=ValueError("bad file"),
-    ):
-        assert (
-            bias_curve_generator._calculate_proton_rate_for_file(
-                tmp_path / "events.hdf5", args, run_context
-            )
-            is None
-        )
-
-
 def test_calculate_proton_rate_for_file_returns_none_without_telescope_config(
     tmp_path, run_context
 ):
@@ -623,55 +608,15 @@ def test_calculate_proton_statistics_single_run(tmp_path, run_context):
     assert stats["num_runs"] == 1
 
 
-def test_calculate_proton_rate_for_file_handles_oserror(tmp_path, run_context):
-    """Test _calculate_proton_rate_for_file handles OSError."""
+@pytest.mark.parametrize(
+    "error", [OSError("missing"), KeyError("missing"), ValueError("bad"), AttributeError("missing")]
+)
+def test_calculate_proton_rate_for_file_returns_none_for_errors(tmp_path, run_context, error):
     args = _base_args(tmp_path)
 
     with patch(
         "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=OSError("File not found"),
-    ):
-        result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args, run_context
-        )
-        assert result is None
-
-
-def test_calculate_proton_rate_for_file_handles_keyerror(tmp_path, run_context):
-    """Test _calculate_proton_rate_for_file handles KeyError."""
-    args = _base_args(tmp_path)
-
-    with patch(
-        "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=KeyError("missing_key"),
-    ):
-        result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args, run_context
-        )
-        assert result is None
-
-
-def test_calculate_proton_rate_for_file_handles_valueerror(tmp_path, run_context):
-    """Test _calculate_proton_rate_for_file handles ValueError."""
-    args = _base_args(tmp_path)
-
-    with patch(
-        "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=ValueError("Invalid value"),
-    ):
-        result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args, run_context
-        )
-        assert result is None
-
-
-def test_calculate_proton_rate_for_file_handles_attributeerror(tmp_path, run_context):
-    """Test _calculate_proton_rate_for_file handles AttributeError."""
-    args = _base_args(tmp_path)
-
-    with patch(
-        "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        side_effect=AttributeError("Missing attribute"),
+        side_effect=error,
     ):
         result = bias_curve_generator._calculate_proton_rate_for_file(
             tmp_path / "events.hdf5", args, run_context

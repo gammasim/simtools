@@ -9,6 +9,7 @@ from simtools.io import ascii_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.simulation.configuration import export_model_files
 
 
 def initialize_simulation_models(
@@ -73,7 +74,7 @@ def initialize_simulation_models(
     else:
         calibration_model = None
     for model in tel_model, site_model:
-        model.export_model_files()
+        export_model_files(model)
     return tel_model, site_model, calibration_model
 
 

@@ -574,7 +574,8 @@ def run_psf_simulation(
     if pars is None:
         raise ValueError("No best parameters found")
 
-    tel_model.overwrite_parameters(pars, flat_dict=True)
+    for par_name, par_value in pars.items():
+        tel_model.overwrite_model_parameter(par_name, par_value)
     fraction = args_dict.get("fraction", DEFAULT_FRACTION)
     ray = RayTracing(
         telescope_model=tel_model,

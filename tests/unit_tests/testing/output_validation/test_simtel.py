@@ -68,7 +68,7 @@ def test_simtel_output_validator_includes_metadata_and_reports_failure(mocker):
 def test_assignment_metadata_keys_returns_assign_parameters(mocker):
     """Select sim_telarray metadata parameters represented as assignments."""
     mocker.patch.object(
-        simtel.simtel_validate_metadata,
+        simtel.sim_telarray_metadata,
         "get_meta_parameter_registry",
         return_value={
             "meta_parameters": {

@@ -20,6 +20,7 @@ from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.backends.interface import image_file_name
 from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing, telescope_pointing
+from simtools.simulation.configuration import get_model_writer
 
 
 class SimtelBackend:
@@ -76,7 +77,7 @@ class SimtelBackend:
             Maximum number of concurrent full-telescope simulations.
         """
         if not self.single_mirror_mode:
-            self.telescope_model.write_sim_telarray_config_file(
+            get_model_writer(self.telescope_model).write_sim_telarray_config_file(
                 additional_models=self.site_model, label=self.label
             )
         simulations = [(self._simulator(request, test, force), request) for request in requests]
@@ -209,7 +210,9 @@ class SimtelBackend:
             ``primary_hit_x``, ``primary_hit_y``, ``secondary_hit_x``,
             ``secondary_hit_y``), and the intermediate files written.
         """
-        self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
+        get_model_writer(self.telescope_model).write_sim_telarray_config_file(
+            additional_models=self.site_model
+        )
         directories = {d: work_directory / d for d in ("logs", "scripts", "photons_files")}
         for directory in directories.values():
             directory.mkdir(parents=True, exist_ok=True)

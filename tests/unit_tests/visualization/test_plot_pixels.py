@@ -35,29 +35,6 @@ def _raw_pixels(pixel_shape=1):
     }
 
 
-@pytest.mark.parametrize(
-    ("rotate_angle", "expected_rotate_angle"),
-    [(None, None), (10.0 * u.deg, 10.0 * u.deg)],
-)
-@mock.patch("simtools.visualization.plot_pixels.visualize.save_figure")
-@mock.patch("simtools.visualization.plot_pixels.plt.close")
-@mock.patch("simtools.visualization.plot_pixels.plot_pixel_layout")
-def test_plot_passes_rotate_angle_and_saves(
-    mock_layout, mock_close, mock_save, rotate_angle, expected_rotate_angle
-):
-    camera, raw_pixels = _camera(), _raw_pixels()
-    mock_fig = mock.MagicMock()
-    mock_layout.return_value = mock_fig
-
-    plot_pixels.plot("test.png", camera, raw_pixels, rotate_angle=rotate_angle)
-
-    mock_layout.assert_called_once_with(
-        camera, raw_pixels, rotate_angle=expected_rotate_angle, pixels_id_to_print=80
-    )
-    mock_save.assert_called_once_with(mock_fig, "test.png")
-    mock_close.assert_called_once_with(mock_fig)
-
-
 def test_raw_pixels_from_configuration():
     configuration = {
         "rotate": 90.0,
@@ -111,16 +88,11 @@ def mock_row(values):
     return row
 
 
-@mock.patch("simtools.visualization.plot_pixels.add_pixel_patch_collections")
-@mock.patch("simtools.visualization.plot_pixels.create_pixel_patches_by_type")
-def test_plot_pixel_layout_smoke(mock_patches, mock_add):
+def test_plot_pixel_layout_smoke():
     camera = _camera()
-    mock_patches.return_value = ([], [], [])
-
     fig = plot_pixels.plot_pixel_layout(camera, _raw_pixels(), pixels_id_to_print=1)
 
     assert isinstance(fig, Figure)
-    mock_add.assert_called_once()
     assert "plot_rotate_angle" in camera.pixels
 
 

@@ -11,6 +11,7 @@ from astropy.table import Table
 
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.camera.camera_efficiency_calculator import CameraEfficiencyCalculator
+from simtools.simulation.configuration import get_model_writer
 
 logger = logging.getLogger()
 _TELESCOPE_THROUGHPUT_FILE_PREFIX = "telescope_throughput_"
@@ -81,82 +82,48 @@ def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
         }
     )
     result_table.write(test_results_file, format="ascii.ecsv", overwrite=True)
-
-    # Mock _file["results"] to point to the generated local table.
-    mocker.patch.object(
-        camera_efficiency_lst,
-        "_file",
-        {"results": test_results_file},
-    )
+    mocker.patch.object(camera_efficiency_lst, "_file", {"results": test_results_file})
     return test_results_file
 
 
-def test_report(camera_efficiency_lst):
+def test_report_and_result_file_name(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
-
-
-def test_load_files_uses_telescope_throughput_name(camera_efficiency_lst):
     assert camera_efficiency_lst._file["results"].name.startswith(_TELESCOPE_THROUGHPUT_FILE_PREFIX)
 
 
-def test_prepared_nsb_spectrum_placeholder_uses_site_model_default(
-    camera_efficiency_lst, config_data_lst
+@pytest.mark.parametrize(
+    ("supplied", "initialize_called"),
+    [
+        ({"telescope_model": True, "site_model": True}, False),
+        ({"telescope_model": True, "site_model": False}, True),
+        ({"telescope_model": False, "site_model": True}, True),
+    ],
+)
+def test_init_reuses_supplied_simulation_models(
+    config_data_lst, mocker, run_context, supplied, initialize_called
 ):
-    config = camera_efficiency_lst._configuration(
-        config_data_lst | {"nsb_spectrum": "${prepared:nsb_reference_spectrum.ecsv}"}
-    )
-
-    assert config["nsb_spectrum"] is None
-
-
-def test_init_reuses_supplied_simulation_models(config_data_lst, mocker, run_context):
-    telescope_model = MagicMock(site="North", name="LSTN-01")
-    site_model = MagicMock()
-    initialize_models = mocker.patch(
-        "simtools.camera.camera_efficiency.initialize_simulation_models"
-    )
-
-    camera_efficiency = CameraEfficiency(
-        config_data=config_data_lst,
-        efficiency_type="shower",
-        label="validate_camera_efficiency",
-        telescope_model=telescope_model,
-        site_model=site_model,
-        context=run_context,
-    )
-
-    assert camera_efficiency.telescope_model is telescope_model
-    assert camera_efficiency.site_model is site_model
-    initialize_models.assert_not_called()
-
-
-@pytest.mark.parametrize("provided_model", ["telescope_model", "site_model"])
-def test_init_reuses_each_supplied_simulation_model(
-    config_data_lst, mocker, provided_model, run_context
-):
-    initialized_telescope_model = MagicMock(site="North", name="LSTN-01")
-    initialized_site_model = MagicMock()
     initialize_models = mocker.patch(
         "simtools.camera.camera_efficiency.initialize_simulation_models",
-        return_value=(initialized_telescope_model, initialized_site_model, None),
+        return_value=(MagicMock(site="North", name="LSTN-01"), MagicMock(), None),
     )
-    supplied_model = MagicMock()
+    kwargs = {name: MagicMock() for name, given in supplied.items() if given}
 
     camera_efficiency = CameraEfficiency(
         config_data=config_data_lst,
         efficiency_type="shower",
         label="validate_camera_efficiency",
-        **{provided_model: supplied_model},
         context=run_context,
+        **kwargs,
     )
 
-    assert getattr(camera_efficiency, provided_model) is supplied_model
-    initialize_models.assert_called_once()
+    for name, model in kwargs.items():
+        assert getattr(camera_efficiency, name) is model
+    assert initialize_models.called is initialize_called
 
 
 def test_simulate(camera_efficiency_lst, caplog, mocker):
     export_correction = mocker.patch.object(
-        camera_efficiency_lst.telescope_model,
+        get_model_writer(camera_efficiency_lst.telescope_model),
         "export_nsb_spectrum_to_telescope_altitude_correction_file",
     )
     mock_calculate = mocker.patch.object(
@@ -171,32 +138,20 @@ def test_simulate(camera_efficiency_lst, caplog, mocker):
     mock_calculate.assert_called_once()
 
 
-def test_read_results(camera_efficiency_lst, prepare_results_file):
+def test_read_results_and_derived_efficiencies(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     assert isinstance(camera_efficiency_lst._results, Table)
     assert camera_efficiency_lst._has_results is True
-
-
-def test_calc_camera_efficiency(camera_efficiency_lst, prepare_results_file):
-    camera_efficiency_lst._read_results()
     assert camera_efficiency_lst.calc_camera_efficiency() == pytest.approx(0.32)
-
-
-def test_calc_tel_efficiency(camera_efficiency_lst, prepare_results_file):
-    camera_efficiency_lst._read_results()
-    assert camera_efficiency_lst.calc_tel_efficiency() == pytest.approx(0.6127171314741036)
-
-
-def test_calc_tot_efficiency(camera_efficiency_lst, prepare_results_file):
-    camera_efficiency_lst._read_results()
-    assert camera_efficiency_lst.calc_tot_efficiency(
-        camera_efficiency_lst.calc_tel_efficiency()
-    ) == pytest.approx(0.958684357445742)
-
-
-def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
-    camera_efficiency_lst._read_results()
+    tel_efficiency = camera_efficiency_lst.calc_tel_efficiency()
+    assert tel_efficiency == pytest.approx(0.6127171314741036)
+    assert camera_efficiency_lst.calc_tot_efficiency(tel_efficiency) == pytest.approx(
+        0.958684357445742
+    )
     assert camera_efficiency_lst.calc_reflectivity() == pytest.approx(0.75)
+    result = camera_efficiency_lst.calc_partial_efficiency(350, 450)
+    assert isinstance(result, (float, np.floating))
+    assert 0 <= result <= 1
 
 
 def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file, mocker):
@@ -210,12 +165,10 @@ def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file, mocker):
 
 
 def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_file):
-    # no results available yet
     with caplog.at_level(logging.ERROR):
         camera_efficiency_lst.export_results()
     assert "Cannot export results because they do not exist" in caplog.text
 
-    # results available
     mocker.patch.object(camera_efficiency_lst, "results_summary", return_value={"test": "data"})
     camera_efficiency_lst._read_results()
     with caplog.at_level(logging.INFO):
@@ -223,15 +176,13 @@ def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_f
     assert "Exporting summary results" in caplog.text
 
 
-def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
+def test_analyze(camera_efficiency_lst, prepare_results_file):
+    with pytest.raises(RuntimeError, match="must be simulated before it can be analyzed"):
+        camera_efficiency_lst.analyze(export=False, force=True)
+
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.analyze()
     assert camera_efficiency_lst._has_results is True
-
-
-def test_analyze_requires_simulation_results(camera_efficiency_lst):
-    with pytest.raises(RuntimeError, match="must be simulated before it can be analyzed"):
-        camera_efficiency_lst.analyze(export=False, force=True)
 
 
 def test_analyze_calculates_derived_efficiencies(camera_efficiency_lst, mocker, tmp_test_directory):
@@ -240,16 +191,7 @@ def test_analyze_calculates_derived_efficiencies(camera_efficiency_lst, mocker, 
         "nsb_site nsb_site_eff nsb_be nsb_be_eff"
     ).split()
     row = dict.fromkeys(parameter_names, 1.0)
-    row.update(
-        wl=400.0,
-        qe=0.5,
-        ref=0.5,
-        masts=0.5,
-        filt=0.5,
-        pixel=0.5,
-        atm_trans=2.0,
-        nsb_be=3.0,
-    )
+    row.update(wl=400.0, qe=0.5, ref=0.5, masts=0.5, filt=0.5, pixel=0.5, atm_trans=2.0, nsb_be=3.0)
     camera_efficiency_lst._calculated_results = [row]
     mocker.patch.object(camera_efficiency_lst, "calc_nsb_rate", return_value=(0.0, None))
     mocker.patch.object(camera_efficiency_lst, "results_summary", return_value={})
@@ -286,24 +228,52 @@ def test_analyze_calculates_derived_efficiencies(camera_efficiency_lst, mocker, 
         "nsb_detected",
         "nsb_detected_without_mirrors",
     ]
-    assert results["cherenkov_at_ground"] == pytest.approx(2.0)
-    assert results["cherenkov_after_mirrors"] == pytest.approx(0.5)
-    assert results["cherenkov_at_photodetector"] == pytest.approx(0.125)
-    assert results["cherenkov_detected"] == pytest.approx(0.0625)
-    assert results["cherenkov_detected_without_mirrors"] == pytest.approx(0.25)
-    assert results["nsb_before_correction"] == pytest.approx(3.0)
-    assert results["nsb_after_mirrors"] == pytest.approx(0.75)
-    assert results["nsb_at_photodetector"] == pytest.approx(0.1875)
-    assert results["nsb_detected"] == pytest.approx(0.09375)
-    assert results["nsb_detected_without_mirrors"] == pytest.approx(0.375)
+    expected = {
+        "cherenkov_at_ground": 2.0,
+        "cherenkov_after_mirrors": 0.5,
+        "cherenkov_at_photodetector": 0.125,
+        "cherenkov_detected": 0.0625,
+        "cherenkov_detected_without_mirrors": 0.25,
+        "nsb_before_correction": 3.0,
+        "nsb_after_mirrors": 0.75,
+        "nsb_at_photodetector": 0.1875,
+        "nsb_detected": 0.09375,
+        "nsb_detected_without_mirrors": 0.375,
+    }
+    for name, value in expected.items():
+        assert results[name] == pytest.approx(value)
 
 
-def test_results_summary(camera_efficiency_lst, prepare_results_file):
+def test_results_summary_by_efficiency_type(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.calc_nsb_rate()
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["tel"] == "LSTN-01"
-    assert "meta" in summary
+
+    camera_efficiency_lst.efficiency_type = "nsb"
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = pytest.approx(0.5)
+    camera_efficiency_lst.nsb_rate_ref_conditions = pytest.approx(0.25)
+    summary = camera_efficiency_lst.results_summary()
+    assert summary["nsb_rate"]["value"] == pytest.approx(0.5)
+    assert (
+        summary["nsb_rate"]["description"]
+        == "Expected NSB pixel rate for the provided NSB spectrum"
+    )
+    assert summary["nsb_ref"]["value"] == pytest.approx(0.25)
+    assert summary["nsb_ref"]["description"] == "Expected NSB pixel rate for the reference NSB"
+
+    camera_efficiency_lst.efficiency_type = "muon"
+    summary = camera_efficiency_lst.results_summary()
+    assert (
+        "Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095)"
+        in summary["muon_frac"]["description"]
+    )
+
+
+def test_results_summary_with_custom_nsb_spectrum(camera_efficiency_lst, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.config["nsb_spectrum"] = "/resource/path/custom_spectrum.fits"
+    assert camera_efficiency_lst.results_summary()["meta"]["nsb"] == "custom_spectrum.fits"
 
 
 @pytest.mark.parametrize("efficiency_type", ["shower", "muon", "nsb"])
@@ -316,57 +286,45 @@ def test_plot_efficiency(camera_efficiency_lst, mocker, prepare_results_file, ef
 
 
 def test_save_plot(camera_efficiency_lst, mocker, caplog):
-    fig_mock = mocker.MagicMock()
     with caplog.at_level(logging.INFO):
-        camera_efficiency_lst._save_plot(fig_mock, "test_plot")
+        camera_efficiency_lst._save_plot(mocker.MagicMock(), "test_plot")
     assert "Saved plot test_plot efficiency to" in caplog.text
 
 
-def test_get_nsb_pixel_rate_provided_spectrum(camera_efficiency_lst, mocker):
+@pytest.mark.parametrize(
+    ("reference_conditions", "value", "expected"),
+    [(False, 5.0, 5.0), (False, 6.0 * u.GHz, 6.0), (True, None, 7.0)],
+)
+def test_get_nsb_pixel_rate(camera_efficiency_lst, mocker, reference_conditions, value, expected):
     mocker.patch.object(
-        camera_efficiency_lst.telescope_model, "get_parameter_value", return_value=10
+        camera_efficiency_lst.telescope_model,
+        "get_parameter_value",
+        return_value=20 if reference_conditions else 10,
     )
-    camera_efficiency_lst.nsb_pixel_pe_per_ns = 5.0
-    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate()
-    assert nsb_pixel_rate.unit == u.GHz
-    assert len(nsb_pixel_rate) == 10
-    assert nsb_pixel_rate[0].value == pytest.approx(5.0)
+    if reference_conditions:
+        camera_efficiency_lst.nsb_rate_ref_conditions = 7.0
+    else:
+        camera_efficiency_lst.nsb_pixel_pe_per_ns = value
 
-    camera_efficiency_lst.nsb_pixel_pe_per_ns = 6.0 * u.GHz
-    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate()
-    assert nsb_pixel_rate.unit == u.GHz
-    assert len(nsb_pixel_rate) == 10
-    assert nsb_pixel_rate[0].value == pytest.approx(6.0)
-
-
-def test_get_nsb_pixel_rate_reference_conditions(camera_efficiency_lst, mocker):
-    mocker.patch.object(
-        camera_efficiency_lst.telescope_model, "get_parameter_value", return_value=20
+    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate(
+        reference_conditions=reference_conditions
     )
-    camera_efficiency_lst.nsb_rate_ref_conditions = 7.0
-    nsb_pixel_rate = camera_efficiency_lst.get_nsb_pixel_rate(reference_conditions=True)
+
     assert nsb_pixel_rate.unit == u.GHz
-    assert len(nsb_pixel_rate) == 20
-    assert nsb_pixel_rate[0].value == pytest.approx(7.0)
+    assert len(nsb_pixel_rate) == (20 if reference_conditions else 10)
+    assert nsb_pixel_rate[0].value == pytest.approx(expected)
 
 
 def test_get_x_max_for_efficiency_type_muon(camera_efficiency_lst, mocker, caplog):
     camera_efficiency_lst.efficiency_type = "muon"
     mock_atmo = mocker.MagicMock()
     mock_atmo.interpolate.return_value = 850.5
-    mocker.patch(
-        "simtools.camera.camera_efficiency.AtmosphereProfile",
-        return_value=mock_atmo,
+    mocker.patch("simtools.camera.camera_efficiency.AtmosphereProfile", return_value=mock_atmo)
+    mocker.patch.object(
+        camera_efficiency_lst.site_model, "get_parameter_value_with_unit", return_value=5 * u.km
     )
     mocker.patch.object(
-        camera_efficiency_lst.site_model,
-        "get_parameter_value_with_unit",
-        return_value=5 * u.km,
-    )
-    mocker.patch.object(
-        camera_efficiency_lst.site_model,
-        "get_parameter_value",
-        return_value="atmosphere.txt",
+        camera_efficiency_lst.site_model, "get_parameter_value", return_value="atmosphere.txt"
     )
     with caplog.at_level(logging.INFO):
         x_max = camera_efficiency_lst._get_x_max_for_efficiency_type()
@@ -378,14 +336,9 @@ def test_get_x_max_for_efficiency_type_muon_exports_ecsv_profile(camera_efficien
     camera_efficiency_lst.efficiency_type = "muon"
     mock_atmo = mocker.MagicMock()
     mock_atmo.interpolate.return_value = 850.5
-    mocker.patch(
-        "simtools.camera.camera_efficiency.AtmosphereProfile",
-        return_value=mock_atmo,
-    )
+    mocker.patch("simtools.camera.camera_efficiency.AtmosphereProfile", return_value=mock_atmo)
     mocker.patch.object(
-        camera_efficiency_lst.site_model,
-        "get_parameter_value_with_unit",
-        return_value=5 * u.km,
+        camera_efficiency_lst.site_model, "get_parameter_value_with_unit", return_value=5 * u.km
     )
     mocker.patch.object(
         camera_efficiency_lst.site_model,
@@ -393,7 +346,7 @@ def test_get_x_max_for_efficiency_type_muon_exports_ecsv_profile(camera_efficien
         return_value="atmospheric_profile-1.0.0.ecsv",
     )
     export_file = mocker.patch.object(
-        camera_efficiency_lst.site_model,
+        get_model_writer(camera_efficiency_lst.site_model),
         "export_model_parameter_as_simtel_file",
     )
 
@@ -422,8 +375,9 @@ def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog, run_context)
     mock_dump = mocker.patch(
         "simtools.data_model.model_data_writer.ModelDataWriter.write_model_parameter"
     )
-    args = {"telescope": "LSTN-01", "parameter_version": "1.0.0"}
-    camera_efficiency_lst.context = run_context.replace(args=args)
+    camera_efficiency_lst.context = run_context.replace(
+        args={"telescope": "LSTN-01", "parameter_version": "1.0.0"}
+    )
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.dump_nsb_pixel_rate()
     mock_dump.assert_called_once()
@@ -433,45 +387,13 @@ def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog, run_context)
     assert call_kwargs["parameter_version"] == "1.0.0"
 
 
-def test_calc_partial_efficiency(camera_efficiency_lst, prepare_results_file):
-    camera_efficiency_lst._read_results()
-    result = camera_efficiency_lst.calc_partial_efficiency(350, 450)
-    assert isinstance(result, (float, np.floating))
-    assert 0 <= result <= 1
-
-
-def test_results_summary_nsb_type(camera_efficiency_lst, prepare_results_file):
+def test_results_summary_nsb_type_values(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.efficiency_type = "nsb"
-    camera_efficiency_lst.nsb_pixel_pe_per_ns = pytest.approx(0.5)
-    camera_efficiency_lst.nsb_rate_ref_conditions = pytest.approx(0.25)
-    summary = camera_efficiency_lst.results_summary()
-    assert summary["meta"]["tel"] == "LSTN-01"
-    assert "nsb_rate" in summary
-    assert summary["nsb_rate"]["value"] == pytest.approx(0.5)
-    assert (
-        summary["nsb_rate"]["description"]
-        == "Expected NSB pixel rate for the provided NSB spectrum"
-    )
-    assert "nsb_ref" in summary
-    assert summary["nsb_ref"]["value"] == pytest.approx(0.25)
-    assert summary["nsb_ref"]["description"] == "Expected NSB pixel rate for the reference NSB"
-
-
-def test_results_summary_muon_type(camera_efficiency_lst, prepare_results_file):
-    camera_efficiency_lst._read_results()
-    camera_efficiency_lst.efficiency_type = "muon"
-    summary = camera_efficiency_lst.results_summary()
-    assert summary["meta"]["tel"] == "LSTN-01"
-    assert "muon_frac" in summary
-    assert (
-        "Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095)"
-        in summary["muon_frac"]["description"]
-    )
-
-
-def test_results_summary_with_custom_nsb_spectrum(camera_efficiency_lst, prepare_results_file):
-    camera_efficiency_lst._read_results()
     camera_efficiency_lst.config["nsb_spectrum"] = "/resource/path/custom_spectrum.fits"
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = 0.5
+    camera_efficiency_lst.nsb_rate_ref_conditions = 0.25
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["nsb"] == "custom_spectrum.fits"
+    assert summary["nsb_rate"]["value"] == pytest.approx(0.5)
+    assert summary["nsb_ref"]["value"] == pytest.approx(0.25)

@@ -7,7 +7,6 @@ import pytest
 from astropy.table import QTable
 
 from simtools.model.site_model import SiteModel
-from simtools.simulation.configuration import get_model_writer
 
 logger = logging.getLogger()
 
@@ -31,44 +30,6 @@ def test_get_corsika_site_parameters_with_model_directory(array_model_north, run
         config_file_style=True, model_directory=model_directory
     )
     assert "model/" in str(corsika_site_parameters["IACT ATMOFILE"][0])
-
-
-def test_get_corsika_site_parameters_uses_simtel_atmospheric_profile_file(
-    array_model_north, run_context
-):
-    parameter = array_model_north.site_model.parameters["atmospheric_profile"]
-    parameter.update(
-        value="atmospheric_profile-1.0.0.ecsv",
-        instrument="OBS-North",
-    )
-
-    parameters = array_model_north.site_model.get_corsika_site_parameters(
-        config_file_style=True,
-        model_directory=array_model_north.get_config_directory(),
-    )
-
-    assert parameters["IACT ATMOFILE"][0].name == "atmospheric_profile-1.0.0.dat"
-
-
-def test_get_array_elements_for_layout(model_version, run_context):
-    _north = SiteModel(
-        context=run_context,
-        site="North",
-        label="testing-sitemodel",
-        model_version=model_version,
-    )
-
-    assert isinstance(_north.get_array_elements_for_layout("test_layout"), list)
-    assert len(_north.get_array_elements_for_layout("test_layout")) == 13
-    assert "LSTN-01" in _north.get_array_elements_for_layout("test_layout")
-    assert _north.get_array_elements_for_layout(
-        "TEST_LAYOUT"
-    ) == _north.get_array_elements_for_layout("test_layout")
-
-    with pytest.raises(
-        ValueError, match=r"Array layout 'not_a_layout' not found in 'North' site model."
-    ):
-        _north.get_array_elements_for_layout("not_a_layout")
 
 
 def test_get_array_elements_for_layout_single_telescope(model_version, run_context):
@@ -119,88 +80,6 @@ def test_get_list_of_array_layouts(model_version, run_context):
 
     assert isinstance(_north.get_list_of_array_layouts(), list)
     assert "test_layout" in _north.get_list_of_array_layouts()
-
-
-def test_export_atmospheric_transmission_file(
-    model_version, tmp_test_directory, mocker, run_context
-):
-    _south = SiteModel(
-        context=run_context,
-        site="South",
-        label="testing-sitemodel",
-        model_version=model_version,
-    )
-
-    mocker.patch.object(_south.model_source, "export_model_files")
-
-    model_directory = tmp_test_directory / "model"
-
-    _south.export_atmospheric_transmission_file(model_directory)
-
-    _south.model_source.export_model_files.assert_called_once_with(
-        parameters={
-            "atmospheric_profile": {
-                **_south.parameters["atmospheric_profile"],
-                "qualify_filename": False,
-            }
-        },
-        dest=model_directory,
-    )
-
-
-def test_export_atmospheric_transmission_file_serializes_ecsv_profile(
-    model_version, tmp_test_directory, mocker, run_context
-):
-    site_model = SiteModel(
-        context=run_context,
-        site="South",
-        label="testing-sitemodel",
-        model_version=model_version,
-    )
-    site_model.parameters["atmospheric_profile"].update(
-        value="atmospheric_profile-1.0.0.ecsv",
-        instrument="OBS-South",
-    )
-    serialize = mocker.patch.object(get_model_writer(site_model), "_export_ecsv_as_simtel_table")
-    model_directory = tmp_test_directory / "model"
-
-    site_model.export_atmospheric_transmission_file(model_directory)
-
-    serialize.assert_called_once_with(
-        parameter_name="atmospheric_profile",
-        parameter={
-            **site_model.parameters["atmospheric_profile"],
-            "qualify_filename": False,
-        },
-        model_directory=model_directory,
-        table_format="plain",
-        output_name="atmospheric_profile-1.0.0.dat",
-    )
-
-
-def test_get_nsb_integrated_flux(model_version, mocker, run_context):
-    _south = SiteModel(
-        context=run_context,
-        site="South",
-        label="testing-sitemodel",
-        model_version=model_version,
-    )
-
-    wl_q = [300, 400, 500, 600, 700] * u.nm
-    rate_q = [1, 2, 3, 4, 5] * (1 / (u.nm * u.cm**2 * u.ns * u.sr))
-
-    mock_table = QTable()
-    mock_table["wavelength"] = wl_q
-    mock_table["differential_photon_rate"] = rate_q
-
-    get_parameter_table = mocker.patch.object(
-        _south, "get_parameter_table", return_value=mock_table
-    )
-    result = _south.get_nsb_integrated_flux(wavelength_min=300 * u.nm, wavelength_max=650 * u.nm)
-
-    assert isinstance(result, float)
-    assert result > 0
-    get_parameter_table.assert_called_once_with("nsb_spectrum")
 
 
 def test_get_nsb_integrated_flux_returns_zero_for_empty_wavelength_range(

@@ -3,7 +3,7 @@
 import logging
 import re
 
-from simtools.simtel import simtel_validate_metadata
+from simtools.simtel import sim_telarray_metadata
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ def validate_output(path, rule):
 
 
 def _assignment_metadata_keys():
-    registry = simtel_validate_metadata.get_meta_parameter_registry(validate=False)
+    registry = sim_telarray_metadata.get_meta_parameter_registry(validate=False)
     return {
         name
         for name, definition in registry["meta_parameters"].items()

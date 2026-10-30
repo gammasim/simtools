@@ -81,6 +81,7 @@ def toy_telescope(tmp_test_directory, mocker):
         parameters=parameters, config_file_directory=tmp_test_directory, model_version="9.9.9"
     )
     telescope.name = "TOY-01"
+    telescope.model_files_exported = False
     telescope.get_parameter_value.side_effect = lambda name: parameters[name]["value"]
     telescope.get_single_mirror_list_file.return_value = tmp_test_directory / "single_mirror.dat"
     return telescope
@@ -89,7 +90,9 @@ def toy_telescope(tmp_test_directory, mocker):
 def test_trace_star(toy_telescope):
     seeds = [(3, 4), (5, 6)]  # (instrument seed, simulation seed) of two instances
     tracer = ObdeectRayTracer(toy_telescope)
-    toy_telescope.export_model_files.assert_called_once_with(update_if_necessary=True)
+    toy_telescope.model_reader.export_model_files.assert_called_once_with(
+        parameters=toy_telescope.parameters, dest=toy_telescope.config_file_directory
+    )
     arrivals = tracer.trace_star(20.0, 0.0, 0.0, 10000.0, 10000, seeds)
     assert arrivals["total_photons"] == 20000
     assert not arrivals["has_structure"]

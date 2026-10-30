@@ -275,7 +275,8 @@ def create_psf_vs_offaxis_plot(
     psf_label_deg = get_psf_diameter_label(fraction, unit="degrees")
     logger.info(f"Creating {psf_label_cm} vs off-axis angle plot with best parameters...")
 
-    tel_model.overwrite_parameters(best_pars, flat_dict=True)
+    for par_name, par_value in best_pars.items():
+        tel_model.overwrite_model_parameter(par_name, par_value)
 
     max_offset = args_dict.get("max_offset", MAX_OFFSET_DEFAULT * u.deg)
     offset_step = args_dict.get("offset_step", OFFSET_STEPS_DEFAULT * u.deg)

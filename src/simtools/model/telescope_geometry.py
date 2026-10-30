@@ -386,7 +386,7 @@ def telescope_geometry(tel_model):
     Parameters
     ----------
     tel_model: TelescopeModel
-        Telescope model with exported model files (``export_model_files``).
+        Telescope model with exported model files (``model_reader.export_model_files``).
 
     Returns
     -------

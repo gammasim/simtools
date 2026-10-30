@@ -15,6 +15,7 @@ from simtools.configuration import arguments as cli
 from simtools.model import telescope_geometry
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing.telescope_shadowing import shadowing_shares
+from simtools.simulation.configuration import export_model_files
 from simtools.visualization import plot_telescope_structure as structure
 
 _ARGUMENTS = (
@@ -86,7 +87,7 @@ def main():
             original_structure = None
             if args["telescope_structure_file"] is not None:
                 original_structure = parameters.pop("telescope_structure", None)
-            tel_model.export_model_files()
+            export_model_files(tel_model)
             if original_structure is not None:
                 parameters["telescope_structure"] = original_structure
         model_files = {}

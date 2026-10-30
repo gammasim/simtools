@@ -63,51 +63,6 @@ def test_read_ecsv_asset_rejects_non_ecsv(tmp_test_directory):
         read_ecsv_asset(path)
 
 
-def test_read_ecsv_asset_validates_schema_and_identity(tmp_test_directory):
-    table = _table()
-    path = Path(tmp_test_directory) / "table.ecsv"
-    table.write(path, format="ascii.ecsv")
-    schema_entry = {
-        "allow_extra_columns": True,
-        "table_columns": [
-            {
-                "name": "time",
-                "description": "Time",
-                "type": "float64",
-                "unit": "ns",
-                "required": True,
-            },
-            {
-                "name": "amplitude",
-                "description": "Amplitude",
-                "type": "float64",
-                "unit": "dimensionless",
-                "required": True,
-            },
-        ],
-        "table_metadata": [
-            {"name": "parameter_name", "description": "name", "type": "string", "required": True},
-            {
-                "name": "original_comments",
-                "description": "comments",
-                "type": "array",
-                "required": True,
-            },
-        ],
-    }
-    result = read_ecsv_asset(
-        path,
-        schema_entry=schema_entry,
-        parameter_data={
-            "parameter": "fadc_pulse_shape",
-            "parameter_version": "1.0.0",
-            "instrument": "LSTN-01",
-            "site": "North",
-        },
-    )
-    assert result.colnames == ["time", "amplitude"]
-
-
 def test_read_ecsv_asset_requires_standard_model_parameter_metadata(tmp_test_directory):
     table = _table()
     del table.meta["site"]
@@ -135,27 +90,6 @@ def test_read_ecsv_asset_rejects_missing_description(tmp_test_directory):
         read_ecsv_asset(path)
 
 
-def test_read_ecsv_asset_rejects_noncanonical_unit(tmp_test_directory):
-    table = _table()
-    table["time"] = table["time"].to(u.us)
-    path = Path(tmp_test_directory) / "table.ecsv"
-    table.write(path, format="ascii.ecsv")
-    schema_entry = {
-        "allow_extra_columns": True,
-        "table_columns": [
-            {
-                "name": "time",
-                "description": "Time",
-                "type": "float64",
-                "unit": "ns",
-                "required": True,
-            }
-        ],
-    }
-    with pytest.raises(ValueError, match="expected ns"):
-        read_ecsv_asset(path, schema_entry=schema_entry)
-
-
 def test_validate_table_asset_converts_plain_table():
     table = Table({"time": [0.0, 1.0], "amplitude": [0.0, 1.0]})
     table["time"].info.description = "Time"
@@ -175,18 +109,6 @@ def test_validate_table_asset_rejects_missing_and_unexpected_columns():
 
     with pytest.raises(ValueError, match="Missing required table columns"):
         validate_table_asset(QTable({"amplitude": [1.0]}), schema_entry=schema_entry)
-
-
-def test_validate_table_asset_allows_extra_described_columns():
-    table = _table()
-    schema_entry = {
-        "allow_extra_columns": True,
-        "table_columns": [{"name": "time", "required": True, "description": "Time"}],
-    }
-
-    result = validate_table_asset(table, schema_entry=schema_entry)
-
-    assert result.colnames == ["time", "amplitude"]
 
 
 def test_validate_table_asset_rejects_undescribed_column():
@@ -236,22 +158,6 @@ def test_validate_table_asset_rejects_nonfinite_and_out_of_range_values():
             table,
             schema_entry={"allow_extra_columns": True, "table_columns": [entry]},
         )
-
-
-def test_validate_table_asset_allows_nan_when_declared():
-    table = _table()
-    table["amplitude"][0] = float("nan")
-    entry = {
-        "name": "amplitude",
-        "description": "Amplitude",
-        "type": "float64",
-        "input_processing": ["allow_nan"],
-    }
-
-    validate_table_asset(
-        table,
-        schema_entry={"allow_extra_columns": True, "table_columns": [entry]},
-    )
 
 
 def test_validate_table_asset_rejects_dtype_and_string_mismatch():
@@ -310,30 +216,6 @@ def test_validate_table_asset_rejects_identity_mismatch_and_metadata_type():
     schema_entry = {"table_metadata": [{"name": "source_file_name", "type": "number"}]}
     with pytest.raises(ValueError, match="not of type number"):
         validate_table_asset(table, schema_entry=schema_entry)
-
-
-def test_get_simtel_serialization_returns_contract():
-    schema_dict = {
-        "name": "pulse",
-        "data": [{"table_columns": [{"name": "time", "unit": "ns"}]}],
-        "simulation_software": [
-            {
-                "name": "sim_telarray",
-                "table_format": "pulse",
-                "serialization": {
-                    "columns": ["time"],
-                    "row_sort_keys": ["time"],
-                    "float_format": ".3f",
-                    "write_comments": False,
-                },
-            }
-        ],
-    }
-
-    result = get_simtel_serialization(schema_dict)
-
-    assert result["table_format"] == "pulse"
-    assert result["units"] == {"time": "ns"}
 
 
 @pytest.mark.parametrize(

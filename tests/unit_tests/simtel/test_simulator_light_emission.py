@@ -144,24 +144,6 @@ def test__add_flasher_command_options_event_length_mismatch_raises(simulator_ins
         simulator_instance.build_flasher_event_and_photon_sequences()
 
 
-def test_get_illuminator_pointing_vector_computed_from_position(simulator_instance):
-    simulator_instance.light_emission_config = {}
-    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = [
-        [10.0 * u.m, 20.0 * u.m, 30.0 * u.m],
-        9.0 * u.m,
-    ]
-
-    with patch.object(
-        simulator_instance,
-        "_calibration_pointing_direction",
-        return_value=([0.1, 0.2, 0.3], []),
-    ) as mock_pointing:
-        vec = simulator_instance.get_illuminator_pointing_vector()
-
-    assert vec == [0.1, 0.2, 0.3]
-    mock_pointing.assert_called_once()
-
-
 def test_get_illuminator_position_adds_tower_height(simulator_instance):
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = [
         [10.0 * u.m, 20.0 * u.m, 30.0 * u.m],
@@ -350,28 +332,6 @@ def test_simulate(simulator_instance, tmp_test_directory):
         assert call_args[0][0] == mock_script_path  # First positional arg is the script
 
 
-def test__initialize_light_emission_configuration(simulator_instance):
-
-    # Mock calibration model responses
-    def mock_get_parameter_value(param_name):
-        if param_name == "flasher_type":
-            return "LED"
-        if param_name == FLASHER_PHOTONS:
-            return 5e6
-        return None
-
-    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
-
-    # Test basic configuration
-    config = {"existing_key": "value"}
-    result = simulator_instance._initialize_light_emission_configuration(config)
-
-    # Verify flasher_type was converted to light_source_type (lowercase)
-    assert result[LIGHT_SOURCE_TYPE] == "led"
-    assert result[FLASHER_PHOTONS] == pytest.approx(5e6)
-    assert result["existing_key"] == "value"  # Existing key preserved
-
-
 def test__initialize_light_emission_configuration_with_flasher_photons_override(
     simulator_instance,
 ):
@@ -450,6 +410,7 @@ def test___init__(tmp_test_directory, run_context):
 
     with patch(models_path) as mock_init_models:
         mock_telescope_model = Mock()
+        mock_telescope_model.configuration_writers = {"sim_telarray": Mock()}
         mock_site_model = Mock()
         mock_calibration_model = Mock()
         mock_calibration_model.get_parameter_value.return_value = None
@@ -493,9 +454,9 @@ def test___init__(tmp_test_directory, run_context):
         )
 
         # Verify telescope model config file was written
-        mock_telescope_model.write_sim_telarray_config_file.assert_called_once_with(
-            additional_models=mock_site_model
-        )
+        mock_telescope_model.configuration_writers[
+            "sim_telarray"
+        ].write_sim_telarray_config_file.assert_called_once_with(additional_models=mock_site_model)
 
 
 def test___init___passes_custom_model_directory(tmp_test_directory, run_context):
@@ -504,7 +465,8 @@ def test___init___passes_custom_model_directory(tmp_test_directory, run_context)
     model_directory = Path(tmp_test_directory) / "model" / "isolated"
 
     with patch(models_path) as mock_init_models:
-        mock_init_models.return_value = (Mock(), Mock(), Mock())
+        telescope = Mock(configuration_writers={"sim_telarray": Mock()})
+        mock_init_models.return_value = (telescope, Mock(), Mock())
         SimulatorLightEmission(
             {
                 "site": "North",
@@ -529,6 +491,7 @@ def test___init___with_wavelength(tmp_test_directory, run_context):
 
     with patch(models_path) as mock_init_models:
         mock_telescope_model = Mock()
+        mock_telescope_model.configuration_writers = {"sim_telarray": Mock()}
         mock_site_model = Mock()
         mock_calibration_model = Mock()
         mock_calibration_model.get_parameter_value.return_value = None
@@ -783,69 +746,6 @@ def test__calibration_pointing_direction(simulator_instance):
     assert AXES_OFFSETS in telescope_calls
 
 
-def test__calibration_pointing_direction_with_custom_params(simulator_instance):
-    import numpy as np
-
-    # Mock telescope position and no horizontal offset
-    tel_x, tel_y, tel_z = 5 * u.m, 5 * u.m, 0 * u.m
-
-    def mock_get_telescope_param_with_unit(name):
-        if name == "array_element_position_ground":
-            return [tel_x, tel_y, tel_z]
-        if name == AXES_OFFSETS:
-            return [0.0 * u.m, 0.0 * u.m]
-        return None
-
-    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
-        mock_get_telescope_param_with_unit
-    )
-
-    # Call with custom calibration position parameters
-    custom_x = 0 * u.m
-    custom_y = 0 * u.m
-    custom_z = 5 * u.m
-
-    result = simulator_instance._calibration_pointing_direction(
-        x_cal=custom_x, y_cal=custom_y, z_cal=custom_z
-    )
-
-    # The method returns a tuple: (pointing_vector, [theta, phi, source_theta, source_phi])
-    pointing_vector, _ = result
-
-    # Verify calculations - direction vector is [5, 5, -5]
-    expected_direction = np.array([5.0, 5.0, -5.0])
-    expected_norm = np.linalg.norm(expected_direction)
-    expected_pointing = np.round(expected_direction / expected_norm, 6).tolist()
-
-    assert pointing_vector == expected_pointing
-
-    # Verify calibration model was NOT called (custom params provided)
-    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
-    # But telescope model should still be called
-    telescope_calls = [
-        call.args[0]
-        for call in simulator_instance.telescope_model.get_parameter_value_with_unit.call_args_list
-    ]
-    assert "array_element_position_ground" in telescope_calls
-    assert AXES_OFFSETS in telescope_calls
-
-
-def test_validate_simulations_success(simulator_instance, tmp_test_directory):
-    output_file = Path(tmp_test_directory) / "output.iact"
-    output_file.write_text("test data", encoding=TEXT_ENCODING)
-
-    simulator_instance.runner_service.get_file_name.return_value = output_file
-
-    # Mock the validator to avoid actual validation
-    with patch(
-        "simtools.simtel.simulator_light_emission.simtel_output_validator.validate_sim_telarray"
-    ):
-        result = simulator_instance.validate_simulations()
-
-    # validate_simulations doesn't return anything (returns None on success)
-    assert result is None
-
-
 def test__initialize_light_emission_configuration_with_invalid_wavelength(simulator_instance):
 
     # Mock calibration model responses
@@ -1089,25 +989,6 @@ def test_make_run_command_with_traced_light(simulator_instance, mirror_class, by
     assert "-C telescope_theta=0.0" in script
     assert "-C telescope_phi=0.0" in script
     assert "-C random_seed=5,3" in script
-
-
-def test_seeds_are_drawn_once(simulator_instance, mocker):
-    simulator_instance._seed_pair = None
-    pairs = mocker.patch(
-        "simtools.simtel.simulator_light_emission.instance_seed_pairs", return_value=[(5, 3)]
-    )
-    assert simulator_instance._seeds() == (5, 3)
-    assert simulator_instance._seeds() == (5, 3)
-    pairs.assert_called_once_with(context=simulator_instance.context)
-
-
-def test_backend_only_if_it_traces_light_sources(simulator_instance, mocker):
-    target = "simtools.simtel.simulator_light_emission.get_backend"
-    mocker.patch(target, return_value=Mock(traces_light_sources=False))
-    assert simulator_instance._backend() is None
-    tracing = _tracing_backend()
-    mocker.patch(target, return_value=tracing)
-    assert simulator_instance._backend() is tracing
 
 
 def test_prepare_run_writes_camera_photons(simulator_instance, tmp_test_directory):

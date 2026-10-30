@@ -25,6 +25,7 @@ from simtools.ray_tracing.backends.interface import image_file_name
 from simtools.ray_tracing.parameter_changes import TELESCOPE_STRUCTURE
 from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
+from simtools.simulation.configuration import export_model_files
 from simtools.utils import geometry
 
 _SPEED_OF_LIGHT_M_PER_NS = speed_of_light.to_value(u.m / u.ns)
@@ -51,7 +52,7 @@ class ObdeectRayTracer:
 
     def __init__(self, telescope_model):
         self.telescope_model = telescope_model
-        telescope_model.export_model_files(update_if_necessary=True)
+        export_model_files(telescope_model, update_if_necessary=True)
         self._models = {}
 
     def optical_model(self, telescope_zenith, instrument_seed, changes=None):

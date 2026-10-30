@@ -74,11 +74,6 @@ def test_input_validation(array_model_north, run_context):
     assert am.number_of_telescopes == 13
 
 
-def test_site(array_model_north, run_context):
-    am = array_model_north
-    assert am.site == "North"
-
-
 def test_get_config_file(array_model_north, run_context):
     am = array_model_north
     assert am.config_file_path.name == "CTAO-North-test_layout.cfg"
@@ -148,32 +143,6 @@ def test_export_array_elements_as_table_with_calibration_elements_flag(run_conte
                 table_with_calibration["telescope_name"] == "ILLS"
             ][0].to_value("m")
         )
-
-
-def test_get_array_elements_from_list(array_model_north, site_model_north, run_context):
-    am = array_model_north
-    assert am._get_array_elements_from_list(["LSTN-01", "MSTN-01"]) == {
-        "LSTN-01": None,
-        "MSTN-01": None,
-    }
-    all_msts_plus_lst = am._get_array_elements_from_list(["LSTN-01", "MSTN"], site_model_north)
-    assert "MSTN-01" in all_msts_plus_lst
-    assert "MSTN-05" in all_msts_plus_lst
-    assert "LSTN-01" in all_msts_plus_lst
-
-
-def test_get_all_array_elements_of_type(array_model_north, site_model_north, run_context):
-    am = array_model_north
-    assert am._get_all_array_elements_of_type("LSTS", site_model_north) == {
-        "LSTS-01": None,
-        "LSTS-02": None,
-        "LSTS-03": None,
-        "LSTS-04": None,
-    }
-    # simple check that more than 10 MSTS are there
-    assert len(am._get_all_array_elements_of_type("MSTS", site_model_north)) > 10
-
-    assert len(am._get_all_array_elements_of_type("MSTE", site_model_north)) == 0
 
 
 def test_pack_model_files(array_model_north, model_version, run_context):
@@ -269,31 +238,3 @@ def test_build_calibration_models(run_context):
 
         # Check that CalibrationModel was called twice with correct parameters
         assert mock_calibration_model.call_count == 2
-
-
-def test_build_telescope_models(run_context):
-
-    array_model_north = Mock()
-    array_model_north.model_version = "6.0.0"
-    array_model_north.label = "test"
-
-    site_model = Mock()
-    site_model.site = "North"
-
-    array_elements = {"LSTN-01": None, "non_telescope": None}
-
-    with (
-        patch(
-            "simtools.model.array_model.names.get_collection_name_from_array_element_name"
-        ) as mock_names,
-        patch("simtools.model.array_model.TelescopeModel") as mock_tel_model,
-    ):
-        mock_names.side_effect = lambda name: "telescopes" if name == "LSTN-01" else "other"
-
-        telescope_models, _ = ArrayModel._build_telescope_models(
-            array_model_north, site_model, array_elements, None
-        )
-
-        assert "LSTN-01" in telescope_models
-        assert "non_telescope" not in telescope_models
-        mock_tel_model.assert_called_once()

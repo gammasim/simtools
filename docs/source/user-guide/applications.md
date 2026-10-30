@@ -76,11 +76,8 @@ simtools-derive-telescope-sphere-radius <applications/simtools-derive-telescope-
 simtools-derive-trigger-rates <applications/simtools-derive-trigger-rates>
 simtools-docs-assemble-pages <applications/simtools-docs-assemble-pages>
 simtools-docs-generate-toctree <applications/simtools-docs-generate-toctree>
-simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
-simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>
-simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
 simtools-docs-produce-production-summary <applications/simtools-docs-produce-production-summary>
-simtools-docs-produce-simulation-configuration-report <applications/simtools-docs-produce-simulation-configuration-report>
+simtools-docs-produce-reports <applications/simtools-docs-produce-reports>
 simtools-export-sim-telarray-metadata-schema <applications/simtools-export-sim-telarray-metadata-schema>
 simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-bias-curve-submissions <applications/simtools-generate-bias-curve-submissions>
@@ -100,7 +97,6 @@ simtools-plot-camera <applications/simtools-plot-camera>
 simtools-plot-corsika-limits <applications/simtools-plot-corsika-limits>
 simtools-plot-production-grid <applications/simtools-plot-production-grid>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
-simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
 simtools-plot-telescope-structure <applications/simtools-plot-telescope-structure>
 simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-plot-simulated-event-distributions <applications/simtools-plot-simulated-event-distributions>
@@ -119,7 +115,6 @@ simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-submit-array-layouts <applications/simtools-submit-array-layouts>
 simtools-submit-data-from-external <applications/simtools-submit-data-from-external>
 simtools-submit-model-parameter-from-external <applications/simtools-submit-model-parameter-from-external>
-simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
 simtools-validate-pulse-response <applications/simtools-validate-pulse-response>

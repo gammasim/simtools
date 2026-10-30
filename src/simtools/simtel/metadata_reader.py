@@ -3,7 +3,7 @@
 import logging
 
 from simtools.constants import SIM_TELARRAY_META_PARAMETER_REGISTRY
-from simtools.simtel import simtel_validate_metadata
+from simtools.simtel import sim_telarray_metadata
 from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 from simtools.utils import names
 
@@ -18,9 +18,9 @@ def read_metadata(metadata_file_name):
     _logger.debug(
         "Validating sim_telarray metadata against %s", SIM_TELARRAY_META_PARAMETER_REGISTRY
     )
-    simtel_validate_metadata.validate_metadata_values(global_metadata)
+    sim_telarray_metadata.validate_metadata_values(global_metadata)
     for metadata in telescope_metadata.values():
-        simtel_validate_metadata.validate_metadata_values(metadata)
+        sim_telarray_metadata.validate_metadata_values(metadata)
     site = _get_valid_site(global_metadata.get("site_config_name"))
     return {
         "software_name": "sim_telarray",
