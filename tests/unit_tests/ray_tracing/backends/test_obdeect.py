@@ -2,13 +2,9 @@
 
 import math
 
+import astropy.units as u
 import numpy as np
 import pytest
-
-pytest.importorskip("obdeect")
-
-# pylint: disable-next=wrong-import-position
-import astropy.units as u
 from astropy.constants import c as speed_of_light
 from astropy.table import QTable
 

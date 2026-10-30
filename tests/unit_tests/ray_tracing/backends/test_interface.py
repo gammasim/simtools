@@ -24,7 +24,6 @@ def test_get_backend(run_context):
 
 
 def test_get_backend_obdeect():
-    pytest.importorskip("obdeect")
     from simtools.ray_tracing.backends.obdeect import ObdeectBackend
 
     assert interface.get_backend("obdeect") is ObdeectBackend
@@ -97,8 +96,6 @@ def test_get_backend_obdeect():
     ],
 )
 def test_backend_contract(backend_name, class_name, expected_methods):
-    if backend_name == "obdeect":
-        pytest.importorskip("obdeect")
     backend = interface.get_backend(backend_name)
     assert backend.__name__ == class_name
     for method_name, expected_parameters in expected_methods.items():

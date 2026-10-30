@@ -5,7 +5,8 @@ and supporting structure. The geometry comes from model parameters and does not
 include random alignment errors.
 
 With `--shadowing`, the plot colours each structure element by the light it
-stops on its own. This analysis requires the optional `obdeect` package.
+stops on its own. This analysis requires the `obdeect` package, installed with
+simtools' default dependencies.
 
 ## Example
 

@@ -37,6 +37,7 @@ dependencies = [
   "jsonschema",
   "matplotlib",
   "numpy",
+  "obdeect>=0.6",
   "packaging",
   "particle",
   "pillow",
@@ -65,9 +66,6 @@ optional-dependencies.doc = [
 ]
 optional-dependencies.htcondor = [
   "htcondor>=25.0.7; platform_system=='Linux'",
-]
-optional-dependencies.obdeect = [
-  "obdeect>=0.6",
 ]
 optional-dependencies.tests = [
   "psutil",
