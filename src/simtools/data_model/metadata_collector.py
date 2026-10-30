@@ -20,10 +20,10 @@ from astropy.table import Table
 import simtools.utils.general as gen
 import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA
+from simtools.context import RunContext
 from simtools.data_model import metadata_model, schema, schema_loader
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler
 from simtools.io.file_type import product_suffixes
-from simtools.settings import config
 from simtools.utils import names, value_conversion
 
 _SENSITIVE_CONFIGURATION_ASSIGNMENT = re.compile(
@@ -89,11 +89,12 @@ class MetadataCollector:
         observatory="cta",
         clean_meta=True,
         schema_version="latest",
+        context=None,
     ):
         """Initialize metadata collector."""
         self._logger = logging.getLogger(__name__)
         self.observatory = observatory
-        self.io_handler = io_handler.IOHandler()
+        self.context = context or RunContext.from_environment()
 
         self.args_dict = args_dict or {}
         self.model_parameter_name = model_parameter_name
@@ -136,7 +137,7 @@ class MetadataCollector:
         return self.top_level_meta
 
     @staticmethod
-    def dump(args_dict, output_file, add_activity_name=False):
+    def dump(args_dict, output_file, add_activity_name=False, context=None):
         """
         Write metadata to file (static method).
 
@@ -148,8 +149,10 @@ class MetadataCollector:
             Name of output file.
         add_activity_name: bool
             Add activity name to file name.
+        context: RunContext, optional
+            Run context providing the activity.
         """
-        collector = MetadataCollector(args_dict)
+        collector = MetadataCollector(args_dict, context=context)
         collector.write(output_file, add_activity_name=add_activity_name)
 
     def write(self, yml_file=None, keys_lower_case=True, add_activity_name=False):
@@ -680,7 +683,7 @@ class MetadataCollector:
             Dictionary for top-level activity metadata.
 
         """
-        activity_dict["name"] = self.args_dict.get("label") or config.activity_name
+        activity_dict["name"] = self.args_dict.get("label") or self.context.activity.activity_name
         activity_dict["type"] = "software"
         activity_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
         activity_dict["start"] = self.args_dict.get(

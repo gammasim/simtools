@@ -9,8 +9,9 @@ import astropy.units as u
 import numpy as np
 
 import simtools.version
-from simtools import dependencies, settings
+from simtools import dependencies
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
+from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
@@ -67,6 +68,7 @@ class SimtelConfigWriter:
         telescope_design_model=None,
         label=None,
         model_reader=None,
+        context=None,
     ):
         """Initialize SimtelConfigWriter."""
         self._logger = logging.getLogger(__name__)
@@ -78,6 +80,7 @@ class SimtelConfigWriter:
         self._telescope_model_name = telescope_model_name
         self._telescope_design_model = telescope_design_model
         self._model_reader = model_reader
+        self._context = context or RunContext.from_environment()
         self._serialized_table_cache = {}
         self._camera_file_cache = {}
 
@@ -704,10 +707,10 @@ class SimtelConfigWriter:
         meta_items = {
             "simtools_version": simtools.version.__version__,
             "simtools_model_production_version": self._model_version,
-            **dependencies.get_dependency_metadata(),
+            **dependencies.get_dependency_metadata(context=self._context),
         }
         try:
-            build_opts = dependencies.get_build_options()
+            build_opts = dependencies.get_build_options(context=self._context)
             for key, value in build_opts.items():
                 if key in dependencies.SIMTEL_METADATA_BUILD_OPTION_KEYS:
                     meta_items[f"simtools_{key}"] = value
@@ -716,8 +719,8 @@ class SimtelConfigWriter:
 
         # CORSIKA executable without _flat/_curved suffix (do not know here if curved or flat)
         try:
-            meta_items["simtools_corsika_exec"] = settings.config.corsika_exe.name.removesuffix(
-                "_flat"
+            meta_items["simtools_corsika_exec"] = (
+                self._context.software.corsika_exe.name.removesuffix("_flat")
             )
         except AttributeError as exc:
             raise AttributeError("CORSIKA executable path is not set in settings.") from exc

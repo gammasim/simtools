@@ -1,6 +1,7 @@
 """Execute one serialized job specification for a remote backend."""
 
 import argparse
+import inspect
 import json
 import logging
 import os
@@ -13,13 +14,8 @@ import traceback
 from contextlib import ExitStack
 from pathlib import Path
 
-from simtools.application.model_reader import (
-    create_model_reader_from_configuration,
-    create_model_reader_from_source_config,
-)
-from simtools.io import io_handler
+from simtools.context import RunContext
 from simtools.job_execution.job import JobSpec
-from simtools.settings import config
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +52,12 @@ def _configure_worker_logging(log_file):
 
 def execute_job_spec(job_spec):
     """Execute one Python or command job specification."""
-    _initialize_runtime(job_spec)
+    context = _initialize_runtime(job_spec)
     if job_spec.initializer is not None:
         job_spec.initializer(*job_spec.initargs)
     if job_spec.function is not None:
+        if context is not None and "context" in inspect.signature(job_spec.function).parameters:
+            return job_spec.function(job_spec.item, context=context)
         return job_spec.function(job_spec.item)
     return execute_command(job_spec)[0]
 
@@ -146,18 +144,9 @@ def _list_arguments(key, value):
 
 def _initialize_runtime(job_spec):
     """Restore the submitting application's runtime for function jobs."""
-    if job_spec.runtime_args is None:
-        return
-    config.load(job_spec.runtime_args)
-    if job_spec.model_source_config is not None:
-        model_reader = create_model_reader_from_source_config(job_spec.model_source_config)
-    else:
-        model_reader = create_model_reader_from_configuration(job_spec.runtime_args)
-    config.set_model_reader(model_reader)
-    io_handler.IOHandler().set_paths(
-        output_path=job_spec.runtime_args.get("output_path"),
-        model_path=job_spec.runtime_args.get("model_path"),
-    )
+    if job_spec.context_spec is None:
+        return None
+    return RunContext.from_spec(job_spec.context_spec)
 
 
 def write_job_payload(job_spec, path):

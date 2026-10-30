@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from simtools.context import RunContext
 from simtools.job_execution import execution
 from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
 from simtools.job_execution.backends.htcondor import HTCondorBackend
@@ -27,7 +28,6 @@ from simtools.job_execution.execution import (
 from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 from simtools.job_execution.worker import run as run_worker
 from simtools.job_execution.worker import write_job_payload
-from simtools.settings import config
 
 
 def test_run_command_returns_result_and_runtime(mocker):
@@ -103,19 +103,15 @@ def test_map_ordered_returns_input_order():
     assert map_ordered(_square, [3, 1, 2], max_workers=2) == [9, 1, 4]
 
 
-def test_map_ordered_serializes_runtime_for_remote_jobs(mocker):
+def test_map_ordered_serializes_runtime_for_remote_jobs(mocker, run_context):
     """Remote function jobs receive the submitting application's runtime configuration."""
     execute = mocker.patch("simtools.job_execution.execution.execute_jobs", return_value=[])
     args = {"output_path": "output", "sim_telarray_path": "simtel"}
-    config.load(args, resolve_sim_software_executables=False)
-
-    try:
-        assert map_ordered(_square, [2], backend="htcondor") == []
-    finally:
-        config.load(resolve_sim_software_executables=False)
+    context = RunContext.from_arguments(args, resolve_sim_software_executables=False)
+    assert map_ordered(_square, [2], backend="htcondor", context=context) == []
 
     job = execute.call_args.args[0][0]
-    assert job.runtime_args == args
+    assert job.context_spec == context.to_spec()
 
 
 def test_execute_jobs_empty_input_does_not_resolve_backend():

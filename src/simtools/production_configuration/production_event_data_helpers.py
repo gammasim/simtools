@@ -13,7 +13,7 @@ from simtools.utils import names
 from simtools.utils.names import normalize_array_element_identifier_container
 
 
-def resolve_telescope_configs(args_dict):
+def resolve_telescope_configs(args_dict, context=None):
     """
     Resolve telescope configurations from supported input options.
 
@@ -46,6 +46,7 @@ def resolve_telescope_configs(args_dict):
             layouts if isinstance(layouts, list) else [layouts],
             args_dict.get("site"),
             model_version,
+            context=context,
         )
     if args_dict.get("array_element_list"):
         return {"array_element_list": args_dict["array_element_list"]}

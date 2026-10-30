@@ -18,6 +18,7 @@ def build_workflow_activity_metadata(
     workflow_end,
     runtime_environment,
     workflow_context,
+    context=None,
 ):
     """Build workflow activity metadata from workflow execution context.
 
@@ -50,7 +51,7 @@ def build_workflow_activity_metadata(
     metadata_args["site"] = workflow_context.get("site")
     metadata_args["instrument"] = workflow_context.get("instrument")
 
-    collector = MetadataCollector(metadata_args, clean_meta=False)
+    collector = MetadataCollector(metadata_args, clean_meta=False, context=context)
     activity = collector.get_top_level_metadata().get("cta", {}).get("activity", {})
     if runtime_environment is not None:
         activity["runtime_environment"] = deepcopy(runtime_environment)

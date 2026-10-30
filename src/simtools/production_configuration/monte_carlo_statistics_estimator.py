@@ -6,8 +6,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-from simtools import settings
-from simtools.io import io_handler
+from simtools.context import RunContext
 from simtools.io.file_type import validate_file_type
 from simtools.production_configuration.derive_corsika_limits import FILE_INFO_COLUMNS
 from simtools.production_configuration.histogram_output_metadata import (
@@ -659,6 +658,7 @@ def _build_result_row(
     optimization_energy,
     spectral_index_override,
     plot_diagnostics,
+    context=None,
 ):
     """Build one result row for a selected trigger histogram."""
     reference_id = metadata_row["reference_id"]
@@ -695,8 +695,9 @@ def _build_result_row(
     relative_uncertainty = _compute_relative_uncertainty(expected_counts)
 
     if plot_diagnostics:
+        context = context or RunContext.from_environment()
         plot_monte_carlo_statistics_diagnostics(
-            io_handler.IOHandler().get_output_directory(),
+            context.paths.get_output_directory(),
             metadata_row["array_name"],
             _extract_diagnostic_file_info(metadata_row),
             prepared["energy_edges"],
@@ -714,7 +715,7 @@ def _build_result_row(
     }
 
 
-def estimate_monte_carlo_statistics(args_dict=None, metadata=None):
+def estimate_monte_carlo_statistics(args_dict=None, metadata=None, context=None):
     """
     Estimate required total thrown events for one or more trigger histograms.
 
@@ -731,7 +732,8 @@ def estimate_monte_carlo_statistics(args_dict=None, metadata=None):
         Results table containing required thrown-event estimates and limiting-bin
         diagnostics for each selected trigger histogram.
     """
-    args_dict = args_dict or settings.config.args
+    context = context or RunContext.from_environment()
+    args_dict = args_dict or context.args
     metadata_table, bin_table = load_trigger_histograms(args_dict.get("trigger_histogram_file"))
 
     selected_references = _select_reference_rows(
@@ -741,7 +743,7 @@ def estimate_monte_carlo_statistics(args_dict=None, metadata=None):
     if args_dict.get("plot_diagnostics") and len(selected_references) > 0:
         _logger.info(
             "Writing Monte Carlo statistics diagnostic plots to %s",
-            io_handler.IOHandler().get_output_directory(),
+            context.paths.get_output_directory(),
         )
 
     output_rows = [
@@ -758,6 +760,7 @@ def estimate_monte_carlo_statistics(args_dict=None, metadata=None):
             ),
             args_dict.get("spectral_index"),
             args_dict.get("plot_diagnostics"),
+            context=context,
         )
         for metadata_row in selected_references
     ]
@@ -771,7 +774,7 @@ def estimate_monte_carlo_statistics(args_dict=None, metadata=None):
     if resolved_spectral_index is not None:
         results.meta["spectral_index"] = resolved_spectral_index
     output_file = validate_file_type(
-        io_handler.IOHandler().get_output_file(args_dict.get("output_file")), file_type="table"
+        context.paths.get_output_file(args_dict.get("output_file")), file_type="table"
     )
     results.write(output_file, format="ascii.ecsv", overwrite=True)
     _logger.info(f"Writing Monte Carlo statistics estimates to {output_file}")

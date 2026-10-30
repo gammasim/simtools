@@ -1,38 +1,8 @@
 #!/usr/bin/python3
 
-import copy
-import logging
 from pathlib import Path
-from unittest.mock import patch
-
-import pytest
 
 from simtools.io import io_handler as io_handler_module
-from simtools.io.io_handler import IOHandler
-
-logger = logging.getLogger()
-
-test_file = "test-file.txt"
-
-
-def test_get_output_directory(args_dict, io_handler):
-    assert io_handler.get_output_directory() == Path(f"{args_dict['output_path']}/output/")
-    assert io_handler.get_output_directory(sub_dir="model") == Path(
-        f"{args_dict['output_path']}/output/model/"
-    )
-
-    io_handler_copy = copy.deepcopy(io_handler)
-    io_handler_copy.output_path["default"] = Path(f"{args_dict['output_path']}/unittest-output")
-    assert io_handler_copy.get_output_directory(sub_dir="model") == Path(
-        f"{args_dict['output_path']}/unittest-output/model"
-    )
-
-    with patch.object(Path, "mkdir", side_effect=FileNotFoundError):
-        with pytest.raises(FileNotFoundError, match=r"^Error creating directory"):
-            io_handler.get_output_directory(sub_dir="model")
-
-    with pytest.raises(KeyError, match=r"Output path label 'nonexistent' not found"):
-        io_handler.get_output_directory(output_path_label="nonexistent")
 
 
 def test_resolve_test_resource_path_macros_nested_structures(tmp_test_directory):
@@ -85,38 +55,3 @@ def test_resolve_test_resource_paths_requires_explicit_resource_root(
     )
 
     assert resolved == str(resources_path / "generated/input.ecsv")
-
-
-def test_get_model_configuration_directory(args_dict, io_handler):
-    model_version = "1.0.0"
-    label = "test-io-handler"
-    expected_path = Path(f"{args_dict['output_path']}/output/model/{label}/{model_version}")
-    assert (
-        io_handler.get_model_configuration_directory(sub_dir=label, model_version=model_version)
-        == expected_path
-    )
-
-    with patch.object(Path, "mkdir", side_effect=FileNotFoundError):
-        with pytest.raises(FileNotFoundError, match=r"^Error creating directory"):
-            io_handler.get_model_configuration_directory(sub_dir=label, model_version=model_version)
-
-
-def test_get_output_file_creates_nested_parent(tmp_path):
-    io_handler = IOHandler()
-    io_handler.set_paths(tmp_path)
-
-    output_file = io_handler.get_output_file("pm_photoelectron_spectrum/spectrum.ecsv")
-
-    assert output_file == (tmp_path / "pm_photoelectron_spectrum/spectrum.ecsv").absolute()
-    assert output_file.parent.is_dir()
-
-
-def test_reassigned_output_paths_are_used(io_handler, tmp_test_directory):
-    original = dict(io_handler.output_path)
-    io_handler.output_path = {"default": str(tmp_test_directory), "other": str(tmp_test_directory)}
-
-    assert (
-        io_handler.get_output_directory(output_path_label="other")
-        == Path(tmp_test_directory).resolve()
-    )
-    io_handler.output_path = original

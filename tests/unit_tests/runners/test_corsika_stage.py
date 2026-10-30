@@ -50,8 +50,13 @@ def test_prepare_rejects_input_and_invalid_runs(corsika_stage_mock_array_model):
         corsika_stage_mock_array_model.prepare(run_number="test")
 
 
-def test_prepare_streams_to_downstream_commands(corsika_config_mock_array_model):
-    stage = CorsikaStage(corsika_config_mock_array_model, label="test-stream", sequential=True)
+def test_prepare_streams_to_downstream_commands(corsika_stage_mock_array_model):
+    stage = CorsikaStage(
+        corsika_stage_mock_array_model.corsika_config,
+        label="test-stream",
+        sequential=True,
+        context=corsika_stage_mock_array_model.context,
+    )
 
     stage.prepare(run_number=1, output=StreamTo(("first command", "second command")))
 
@@ -64,8 +69,13 @@ def test_prepare_streams_to_downstream_commands(corsika_config_mock_array_model)
     assert "multi_pipe_config" in stage.file_list
 
 
-def test_prepare_stream_saves_corsika_output(corsika_config_mock_array_model):
-    stage = CorsikaStage(corsika_config_mock_array_model, label="test-save", save_output=True)
+def test_prepare_stream_saves_corsika_output(corsika_stage_mock_array_model):
+    stage = CorsikaStage(
+        corsika_stage_mock_array_model.corsika_config,
+        label="test-save",
+        save_output=True,
+        context=corsika_stage_mock_array_model.context,
+    )
 
     stage.prepare(run_number=1, output=StreamTo(("command",)))
 
@@ -83,11 +93,13 @@ def test_corsika_executable(corsika_stage_mock_array_model):
 
 
 @pytest.mark.parametrize("transition_energy", [None, 120 * u.GeV])
-def test_environment(corsika_stage_mock_array_model, mocker, transition_energy):
-    mock_config = mocker.Mock()
-    mock_config.args = {"corsika_hadronic_transition_energy": transition_energy}
-    mock_config.corsika_interaction_models = ("qgs3", "urqmd")
-    mocker.patch("simtools.settings.config", mock_config)
+def test_environment(corsika_stage_mock_array_model, transition_energy):
+    stage = corsika_stage_mock_array_model
+    stage.context.software.he_interaction = "qgs3"
+    stage.context.software.le_interaction = "urqmd"
+    stage.context = stage.context.replace(
+        args={"corsika_hadronic_transition_energy": transition_energy},
+    )
 
     expected = {
         "SIMTOOLS_CORSIKA_HE_INTERACTION": "qgs3",
@@ -95,7 +107,7 @@ def test_environment(corsika_stage_mock_array_model, mocker, transition_energy):
     }
     if transition_energy is not None:
         expected["SIMTOOLS_CORSIKA_HADRONIC_TRANSITION_ENERGY_GEV"] = "120.0"
-    assert corsika_stage_mock_array_model.environment() == expected
+    assert stage.environment() == expected
 
 
 def test_resources(corsika_stage_mock_array_model):

@@ -12,10 +12,10 @@ from pathlib import Path
 
 import numpy as np
 
-from simtools.application.model_reader import require_model_reader
 from simtools.constants import DEFAULT_SIMULATIONS_REPO
+from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model_repository.asset_names import get_export_file_name
 from simtools.reporting.figure_cache import figure_cache_key
@@ -75,7 +75,7 @@ class ParameterDelta:
         )
 
 
-def _get_figure_cache_key(plot_config, data):
+def _get_figure_cache_key(plot_config, data, context):
     """Hash effective table-plot inputs and output settings for per-run figure reuse."""
     config_for_render = {**plot_config}
     config_for_render["tables"] = [dict(table) for table in plot_config.get("tables", [])]
@@ -84,22 +84,21 @@ def _get_figure_cache_key(plot_config, data):
         table_config.pop("model_version", None)
     return figure_cache_key(
         renderer="plot_tables._plot_data",
-        renderer_modules={
-            "plot_tables": plot_tables.__file__,
-            "visualize": visualize.__file__,
-        },
+        renderer_modules={"plot_tables": plot_tables.__file__, "visualize": visualize.__file__},
         plot_config=config_for_render,
         rendered_data=data,
+        context=context,
     )
 
 
 class ReadParameters:
     """Read and manage model parameter data for report generation."""
 
-    def __init__(self, args, output_path, model_reader=None):
+    def __init__(self, args, output_path, model_reader=None, context=None):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
         self.array_element = args.get("telescope", None)
         self.site = args.get("site", None)
         self.model_version = args.get("model_version", None)
@@ -152,15 +151,7 @@ class ReadParameters:
         if value1 is None or value2 is None:
             result = value1 is None and value2 is None
         elif isinstance(value1, (int, float)) and isinstance(value2, (int, float)):
-            result = bool(
-                np.isclose(
-                    value1,
-                    value2,
-                    rtol=1e-12,
-                    atol=1e-12,
-                    equal_nan=True,
-                )
-            )
+            result = bool(np.isclose(value1, value2, rtol=1e-12, atol=1e-12, equal_nan=True))
         elif isinstance(value1, (list, tuple)) and isinstance(value2, (list, tuple)):
             result = len(value1) == len(value2) and all(
                 self._values_equal(v1, v2) for v1, v2 in zip(value1, value2)
@@ -232,10 +223,7 @@ class ReadParameters:
 
             changes.append(
                 ParameterDelta.from_parameter_data(
-                    parameter,
-                    base_param_data,
-                    current_param_data,
-                    self._format_value_for_delta,
+                    parameter, base_param_data, current_param_data, self._format_value_for_delta
                 )
             )
 
@@ -351,7 +339,7 @@ class ReadParameters:
         plot_kwargs = {k: v for k, v in (("telescope", telescope), ("site", site)) if v}
 
         if parameter == "correct_nsb_spectrum_to_telescope_altitude":
-            plot_names = plot_nsb_altitude_correction(input_file, outpath)
+            plot_names = plot_nsb_altitude_correction(input_file, outpath, context=self.context)
         elif parameter == "camera_pixel_layout":
             plot_names = plot_camera_config(
                 parameter_version,
@@ -360,6 +348,7 @@ class ReadParameters:
                 site or self.site,
                 model_version or self.model_version,
                 self.model_reader,
+                context=self.context,
             )
         elif parameter in (
             "mirror_list",
@@ -374,14 +363,11 @@ class ReadParameters:
                 telescope or self.array_element,
                 site or self.site,
                 model_version or self.model_version,
+                context=self.context,
             )
         elif parameter_version:
             plot_names = self._plot_parameter_tables(
-                parameter,
-                parameter_version,
-                outpath,
-                **plot_kwargs,
-                model_version=model_version,
+                parameter, parameter_version, outpath, **plot_kwargs, model_version=model_version
             )
 
         return plot_names
@@ -402,6 +388,7 @@ class ReadParameters:
             plot_type="all",
             model_reader=self.model_reader,
             model_version=model_version or self.model_version,
+            context=self.context,
         )
 
         if not config_data:
@@ -411,14 +398,16 @@ class ReadParameters:
         plot_names = []
 
         for plot_config, output_file in zip(plot_configs, output_files):
-            plot_data = plot_tables.read_table_data(plot_config, model_reader=self.model_reader)
-            cache_key = _get_figure_cache_key(plot_config, plot_data)
+            plot_data = plot_tables.read_table_data(
+                plot_config, model_reader=self.model_reader, context=self.context
+            )
+            cache_key = _get_figure_cache_key(plot_config, plot_data, self.context)
             figure_stem = f"{output_file.stem.replace('.', '-')}_{cache_key}"
             plot_names.append(figure_stem)
             image_output_file = outpath / figure_stem
             if not image_output_file.with_suffix(".png").exists():
                 plot_tables._plot_data(  # pylint: disable=protected-access
-                    plot_data, plot_config, image_output_file
+                    plot_data, plot_config, image_output_file, context=self.context
                 )
 
         return plot_names
@@ -481,7 +470,7 @@ class ReadParameters:
         markdown_output_file = output_data_path / output_file_name
 
         if not markdown_output_file.exists():
-            outpath = io_handler.IOHandler().get_output_directory("_images")
+            outpath = self.context.paths.get_output_directory("_images")
             outpath.mkdir(parents=True, exist_ok=True)
 
             plot_kwargs = {
@@ -786,14 +775,7 @@ class ReadParameters:
                 short_description = f"***{short_description}***"
 
             data.append(
-                [
-                    inst_class,
-                    parameter,
-                    parameter_version,
-                    value,
-                    description,
-                    short_description,
-                ]
+                [inst_class, parameter, parameter_version, value, description, short_description]
             )
 
         return data, dict_tables
@@ -809,14 +791,7 @@ class ReadParameters:
 
         # Write table rows
         column_widths = [10, 10, 20, 60]
-        for (
-            _,
-            parameter_name,
-            parameter_version,
-            value,
-            description,
-            short_description,
-        ) in data:
+        for _, parameter_name, parameter_version, value, description, short_description in data:
             text = short_description if short_description else description
             wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
             wrapped_text = " ".join(wrapped_text)
@@ -895,14 +870,7 @@ class ReadParameters:
                 dict_tables.append((telescope, parameter, value_data, unit))
 
             data.append(
-                [
-                    telescope,
-                    parameter,
-                    parameter_version,
-                    value,
-                    description,
-                    short_description,
-                ]
+                [telescope, parameter, parameter_version, value, description, short_description]
             )
 
         return data, dict_tables
@@ -955,6 +923,7 @@ class ReadParameters:
             ignore_software_version=True,
             model_reader=self.model_reader,
             model_directory=Path(self.output_path) / "model",
+            context=self.context,
         )
 
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))
@@ -970,7 +939,9 @@ class ReadParameters:
         with output_filename.open("w", encoding="utf-8") as file:
             # Group by class and write sections
             file.write(f"# {telescope_model.name}\n")
-            write_telescope_structure_figure(file, telescope_model, self._logger)
+            write_telescope_structure_figure(
+                file, telescope_model, self._logger, context=self.context
+            )
 
             if not is_design_model:
                 file.write(
@@ -1051,8 +1022,7 @@ class ReadParameters:
         ]
         if dict_items:
             latest_dict_item = max(
-                dict_items,
-                key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
+                dict_items, key=lambda x: tuple(map(int, x["parameter_version"].split(".")))
             )
             self._write_dict_table(
                 parameter,
@@ -1072,6 +1042,7 @@ class ReadParameters:
                 self.model_reader,
                 self.site,
                 self.array_element,
+                self.context,
             )
         file.write("\n\n")
 
@@ -1099,7 +1070,7 @@ class ReadParameters:
 
     def _write_file_flag_section(self, file, parameter, comparison_data, collection):
         """Write image/plot references when parameter entries include files."""
-        outpath = io_handler.IOHandler().get_output_directory("_images")
+        outpath = self.context.paths.get_output_directory("_images")
         latest_item = max(
             comparison_data.get(parameter),
             key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
@@ -1320,10 +1291,7 @@ class ReadParameters:
             ) or telescope_descriptions.get(parameter)
 
             row, dict_table = self._build_calibration_row(
-                parameter,
-                parameter_data,
-                parameter_descriptions,
-                array_element,
+                parameter, parameter_data, parameter_descriptions, array_element
             )
             if row is None:
                 continue

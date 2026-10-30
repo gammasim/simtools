@@ -384,8 +384,7 @@ def test_main_uses_explicit_application_definition(mock_application_start, mock_
         app.main()
 
     mock_application_start.assert_called_once_with()
-    assert app.APPLICATION.setup_io_handler is False
-    assert app.APPLICATION.validate_simulation_dependencies is True
+    assert "sim_telarray" in app.APPLICATION.needs
     assert app.APPLICATION.post_parse == app._post_parse
     mock_write_metadata.assert_called_once()
 
@@ -400,7 +399,9 @@ def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_
     with patch("simtools.applications.simulate_prod._write_job_metadata") as mock_write_metadata:
         app.main()
 
-    mock_simulator_class.assert_called_once_with(label="myprod")
+    mock_simulator_class.assert_called_once_with(
+        label="myprod", context=mock_application_start.return_value
+    )
     mock_simulator.simulate.assert_called_once()
     mock_simulator.validate_simulations.assert_called_once()
     mock_simulator.report.assert_called_once()

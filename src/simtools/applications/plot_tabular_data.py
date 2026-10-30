@@ -47,6 +47,7 @@ APPLICATION = ApplicationDefinition.for_module(
     usage=(
         "simtools-plot-tabular-data --plot_config config_file_name --output_file output_file_name"
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -71,15 +72,17 @@ def main():
 
     plot_tables.plot(
         config=plot_config["plot"],
-        output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
+        output_file=app_context.paths.get_output_file(app_context.args["output_file"]),
         data_path=app_context.args.get("data_search_path"),
         model_reader=app_context.model_reader,
+        context=app_context,
     )
 
     MetadataCollector.dump(
         app_context.args,
-        app_context.io_handler.get_output_file(app_context.args["output_file"]),
+        app_context.paths.get_output_file(app_context.args["output_file"]),
         add_activity_name=True,
+        context=app_context,
     )
 
 

@@ -6,7 +6,7 @@ import yaml
 from astropy.table import Table
 from jsonschema.exceptions import ValidationError
 
-from simtools.io.io_handler import IOHandler
+from simtools.io.output_paths import OutputPaths
 from simtools.production_configuration import parameter_scans
 
 _MODULE = "simtools.production_configuration.parameter_scans"
@@ -212,22 +212,21 @@ def test_clean_scan_grid_metadata_keeps_only_essential_keys(
 @patch(f"{_MODULE}.generate_job_grid")
 @patch(f"{_MODULE}.expand_job_grid_with_scan")
 def test_generate_scan_grids_generates_both_curves_without_mutating_args(
-    mock_expand, mock_generate_job_grid, tmp_test_directory
+    mock_expand, mock_generate_job_grid, tmp_test_directory, run_context
 ):
     args = _base_args(tmp_test_directory)
     original_args = dict(args)
-    io_handler = IOHandler()
-    io_handler.set_paths(output_path=Path(args["output_path"]).resolve())
+    paths = OutputPaths(output_path=Path(args["output_path"]).resolve())
 
     with (
         patch(f"{_MODULE}.resolve_array_layout_name", return_value="LSTN-01") as mock_layout,
         patch(f"{_MODULE}._threshold_param_name", return_value="asum_threshold") as mock_param,
     ):
-        parameter_scans.generate_scan_grids(args, io_handler)
+        parameter_scans.generate_scan_grids(args, paths, run_context)
 
     assert args == original_args
     mock_layout.assert_called_once_with("LSTN-01", "7.0.0")
-    mock_param.assert_called_once_with(args, "LSTN-01")
+    mock_param.assert_called_once_with(args, "LSTN-01", run_context)
     assert [call.args[0]["label"] for call in mock_generate_job_grid.call_args_list] == [
         "nsb",
         "proton",
@@ -237,11 +236,10 @@ def test_generate_scan_grids_generates_both_curves_without_mutating_args(
     assert mock_expand.call_count == 2
 
 
-def test_generate_scan_grid_writes_scan_config_and_expands_grid(tmp_test_directory):
+def test_generate_scan_grid_writes_scan_config_and_expands_grid(tmp_test_directory, run_context):
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()
-    io_handler = IOHandler()
-    io_handler.set_paths(output_path=output_root)
+    paths = OutputPaths(output_path=output_root)
     curve_directory = output_root / "nsb"
 
     with (
@@ -253,7 +251,8 @@ def test_generate_scan_grid_writes_scan_config_and_expands_grid(tmp_test_directo
             ("gamma", "nsb_energy_range"),
             {**args, "threshold_parameter": "asum_threshold"},
             "LSTN-01",
-            io_handler,
+            paths,
+            run_context,
         )
 
     scan_config_file = curve_directory / "scan_config.yaml"
@@ -282,13 +281,15 @@ def test_generate_scan_grid_writes_scan_config_and_expands_grid(tmp_test_directo
     ],
 )
 def test_threshold_parameter_is_chosen_from_telescope_model(
-    default_trigger, expected_param, tmp_test_directory
+    default_trigger, expected_param, tmp_test_directory, run_context
 ):
     args = _base_args(tmp_test_directory)
     with patch(f"{_MODULE}.TelescopeModel") as model:
         model.return_value.get_parameter_value.return_value = default_trigger
-        assert parameter_scans._threshold_param_name(args, "LSTN-01") == expected_param
-    model.assert_called_once_with(site="North", telescope_name="LSTN-01", model_version="7.0.0")
+        assert parameter_scans._threshold_param_name(args, "LSTN-01", run_context) == expected_param
+    model.assert_called_once_with(
+        site="North", telescope_name="LSTN-01", model_version="7.0.0", context=run_context
+    )
 
 
 @pytest.mark.parametrize(

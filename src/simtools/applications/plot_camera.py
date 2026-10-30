@@ -71,6 +71,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -85,7 +86,7 @@ def main():
         model_version=args["model_version"],
         label=label,
         model_reader=app_context.model_reader,
-        context=app_context.context,
+        context=app_context,
     )
     tel_model.export_model_files()
     app_context.logger.info(f"\nPlot camera for {tel_model.name}\n")
@@ -120,7 +121,7 @@ def main():
             camera_pixels,
         )
         fig = plot_selected_trigger_patches(camera, groups, args["camera_in_sky_coor"])
-    output_dir = app_context.context.paths.get_output_directory()
+    output_dir = app_context.paths.get_output_directory()
     plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
     save_figure(fig, f"{plot_file_prefix!s}", log_title="camera")
 

@@ -67,23 +67,24 @@ def _pool_result(
     }
 
 
-def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory):
+def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory, run_context):
     tmp_test_directory = Path(tmp_test_directory)
-    mock_io = mocker.patch("simtools.io.io_handler.IOHandler")
-    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+    run_context.paths.output_path["default"] = tmp_test_directory
     metadata = {"cta": {"activity": {"name": "production_derive_corsika_limits"}}}
     mock_metadata_collector = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.MetadataCollector"
     )
     mock_metadata_collector.return_value.get_top_level_metadata.return_value = metadata
 
-    derive_corsika_limits.write_results(mock_results, mock_args_dict, DEFAULT_ALLOWED_LOSSES, 0.1)
+    derive_corsika_limits.write_results(
+        mock_results, mock_args_dict, DEFAULT_ALLOWED_LOSSES, 0.1, run_context
+    )
 
     output_file = tmp_test_directory / "corsika_limits.ecsv"
     output_table = Table.read(output_file, format="ascii.ecsv")
     assert output_table.meta["cta"] == metadata["cta"]
     assert not output_file.with_suffix(".meta.yml").exists()
-    mock_metadata_collector.assert_called_once_with(mock_args_dict)
+    mock_metadata_collector.assert_called_once_with(mock_args_dict, context=run_context)
 
 
 def test_load_output_table_configuration_from_schema_raises_without_data(mocker):
@@ -147,7 +148,7 @@ def test_generate_corsika_limits_grid_requires_trigger_histogram_file(mock_args_
 
 
 def test_generate_corsika_limits_grid_from_trigger_histogram_file(
-    mocker, mock_args_dict, tmp_test_directory
+    mocker, mock_args_dict, tmp_test_directory, run_context
 ):
     args = mock_args_dict.copy()
     args["trigger_histogram_file"] = "trigger_histograms.hdf5"
@@ -174,11 +175,9 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
-    mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    ).return_value.get_output_directory.return_value = tmp_test_directory
+    run_context.paths.output_path["default"] = Path(tmp_test_directory)
 
-    derive_corsika_limits.generate_corsika_limits_grid(args)
+    derive_corsika_limits.generate_corsika_limits_grid(args, context=run_context)
 
     mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=["alpha"])
     mock_derive.assert_called_once()
@@ -189,7 +188,7 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
 
 
 def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given(
-    mocker, mock_args_dict, tmp_test_directory
+    mocker, mock_args_dict, tmp_test_directory, run_context
 ):
     args = mock_args_dict.copy()
     args["trigger_histogram_file"] = "trigger_histograms.hdf5"
@@ -222,11 +221,9 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
-    mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    ).return_value.get_output_directory.return_value = tmp_test_directory
+    run_context.paths.output_path["default"] = Path(tmp_test_directory)
 
-    derive_corsika_limits.generate_corsika_limits_grid(args)
+    derive_corsika_limits.generate_corsika_limits_grid(args, context=run_context)
 
     mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=None)
     assert mock_derive.call_count == 2
@@ -237,7 +234,7 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
 
 
 def test_generate_corsika_limits_grid_skips_empty_energy_histograms(
-    mocker, mock_args_dict, tmp_test_directory
+    mocker, mock_args_dict, tmp_test_directory, run_context
 ):
     args = mock_args_dict.copy()
     args["trigger_histogram_file"] = "trigger_histograms.hdf5"
@@ -278,11 +275,9 @@ def test_generate_corsika_limits_grid_skips_empty_energy_histograms(
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
-    mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    ).return_value.get_output_directory.return_value = tmp_test_directory
+    run_context.paths.output_path["default"] = Path(tmp_test_directory)
 
-    derive_corsika_limits.generate_corsika_limits_grid(args)
+    derive_corsika_limits.generate_corsika_limits_grid(args, context=run_context)
 
     mock_derive.assert_called_once()
     assert mock_derive.call_args.args[1] == "valid"
@@ -290,7 +285,7 @@ def test_generate_corsika_limits_grid_skips_empty_energy_histograms(
 
 
 def test_generate_corsika_limits_grid_plots_only_selected_array_layouts(
-    mocker, mock_args_dict, tmp_test_directory
+    mocker, mock_args_dict, tmp_test_directory, run_context
 ):
     args = mock_args_dict.copy()
     args["trigger_histogram_file"] = "trigger_histograms.hdf5"
@@ -319,11 +314,9 @@ def test_generate_corsika_limits_grid_plots_only_selected_array_layouts(
         side_effect=[_pool_result(array_name="alpha"), _pool_result(array_name="beta")],
     )
     mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
-    mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    ).return_value.get_output_directory.return_value = tmp_test_directory
+    run_context.paths.output_path["default"] = Path(tmp_test_directory)
 
-    derive_corsika_limits.generate_corsika_limits_grid(args)
+    derive_corsika_limits.generate_corsika_limits_grid(args, context=run_context)
 
     assert [call.args[4] for call in mock_derive.call_args_list] == [True, False]
 
@@ -348,7 +341,7 @@ def test_normalize_plot_histogram_selection_rejects_mixed_false_and_layouts():
 
 
 def test_generate_corsika_limits_grid_expands_trigger_histogram_glob(
-    mocker, mock_args_dict, tmp_test_directory
+    mocker, mock_args_dict, tmp_test_directory, run_context
 ):
     args = mock_args_dict.copy()
     first_file = Path(tmp_test_directory) / "electron_20.hdf5"
@@ -377,11 +370,9 @@ def test_generate_corsika_limits_grid_expands_trigger_histogram_glob(
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
-    mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    ).return_value.get_output_directory.return_value = tmp_test_directory
+    run_context.paths.output_path["default"] = Path(tmp_test_directory)
 
-    derive_corsika_limits.generate_corsika_limits_grid(args)
+    derive_corsika_limits.generate_corsika_limits_grid(args, context=run_context)
 
     assert sorted(mock_load.call_args_list, key=lambda call: call.args[0]) == [
         mocker.call(str(first_file), array_names=None),
@@ -445,7 +436,7 @@ def test_discover_trigger_histogram_groups_rejects_missing_directory(tmp_test_di
 
 
 def test_generate_corsika_limits_grid_writes_one_file_per_particle(
-    mocker, mock_args_dict, tmp_test_directory
+    mocker, mock_args_dict, tmp_test_directory, run_context
 ):
     input_directory = Path(tmp_test_directory) / "trigger_histograms"
     input_directory.mkdir()
@@ -463,9 +454,7 @@ def test_generate_corsika_limits_grid_writes_one_file_per_particle(
     args["output_file"] = "activity-id-simtools-production-derive-corsika-limits.ecsv"
     args["output_file_from_default"] = True
 
-    mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    ).return_value.get_output_directory.return_value = Path(tmp_test_directory) / "output"
+    run_context.paths.output_path["default"] = Path(tmp_test_directory) / "output"
     mock_generate = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits._generate_corsika_limits_from_histogram_file",
         return_value=[_pool_result()],
@@ -474,7 +463,7 @@ def test_generate_corsika_limits_grid_writes_one_file_per_particle(
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
 
-    derive_corsika_limits.generate_corsika_limits_grid(args)
+    derive_corsika_limits.generate_corsika_limits_grid(args, context=run_context)
 
     output_root = Path(tmp_test_directory) / "output"
     assert [call.kwargs["histogram_files"] for call in mock_generate.call_args_list] == [
@@ -633,7 +622,9 @@ def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
     )
 
     mock_resolve.assert_called_once_with("layout", "1.0.0")
-    mock_repository_lookup.assert_called_once_with(["single-layout"], "South", "1.0.0")
+    mock_repository_lookup.assert_called_once_with(
+        ["single-layout"], "South", "1.0.0", context=None
+    )
     assert result == {"LST": ["LSTN-01"]}
 
 

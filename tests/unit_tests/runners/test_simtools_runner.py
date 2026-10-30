@@ -585,7 +585,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     assert submit_calls[0]["configuration"]["output_path"] == str(tmp_test_directory)
     assert submit_calls[1]["configuration"]["output_path"] == str(tmp_test_directory)
 
-    version_string_mock.assert_called_once_with([], include_software_versions=True)
+    version_string_mock.assert_called_once_with([], include_software_versions=True, context=None)
     workflow_build_mock.assert_not_called()
     workflow_update_mock.assert_not_called()
 

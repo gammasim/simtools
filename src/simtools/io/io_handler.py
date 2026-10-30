@@ -1,11 +1,9 @@
 """Handle input and output directories and file paths."""
 
-import logging
 import re
 from pathlib import Path
 
 from simtools import constants
-from simtools.io.output_paths import OutputPaths
 
 _TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated|downloaded):([^}]+)\}")
 _TEST_RESOURCE_PATH_PATTERN = re.compile(r"(?<![\w/])(?:\./)?tests/resources(?=/|$)")
@@ -58,119 +56,3 @@ def _contains_test_resource_reference(value):
         _TEST_RESOURCE_PATTERN.search(value) is not None
         or _TEST_RESOURCE_PATH_PATTERN.search(value) is not None
     )
-
-
-class IOHandlerSingleton(type):
-    """Singleton base class."""
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        """Create a new instance if it doesn't exist, otherwise returns the existing instance."""
-        if cls not in cls._instances:
-            cls._instances[cls] = super().__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
-class IOHandler(metaclass=IOHandlerSingleton):
-    """Handle input and output directories and file paths."""
-
-    def __init__(self):
-        """Initialize IOHandler."""
-        self.logger = logging.getLogger(__name__)
-        self._paths = OutputPaths()
-        self.test_resources_path = self._paths.test_resources_path
-
-    @property
-    def output_path(self):
-        """Output paths by label."""
-        return self._paths.output_path
-
-    @output_path.setter
-    def output_path(self, output_path):
-        self._paths.output_path = output_path
-
-    @property
-    def model_path(self):
-        """Model file directory."""
-        return self._paths.model_path
-
-    @model_path.setter
-    def model_path(self, model_path):
-        self._paths.model_path = model_path
-
-    def set_paths(self, output_path=None, model_path=None, output_path_label="default"):
-        """
-        Set paths for input and output.
-
-        Parameters
-        ----------
-        output_path: str or Path
-            Path pointing to the output directory.
-        model_path: str or Path
-            Path pointing to the model file directory.
-        output_path_label: str
-            Label for the output path.
-        """
-        self.output_path[output_path_label] = output_path
-        self.model_path = model_path
-
-    def get_output_directory(self, sub_dir=None, output_path_label="default"):
-        """
-        Create and get path of an output directory.
-
-        Parameters
-        ----------
-        sub_dir: str or list of str, optional
-            Name of the subdirectory (ray_tracing, model etc)
-        output_path_label: str
-            Label for the output path.
-
-        Returns
-        -------
-        Path
-
-        Raises
-        ------
-        FileNotFoundError
-            if the directory cannot be created
-        """
-        return self._paths.get_output_directory(sub_dir, output_path_label)
-
-    def get_output_file(self, file_name, sub_dir=None, output_path_label="default"):
-        """
-        Get path of an output file.
-
-        Parameters
-        ----------
-        files_name: str
-            File name.
-        sub_dir: sub_dir: str or list of str, optional
-            Name of the subdirectory (ray_tracing, model etc)
-        output_path_label: str
-            Label for the output path.
-
-        Returns
-        -------
-        Path
-        """
-        return self._paths.get_output_file(file_name, sub_dir, output_path_label)
-
-    def get_model_configuration_directory(self, model_version, sub_dir=None):
-        """
-        Get path of the simulation model configuration directory.
-
-        This is the directory where the sim_telarray configuration files will be stored.
-
-        Parameters
-        ----------
-        model_version: str
-            Model version.
-        sub_dir: str
-            subdirectory
-
-        Returns
-        -------
-        Path
-        """
-        return self._paths.get_model_configuration_directory(model_version, sub_dir)

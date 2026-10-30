@@ -5,7 +5,6 @@ import shlex
 import stat
 from pathlib import Path
 
-from simtools import settings
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.runners.runner_services import RunnerServices
 from simtools.runners.stages import CHERENKOV_PHOTONS, StreamTo
@@ -35,15 +34,22 @@ class CorsikaStage:
     produces = CHERENKOV_PHOTONS
     streams = True
 
-    def __init__(self, corsika_config, label=None, sequential=False, save_output=False):
+    def __init__(
+        self, corsika_config, label=None, sequential=False, save_output=False, context=None
+    ):
         """Initialize CorsikaStage."""
         self._logger = logging.getLogger(__name__)
         self.corsika_config = corsika_config
         self.label = label
         self.sequential = sequential
         self.save_output = save_output
-        self.runner_service = RunnerServices(corsika_config, run_type="corsika", label=label)
-        self.stream_service = RunnerServices(corsika_config, run_type="multi_pipe", label=label)
+        self.context = context or corsika_config.context
+        self.runner_service = RunnerServices(
+            corsika_config, run_type="corsika", label=label, context=self.context
+        )
+        self.stream_service = RunnerServices(
+            corsika_config, run_type="multi_pipe", label=label, context=self.context
+        )
         self.file_list = None
 
     @classmethod
@@ -55,6 +61,7 @@ class CorsikaStage:
                 label=label,
                 sequential=inputs.args.get("sequential", False),
                 save_output=inputs.args.get("save_corsika_output", False),
+                context=inputs.context,
             )
         ]
 
@@ -129,7 +136,7 @@ class CorsikaStage:
             "multi_pipe_script", run_number=run_number
         )
         multipipe_command = [
-            settings.config.sim_telarray_path / "bin/multipipe_corsika",
+            self.context.software.sim_telarray_path / "bin/multipipe_corsika",
             "-c",
             multipipe_file,
         ]
@@ -150,13 +157,13 @@ class CorsikaStage:
         """Return the CORSIKA executable for the configured atmosphere geometry."""
         if self.corsika_config.use_curved_atmosphere:
             geometry = "curved"
-            executable = Path(settings.config.corsika_exe_curved)
+            executable = Path(self.context.software.corsika_exe_curved)
         else:
             geometry = "flat"
-            executable = Path(settings.config.corsika_exe)
+            executable = Path(self.context.software.corsika_exe)
 
-        he_model, le_model = settings.config.corsika_interaction_models
-        transition_energy = settings.config.args.get("corsika_hadronic_transition_energy")
+        he_model, le_model = self.context.software.corsika_interaction_models
+        transition_energy = self.context.args.get("corsika_hadronic_transition_energy")
         transition_description = (
             "CORSIKA default"
             if transition_energy is None
@@ -178,12 +185,12 @@ class CorsikaStage:
 
     def environment(self):
         """Return the CORSIKA interaction-model environment variables."""
-        he_model, le_model = settings.config.corsika_interaction_models
+        he_model, le_model = self.context.software.corsika_interaction_models
         environment = {
             "SIMTOOLS_CORSIKA_HE_INTERACTION": he_model,
             "SIMTOOLS_CORSIKA_LE_INTERACTION": le_model,
         }
-        transition_energy = settings.config.args.get("corsika_hadronic_transition_energy")
+        transition_energy = self.context.args.get("corsika_hadronic_transition_energy")
         if transition_energy is not None:
             environment["SIMTOOLS_CORSIKA_HADRONIC_TRANSITION_ENERGY_GEV"] = str(
                 transition_energy.to_value("GeV")

@@ -13,7 +13,6 @@ from simtools.configuration.argument_helpers import (
     normalize_argument_aliases,
     validate_site_telescope_consistency,
 )
-from simtools.io import io_handler
 from simtools.utils import general as gen
 
 
@@ -98,7 +97,6 @@ class Configurator:
         if self.config.get("label") is None:
             self.config["label"] = self.label
         self._initialize_model_versions()
-        self._initialize_io_handler()
         if initialize_output:
             self._initialize_output()
         self.config["application_label"] = self.config.get("application_label") or self.label
@@ -252,14 +250,6 @@ class Configurator:
             and len(self.config["model_version"]) == 1
         ):
             self.config["model_version"] = self.config["model_version"][0]
-
-    def _initialize_io_handler(self):
-        """Initialize IOHandler with input and output paths."""
-        _io_handler = io_handler.IOHandler()
-        _io_handler.set_paths(
-            output_path=self.config.get("output_path", None),
-            model_path=self.config.get("model_path", None),
-        )
 
     def _initialize_output(self):
         """Initialize default output file names (in case output_file is not configured)."""

@@ -19,6 +19,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.layout_selection_arguments(),
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -33,6 +34,7 @@ def main():
         layout_name=app_context.args.get("array_layout_name"),
         array_elements=app_context.args.get("array_element_list"),
         model_reader=app_context.model_reader,
+        context=app_context,
     )
     array_model.print_telescope_list()
     array_model.export_all_simtel_config_files()

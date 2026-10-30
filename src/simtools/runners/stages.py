@@ -34,6 +34,7 @@ class StageInputs:
     simulation_parameters: tuple
     shower_configurations: tuple
     args: dict
+    context: object = None
 
 
 class SimulationStage(Protocol):

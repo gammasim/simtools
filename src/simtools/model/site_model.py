@@ -232,7 +232,7 @@ class SiteModel(ModelParameter):
         model_directory: Path
             Model directory to export the file to.
         """
-        return get_model_writer(self).export_atmospheric_transmission_file(
+        return get_model_writer(self, context=self.context).export_atmospheric_transmission_file(
             model_directory=model_directory
         )
 

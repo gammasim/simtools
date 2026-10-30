@@ -78,9 +78,7 @@ def test_execute_command_applies_runtime_streams_environment_and_configuration(
 
 
 def test_execute_job_spec_initializes_serialized_runtime(mocker):
-    """Function jobs restore settings and IO paths in the worker interpreter."""
-    config = mocker.patch("simtools.job_execution.worker.config")
-    io_handler = mocker.patch("simtools.job_execution.worker.io_handler.IOHandler")
+    """Function jobs receive a rebuilt run context in the worker interpreter."""
     function = mocker.Mock(return_value=4)
     args = {"output_path": "output", "model_path": "models", "sim_telarray_path": "simtel"}
     job = JobSpec(
@@ -88,26 +86,20 @@ def test_execute_job_spec_initializes_serialized_runtime(mocker):
         0,
         function=function,
         item=2,
-        runtime_args=args,
+        context_spec={"args": args, "model_source": None, "model_path": "models"},
     )
 
     assert execute_job_spec(job) == 4
 
-    config.load.assert_called_once_with(args)
-    io_handler.return_value.set_paths.assert_called_once_with(
-        output_path="output", model_path="models"
-    )
     function.assert_called_once_with(2)
 
 
 def test_execute_job_spec_restores_serialized_model_source(mocker):
     """Workers reopen the immutable model source recorded at submission time."""
-    config = mocker.patch("simtools.job_execution.worker.config")
-    io_handler = mocker.patch("simtools.job_execution.worker.io_handler.IOHandler")
     source_config = {"type": "git", "repository": "/models.git", "commit": "a" * 40}
     reader = mocker.Mock()
     restore_reader = mocker.patch(
-        "simtools.job_execution.worker.create_model_reader_from_source_config",
+        "simtools.application.model_reader.create_model_reader_from_source_config",
         return_value=reader,
     )
     job = JobSpec(
@@ -115,15 +107,12 @@ def test_execute_job_spec_restores_serialized_model_source(mocker):
         0,
         function=lambda value: value,
         item=2,
-        runtime_args={},
-        model_source_config=source_config,
+        context_spec={"args": {}, "model_source": source_config, "model_path": None},
     )
 
     assert execute_job_spec(job) == 2
 
     restore_reader.assert_called_once_with(source_config)
-    config.set_model_reader.assert_called_once_with(reader)
-    io_handler.return_value.set_paths.assert_called_once_with(output_path=None, model_path=None)
 
 
 def test_worker_writes_failure_result_for_invalid_payload(tmp_test_directory):

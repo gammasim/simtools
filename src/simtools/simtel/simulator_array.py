@@ -1,7 +1,5 @@
 """Simulation runner for array simulations."""
 
-from simtools import settings
-from simtools.io import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
 
 
@@ -24,13 +22,16 @@ class SimulatorArray(SimtelRunner):
         simulation_parameters,
         array_model,
         label=None,
+        context=None,
     ):
         """Initialize SimulatorArray."""
-        super().__init__(label=label, config=simulation_parameters, array_model=array_model)
+        super().__init__(
+            label=label, config=simulation_parameters, array_model=array_model, context=context
+        )
 
         self.simulation_parameters = simulation_parameters
         self.array_model = array_model
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
         self._log_file = None
 
     def make_run_command(self, run_number=None, input_file=None):
@@ -79,7 +80,7 @@ class SimulatorArray(SimtelRunner):
 
     def _make_run_command_for_calibration_simulations(self):
         """Build sim_telarray command for calibration simulations."""
-        cfg = settings.config.args
+        cfg = self.context.args
         altitude = self.array_model.site_model.get_parameter_value_with_unit(
             "reference_point_altitude"
         ).to_value("m")
@@ -126,7 +127,7 @@ class SimulatorArray(SimtelRunner):
         self.array_model.export_config_files("sim_telarray")
 
         cmd = [
-            str(settings.config.sim_telarray_exe),
+            str(self.context.software.sim_telarray_exe),
             "-c",
             str(self.array_model.config_file_path),
             f"-I{config_dir}",

@@ -24,6 +24,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("corsika",),
 )
 
 
@@ -36,7 +37,7 @@ def main():
         source_type=app_context.args["source_type"],
     )
 
-    output_file = app_context.io_handler.get_output_file(app_context.args.get("output_file"))
+    output_file = app_context.paths.get_output_file(app_context.args.get("output_file"))
     app_context.logger.info(f"Writing sim_telarray metadata schema to {output_file}")
     ascii_handler.write_data_to_file(registry, output_file, sort_keys=False)
 

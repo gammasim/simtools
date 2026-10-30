@@ -10,8 +10,9 @@ from ctao_cr_spectra.definitions import IRFDOC_ELECTRON_SPECTRUM, IRFDOC_PROTON_
 from ctao_cr_spectra.spectral import LogParabola, PowerLaw, PowerLawWithExponentialGaussian
 from scipy import integrate
 
+from simtools.context import RunContext
 from simtools.histogram.histogram import Histogram
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler
 from simtools.layout.array_layout_utils import get_array_elements_from_model_repository
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
@@ -32,7 +33,7 @@ _SPECTRUM_TYPES = {
 }
 
 
-def telescope_trigger_rates(args_dict):
+def telescope_trigger_rates(args_dict, context=None):
     """
     Calculate trigger rates for single telescopes or arrays of telescopes.
 
@@ -49,6 +50,7 @@ def telescope_trigger_rates(args_dict):
         Dictionary with array names as keys and trigger rates (astropy.units.Quantity) as values.
         Example: {"array_name": 1234.5 * u.Hz}
     """
+    context = context or RunContext.from_environment()
     layout_name = args_dict.get("array_layout_name") or args_dict.get("telescope")
 
     if layout_name:
@@ -57,6 +59,7 @@ def telescope_trigger_rates(args_dict):
             layout_names,
             args_dict.get("site"),
             args_dict.get("model_version"),
+            context=context,
         )
     else:
         telescope_configs = ascii_handler.collect_data_from_file(
@@ -81,7 +84,7 @@ def telescope_trigger_rates(args_dict):
         if args_dict.get("plot_histograms"):
             plot_simtel_event_histograms.plot(
                 histograms.histograms,
-                output_path=io_handler.IOHandler().get_output_directory(),
+                output_path=context.paths.get_output_directory(),
                 array_name=array_name,
             )
 

@@ -11,8 +11,6 @@ from simtools.data_model.setting_workflow import create_setting_workflow, run_se
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
-    resolve_sim_software_executables=False,
-    setup_io_handler=False,
     excluded_standard_arguments=("runtime_environment_file",),
     arguments=(
         cli.ArgumentDefinition(
@@ -48,13 +46,14 @@ APPLICATION = ApplicationDefinition.for_module(
         ),
         cli.ArgumentDefinition("run", action="store_true", help="Run the prepared workflow."),
     ),
+    needs=("model",),
 )
 
 
 def main():
     """Prepare the workflow and report the files and production reference."""
     context = APPLICATION.start()
-    config_file = create_setting_workflow(context.args, context.model_reader)
+    config_file = create_setting_workflow(context.args, context.model_reader, context=context)
     context.logger.info(f"Prepared workflow: {config_file}")
     reference = _production_info_reference(context.args, config_file)
     context.logger.info(
@@ -62,7 +61,7 @@ def main():
         _production_info_text(reference),
     )
     if context.args.get("run"):
-        output = run_setting_workflow(config_file, context.args)
+        output = run_setting_workflow(config_file, context.args, context=context)
         context.logger.info(f"Results: {output}")
 
 

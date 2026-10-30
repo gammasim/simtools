@@ -11,19 +11,26 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def simtel_runner(corsika_config_mock_array_model):
+def simtel_runner(corsika_config_mock_array_model, run_context):
     return SimulatorArray(
         simulation_parameters=corsika_config_mock_array_model.simulation_parameters,
         array_model=corsika_config_mock_array_model.array_model,
         label="test-simtel-runner",
+        context=run_context,
     )
 
 
-def test_init_simulator_array(corsika_config_mock_array_model):
+def _set_context_config(simulator, config):
+    """Set the simulator context from a test configuration object."""
+    simulator.context = simulator.context.replace(args=getattr(config, "args", {}), software=config)
+
+
+def test_init_simulator_array(corsika_config_mock_array_model, run_context):
     simulator = SimulatorArray(
         simulation_parameters=corsika_config_mock_array_model.simulation_parameters,
         array_model=corsika_config_mock_array_model.array_model,
         label="test-label",
+        context=run_context,
     )
     assert simulator.array_model == corsika_config_mock_array_model.array_model
     assert simulator.label == "test-label"
@@ -53,10 +60,10 @@ def test_make_run_command_calibration_simulation(simtel_runner, mocker):
 
 
 def test_make_run_command_for_calibration_simulations_basic(simtel_runner, mocker):
-    # Mock settings.config.args
+    # Supply run-specific arguments through the runner context.
     mock_config = mocker.Mock()
     mock_config.args = {"run_mode": "pedestals", "number_of_events": 1000}
-    mocker.patch("simtools.settings.config", mock_config)
+    _set_context_config(simtel_runner, mock_config)
 
     # Mock site model parameter
     mock_param = mocker.Mock()
@@ -73,7 +80,7 @@ def test_make_run_command_for_calibration_simulations_basic(simtel_runner, mocke
 def test_make_run_command_for_calibration_direct_injection(simtel_runner, mocker):
     mock_config = mocker.Mock()
     mock_config.args = {"run_mode": "direct_injection", "number_of_events": 1000}
-    mocker.patch("simtools.settings.config", mock_config)
+    _set_context_config(simtel_runner, mock_config)
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
@@ -141,7 +148,7 @@ def test_determine_pointing_option(simtel_runner):
 
 
 def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker):
-    mocker.patch("simtools.settings.config", mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
+    _set_context_config(simtel_runner, mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
 
     simtel_runner.label = "divergent"
     simtel_runner.array_model.get_config_directory.return_value = "/config/dir"
@@ -171,7 +178,7 @@ def test_make_run_command_for_calibration_simulations_pedestals(simtel_runner, m
         "number_of_events": 1000,
         "number_of_pedestal_events": 500,
     }
-    mocker.patch("simtools.settings.config", mock_config)
+    _set_context_config(simtel_runner, mock_config)
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
@@ -192,7 +199,7 @@ def test_make_run_command_for_calibration_simulations_pedestals_nsb_only(simtel_
         "number_of_events": 1000,
         "number_of_pedestal_events": 800,
     }
-    mocker.patch("simtools.settings.config", mock_config)
+    _set_context_config(simtel_runner, mock_config)
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
@@ -213,7 +220,7 @@ def test_make_run_command_for_calibration_simulations_pedestals_dark(simtel_runn
         "number_of_events": 1000,
         "number_of_dark_events": 600,
     }
-    mocker.patch("simtools.settings.config", mock_config)
+    _set_context_config(simtel_runner, mock_config)
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
@@ -232,7 +239,7 @@ def test_make_run_command_for_calibration_simulations_with_nsb_scaling(simtel_ru
         "number_of_events": 1000,
         "nsb_scaling_factor": 1.5,
     }
-    mocker.patch("simtools.settings.config", mock_config)
+    _set_context_config(simtel_runner, mock_config)
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
@@ -251,7 +258,7 @@ def test_make_run_command_for_calibration_simulations_with_stars(simtel_runner, 
         "number_of_events": 1000,
         "stars": 0,
     }
-    mocker.patch("simtools.settings.config", mock_config)
+    _set_context_config(simtel_runner, mock_config)
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0

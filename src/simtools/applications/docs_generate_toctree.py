@@ -27,8 +27,7 @@ _ARGUMENTS = (
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=_ARGUMENTS,
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
+    needs=(),
 )
 
 

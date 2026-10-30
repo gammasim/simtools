@@ -3,6 +3,7 @@
 import io
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 import astropy.units as u
@@ -17,12 +18,19 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def simtel_config_writer(model_version):
+def simtel_config_writer(model_version, run_context):
     return SimtelConfigWriter(
         site="North",
         model_version=model_version,
         label="test-simtel-config-writer",
         telescope_model_name="test_telescope",
+        context=run_context.replace(
+            software=SimpleNamespace(
+                corsika_exe=Path("/mock/corsika_flat"),
+                corsika_path=Path("/mock/corsika"),
+                sim_telarray_path=Path("/mock/simtel"),
+            )
+        ),
     )
 
 
@@ -926,22 +934,21 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_test_directory, fil
     with open(build_opts_file, "w") as f:
         f.write("build_date: 2023-01-01\nversion: 1.0.0")
 
-    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
-        mock_settings.config.sim_telarray_path = tmp_test_directory
-        with open(test_file, "w") as f:
-            simtel_config_writer._write_simtools_parameters(f)
+    simtel_config_writer._context.software.sim_telarray_path = Path(tmp_test_directory)
+    with open(test_file, "w") as f:
+        simtel_config_writer._write_simtools_parameters(f)
+        f.flush()
 
         # Check build_opts parameters are included
         assert file_has_text(test_file, "metaparam global set simtools_")
 
     # Test with invalid sim_telarray_path
-    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
-        mock_settings.config.sim_telarray_path = tmp_test_directory / "nonexistent"
-        with open(test_file, "w") as f:
-            simtel_config_writer._write_simtools_parameters(f)
-        # Should still write basic parameters without build_opts
-        assert file_has_text(test_file, "% Simtools parameters")
-        assert file_has_text(test_file, "metaparam global set simtools_version")
+    simtel_config_writer._context.software.sim_telarray_path = tmp_test_directory / "nonexistent"
+    with open(test_file, "w") as f:
+        simtel_config_writer._write_simtools_parameters(f)
+    # Should still write basic parameters without build_opts
+    assert file_has_text(test_file, "% Simtools parameters")
+    assert file_has_text(test_file, "metaparam global set simtools_version")
 
 
 def test_write_single_mirror_list_file(simtel_config_writer, tmp_test_directory, file_has_text):
@@ -1231,14 +1238,10 @@ def test_write_trigger_lines_no_hardstereo_no_minsep(simtel_config_writer):
 def test_write_simtools_parameters_attribute_error(simtel_config_writer, tmp_test_directory):
     # Create a mock file to write to
     test_file = tmp_test_directory / "test_simtools_params.txt"
-    # Patch settings.config.corsika_exe to None to trigger AttributeError
-    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
-        mock_settings.config.corsika_exe = None
-        with pytest.raises(
-            AttributeError, match=r"CORSIKA executable path is not set in settings."
-        ):
-            with open(test_file, "w") as f:
-                simtel_config_writer._write_simtools_parameters(f)
+    simtel_config_writer._context.software.corsika_exe = None
+    with pytest.raises(AttributeError, match=r"CORSIKA executable path is not set in settings."):
+        with open(test_file, "w") as f:
+            simtel_config_writer._write_simtools_parameters(f)
 
 
 def test_write_angular_distribution_table_lambertian(tmp_test_directory):

@@ -63,9 +63,8 @@ APPLICATION = ApplicationDefinition.for_module(
         ),
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_output=True,
-    initialize_model_reader=False,
     excluded_standard_arguments=("test",),
+    needs=("corsika", "output"),
 )
 
 
@@ -73,7 +72,7 @@ def main():
     """Compare baseline and candidate results and write the report and JSON summary."""
     context = APPLICATION.start()
     args = context.args
-    output = context.io_handler.get_output_directory()
+    output = context.paths.get_output_directory()
     result = {
         _STATUS: throughput.INCOMPLETE,
         throughput.BASELINE: {_LABEL: args[_BASELINE_LABEL]},

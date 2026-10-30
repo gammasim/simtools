@@ -3,10 +3,10 @@
 from copy import deepcopy
 from pathlib import Path
 
-from simtools import settings
+from simtools import context as run_context
 from simtools.data_model import parameter_catalog as catalog
+from simtools.model_repository import source as model_repository_source
 from simtools.model_repository.asset_names import ECSV_SUFFIX, SOURCE_VALUE_KEY
-from simtools.model_repository.source import ModelSource
 from simtools.model_repository.storage import DirectoryStorage, GitStorage, MemoryStorage
 from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
@@ -32,17 +32,21 @@ class SimulationModelReader:
                 raise FileNotFoundError(
                     f"Expected simulation models directory not found: {storage.root / required}"
                 )
-        return cls(ModelSource(storage))
+        return cls(model_repository_source.ModelSource(storage))
 
     @classmethod
     def from_git(cls, repository_path, revision, object_store=None):
         """Create a reader for one immutable revision of a Git repository."""
-        return cls(ModelSource(GitStorage(repository_path, revision, object_store=object_store)))
+        return cls(
+            model_repository_source.ModelSource(
+                GitStorage(repository_path, revision, object_store=object_store)
+            )
+        )
 
     @classmethod
     def from_memory(cls, files):
         """Create a reader from in-memory model files."""
-        return cls(ModelSource(MemoryStorage(files)))
+        return cls(model_repository_source.ModelSource(MemoryStorage(files)))
 
     @property
     def source_name(self):
@@ -88,7 +92,13 @@ class SimulationModelReader:
             )
             production = self.read_production_table(collection, model_version)
             for element in reversed(
-                self._get_array_element_list(array_element_name, site, production, collection)
+                self._get_array_element_list(
+                    array_element_name,
+                    site,
+                    production,
+                    collection,
+                    run_context.RunContext.from_environment(),
+                )
             ):
                 parameter_version = production["parameters"].get(element, {}).get(parameter)
                 if parameter_version:
@@ -99,7 +109,13 @@ class SimulationModelReader:
         )
 
     def get_model_parameters(
-        self, site, array_element_name, collection, model_version, parameter_names=None
+        self,
+        site,
+        array_element_name,
+        collection,
+        model_version,
+        parameter_names=None,
+        context=None,
     ):
         """Read resolved parameters for an array element and model version.
 
@@ -111,13 +127,14 @@ class SimulationModelReader:
         """
         if parameter_names is not None:
             parameter_names = frozenset(parameter_names)
+        context = context or run_context.RunContext.from_environment()
         model_version = resolve_version_to_latest_patch(
             model_version, self.get_model_versions(collection)
         )
         production = self.read_production_table(collection, model_version)
         parameters = {}
         for element in self._get_array_element_list(
-            array_element_name, site, production, collection
+            array_element_name, site, production, collection, context
         ):
             versions = production["parameters"].get(element, {})
             if parameter_names is not None:
@@ -308,21 +325,27 @@ class SimulationModelReader:
         }
         return {key: parameters[key] for key in sorted(parameters)}
 
-    def _get_array_element_list(self, array_element_name, site, production, collection):
+    def _get_array_element_list(
+        self, array_element_name, site, production, collection, context=None
+    ):
         """Return the design and concrete elements represented by a request."""
+        context = context or run_context.RunContext.from_environment()
         if collection == "configuration_corsika":
             return ["global"]
         if collection == "sites":
             return [f"OBS-{site}"]
         if collection == "configuration_sim_telarray":
-            return self._get_sim_telarray_array_element_list(array_element_name, production)
+            return self._get_sim_telarray_array_element_list(
+                array_element_name, production, context
+            )
         if names.is_design_type(array_element_name):
             return [array_element_name]
         design = production["design_model"].get(array_element_name)
         return [element for element in (design, array_element_name) if element]
 
-    def _get_sim_telarray_array_element_list(self, array_element_name, production):
+    def _get_sim_telarray_array_element_list(self, array_element_name, production, context=None):
         """Return global, design, and concrete sim_telarray scopes."""
+        context = context or run_context.RunContext.from_environment()
         design_model = None
         if array_element_name not in (None, "global") and not names.is_design_type(
             array_element_name
@@ -338,7 +361,7 @@ class SimulationModelReader:
             return catalog.get_sim_telarray_parameter_scopes(
                 array_element_name,
                 design_model,
-                settings.config.args.get("ignore_missing_design_model", False),
+                context.args.get("ignore_missing_design_model", False),
             )
         except KeyError as exc:
             raise KeyError(

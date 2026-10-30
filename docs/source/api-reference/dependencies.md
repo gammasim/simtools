@@ -11,15 +11,6 @@
    :members:
 ```
 
-(settings)=
-
-## settings
-
-```{eval-rst}
-.. automodule:: simtools.settings
-   :members:
-```
-
 (application-control)=
 
 ## application.control

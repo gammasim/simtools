@@ -63,8 +63,8 @@ def generate_and_save_plots(plots, args, ioh):
         List of plot names to generate.
     args : dict
         Additional arguments for plot functions.
-    ioh : IOHandler
-        IOHandler for managing output paths and metadata.
+    ioh : OutputPaths
+        Paths used for output files and metadata.
     """
     plotter = _StreamingPlotter(
         file_name=args.get("simtel_file", None),

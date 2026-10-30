@@ -59,7 +59,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
@@ -69,7 +69,7 @@ def main():
 
     app_context.logger.info("Starting derivation of incident angles")
 
-    output_dir = app_context.io_handler.get_output_directory()
+    output_dir = app_context.paths.get_output_directory()
     base_label = app_context.args.get("label") or app_context.args["application_label"]
     telescope_name = app_context.args["telescope"]
     label_with_telescope = f"{base_label}_{telescope_name}"
@@ -82,6 +82,7 @@ def main():
         config_data=app_context.args,
         output_dir=output_dir,
         label=base_label,
+        context=app_context,
     )
     results_by_offset = calculator.run_for_offsets(offsets)
     calculator.save_model_parameters(results_by_offset)

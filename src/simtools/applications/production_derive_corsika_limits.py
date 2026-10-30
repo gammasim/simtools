@@ -123,16 +123,15 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *_OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
-    initialize_model_reader=False,
     post_parse=_post_parse,
+    needs=("corsika", "output"),
 )
 
 
 def main():
     """See CLI description."""
-    APPLICATION.start()
-    generate_corsika_limits_grid()
+    context = APPLICATION.start()
+    generate_corsika_limits_grid(context=context)
 
 
 if __name__ == "__main__":

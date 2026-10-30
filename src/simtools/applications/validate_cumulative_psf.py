@@ -27,6 +27,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         *cli.RAY_TRACING_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 

@@ -4,14 +4,14 @@ import gzip
 import logging
 import shutil
 from pathlib import Path
+from types import MappingProxyType
 
 import numpy as np
 
-from simtools import settings
-from simtools.application.model_reader import require_model_reader
 from simtools.configuration import defaults
+from simtools.context import RunContext
 from simtools.corsika import corsika_output_validator
-from simtools.io import io_handler, table_handler
+from simtools.io import table_handler
 from simtools.io.file_type import product_value
 from simtools.job_execution import execution
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
@@ -30,7 +30,7 @@ from simtools.utils import general, value_conversion
 _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
 
 
-def _write_reduced_event_list_batch(job_spec):
+def _write_reduced_event_list_batch(job_spec, context=None):
     """Write one reduced-event output file from one input-file batch."""
     input_files, output_file = job_spec[:2]
     metadata_args = job_spec[2] if len(job_spec) > 2 else {}
@@ -41,7 +41,7 @@ def _write_reduced_event_list_batch(job_spec):
 
     def build_metadata_documents():
         return {
-            "METADATA": build_standard_metadata(metadata_args, output_file),
+            "METADATA": build_standard_metadata(metadata_args, output_file, context=context),
             "SIMULATION_METADATA": build_simulation_metadata(
                 generator.get_simulation_input_metadata(), array_models=model_exports
             ),
@@ -85,21 +85,24 @@ class Simulator:
         Extra commands to be added to the run script before the run command.
     """
 
-    def __init__(self, label=None, extra_commands=None, model_reader=None):
+    def __init__(self, label=None, extra_commands=None, model_reader=None, context=None):
         """Initialize Simulator class."""
         self.logger = logging.getLogger(__name__)
         self.label = label
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
+        if model_reader is not None and model_reader is not self.context.model_reader:
+            self.context = self.context.replace(model_reader=model_reader)
 
-        self.site = settings.config.args.get("site", None)
-        self.model_version = settings.config.args.get("model_version", None)
+        self.site = self.context.args.get("site", None)
+        self.model_version = self.context.args.get("model_version", None)
 
-        self.simulation_software = settings.config.args.get(
+        self.simulation_software = self.context.args.get(
             "simulation_software", defaults.SIMULATION_SOFTWARE_DEFAULT
         )
-        self.run_mode = settings.config.args.get("run_mode", None)
+        self.run_mode = self.context.args.get("run_mode", None)
 
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
 
         self._extra_commands = extra_commands
         self._runtime = None
@@ -113,6 +116,7 @@ class Simulator:
             "sub",
             label,
             array_model=self.array_models[0],
+            context=self.context,
         )
         self.file_list = self.runner_service.load_files(self.run_number)
 
@@ -145,15 +149,15 @@ class Simulator:
 
     def _initialize_from_tool_configuration(self):
         """Initialize simulator from tool configuration."""
-        if settings.config.args.get("corsika_file"):
+        if self.context.args.get("corsika_file"):
             run_number = file_info.get_corsika_run_number(
-                settings.config.args["corsika_file"],
-                file_format=settings.config.args.get("simulation_file_format", "eventio"),
+                self.context.args["corsika_file"],
+                file_format=self.context.args.get("simulation_file_format", "eventio"),
             )
         else:
-            run_number = settings.config.args.get(
-                "run_number_offset", 0
-            ) + settings.config.args.get("run_number", 1)
+            run_number = self.context.args.get("run_number_offset", 0) + self.context.args.get(
+                "run_number", 1
+            )
         return runner_services.validate_corsika_run_number(run_number)
 
     def _initialize_array_models(self):
@@ -176,24 +180,28 @@ class Simulator:
             model = ArrayModel(
                 label=self.label,
                 site=self.site,
-                layout_name=settings.config.args.get("array_layout_name"),
+                layout_name=self.context.args.get("array_layout_name"),
                 array_elements=value_conversion.ensure_list(
-                    settings.config.args.get("telescopes", [])
+                    self.context.args.get("telescopes", [])
                 ),
                 model_version=version,
                 calibration_device_types=self._get_calibration_device_types(self.run_mode),
-                overwrite_model_parameters=settings.config.args.get("overwrite_model_parameters"),
+                overwrite_model_parameters=self.context.args.get("overwrite_model_parameters"),
                 model_directory_subdir=model_subdir,
                 model_reader=self.model_reader,
+                context=self.context,
             )
             if not self.chain.starts_with_showers:
                 cfg = None
                 parameters = SimulationParameters.from_args(
-                    settings.config.args, self.run_number, model.site_model
+                    self.context.args, self.run_number, model.site_model
                 )
             else:
                 cfg = get_shower_configuration(
-                    array_model=model, label=self.label, run_number=self.run_number
+                    array_model=model,
+                    label=self.label,
+                    run_number=self.run_number,
+                    context=self.context,
                 )
                 parameters = cfg.simulation_parameters
             self.simulation_parameters.append(parameters)
@@ -223,7 +231,8 @@ class Simulator:
             array_models=tuple(self.array_models[models]),
             simulation_parameters=tuple(self.simulation_parameters[models]),
             shower_configurations=tuple(value_conversion.ensure_list(self.corsika_configurations)),
-            args=dict(settings.config.args),
+            args=dict(self.context.args),
+            context=self.context,
         )
         return ChainRunner(self.chain, inputs, label=self.label)
 
@@ -252,7 +261,7 @@ class Simulator:
         self._runtime = result.runtime
 
     @classmethod
-    def simulate_direct_injection_sequence(cls, label=None):
+    def simulate_direct_injection_sequence(cls, label=None, context=None):
         """Run direct-injection simulations for one or multiple intensity settings.
 
         This method supports filter-wheel-like sequences by allowing
@@ -272,8 +281,8 @@ class Simulator:
                 This method runs simulations as side effects and does not return a
                 value.
         """
-        base_args = dict(settings.config.args)
-        model_reader = settings.config.model_reader
+        context = context or RunContext.from_environment()
+        base_args = dict(context.args)
         base_run_number = int(base_args.get("run_number", 1))
 
         events = value_conversion.parse_typed_sequence(base_args.get("number_of_events", 1), int)
@@ -301,23 +310,16 @@ class Simulator:
                 "Use one value or one value per event setting."
             )
 
-        try:
-            for idx in range(n_runs):
-                run_args = base_args.copy()
-                run_args["run_number"] = base_run_number + idx
-                run_args["number_of_events"] = int(events[idx])
-                if photons[idx] is not None:
-                    run_args["flasher_photons"] = photons[idx]
+        for idx in range(n_runs):
+            run_args = base_args.copy()
+            run_args["run_number"] = base_run_number + idx
+            run_args["number_of_events"] = int(events[idx])
+            if photons[idx] is not None:
+                run_args["flasher_photons"] = photons[idx]
 
-                settings.config.load(args=run_args)
-                settings.config.set_model_reader(model_reader)
-
-                simulator = cls(label=label)
-                simulator.simulate()
-                simulator.validate_simulations()
-        finally:
-            settings.config.load(args=base_args)
-            settings.config.set_model_reader(model_reader)
+            simulator = cls(label=label, context=context.replace(args=MappingProxyType(run_args)))
+            simulator.simulate()
+            simulator.validate_simulations()
 
     def _get_corsika_file(self):
         """
@@ -329,7 +331,7 @@ class Simulator:
             Path to the CORSIKA input file.
         """
         if self.chain.reads_input_file:
-            return settings.config.args.get("corsika_file", None)
+            return self.context.args.get("corsika_file", None)
         return None
 
     def get_files(self, file_type):
@@ -426,8 +428,8 @@ class Simulator:
             output_files=value_conversion.ensure_list(
                 self.get_files(file_type="sim_telarray_event_data")
             ),
-            metadata_args=settings.config.args,
             array_models=self.array_models,
+            context=self.context,
         )
 
     @staticmethod
@@ -441,10 +443,10 @@ class Simulator:
         backend="local",
         backend_config=None,
         wait_for_completion=True,
-        metadata_args=None,
         array_models=None,
         input_file_list_pattern=None,
         file_format="eventio",
+        context=None,
     ):
         """
         Write reduced event lists using the selected simulation-file reader.
@@ -470,8 +472,6 @@ class Simulator:
         max_workers : int, optional
             Maximum number of output-file worker processes. ``None`` uses 60% of
             available CPUs, 0 uses all CPUs, and 1 runs serially. Defaults to 1.
-        metadata_args : dict, optional
-            Arguments used to build the embedded standard metadata document.
         array_models : list, optional
             Resolved ``ArrayModel`` instances to export into simulation metadata.
         input_file_list_pattern : str, optional
@@ -485,6 +485,8 @@ class Simulator:
         wait_for_completion : bool, optional
             Wait for all backend jobs before returning. Submit-only mode is
             available for asynchronous backends such as HTCondor.
+        context : RunContext, optional
+            Run context; its arguments build the embedded standard metadata document.
 
         Returns
         -------
@@ -549,8 +551,12 @@ class Simulator:
             backend=backend,
             backend_config=backend_config,
             wait_for_completion=wait_for_completion,
-            metadata_args={**(metadata_args or {}), "simulation_file_format": file_format},
+            metadata_args={
+                **(context.args if context is not None else {}),
+                "simulation_file_format": file_format,
+            },
             array_models=array_models,
+            context=context,
         )
 
     @staticmethod
@@ -662,8 +668,10 @@ class Simulator:
         wait_for_completion=True,
         metadata_args=None,
         array_models=None,
+        context=None,
     ):
         """Run reduced event list jobs serially or in parallel."""
+        context = context or RunContext.from_environment()
         model_exports = [model.to_simulation_metadata_dict() for model in (array_models or [])]
         job_specs = [
             (input_files, output_file, metadata_args or {}, model_exports)
@@ -675,6 +683,7 @@ class Simulator:
                 index=index,
                 function=_write_reduced_event_list_batch,
                 item=job_spec,
+                context_spec=context.to_spec(),
                 output_paths=(Path(output_files[index]),),
             )
             for index, job_spec in enumerate(job_specs)
@@ -719,12 +728,12 @@ class Simulator:
         )
         corsika_output_files = (
             value_conversion.ensure_list(self.get_files(file_type="corsika_output"))
-            if settings.config.args.get("save_corsika_output")
+            if self.context.args.get("save_corsika_output")
             else []
         )
         reduced_event_files = (
             value_conversion.ensure_list(self.get_files(file_type="sim_telarray_event_data"))
-            if settings.config.args.get("reduced_event_lists")
+            if self.context.args.get("reduced_event_lists")
             else []
         )
 
@@ -788,7 +797,7 @@ class Simulator:
 
     def _overwrite_flasher_photons_for_direct_injection(self):
         """Overwrite direct-injection photons-per-pixel in calibration models."""
-        flasher_photons = settings.config.args.get("flasher_photons")
+        flasher_photons = self.context.args.get("flasher_photons")
         if self.run_mode != "direct_injection" or flasher_photons is None:
             return
 
@@ -827,15 +836,14 @@ class Simulator:
         if self.chain.has("corsika"):
             corsika_output_validator.validate_corsika_output(
                 data_files=self.get_files(file_type="corsika_output")
-                if self.chain.stages == ("corsika",)
-                or settings.config.args.get("save_corsika_output")
+                if self.chain.stages == ("corsika",) or self.context.args.get("save_corsika_output")
                 else None,
                 log_files=self.get_files(file_type="corsika_log"),
                 expected_shower_events=expected_shower_events,
                 curved_atmo=parameters.use_curved_atmosphere,
             )
 
-        if settings.config.args.get("reduced_event_lists"):
+        if self.context.args.get("reduced_event_lists"):
             output_validator.validate_sim_events(
                 data_files=self.get_files(file_type="sim_telarray_event_data"),
                 expected_mc_events=expected_mc_events,

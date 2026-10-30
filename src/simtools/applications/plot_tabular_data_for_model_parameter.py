@@ -28,6 +28,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -40,9 +41,10 @@ def main():
         parameter_version=app_context.args["parameter_version"],
         site=app_context.args["site"],
         telescope=app_context.args.get("telescope"),
-        output_path=app_context.io_handler.get_output_directory(),
+        output_path=app_context.paths.get_output_directory(),
         plot_type=app_context.args["plot_type"],
         model_reader=app_context.model_reader,
+        context=app_context,
     )
 
     for plot_config, output_file in zip(plot_configs, output_files):
@@ -50,8 +52,11 @@ def main():
             config=plot_config,
             output_file=output_file,
             model_reader=app_context.model_reader,
+            context=app_context,
         )
-        MetadataCollector.dump(app_context.args, output_file=output_file, add_activity_name=True)
+        MetadataCollector.dump(
+            app_context.args, output_file=output_file, add_activity_name=True, context=app_context
+        )
 
 
 if __name__ == "__main__":

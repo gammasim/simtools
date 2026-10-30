@@ -194,11 +194,11 @@ def test_add_additional_models(telescope_model_lst, mocker):
     assert parameters["param2"] == "value2"
 
 
-def test_get_additional_simtel_metadata(array_model_north, mocker, runtime_args):
+def test_get_additional_simtel_metadata(array_model_north, mocker, run_context):
     array_model_north_cp = copy.deepcopy(array_model_north)
     mocker.patch.object(array_model_north_cp.site_model, _NSB_FLUX, return_value=42.0)
-    runtime_args(
-        {
+    array_model_north_cp.context = run_context.replace(
+        args={
             "site": _NORTH,
             _PRIMARY: "gamma",
             _AZIMUTH_ANGLE: 180.0 * u.deg,
@@ -220,13 +220,11 @@ def test_get_additional_simtel_metadata(array_model_north, mocker, runtime_args)
     assert metadata[_PDGID] == 22
 
 
-def test_metadata_from_corsika_input_uses_shower_parameters(
-    array_model_north, mocker, runtime_args
-):
+def test_metadata_from_corsika_input_uses_shower_parameters(array_model_north, mocker, run_context):
     model = copy.deepcopy(array_model_north)
     mocker.patch.object(model.site_model, _NSB_FLUX, return_value=42.0)
-    runtime_args(
-        {
+    model.context = run_context.replace(
+        args={
             "site": _NORTH,
             "corsika_file": "showers.iact",
             _PRIMARY: None,
@@ -281,8 +279,9 @@ def test_export_simtel_telescope_config_files(array_model_north):
     assert get_model_writer(am)._telescope_model_files_exported is True
 
 
-def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
+def test_export_simtel_telescope_config_files_skips_duplicates(mocker, run_context):
     am = Mock(spec=ArrayModel)
+    am.context = run_context
     am._logger = Mock()
     am.configuration_writers = {}
     am.calibration_models = {}

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import astropy.units as u
 
-from simtools import settings
+from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
@@ -33,8 +33,9 @@ class SimtelModelWriter:
         Model providing validated parameters, tables, and output paths.
     """
 
-    def __init__(self, model):
+    def __init__(self, model, context=None):
         self.model = model
+        self.context = context or getattr(model, "context", None) or RunContext.from_environment()
         self._logger = logging.getLogger(__name__)
         self._serialized_tables = {}
         self.config_writer = None
@@ -114,6 +115,7 @@ class SimtelModelWriter:
                 model_version=self.model.model_version,
                 label=desired_label,
                 model_reader=self.model.model_reader,
+                context=self.context,
             )
 
     def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
@@ -227,6 +229,7 @@ class SimtelModelWriter:
             model_version=self.model.model_version,
             label=self.model.label,
             model_reader=self.model.model_reader,
+            context=self.context,
         )
         simtel_writer.write_array_config_file(
             config_file_path=self.model.config_file_path,
@@ -256,7 +259,7 @@ class SimtelModelWriter:
         dict
             Dictionary with additional metadata.
         """
-        args = dict(settings.config.args)
+        args = dict(self.context.args)
         if args.get(_CORSIKA_FILE):
             reader = get_reader(args[_CORSIKA_FILE], args.get("simulation_file_format", "eventio"))
             shower = reader.read_simulation_parameters()
@@ -384,6 +387,7 @@ class SimtelModelWriter:
             model_version=self.model.model_version,
             zenith_angle=zenith_angle,
             azimuth_angle=azimuth_angle,
+            context=self.context,
         )
 
     def get_single_mirror_list_file(self, mirror_number, set_focal_length_to_zero=False):

@@ -83,18 +83,20 @@ def test_initialization(calculator, config_data):
 @pytest.mark.parametrize("debug", [False, True])
 @pytest.mark.parametrize("fails", [False, True])
 def test_application_cleans_working_directory_and_controls_plots(
-    monkeypatch, tmp_test_directory, debug, fails
+    monkeypatch, tmp_test_directory, debug, fails, run_context
 ):
     from simtools.applications import derive_incident_angle as app
 
-    context = MagicMock()
-    context.args = {
-        "application_label": "test",
-        "telescope": "SSTS-01",
-        "debug_plots": debug,
-        "model_version": "7.0.0",
-    }
-    context.io_handler.get_output_directory.return_value = Path(tmp_test_directory)
+    context = run_context.replace(
+        args={
+            "application_label": "test",
+            "telescope": "SSTS-01",
+            "debug_plots": debug,
+            "model_version": "7.0.0",
+        },
+        logger=MagicMock(),
+    )
+    output_dir = context.paths.get_output_directory()
     monkeypatch.setattr(app, "APPLICATION", MagicMock(start=MagicMock(return_value=context)))
     factory = MagicMock()
     factory.return_value.run_for_offsets.return_value = {0: [1]}
@@ -112,7 +114,7 @@ def test_application_cleans_working_directory_and_controls_plots(
         return
     app.main()
     assert plot.call_count == int(debug)
-    cleanup.assert_called_once_with(Path(tmp_test_directory), files=[])
+    cleanup.assert_called_once_with(output_dir, files=[])
     factory.return_value.save_model_parameters.assert_called_once()
 
 
@@ -386,8 +388,8 @@ def fake_backend(monkeypatch):
         },
         [Path("run.sh")],
     )
-    monkeypatch.setattr(ia.interface, "get_backend", lambda: backend)
-    monkeypatch.setattr(ia.simtel_seeds, "instance_seed_pairs", lambda: [(11, 22)])
+    monkeypatch.setattr(ia.interface, "get_backend", lambda context=None: backend)
+    monkeypatch.setattr(ia.simtel_seeds, "instance_seed_pairs", lambda context=None: [(11, 22)])
     return backend
 
 
@@ -399,7 +401,12 @@ def test_run_with_backend(calculator, fake_backend, perfect_mirror):
     result = calculator.run()
 
     fake_backend.assert_called_once_with(
-        calculator.telescope_model, calculator.site_model, calculator.label, 0.0, False
+        calculator.telescope_model,
+        calculator.site_model,
+        calculator.label,
+        0.0,
+        False,
+        context=calculator.context,
     )
     request, work_directory, name, with_mirrors = (
         fake_backend.return_value.incidence_angles.call_args.args

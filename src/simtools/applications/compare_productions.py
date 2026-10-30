@@ -127,10 +127,9 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_output=False,
-    initialize_model_reader=False,
     excluded_standard_arguments=("test",),
     post_parse=_post_parse,
+    needs=("corsika",),
 )
 
 
@@ -141,7 +140,7 @@ def main():
     if comparison_level == "events":
         write_production_comparison(
             app_context.args,
-            app_context.io_handler.get_output_directory(),
+            app_context.paths.get_output_directory(),
         )
         return
     if comparison_level == "signal":
@@ -149,7 +148,7 @@ def main():
     elif comparison_level == "computing":
         write_resource_requirements(
             app_context.args,
-            app_context.io_handler.get_output_directory(),
+            app_context.paths.get_output_directory(),
             plot_resource_requirements.plot,
         )
         return
@@ -157,7 +156,7 @@ def main():
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
     for output_file, array_layout_name in output_files:
-        _dump_comparison_metadata(app_context.args, output_file, array_layout_name)
+        _dump_comparison_metadata(app_context, output_file, array_layout_name)
 
 
 def _run_signal_comparison(app_context):
@@ -171,15 +170,15 @@ def _run_signal_comparison(app_context):
         (statistics_file, None)
         for statistics_file in plot_production_comparison.plot_signal_level_comparison(
             metrics_by_telescope,
-            output_path=app_context.io_handler.get_output_directory(),
+            output_path=app_context.paths.get_output_directory(),
             figure_format=app_context.args.get("figure_format"),
         )
     ]
 
 
-def _dump_comparison_metadata(args, output_file, array_layout_name=None):
+def _dump_comparison_metadata(app_context, output_file, array_layout_name=None):
     """Write comparison metadata for one generated statistics file."""
-    metadata_args = dict(args)
+    metadata_args = dict(app_context.args)
     if array_layout_name is not None:
         metadata_args["array_layout_name"] = array_layout_name
     metadata_args.update(
@@ -190,7 +189,7 @@ def _dump_comparison_metadata(args, output_file, array_layout_name=None):
             "schema_file": str(SCHEMA_PATH / "production_comparison_statistics.schema.yml"),
         }
     )
-    MetadataCollector.dump(metadata_args, output_file)
+    MetadataCollector.dump(metadata_args, output_file, context=app_context)
 
 
 if __name__ == "__main__":

@@ -28,11 +28,12 @@ def config_data_lst(model_version_prod5):
 
 
 @pytest.fixture
-def camera_efficiency_lst(config_data_lst, mocker):
+def camera_efficiency_lst(config_data_lst, mocker, run_context):
     camera_eff = CameraEfficiency(
         config_data=config_data_lst,
         efficiency_type="shower",
         label="validate_camera_efficiency",
+        context=run_context,
     )
     mock_camera = MagicMock()
     mock_camera.get_camera_fill_factor.return_value = 0.8
@@ -108,7 +109,7 @@ def test_prepared_nsb_spectrum_placeholder_uses_site_model_default(
     assert config["nsb_spectrum"] is None
 
 
-def test_init_reuses_supplied_simulation_models(config_data_lst, mocker):
+def test_init_reuses_supplied_simulation_models(config_data_lst, mocker, run_context):
     telescope_model = MagicMock(site="North", name="LSTN-01")
     site_model = MagicMock()
     initialize_models = mocker.patch(
@@ -121,6 +122,7 @@ def test_init_reuses_supplied_simulation_models(config_data_lst, mocker):
         label="validate_camera_efficiency",
         telescope_model=telescope_model,
         site_model=site_model,
+        context=run_context,
     )
 
     assert camera_efficiency.telescope_model is telescope_model
@@ -129,7 +131,9 @@ def test_init_reuses_supplied_simulation_models(config_data_lst, mocker):
 
 
 @pytest.mark.parametrize("provided_model", ["telescope_model", "site_model"])
-def test_init_reuses_each_supplied_simulation_model(config_data_lst, mocker, provided_model):
+def test_init_reuses_each_supplied_simulation_model(
+    config_data_lst, mocker, provided_model, run_context
+):
     initialized_telescope_model = MagicMock(site="North", name="LSTN-01")
     initialized_site_model = MagicMock()
     initialize_models = mocker.patch(
@@ -143,6 +147,7 @@ def test_init_reuses_each_supplied_simulation_model(config_data_lst, mocker, pro
         efficiency_type="shower",
         label="validate_camera_efficiency",
         **{provided_model: supplied_model},
+        context=run_context,
     )
 
     assert getattr(camera_efficiency, provided_model) is supplied_model
@@ -407,7 +412,7 @@ def test_get_x_max_for_efficiency_type_muon_exports_ecsv_profile(camera_efficien
     assert x_max == pytest.approx(850.5)
 
 
-def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog, runtime_args):
+def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog, run_context):
     camera_efficiency_lst.nsb_pixel_pe_per_ns = 5.0
     mocker.patch.object(
         camera_efficiency_lst,
@@ -418,10 +423,7 @@ def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog, runtime_args
         "simtools.data_model.model_data_writer.ModelDataWriter.write_model_parameter"
     )
     args = {"telescope": "LSTN-01", "parameter_version": "1.0.0"}
-    runtime_args(args)
-    from simtools.context import RunContext
-
-    camera_efficiency_lst.context = RunContext.from_environment()
+    camera_efficiency_lst.context = run_context.replace(args=args)
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.dump_nsb_pixel_rate()
     mock_dump.assert_called_once()

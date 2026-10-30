@@ -48,7 +48,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
-    validate_simulation_dependencies=True,
+    needs=("model", "sim_telarray", "corsika"),
 )
 
 
@@ -57,7 +57,9 @@ def main():
     app_context = APPLICATION.start()
 
     simulator = Simulator(
-        label=app_context.args.get("label"), model_reader=app_context.model_reader
+        label=app_context.args.get("label"),
+        model_reader=app_context.model_reader,
+        context=app_context,
     )
     simulator.simulate()
     simulator.validate_simulations()

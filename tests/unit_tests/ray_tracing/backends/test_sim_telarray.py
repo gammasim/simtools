@@ -421,8 +421,8 @@ def test_psf_image_with_rx_prefers_the_compressed_list(backend, mocker):
     psf_image.return_value.process_photon_list.assert_called_once_with(files[1], True)
 
 
-def test_file_names_of_single_mirrors(models):
-    backend = SimtelBackend(models.tel, models.site, "test", 20.0, True)
+def test_file_names_of_single_mirrors(models, run_context):
+    backend = SimtelBackend(models.tel, models.site, "test", 20.0, True, context=run_context)
     photons, compressed, stars = backend._files(_request(mirror_number=3))
     assert "mirror3" in photons.name
     assert "d10" not in photons.name

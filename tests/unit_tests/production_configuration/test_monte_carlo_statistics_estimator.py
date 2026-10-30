@@ -279,7 +279,7 @@ def test_ceil_required_total_events_rounds_up_to_integer():
     assert np.isinf(monte_carlo_statistics_estimator._ceil_required_total_events(np.inf))
 
 
-def test_estimator_radius_override_changes_required_events(mocker, tmp_path):
+def test_estimator_radius_override_changes_required_events(mocker, tmp_test_directory, run_context):
     metadata, bins = _build_reference_tables()
     mocker.patch(
         _LOAD_HISTOGRAMS,
@@ -300,17 +300,19 @@ def test_estimator_radius_override_changes_required_events(mocker, tmp_path):
 
     args_original = common_args | {
         "reduced_core_radius": None,
-        "output_file": str(tmp_path / "a.ecsv"),
+        "output_file": str(tmp_test_directory / "a.ecsv"),
     }
     args_reduced = common_args | {
         "reduced_core_radius": 50.0 * u.m,
-        "output_file": str(tmp_path / "b.ecsv"),
+        "output_file": str(tmp_test_directory / "b.ecsv"),
     }
 
     product_metadata = {"cta": {"activity": {"name": "estimate_statistics"}}}
-    original = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args_original)
+    original = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        args_original, context=run_context
+    )
     reduced = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
-        args_reduced, metadata=product_metadata
+        args_reduced, metadata=product_metadata, context=run_context
     )
 
     assert original["estimated_total_events"][0] != pytest.approx(
@@ -321,7 +323,7 @@ def test_estimator_radius_override_changes_required_events(mocker, tmp_path):
     assert "effective_core_scatter_radius" not in reduced.colnames
 
 
-def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
+def test_estimator_writes_diagnostic_plots(mocker, tmp_test_directory, run_context):
     metadata, bins = _build_reference_tables()
     mocker.patch(
         _LOAD_HISTOGRAMS,
@@ -345,8 +347,9 @@ def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
             "reduced_core_radius": None,
             "reduced_view_cone_radius": None,
             "plot_diagnostics": True,
-            "output_file": str(tmp_path / "estimate.ecsv"),
-        }
+            "output_file": str(tmp_test_directory / "estimate.ecsv"),
+        },
+        context=run_context,
     )
 
     mock_plot.assert_called_once()
@@ -358,7 +361,7 @@ def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
 
 
 def test_estimator_logs_overall_trigger_probability_for_target_triggered_events(
-    mocker, tmp_path, caplog
+    mocker, tmp_test_directory, caplog, run_context
 ):
     metadata, bins = _build_reference_tables()
     mocker.patch(
@@ -377,8 +380,9 @@ def test_estimator_logs_overall_trigger_probability_for_target_triggered_events(
             "optimization_energy_max": 10.0 * u.TeV,
             "reduced_core_radius": None,
             "reduced_view_cone_radius": None,
-            "output_file": str(tmp_path / "estimate.ecsv"),
-        }
+            "output_file": str(tmp_test_directory / "estimate.ecsv"),
+        },
+        context=run_context,
     )
 
     assert (
@@ -391,7 +395,9 @@ def test_estimator_logs_overall_trigger_probability_for_target_triggered_events(
     ) in caplog.text
 
 
-def test_estimator_rejects_reduced_radius_for_legacy_2d_histograms(mocker, tmp_path):
+def test_estimator_rejects_reduced_radius_for_legacy_2d_histograms(
+    mocker, tmp_test_directory, run_context
+):
     metadata, bins = _build_legacy_reference_tables()
     mocker.patch(
         _LOAD_HISTOGRAMS,
@@ -409,14 +415,17 @@ def test_estimator_rejects_reduced_radius_for_legacy_2d_histograms(mocker, tmp_p
                 "optimization_energy_max": 1.0 * u.TeV,
                 "reduced_core_radius": 50.0 * u.m,
                 "reduced_view_cone_radius": None,
-                "output_file": str(tmp_path / "estimate.ecsv"),
-            }
+                "output_file": str(tmp_test_directory / "estimate.ecsv"),
+            },
+            context=run_context,
         )
 
 
-def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path):
+def test_estimator_supports_reference_tables_reloaded_from_hdf5(
+    mocker, tmp_test_directory, run_context
+):
     metadata, bins = _build_reference_tables()
-    reference_file = tmp_path / "trigger_histograms.hdf5"
+    reference_file = tmp_test_directory / "trigger_histograms.hdf5"
     metadata.meta["EXTNAME"] = "TRIGGER_REFERENCE_METADATA"
     bins.meta["EXTNAME"] = "TRIGGER_REFERENCE_BINS"
     table_handler.write_tables([metadata, bins], reference_file, file_type="HDF5")
@@ -439,20 +448,24 @@ def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path
         "optimization_energy_max": None,
         "reduced_core_radius": None,
         "reduced_view_cone_radius": None,
-        "output_file": str(tmp_path / "estimate.ecsv"),
+        "output_file": str(tmp_test_directory / "estimate.ecsv"),
     }
 
-    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args)
+    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        args, context=run_context
+    )
 
     assert "effective_core_scatter_radius" not in result.colnames
     assert "original_core_scatter_radius" not in result.colnames
     assert result["estimated_total_events"][0] > 0.0
 
 
-def test_estimator_selects_reloaded_hdf5_rows_by_array_layout_name(mocker, tmp_path):
+def test_estimator_selects_reloaded_hdf5_rows_by_array_layout_name(
+    mocker, tmp_test_directory, run_context
+):
     metadata, bins = _build_reference_tables()
     metadata["array_name"] = ["CTAO-North-Alpha"]
-    reference_file = tmp_path / "trigger_histograms.hdf5"
+    reference_file = tmp_test_directory / "trigger_histograms.hdf5"
     metadata.meta["EXTNAME"] = "TRIGGER_REFERENCE_METADATA"
     bins.meta["EXTNAME"] = "TRIGGER_REFERENCE_BINS"
     table_handler.write_tables([metadata, bins], reference_file, file_type="HDF5")
@@ -477,14 +490,17 @@ def test_estimator_selects_reloaded_hdf5_rows_by_array_layout_name(mocker, tmp_p
             "optimization_energy_max": None,
             "reduced_core_radius": None,
             "reduced_view_cone_radius": None,
-            "output_file": str(tmp_path / "estimate.ecsv"),
-        }
+            "output_file": str(tmp_test_directory / "estimate.ecsv"),
+        },
+        context=run_context,
     )
 
     assert result["array_name"][0] == "CTAO-North-Alpha"
 
 
-def test_estimator_view_cone_override_changes_required_events(mocker, tmp_path):
+def test_estimator_view_cone_override_changes_required_events(
+    mocker, tmp_test_directory, run_context
+):
     metadata, bins = _build_reference_tables_with_multiple_angular_bins()
     mocker.patch(
         _LOAD_HISTOGRAMS,
@@ -505,15 +521,17 @@ def test_estimator_view_cone_override_changes_required_events(mocker, tmp_path):
         common_args
         | {
             "reduced_view_cone_radius": None,
-            "output_file": str(tmp_path / "full.ecsv"),
-        }
+            "output_file": str(tmp_test_directory / "full.ecsv"),
+        },
+        context=run_context,
     )
     reduced = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
         common_args
         | {
             "reduced_view_cone_radius": 5.0 * u.deg,
-            "output_file": str(tmp_path / "reduced.ecsv"),
-        }
+            "output_file": str(tmp_test_directory / "reduced.ecsv"),
+        },
+        context=run_context,
     )
 
     assert original["estimated_total_events"][0] != pytest.approx(
@@ -523,7 +541,9 @@ def test_estimator_view_cone_override_changes_required_events(mocker, tmp_path):
     assert "effective_view_cone_radius" not in reduced.colnames
 
 
-def test_estimator_uses_histogram_spectral_index_when_no_override_is_given(mocker, tmp_path):
+def test_estimator_uses_histogram_spectral_index_when_no_override_is_given(
+    mocker, tmp_test_directory, run_context
+):
     metadata, bins = _build_reference_tables()
     mocker.patch(
         _LOAD_HISTOGRAMS,
@@ -540,8 +560,9 @@ def test_estimator_uses_histogram_spectral_index_when_no_override_is_given(mocke
             "optimization_energy_max": 10.0 * u.TeV,
             "reduced_core_radius": None,
             "reduced_view_cone_radius": None,
-            "output_file": str(tmp_path / "estimate.ecsv"),
-        }
+            "output_file": str(tmp_test_directory / "estimate.ecsv"),
+        },
+        context=run_context,
     )
 
     assert result.meta["spectral_index"] == pytest.approx(-2.0)
@@ -549,7 +570,7 @@ def test_estimator_uses_histogram_spectral_index_when_no_override_is_given(mocke
 
 
 def test_estimator_warns_and_falls_back_when_histogram_spectral_index_is_missing(
-    mocker, tmp_path, caplog
+    mocker, tmp_test_directory, caplog, run_context
 ):
     metadata, bins = _build_reference_tables()
     metadata.remove_column("spectral_index")
@@ -569,8 +590,9 @@ def test_estimator_warns_and_falls_back_when_histogram_spectral_index_is_missing
             "optimization_energy_max": 10.0 * u.TeV,
             "reduced_core_radius": None,
             "reduced_view_cone_radius": None,
-            "output_file": str(tmp_path / "estimate.ecsv"),
-        }
+            "output_file": str(tmp_test_directory / "estimate.ecsv"),
+        },
+        context=run_context,
     )
 
     assert "No spectral index found in trigger histogram metadata" in caplog.text

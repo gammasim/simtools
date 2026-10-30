@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from types import SimpleNamespace
 
 import pytest
 
@@ -8,18 +8,15 @@ from simtools.utils import random
 
 
 @pytest.fixture
-def mock_config(mocker):
-    """Fixture providing a mocked configuration."""
-    mock = MagicMock()
-    mock.args = {}
-    mocker.patch("simtools.simtel.simtel_seeds.settings.config", mock)
-    return mock
+def mock_config():
+    """Fixture providing explicit context arguments."""
+    return SimpleNamespace(args={})
 
 
 @pytest.fixture
 def seeds_instance(mock_config):
     """Fixture providing a SimtelSeeds instance."""
-    return SimtelSeeds()
+    return SimtelSeeds(context=mock_config)
 
 
 @pytest.mark.parametrize(
@@ -39,7 +36,7 @@ def test_initialize_seeds_routes_correctly(
         mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=789)
     mocker.patch.object(SimtelSeeds, expected_method, return_value=return_value)
 
-    seeds = SimtelSeeds()
+    seeds = SimtelSeeds(context=mock_config)
     seeds.simulation_seed = simulation_seed
     seeds.instruments = instruments
     result = seeds.initialize_seeds("north", "1.0.0", 20.0, 180.0)
@@ -52,7 +49,7 @@ def test_initialize_seeds_routes_correctly(
 
 
 def test_initialize_seeds_raises_for_too_many_fixed_seeds(mock_config):
-    seeds = SimtelSeeds()
+    seeds = SimtelSeeds(context=mock_config)
     seeds.simulation_seed = [1, 2, 3]
 
     with pytest.raises(ValueError, match="simulation_seed must contain one value"):
@@ -63,7 +60,7 @@ def test_initialize_seeds_single_value_uses_configured_instrument_seed(mocker, m
     mock_config.args = {"instrument_seed": 1745, "simulation_seed": [290]}
     random_seed_mock = mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=999)
 
-    seeds = SimtelSeeds()
+    seeds = SimtelSeeds(context=mock_config)
 
     result = seeds.seed_string
 
@@ -77,7 +74,7 @@ def test_set_fixed_seeds(mocker, mock_config):
     mocker.patch.object(SimtelSeeds, "initialize_seeds", return_value="mock")
     mock_logger = mocker.patch("simtools.simtel.simtel_seeds.logging.getLogger")
 
-    seeds = SimtelSeeds()
+    seeds = SimtelSeeds(context=mock_config)
     seeds.simulation_seed = [123, 456]
     result = seeds._set_fixed_seeds()
     assert result == "123,456"
@@ -103,7 +100,7 @@ def test_generate_seed_pair(mocker, mock_config, instrument_seed, expected_gener
     mocker.patch.object(SimtelSeeds, "initialize_seeds", return_value="mock")
     mock_logger = mocker.patch("simtools.simtel.simtel_seeds.logging.getLogger")
 
-    seeds = SimtelSeeds()
+    seeds = SimtelSeeds(context=mock_config)
     seeds.instrument_seed = instrument_seed
     seeds.simulation_seed = 600
     result = seeds._generate_seed_pair()
@@ -124,7 +121,7 @@ def test_generate_seeds_with_file(mocker, mock_config, tmp_path):
     mock_config.args = {"sim_telarray_seed_file": "seeds.txt"}
     mock_logger = mocker.patch("simtools.simtel.simtel_seeds.logging.getLogger")
 
-    seeds = SimtelSeeds()
+    seeds = SimtelSeeds(context=mock_config)
     seeds.seed_file = tmp_path / "seeds.txt"
     seeds.instruments = 3
     seeds.simulation_seed = 200
@@ -152,7 +149,7 @@ def test_get_instrument_seed_deterministic(mocker, mock_config):
         return_value={"North": ["north"], "South": ["south"]},
     )
 
-    seeds = SimtelSeeds()
+    seeds = SimtelSeeds(context=mock_config)
     seeds.instrument_seed = None
 
     result_base = seeds._get_instrument_seed("north", "1.0.0", 20.0, 180.0)
@@ -190,18 +187,18 @@ def test_get_instrument_seed_deterministic(mocker, mock_config):
 )
 def test_instance_seed_pairs(mock_config, args, instances, expected):
     mock_config.args = args
-    assert instance_seed_pairs(instances) == expected
+    assert instance_seed_pairs(instances, context=mock_config) == expected
 
 
 def test_instance_seed_pairs_draws_missing_seeds(mock_config):
     mock_config.args = {}
-    (instrument, simulation), *others = instance_seed_pairs(4)
+    (instrument, simulation), *others = instance_seed_pairs(4, context=mock_config)
     assert len(others) == 3
     assert 1 <= instrument < SIMTEL_MAX_SEED
     assert 1 <= simulation < SIMTEL_MAX_SEED
     mock_config.args = {"simulation_seed": [1, 2, 3]}
     with pytest.raises(ValueError, match="simulation_seed must contain one value"):
-        instance_seed_pairs()
+        instance_seed_pairs(context=mock_config)
 
 
 def test_seed_file_holds_the_instance_seeds(mock_config, tmp_test_directory):
@@ -211,7 +208,7 @@ def test_seed_file_holds_the_instance_seeds(mock_config, tmp_test_directory):
         "random_instrument_instances": 3,
         "sim_telarray_seed_file": "seeds.txt",
     }
-    seeds = SimtelSeeds(output_path=tmp_test_directory)
+    seeds = SimtelSeeds(output_path=tmp_test_directory, context=mock_config)
     lines = seeds.seed_file.read_text(encoding="utf-8").splitlines()
     assert [int(line) for line in lines if not line.startswith("#")] == random.instance_seeds(
         5, 3, max_seed=SIMTEL_MAX_SEED

@@ -207,10 +207,9 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         *cli.CORSIKA_PATH_ARGUMENTS,
     ),
-    setup_io_handler=False,
-    validate_simulation_dependencies=True,
     post_parse=_post_parse,
     defer_required_validation=True,
+    needs=("model", "sim_telarray", "corsika"),
 )
 
 
@@ -227,7 +226,7 @@ def main():
         # Fall back to single row processing
         logger.warning("Job grid file detected but _job_grid_rows not set")
 
-    simulator = Simulator(label=app_context.args.get("label"))
+    simulator = Simulator(label=app_context.args.get("label"), context=app_context)
 
     simulator.simulate()
     if app_context.args["reduced_event_lists"]:

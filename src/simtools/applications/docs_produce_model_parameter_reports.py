@@ -25,19 +25,21 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    output_path = app_context.io_handler.get_output_directory()
+    output_path = app_context.paths.get_output_directory()
 
     if any([app_context.args.get("all_telescopes"), app_context.args.get("all_sites")]):
         ReportGenerator(
             app_context.args,
             output_path,
             app_context.model_reader,
+            context=app_context,
         ).auto_generate_parameter_reports()
 
     else:
@@ -45,6 +47,7 @@ def main():
             app_context.args,
             output_path,
             app_context.model_reader,
+            context=app_context,
         ).produce_model_parameter_reports()
 
         app_context.logger.info(

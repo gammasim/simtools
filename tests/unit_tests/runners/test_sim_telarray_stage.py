@@ -12,6 +12,7 @@ def sim_telarray_stage(corsika_config_mock_array_model):
         simulation_parameters=corsika_config_mock_array_model.simulation_parameters,
         array_model=corsika_config_mock_array_model.array_model,
         label="test-sim-telarray-stage",
+        context=corsika_config_mock_array_model.context,
     )
 
 
@@ -21,6 +22,7 @@ def test_instances_one_per_array_model(corsika_config_mock_array_model):
         simulation_parameters=(corsika_config_mock_array_model.simulation_parameters,) * 2,
         shower_configurations=(),
         args={},
+        context=corsika_config_mock_array_model.context,
     )
 
     assert len(SimTelArrayStage.instances(inputs, label="test")) == 2

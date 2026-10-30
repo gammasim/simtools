@@ -55,7 +55,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_model_reader=False,
+    needs=("corsika",),
 )
 
 
@@ -75,7 +75,7 @@ def main():
 
     plot_corsika_histograms.export_all_photon_figures_pdf(
         all_histograms,
-        app_context.io_handler.get_output_file(app_context.args["output_file"]),
+        app_context.paths.get_output_file(app_context.args["output_file"]),
         app_context.args.get("file_labels"),
     )
 

@@ -5,10 +5,11 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.configuration import arguments as configurator_arguments
 from simtools.configuration import configurator
 from simtools.configuration.arguments import STANDARD_ARGUMENTS, ArgumentDefinition
-from simtools.settings import config
+from simtools.context import RunContext
 
 PostParseHook = Callable[[dict, Mapping[str, str], object], None]
 
@@ -21,15 +22,10 @@ class ApplicationDefinition:
     description: str
     arguments: tuple[ArgumentDefinition, ...] = ()
     model_repository: bool = False
-    initialize_output: bool = False
-    setup_io_handler: bool = True
-    resolve_sim_software_executables: bool = True
+    needs: tuple[str, ...] | None = None
     post_parse: PostParseHook | None = None
     defer_required_validation: bool = False
     usage: str | None = None
-    validate_simulation_dependencies: bool = False
-    initialize_model_reader: bool | None = None
-    use_dependency_defaults: bool = True
     excluded_standard_arguments: tuple[str, ...] = ()
 
     @classmethod
@@ -50,8 +46,8 @@ class ApplicationDefinition:
             "excluded_standard_arguments",
             tuple(self.excluded_standard_arguments),
         )
-        if self.initialize_model_reader is None:
-            object.__setattr__(self, "initialize_model_reader", self.model_repository)
+        needs = ("model",) if self.needs is None and self.model_repository else (self.needs or ())
+        object.__setattr__(self, "needs", tuple(needs))
         self._validate_arguments(self.all_arguments)
 
     @property
@@ -89,7 +85,6 @@ class ApplicationDefinition:
             label=self.label,
             description=self._description_line(),
             usage=self.usage,
-            use_dependency_defaults=self.use_dependency_defaults,
         )
         config_builder.parser.add_argument_definitions(arguments)
         return config_builder
@@ -116,20 +111,24 @@ class ApplicationDefinition:
             else self.all_arguments
         )
         config_builder = self._configurator(runtime_arguments)
-        args_dict = config_builder.configure(initialize_output=self.initialize_output)
+        args_dict = config_builder.configure(initialize_output="output" in self.needs)
         if args_dict.get("show_options"):
             from simtools.configuration.show_options import (  # pylint: disable=import-outside-toplevel
                 handle_show_options,
             )
 
             try:
-                config.load(
+                context = RunContext.from_arguments(
                     args_dict,
-                    resolve_sim_software_executables=self.resolve_sim_software_executables,
+                    resolve_sim_software_executables="corsika" in self.needs,
                 )
+                if self._show_options_need_model_reader(args_dict):
+                    context = context.replace(
+                        model_reader=create_model_reader_from_configuration(args_dict)
+                    )
             except (FileNotFoundError, PermissionError, ValueError) as exc:
                 config_builder.parser.error(str(exc))
-            handle_show_options(args_dict, config_builder.parser)
+            handle_show_options(args_dict, config_builder.parser, context=context)
         if self.post_parse is not None:
             self.post_parse(args_dict, config_builder.config_sources, config_builder.parser)
         if defer_required_validation:
@@ -149,6 +148,11 @@ class ApplicationDefinition:
         return any(
             argument.split("=", maxsplit=1)[0] == "--show_options" for argument in sys.argv[1:]
         )
+
+    @staticmethod
+    def _show_options_need_model_reader(args):
+        """Return whether this option discovers values from the model repository."""
+        return args.get("show_options") in {"array_layout_name", "model_version"}
 
     def _validate_required_values(self, args, parser):
         """Validate declarations deferred until after the post-parse hook."""
@@ -182,8 +186,5 @@ class ApplicationDefinition:
 
         return initialize_runtime(
             args_dict,
-            setup_io_handler=self.setup_io_handler,
-            resolve_sim_software_executables=self.resolve_sim_software_executables,
-            validate_simulation_dependencies=self.validate_simulation_dependencies,
-            initialize_model_reader=self.initialize_model_reader,
+            needs=self.needs,
         )

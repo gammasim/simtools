@@ -2,14 +2,13 @@
 
 import copy
 import logging
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from astropy import units as u
 
-from simtools import settings
+from simtools.context import RunContext
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.settings import _Config
 
 logger = logging.getLogger()
 
@@ -42,6 +41,7 @@ def create_mock_array_model(mocker, geomag_rotation=0):
         "corsika_observation_level": 2200.0,
     }.get(x, geomag_rotation)
     mock_array_model.site_model = mock_site_model
+    mock_array_model.context = RunContext.from_arguments({}, resolve_sim_software_executables=False)
     return mock_array_model
 
 
@@ -65,24 +65,18 @@ def get_standard_corsika_parameters():
 
 
 @pytest.fixture
-def corsika_config_no_array_model(mocker):
+def corsika_config_no_array_model(mocker, run_context):
     """Fixture for corsika config with no array model."""
 
     mock_array_model = create_mock_array_model(mocker)
 
     modified_data = dict(_BASE_CORSIKA_ARGS)
 
-    mocker.patch.object(
-        _Config,
-        "args",
-        new_callable=mocker.PropertyMock,
-        return_value=modified_data,
-    )
-
     return CorsikaConfig(
         array_model=mock_array_model,
         run_number=1,
         label="test-corsika-config",
+        context=run_context.replace(args=modified_data),
     )
 
 
@@ -138,22 +132,16 @@ def get_standard_corsika_parameters_teltype_grammage(get_standard_corsika_parame
     return params
 
 
-def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker):
+def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker, run_context):
     mock_array_model = create_mock_array_model(mocker)
 
     args_dict = dict(_BASE_CORSIKA_ARGS)
-
-    mocker.patch.object(
-        _Config,
-        "args",
-        new_callable=mocker.PropertyMock,
-        return_value=args_dict,
-    )
 
     config_none_args = CorsikaConfig(
         array_model=mock_array_model,
         label="test-corsika-config",
         run_number=11,
+        context=run_context.replace(args=args_dict),
     )
     assert isinstance(config_none_args.config, dict)
     assert "USER_INPUT" in config_none_args.config
@@ -186,8 +174,11 @@ def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker):
 
 
 def test_fill_corsika_configuration_model_version(
-    corsika_config_mock_array_model, get_standard_corsika_parameters
+    corsika_config_mock_array_model, get_standard_corsika_parameters, run_context
 ):
+    corsika_config_mock_array_model.context = corsika_config_mock_array_model.context.replace(
+        model_reader=run_context.model_reader
+    )
     corsika_config_mock_array_model.array_model.site_model.get_simulation_software_parameters.return_value = get_standard_corsika_parameters
     args_dict = {
         "model_version": ["5.0.0", "6.0.0"],
@@ -214,11 +205,8 @@ def test_fill_corsika_configuration_model_version(
 def test_corsika_configuration_custom_hadronic_transition_energy(
     corsika_config_mock_array_model, get_standard_corsika_parameters, mocker
 ):
-    mocker.patch.object(
-        _Config,
-        "args",
-        new_callable=mocker.PropertyMock,
-        return_value={"corsika_hadronic_transition_energy": 120 * u.GeV},
+    corsika_config_mock_array_model.context = corsika_config_mock_array_model.context.replace(
+        args={"corsika_hadronic_transition_energy": 120 * u.GeV}
     )
 
     parameters = corsika_config_mock_array_model._corsika_configuration_interaction_flags(
@@ -405,8 +393,8 @@ def test_get_top_level_run_parameters(corsika_config_mock_array_model):
     corsika_config_mock_array_model.config["RUNNR"] = [42]
     assert corsika_config_mock_array_model._get_top_level_run_parameters() == {
         "RUNNR": [42],
-        "USER": [settings.config.user],
-        "HOST": [settings.config.hostname],
+        "USER": [corsika_config_mock_array_model.context.activity.user],
+        "HOST": [corsika_config_mock_array_model.context.activity.hostname],
     }
 
 
@@ -437,8 +425,10 @@ def test_generate_corsika_input_file(corsika_config_mock_array_model, tmp_path):
     with open(input_file) as f:
         input_file_text = f.read()
         assert "RUNNR 42 " in input_file_text
-        assert f"USER {settings.config.user} " in input_file_text
-        assert f"HOST {settings.config.hostname} " in input_file_text
+        assert f"USER {corsika_config_mock_array_model.context.activity.user} " in input_file_text
+        assert (
+            f"HOST {corsika_config_mock_array_model.context.activity.hostname} " in input_file_text
+        )
         assert "TELFIL |" not in input_file_text
 
 
@@ -470,12 +460,14 @@ def test_write_seeds(corsika_config_mock_array_model):
         assert _call.endswith(" 0 0\n")
 
 
-def test_write_seeds_use_test_seeds(corsika_config_mock_array_model, runtime_args):
+def test_write_seeds_use_test_seeds(corsika_config_mock_array_model):
     mock_file = Mock()
     corsika_config_mock_array_model.run_number = 10
     corsika_config_mock_array_model.config = {"USER_INPUT": {"PRMPAR": [14]}}
     expected_seeds = [534, 220, 1104, 382]
-    runtime_args({**settings.config.args, "corsika_seeds": expected_seeds})
+    corsika_config_mock_array_model.context = corsika_config_mock_array_model.context.replace(
+        args={**dict(corsika_config_mock_array_model.context.args), "corsika_seeds": expected_seeds}
+    )
     with patch("io.open", return_value=mock_file):
         corsika_config_mock_array_model._write_seeds(mock_file)
     assert mock_file.write.call_count == 4
@@ -720,7 +712,7 @@ def test_fill_corsika_configuration_variations(
     )
 
 
-def test_corsika_file_initialization(mocker, tmp_path):
+def test_corsika_file_initialization(mocker, tmp_path, run_context):
     mock_array_model = create_mock_array_model(mocker)
 
     test_cases = [
@@ -768,40 +760,40 @@ def test_corsika_file_initialization(mocker, tmp_path):
             }
             mock_headers.return_value = (run_header_dict, event_header_dict)
 
-            with patch.object(
-                _Config,
-                "args",
-                new_callable=PropertyMock,
-                return_value=case["args"],
-            ):
-                config = CorsikaConfig(array_model=mock_array_model, label="test", run_number=1)
+            config = CorsikaConfig(
+                array_model=mock_array_model,
+                label="test",
+                run_number=1,
+                context=run_context.replace(args=case["args"]),
+            )
 
-                assert config.zenith_angle == case["expected"]["zenith"]
-                assert config.azimuth_angle == case["expected"]["azimuth"]
-                assert config.curved_atmosphere_min_zenith_angle == pytest.approx(
-                    case["expected"]["curved_atm"]
-                )
+            assert config.zenith_angle == case["expected"]["zenith"]
+            assert config.azimuth_angle == case["expected"]["azimuth"]
+            assert config.curved_atmosphere_min_zenith_angle == pytest.approx(
+                case["expected"]["curved_atm"]
+            )
 
 
-def test_zenith_azimuth_float_precision(mocker):
+def test_zenith_azimuth_float_precision(mocker, run_context):
     """Test that zenith and azimuth angles are stored with two decimal places (not as integers)."""
     mock_array_model = create_mock_array_model(mocker)
 
-    with patch.object(
-        _Config,
-        "args",
-        new_callable=PropertyMock,
-        return_value={
-            **_BASE_CORSIKA_ARGS,
-            "zenith_angle": 20.567 * u.deg,
-            "azimuth_angle": 45.123 * u.deg,
-        },
-    ):
-        config = CorsikaConfig(array_model=mock_array_model, label="test", run_number=1)
-        assert config.zenith_angle == pytest.approx(20.57, abs=1e-9)
-        assert config.azimuth_angle == pytest.approx(45.12, abs=1e-9)
-        assert isinstance(config.zenith_angle, float)
-        assert isinstance(config.azimuth_angle, float)
+    config = CorsikaConfig(
+        array_model=mock_array_model,
+        label="test",
+        run_number=1,
+        context=run_context.replace(
+            args={
+                **_BASE_CORSIKA_ARGS,
+                "zenith_angle": 20.567 * u.deg,
+                "azimuth_angle": 45.123 * u.deg,
+            },
+        ),
+    )
+    assert config.zenith_angle == pytest.approx(20.57, abs=1e-9)
+    assert config.azimuth_angle == pytest.approx(45.12, abs=1e-9)
+    assert isinstance(config.zenith_angle, float)
+    assert isinstance(config.azimuth_angle, float)
 
 
 def test_check_altitude_and_site(corsika_config_mock_array_model):
@@ -817,11 +809,13 @@ def test_get_starting_grammage_value_list_empty(corsika_config_mock_array_model)
 
 
 @pytest.mark.parametrize("seeds", [[1, 2, 3], [1, 2, 3, 4, 5]])
-def test_write_seeds_invalid_seed_count_wrong(corsika_config_mock_array_model, runtime_args, seeds):
+def test_write_seeds_invalid_seed_count_wrong(corsika_config_mock_array_model, seeds):
     mock_file = Mock()
     corsika_config_mock_array_model.run_number = 10
     corsika_config_mock_array_model.config = {"USER_INPUT": {"PRMPAR": [14]}}
-    runtime_args({**settings.config.args, "corsika_seeds": seeds})
+    corsika_config_mock_array_model.context = corsika_config_mock_array_model.context.replace(
+        args={**dict(corsika_config_mock_array_model.context.args), "corsika_seeds": seeds}
+    )
 
     with patch("io.open", return_value=mock_file):
         with pytest.raises(ValueError, match="Exactly 4 CORSIKA seeds must be provided"):

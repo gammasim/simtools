@@ -13,7 +13,7 @@ VALUE_ARGUMENT = "value"
 PULSE_SHAPE_VALUES = ["Gauss-Exponential", "0.4 ns", "1.59 ns"]
 
 
-def test_value_argument_accepts_multiple_values():
+def test_value_argument_accepts_multiple_values(run_context):
     parser = submit_parameter.APPLICATION.build_parser()
     args = parser.parse_args(
         [
@@ -31,7 +31,9 @@ def test_value_argument_accepts_multiple_values():
     )
 
     assert args.value == PULSE_SHAPE_VALUES
-    parameter = submit_parameter.writer.ModelDataWriter().get_validated_parameter_dict(
+    parameter = submit_parameter.writer.ModelDataWriter(
+        context=run_context
+    ).get_validated_parameter_dict(
         parameter_name=args.parameter,
         value=args.value,
         instrument=args.instrument,

@@ -40,4 +40,6 @@ def test_main_forwards_context(mocker):
     mocker.patch.object(run_application.APPLICATION.__class__, "start", return_value=context)
     execute = mocker.patch.object(run_application, "run_applications")
     run_application.main()
-    execute.assert_called_once_with(context.args, run_time=[], replacements={"__VALUE__": "value"})
+    execute.assert_called_once_with(
+        context.args, run_time=[], replacements={"__VALUE__": "value"}, context=context
+    )

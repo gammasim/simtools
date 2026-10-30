@@ -92,7 +92,7 @@ class TelescopeModel(ModelParameter):
         set_focal_length_to_zero: bool
             Set the focal length to zero if True.
         """
-        return get_model_writer(self).export_single_mirror_list_file(
+        return get_model_writer(self, context=self.context).export_single_mirror_list_file(
             mirror_number=mirror_number, set_focal_length_to_zero=set_focal_length_to_zero
         )
 
@@ -114,7 +114,7 @@ class TelescopeModel(ModelParameter):
         Path
             Path of the single mirror list file.
         """
-        return get_model_writer(self).get_single_mirror_list_file(
+        return get_model_writer(self, context=self.context).get_single_mirror_list_file(
             mirror_number, set_focal_length_to_zero
         )
 

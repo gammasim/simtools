@@ -62,6 +62,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -78,6 +79,7 @@ def main():
             label=label,
             model_reader=app_context.model_reader,
             model_directory=model_directory,
+            context=app_context,
         )
         parameters = tel_model.parameters
         if args["shadowing"]:
@@ -111,7 +113,7 @@ def main():
             shares = shadowing_shares(
                 tel_model, args["zenith_angle"], args["photons"], args["seed"]
             )
-        output_dir = app_context.io_handler.get_output_directory()
+        output_dir = app_context.paths.get_output_directory()
         structure.plot_telescope_structure(
             geometry, output_dir.joinpath(f"{label}_{tel_model.name}"), shares
         )

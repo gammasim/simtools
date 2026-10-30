@@ -22,7 +22,7 @@ def test_resolve_telescope_configs_prefers_layout_and_falls_back_to_array_elemen
         {"array_layout_name": "alpha", "model_version": "1.0.0", "site": "North"}
     ) == {"alpha": ["LSTN-01"]}
     mock_resolve.assert_called_once_with("alpha", "1.0.0")
-    mock_get.assert_called_once_with(["alpha"], "North", "1.0.0")
+    mock_get.assert_called_once_with(["alpha"], "North", "1.0.0", context=None)
     assert helpers.resolve_telescope_configs({"array_element_list": ["LSTN-01"]}) == {
         "array_element_list": ["LSTN-01"]
     }
@@ -52,7 +52,7 @@ def test_resolve_telescope_configs_passes_scalar_model_version_to_repository(moc
 
     assert result == {"alpha": ["LSTN-01"]}
     mock_resolve.assert_called_once_with(["alpha"], "7.0.0")
-    mock_get.assert_called_once_with(["alpha"], "North", "7.0.0")
+    mock_get.assert_called_once_with(["alpha"], "North", "7.0.0", context=None)
 
 
 def test_resolve_telescope_configs_rejects_multiple_model_versions(mocker):

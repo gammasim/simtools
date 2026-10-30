@@ -11,7 +11,7 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 
 
 def run_camera_efficiency(
-    config, output_directory, label=None, telescope_model=None, site_model=None
+    config, output_directory, label=None, telescope_model=None, site_model=None, context=None
 ):
     """Run Shower, NSB and Muon camera-efficiency calculations.
 
@@ -25,6 +25,8 @@ def run_camera_efficiency(
         Log label for this calculation.
     telescope_model, site_model : object, optional
         Initialized models to reuse; both are initialized when either is omitted.
+    context : RunContext, optional
+        Run context passed to the models and calculators.
 
     Returns
     -------
@@ -38,6 +40,7 @@ def run_camera_efficiency(
             model_version=config["model_version"],
             site=config["site"],
             telescope_name=config["telescope"],
+            context=context,
         )
         telescope_model = telescope_model or initialized_telescope
         site_model = site_model or initialized_site
@@ -51,6 +54,7 @@ def run_camera_efficiency(
             efficiency_type=efficiency_type,
             telescope_model=telescope_model,
             site_model=site_model,
+            context=context,
         )
         efficiency.simulate()
         efficiency.analyze(force=True)

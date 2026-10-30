@@ -12,7 +12,6 @@ from astropy.table import QTable
 from cycler import cycler
 from PIL import Image
 
-from simtools.settings import config
 from simtools.utils import value_conversion
 from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
@@ -376,8 +375,40 @@ def plot_histogram(data, ax=None, **kwargs):
     return ax.figure
 
 
+_FIGURE_OUTPUT = {}
+
+
+def configure_figure_output(args):
+    """
+    Set the figure output options of this process (like matplotlib ``rcParams``).
+
+    Applications call this once at start with their parsed arguments; ``save_figure``
+    then uses ``figure_format``, ``figure_dpi`` and ``figure_png_palette`` from them.
+    """
+    _FIGURE_OUTPUT.clear()
+    _FIGURE_OUTPUT.update(
+        {
+            key: args[key]
+            for key in ("figure_format", "figure_dpi", "figure_png_palette")
+            if args.get(key) is not None
+        }
+    )
+
+
+def figure_output_settings(context=None):
+    """Return figure output options from the context or from ``configure_figure_output``."""
+    return context.args if context is not None else _FIGURE_OUTPUT
+
+
 def save_figure(
-    fig, output_file, figure_format=None, log_title="", dpi="figure", close=False, pil_kwargs=None
+    fig,
+    output_file,
+    figure_format=None,
+    log_title="",
+    dpi="figure",
+    close=False,
+    pil_kwargs=None,
+    context=None,
 ):
     """
     Save figure to output file(s).
@@ -403,10 +434,11 @@ def save_figure(
     pil_kwargs : dict, optional
         Keyword arguments passed to Pillow when saving PNG files.
     """
-    configured_dpi = config.args.get("figure_dpi")
-    png_palette = config.args.get("figure_png_palette", False)
+    args = figure_output_settings(context)
+    configured_dpi = args.get("figure_dpi")
+    png_palette = args.get("figure_png_palette", False)
 
-    figure_format = figure_format or config.args.get("figure_format") or ["png"]
+    figure_format = figure_format or args.get("figure_format") or ["png"]
     base = Path(output_file)
     if base.suffix.lower() in _FIGURE_SUFFIXES:
         base = base.with_suffix("")
