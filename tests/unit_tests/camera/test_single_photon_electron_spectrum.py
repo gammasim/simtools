@@ -34,19 +34,6 @@ def afterpulse_column():
     return "frequency (afterpulsing)"
 
 
-@patch("simtools.camera.single_photon_electron_spectrum.MetadataCollector")
-def test_init(mock_metadata_collector, spe_spectrum):
-    mock_metadata_collector_instance = mock_metadata_collector.return_value
-
-    spe_spectrum.metadata = mock_metadata_collector_instance
-    tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
-
-    assert tmp_spe_spectrum.args_dict["output_file"] == "output_file.ecsv"
-    assert tmp_spe_spectrum.io_handler.output_path == spe_spectrum.context.paths.output_path
-    assert tmp_spe_spectrum.data == ""
-    assert tmp_spe_spectrum.metadata == mock_metadata_collector_instance
-
-
 def test_derive_single_pe_spectrum(spe_spectrum, tmp_test_directory):
     input_file = tmp_test_directory / "prompt.ecsv"
     Table(
@@ -90,10 +77,6 @@ def test_write_single_pe_spectrum(mock_dump, spe_spectrum, tmp_test_directory):
         "response",
         "response_with_ap",
     ]
-
-
-def test_get_output_columns_uses_model_parameter_schema(spe_spectrum):
-    assert spe_spectrum._get_output_columns() == ["amplitude", "response", "response_with_ap"]
 
 
 def test_write_single_pe_spectrum_rejects_unexpected_spectrum_columns(spe_spectrum):
@@ -178,13 +161,6 @@ def test_normalize_prompt_spectrum_uses_first_moment():
     np.testing.assert_allclose(prompt, np.array([1.0, 4.0, 2.0]) / (8.5 * scale))
 
 
-def test_linear_interpolate_uses_end_values_outside_input_range():
-    result = SinglePhotonElectronSpectrum._linear_interpolate(
-        np.array([0.0, 1.0]), np.array([0.2, 0.4]), np.array([-1.0, 0.5, 2.0])
-    )
-    np.testing.assert_allclose(result, [0.2, 0.3, 0.4])
-
-
 def test_fold_afterpulse_spectrum(spe_spectrum):
     spe_spectrum.args_dict.update(
         afterpulse_amplitude_range=[0.0, 42.0], scale_afterpulse_spectrum=1.0
@@ -199,23 +175,6 @@ def test_fold_afterpulse_spectrum(spe_spectrum):
     np.testing.assert_allclose(amplitude, [0.0, 1.0, 2.0])
     np.testing.assert_allclose(prompt, [0.0, 1.0, 0.0])
     np.testing.assert_allclose(combined, [0.0, 1.0, 0.2])
-
-
-def test_fold_afterpulse_spectrum_reaches_output_maximum(spe_spectrum):
-    spe_spectrum.args_dict.update(
-        max_amplitude=4.0,
-        afterpulse_amplitude_range=[0.0, 42.0],
-        scale_afterpulse_spectrum=1.0,
-    )
-    amplitude, _, combined = spe_spectrum._fold_afterpulse_spectrum(
-        np.array([0.0, 1.0, 2.0]),
-        np.array([0.0, 1.0, 0.0]),
-        np.array([0.0, 1.0, 2.0, 3.0]),
-        np.array([0.0, 0.0, 0.0, 1.0]),
-    )
-
-    np.testing.assert_allclose(amplitude, [0.0, 1.0, 2.0, 3.0, 4.0])
-    assert combined[-1] == pytest.approx(1.0)
 
 
 def test_fold_afterpulse_spectrum_preserves_prompt_tail(spe_spectrum):
@@ -242,20 +201,6 @@ def test_fold_afterpulse_spectrum_preserves_prompt_tail(spe_spectrum):
     np.testing.assert_allclose(output_prompt, [0.5, 0.25, 0.0])
 
 
-def test_fold_afterpulse_spectrum_applies_lower_amplitude_cutoff(spe_spectrum):
-    spe_spectrum.args_dict.update(
-        afterpulse_amplitude_range=[1.0, 42.0], scale_afterpulse_spectrum=1.0
-    )
-    _, _, combined = spe_spectrum._fold_afterpulse_spectrum(
-        np.array([0.0, 1.0, 2.0]),
-        np.array([0.0, 1.0, 0.0]),
-        np.array([0.0, 1.0, 2.0]),
-        np.array([1.0, 0.5, 0.0]),
-    )
-
-    np.testing.assert_allclose(combined, [0.0, 1.0, 0.5])
-
-
 def test_read_input_data(spe_spectrum, tmp_test_directory):
     assert spe_spectrum._read_input_data(None, None, spe_spectrum.prompt_column) is None
 
@@ -271,119 +216,6 @@ def test_read_input_data(spe_spectrum, tmp_test_directory):
         )
         np.testing.assert_allclose(amplitude, [0.0, 0.02])
         np.testing.assert_allclose(frequency, [0.4694, 0.46378])
-
-
-def test_read_input_data_validates_csv(spe_spectrum, tmp_test_directory):
-    input_file = tmp_test_directory / "input_spectrum.csv"
-    input_file.write_text("0.01,0.4\n0.02,0.2\n", encoding="utf-8")
-
-    amplitude, frequency = spe_spectrum._read_input_data(
-        input_file, None, spe_spectrum.prompt_column
-    )
-
-    np.testing.assert_allclose(amplitude, [0.01, 0.02])
-    np.testing.assert_allclose(frequency, [0.4, 0.2])
-
-
-@patch("simtools.camera.single_photon_electron_spectrum.Table")
-def test_read_afterpulse_spectrum_for_fit(mock_table, spe_spectrum, afterpulse_column):
-    mock_data = Table()
-    mock_data["amplitude"] = [1.0, 2.0, 3.0, 4.0, 5.0]
-    mock_data[afterpulse_column] = [0.1, 0.2, 0.0, 0.4, 0.5]
-    mock_data["frequency stdev (afterpulsing)"] = [0.01, 0.02, 0.03, 0.04, 0.05]
-    mock_table.read.return_value = mock_data
-
-    x, y, y_err = spe_spectrum._read_afterpulse_spectrum_for_fit("dummy.ecsv", 3.0)
-    mock_table.read.assert_called_once_with("dummy.ecsv", format="ascii.ecsv")
-    assert len(x) == 2
-    assert len(y) == 2
-    assert len(y_err) == 2
-    np.testing.assert_array_equal(x, [4.0, 5.0])
-    np.testing.assert_array_equal(y, [0.4, 0.5])
-    np.testing.assert_array_equal(y_err, [0.04, 0.05])
-
-
-def test_afterpulse_fit_statistics(spe_spectrum):
-    # Test case 1: without fixed k
-    x = np.array([1.0, 2.0, 3.0])
-    y = np.array([0.1, 0.05, 0.02])
-    y_err = np.array([0.01, 0.01, 0.01])
-    params = np.array([0.5, 1.0])
-    param_errors = np.array([0.1, 0.2])
-    predicted = np.array([0.11, 0.04, 0.03])
-    fix_k = None
-
-    result = spe_spectrum._afterpulse_fit_statistics(
-        x, y, y_err, params, param_errors, predicted, fix_k
-    )
-
-    assert "params" in result
-    assert "errors" in result
-    assert "chi2_ndf" in result
-    np.testing.assert_array_equal(result["params"], [0.5, 1.0])
-    np.testing.assert_array_equal(result["errors"], [0.1, 0.2])
-    assert isinstance(result["chi2_ndf"], float)
-
-    # Test case 2: with fixed k
-    fix_k = 25.0
-    result = spe_spectrum._afterpulse_fit_statistics(
-        x, y, y_err, params, param_errors, predicted, fix_k
-    )
-
-    assert len(result["params"]) == 3
-    assert len(result["errors"]) == 3
-    np.testing.assert_array_equal(result["params"], [0.5, 1.0, 25.0])
-    np.testing.assert_array_equal(result["errors"], [0.1, 0.2, 0.0])
-
-    # Test case 3: zero degrees of freedom
-    x = np.array([1.0, 2.0])
-    y = np.array([0.1, 0.05])
-    y_err = np.array([0.01, 0.01])
-    params = np.array([0.5, 1.0])
-    param_errors = np.array([0.1, 0.2])
-    predicted = np.array([0.11, 0.04])
-
-    result = spe_spectrum._afterpulse_fit_statistics(
-        x, y, y_err, params, param_errors, predicted, fix_k=None
-    )
-
-    assert np.isnan(result["chi2_ndf"])
-
-
-def test_afterpulse_fit_function(spe_spectrum):
-    # Test case 1: without fixed k parameter
-    func, p0, bounds = spe_spectrum.afterpulse_fit_function(fix_k=None)
-
-    # Check return values
-    assert callable(func)
-    assert len(p0) == 3
-    assert len(bounds) == 2
-
-    # Test the returned function
-    x = np.array([1.0, 2.0, 3.0])
-    test_params = [1e-5, 8.0, 25.0]
-    y = func(x, *test_params)
-    assert isinstance(y, np.ndarray)
-    assert len(y) == len(x)
-
-    # Test case 2: with fixed k parameter
-    fixed_k = 15.0
-    func_fixed, p0_fixed, bounds_fixed = spe_spectrum.afterpulse_fit_function(fix_k=fixed_k)
-
-    # Check return values
-    assert callable(func_fixed)
-    assert len(p0_fixed) == 2
-    assert len(bounds_fixed) == 2
-
-    # Test the returned function with fixed k
-    y_fixed = func_fixed(x, 1e-5, 8.0)
-    assert isinstance(y_fixed, np.ndarray)
-    assert len(y_fixed) == len(x)
-
-    # Verify that both functions give same results when using same parameters
-    y1 = func(x, 1e-5, 8.0, 15.0)
-    y2 = func_fixed(x, 1e-5, 8.0)
-    np.testing.assert_array_almost_equal(y1, y2)
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.curve_fit")

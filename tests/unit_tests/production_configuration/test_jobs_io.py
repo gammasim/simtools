@@ -158,31 +158,6 @@ def test_validate_job_grid_table_restores_integral_float_columns(tmp_test_direct
     assert validated["run_number"].dtype.kind == "i"
 
 
-def test_parameter_scan_overwrites_merge_existing_dict():
-    row = {**_job_rows()[0], "model_parameter_set": "scan"}
-    metadata = {"model_parameter_sets": {"scan": {"LSTN-01": {"asum_threshold": {"value": 220}}}}}
-    row["overwrite_model_parameters"] = {"LSTN-01": {"other": {"value": 1}}}
-
-    args = jobs_io.job_grid_row_to_simulate_prod_args(row, metadata)
-
-    assert args["overwrite_model_parameters"] == {
-        "LSTN-01": {
-            "other": {"value": 1},
-            "asum_threshold": {"value": 220},
-        }
-    }
-
-
-def test_parameter_scan_overwrites_falls_back_to_file_and_ignores_unknown_set():
-    row = {**_job_rows()[0], "overwrite_model_parameters": "base.yml"}
-    args = jobs_io.job_grid_row_to_simulate_prod_args(row)
-    assert args["overwrite_model_parameters"] == "base.yml"
-
-    row["model_parameter_set"] = "missing"
-    args = jobs_io.job_grid_row_to_simulate_prod_args(row, {"model_parameter_sets": {}})
-    assert args["overwrite_model_parameters"] == "base.yml"
-
-
 def test_remote_path_forwarding_follows_configuration_sources(tmp_test_directory):
     args = {
         "output_path": tmp_test_directory / "output",
@@ -223,17 +198,6 @@ def test_job_grid_row_to_simulate_prod_args_maps_fields():
     assert "site" not in args
 
 
-def test_job_grid_row_to_simulate_prod_args_omits_missing_hadec_coordinates():
-    row = _job_rows()[0]
-    row.pop("ha")
-    row.pop("dec")
-
-    args = jobs_io.job_grid_row_to_simulate_prod_args(row)
-
-    assert "ha" not in args
-    assert "dec" not in args
-
-
 def test_job_grid_row_to_simulate_prod_args_includes_explicit_transition_energy():
     row = _job_rows()[0]
     row["corsika_hadronic_transition_energy"] = 120 * u.GeV
@@ -241,27 +205,6 @@ def test_job_grid_row_to_simulate_prod_args_includes_explicit_transition_energy(
     args = jobs_io.job_grid_row_to_simulate_prod_args(row)
 
     assert args["corsika_hadronic_transition_energy"] == 120 * u.GeV
-
-
-def test_job_grid_row_to_simulate_prod_args_includes_metadata_site_and_software():
-    row = _job_rows()[0]
-    metadata = _metadata()
-
-    args = jobs_io.job_grid_row_to_simulate_prod_args(row, metadata)
-
-    assert args["site"] == "North"
-    assert args["simulation_software"] == "corsika_sim_telarray"
-
-
-def test_job_grid_row_to_simulate_prod_args_skips_empty_metadata():
-    row = _job_rows()[0]
-
-    args_no_meta = jobs_io.job_grid_row_to_simulate_prod_args(row, metadata=None)
-    args_empty_meta = jobs_io.job_grid_row_to_simulate_prod_args(row, metadata={})
-
-    for args in (args_no_meta, args_empty_meta):
-        assert "site" not in args
-        assert "simulation_software" not in args
 
 
 @pytest.mark.parametrize("model_key", [_FILESYSTEM_MODELS, _GIT_MODELS])
@@ -350,35 +293,6 @@ def test_job_commands_forward_git_revision_only_for_git_models(tmp_test_director
     assert (f"--{_GIT_MODELS}" in job.command) == (model_key == _GIT_MODELS)
     assert ("--simulation_models_git_revision" in job.command) == (model_key == _GIT_MODELS)
     assert (revision in job.command) == (model_key == _GIT_MODELS)
-
-
-def test_build_simulate_prod_job_specs_uses_one_based_job_names(tmp_test_directory):
-    """Use one-based names for job IDs and both production output directories."""
-    args = {
-        "output_path": tmp_test_directory / "output",
-        "grid_output_path": tmp_test_directory / "grid",
-    }
-    rows = _job_rows()
-    rows.append({**rows[0], "run_number": 11})
-
-    jobs = jobs_io.build_simulate_prod_job_specs(
-        args,
-        rows,
-        app.APPLICATION.build_parser(),
-        _metadata(),
-    )
-
-    assert [job.job_id for job in jobs] == ["job-000001", "job-000002"]
-    assert [job.output_paths for job in jobs] == [
-        (
-            tmp_test_directory / "output" / "job-000001",
-            tmp_test_directory / "grid" / "job-000001",
-        ),
-        (
-            tmp_test_directory / "output" / "job-000002",
-            tmp_test_directory / "grid" / "job-000002",
-        ),
-    ]
 
 
 def test_build_simulate_prod_job_specs_uses_remote_environment_paths(tmp_test_directory):

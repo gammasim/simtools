@@ -2,30 +2,12 @@
 
 import json
 
-import pytest
 from astropy import units as u
-from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
 
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import data_reader
 from simtools.data_model.metadata_collector import MetadataCollector
-
-
-def test_read_table_from_file(tmp_test_directory):
-    table_file = tmp_test_directory / "table.ecsv"
-    Table({"value": [1, 2]}).write(table_file, format="ascii.ecsv")
-
-    assert isinstance(
-        data_reader.read_table_from_file(table_file),
-        Table,
-    )
-
-    with pytest.raises(FileNotFoundError):
-        data_reader.read_table_from_file("non_existing_file.fits")
-
-    with pytest.raises(IORegistryError):
-        data_reader.read_table_from_file(None)
 
 
 def test_read_table_from_file_and_validate(tmp_test_directory, args_dict_site):

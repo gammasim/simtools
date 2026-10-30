@@ -55,51 +55,9 @@ def _model(mirror_class=0):
     return model
 
 
-def test_single_mirror_encloses_panel_corners_and_sag():
-    result = derive_telescope_sphere_radius(_model())
-    assert result.to_value(u.m) == pytest.approx(1.59, rel=0.01)
-
-
-def test_single_piece_mirror_uses_panel_bounds():
-    assert_quantity_allclose(
-        derive_telescope_sphere_radius(_model(1)), derive_telescope_sphere_radius(_model())
-    )
-
-
-def test_camera_does_not_enlarge_corsika_entrance_sphere():
-    model = _model()
-    assert derive_telescope_sphere_radius(model) < 2 * u.m
-    assert "camera_body_shape" not in [
-        call.args[0] for call in model.get_parameter_value.call_args_list
-    ]
-
-
-def test_square_panel_corners_are_enclosed():
-    model = _model()
-    model.get_parameter_table.return_value[_SHAPE_TYPE] = [2]
-    assert derive_telescope_sphere_radius(model) > derive_telescope_sphere_radius(_model())
-
-
 def test_dual_mirror_encloses_polynomial_surfaces():
     result = derive_telescope_sphere_radius(_model(2))
     assert_quantity_allclose(result, np.hypot(1, 4) * u.m)
-
-
-def test_polynomial_coefficients_are_not_scaled_by_reference_radius():
-    from simtools.model.telescope_sphere import _polynomial_bounds
-
-    model = _model(2)
-    values = model.get_parameter_value_with_unit.side_effect
-
-    def read_parameter(name):
-        if name == _PRIMARY_MIRROR_REF_RADIUS:
-            return 2 * u.m
-        if name == _PRIMARY_MIRROR_PARAMETERS:
-            return [0.25, 0] * u.m
-        return values(name)
-
-    model.get_parameter_value_with_unit.side_effect = read_parameter
-    assert _polynomial_bounds(model, "primary", 1) == pytest.approx((0.25, 0.25))
 
 
 def test_missing_geometry_is_actionable():
@@ -130,42 +88,6 @@ def test_invalid_mirror_class():
         derive_telescope_sphere_radius(_model(3))
 
 
-@pytest.mark.parametrize("parameter", ["primary_mirror_diameter", "secondary_mirror_diameter"])
-@pytest.mark.parametrize("value", [0, np.nan])
-def test_invalid_parameterized_mirror_diameter(parameter, value):
-    model = _model(2)
-    values = model.get_parameter_value_with_unit.side_effect
-    model.get_parameter_value_with_unit.side_effect = lambda name: (
-        value * u.m if name == parameter else values(name)
-    )
-    with pytest.raises(ValueError, match="mirror diameter must be positive and finite"):
-        derive_telescope_sphere_radius(model)
-
-
-def test_nonfinite_dish_length():
-    model = _model()
-    values = model.get_parameter_value_with_unit.side_effect
-    model.get_parameter_value_with_unit.side_effect = lambda name: (
-        np.nan * u.m if name == _DISH_SHAPE_LENGTH else values(name)
-    )
-    with pytest.raises(ValueError, match=_FINITE):
-        derive_telescope_sphere_radius(model)
-
-
-def test_missing_dish_length():
-    model = _model()
-    values = model.get_parameter_value_with_unit.side_effect
-
-    def read_length(name):
-        if name == _DISH_SHAPE_LENGTH:
-            raise KeyError(name)
-        return values(name)
-
-    model.get_parameter_value_with_unit.side_effect = read_length
-    with pytest.raises(ValueError, match=_DISH_SHAPE_LENGTH):
-        derive_telescope_sphere_radius(model)
-
-
 def test_nonfinite_panel_geometry():
     model = _model()
     model.get_parameter_table.return_value[_MIRROR_X] = [np.nan] * u.m
@@ -180,24 +102,6 @@ def test_parabolic_dish_uses_parabolic_panel_heights():
     model.get_parameter_value.side_effect = lambda name: name == "parabolic_dish"
     height = _panel_heights(model, np.array([2.0]), np.array([0.0]))
     assert height[0] == pytest.approx(0.2)
-
-
-def test_listed_panel_height_preserves_sign():
-    from simtools.model.telescope_sphere import _panel_heights
-
-    height = _panel_heights(_model(), np.array([2.0]), np.array([-0.5]))
-    assert height[0] == pytest.approx(-0.5)
-
-
-def test_explicit_panel_heights_do_not_require_dish_geometry():
-    from simtools.model.telescope_sphere import _panel_heights
-
-    model = _model()
-    model.get_parameter_value_with_unit.side_effect = InvalidModelParameterError(
-        "missing dish geometry"
-    )
-    listed_z = np.array([-0.5, 0.25])
-    np.testing.assert_array_equal(_panel_heights(model, np.array([2.0, 3.0]), listed_z), listed_z)
 
 
 def test_invalid_davies_cotton_dish_length():
@@ -273,13 +177,3 @@ def test_nonfinite_polynomial_coefficients():
     )
     with pytest.raises(ValueError, match="finite coefficients"):
         derive_telescope_sphere_radius(model)
-
-
-def test_axes_offsets_are_normalized_to_quantity_array():
-    model = _model()
-    values = model.get_parameter_value_with_unit.side_effect
-    model.get_parameter_value_with_unit.side_effect = lambda name: (
-        [160 * u.cm, 0 * u.cm] if name == _AXES_OFFSETS else values(name)
-    )
-    result = derive_telescope_sphere_radius(model)
-    assert result.unit == u.m

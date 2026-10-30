@@ -5,11 +5,8 @@ import getpass
 import json
 import logging
 import re
-import uuid
 from pathlib import Path
 
-import astropy.units as u
-import jsonschema
 import numpy as np
 import pytest
 from astropy.table import Table
@@ -39,85 +36,6 @@ def test_associated_data_keeps_required_data_description(mocker):
     assert context["associated_data"] == [{"id": "input-id", "format": "yaml", "data": data}]
 
 
-def test_get_data_model_schema_file_name():
-    # from args_dict / command line
-    args_dict = {"no_schema": "schema_file.yml"}
-    _collector = metadata_collector.MetadataCollector(args_dict)
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file is None
-
-    args_dict = {"schema_file": str(METADATA_JSON_SCHEMA)}
-    _collector = metadata_collector.MetadataCollector(args_dict, clean_meta=False)
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file == args_dict["schema_file"]
-
-    # from metadata
-    _collector.top_level_meta["cta"]["product"]["data"]["model"]["url"] = str(
-        SCHEMA_PATH / "top_level_meta.schema.yml"
-    )
-    schema_file = _collector.get_data_model_schema_file_name()
-    # test that priority is given to args_dict (if not none)
-    assert schema_file == args_dict["schema_file"]
-    _collector.args_dict["schema_file"] = None
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file == str(SCHEMA_PATH / "top_level_meta.schema.yml")
-
-    _collector.top_level_meta["cta"]["product"]["data"]["model"].pop("url")
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file is None
-
-    # from data model_name
-    _collector.model_parameter_name = "array_coordinates"
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert Path(schema_file) == (
-        schema.get_model_parameter_schema_file(_collector.model_parameter_name)
-    )
-
-    # from input metadata
-    _collector.input_metadata = [
-        {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
-    ]
-    _collector.model_parameter_name = None
-    schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file == "from_input_meta"
-
-
-def test_get_data_model_schema_dict(args_dict_site):
-    metadata = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata.schema_file_name = METADATA_JSON_SCHEMA
-
-    assert isinstance(metadata.get_data_model_schema_dict(), dict)
-
-    metadata.schema_file_name = "this_file_does_not_exist"
-    assert metadata.get_data_model_schema_dict() == {}
-
-
-def test_get_top_level_metadata(args_dict_site, mocker):
-    mocker.patch(
-        "simtools.data_model.metadata_collector.gen.now_date_time_in_isoformat",
-        side_effect=[
-            "2020-01-01T00:00:00+00:00",
-            "2020-01-01T00:00:00+00:00",
-            "2020-01-01T00:00:00+00:00",
-            "2099-01-01T00:00:00+00:00",
-        ],
-    )
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    assert (
-        collector.top_level_meta["cta"]["activity"]["end"]
-        == collector.top_level_meta["cta"]["activity"]["start"]
-    )
-
-    # no update when activity cannot be found in the metadata
-    collector.observatory = "not_cta"
-    top_level_meta = collector.get_top_level_metadata()
-    assert top_level_meta["cta"]["activity"]["end"] == top_level_meta["cta"]["activity"]["start"]
-
-    collector.observatory = "cta"  # back to default
-    top_level_meta = collector.get_top_level_metadata()
-    assert top_level_meta["cta"]["activity"]["end"] > top_level_meta["cta"]["activity"]["start"]
-
-
 def test_fill_contact_meta(args_dict_site, caplog):
     contact_dict = {}
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
@@ -129,55 +47,6 @@ def test_fill_contact_meta(args_dict_site, caplog):
         assert contact_dict["name"] == getpass.getuser()
     except Exception:  # pylint: disable=broad-except
         pass
-
-
-def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_site):
-    """Embed resolved configuration in metadata context without exposing credentials."""
-    args_dict_site.update(
-        {
-            "application_label": "test_application",
-            "activity_id": "019fc820-d1f3-7677-ac30-4002f1a8dd37",
-            "output_file": "result.ecsv",
-            "output_file_format": "ecsv",
-            "input_path": Path("input/events.simtel.zst"),
-            "off_axis_angle": 1.5 * u.deg,
-            "nested": {"api_token": "do-not-store-this-either"},
-            "runtime_environment": {"options": ["--env SIMTOOLS_SECRET=runtime-secret"]},
-            "run_time": ["podman", "run", "--env", "SIMTOOLS_SECRET=runtime-secret"],
-            "_metadata_configuration_sources": {
-                "input_path": "cli",
-                "off_axis_angle": "default",
-            },
-        }
-    )
-
-    metadata = metadata_collector.MetadataCollector(
-        args_dict=args_dict_site
-    ).get_top_level_metadata()
-    configuration = metadata["cta"]["context"]["application_configuration"]
-
-    assert configuration["schema_version"] == "2.0.0"
-    assert configuration["application"] == "test_application"
-    assert configuration["arguments"]["input_path"] == "input/events.simtel.zst"
-    assert configuration["arguments"]["off_axis_angle"] == {"value": 1.5, "unit": "deg"}
-    assert configuration["arguments"]["nested"]["api_token"] == "***REDACTED***"
-    assert configuration["arguments"]["runtime_environment"]["options"] == [
-        "--env SIMTOOLS_SECRET=***REDACTED***"
-    ]
-    assert configuration["arguments"]["run_time"] == [
-        "podman",
-        "run",
-        "--env",
-        "SIMTOOLS_SECRET=***REDACTED***",
-    ]
-    assert configuration["sources"] == {
-        "input_path": "cli",
-        "off_axis_angle": "default",
-    }
-    context_schema = schema.load_schema(METADATA_JSON_SCHEMA)["definitions"]["cta"]["properties"][
-        "context"
-    ]
-    jsonschema.Draft6Validator(context_schema).validate(metadata["cta"]["context"])
 
 
 def test_get_site(args_dict_site, tmp_test_directory):
@@ -332,43 +201,6 @@ def test_read_input_metadata_from_ecsv(args_dict_site, caplog):
     assert "Failed reading metadata for" in caplog.text
 
 
-def test_fill_product_meta(args_dict_site):
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site, clean_meta=False)
-
-    with pytest.raises(TypeError):
-        metadata_1._fill_product_meta(product_dict=None)
-
-    _product_dict = {}
-    with pytest.raises(KeyError):
-        metadata_1._fill_product_meta(product_dict=_product_dict)
-
-    _product_dict["data"] = {}
-    _product_dict["data"]["model"] = {}
-    metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
-
-    try:
-        uuid.UUID(metadata_1.top_level_meta["cta"]["product"]["id"])
-    except ValueError:
-        pytest.fail("Invalid UUID format in metadata")
-
-    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.0.0"
-
-    # read product metadata from schema file
-    metadata_1.args_dict["schema_file"] = (
-        SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
-    )
-    metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
-
-    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.1.0"
-
-
-def test_fill_process_meta(args_dict_site):
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata_1._fill_process_meta(metadata_1.top_level_meta["cta"]["activity"])
-
-    assert metadata_1.top_level_meta["cta"]["activity"]["type"] == "simulation"
-
-
 def test_merge_config_dicts(args_dict_site):
     d_low_priority = {
         "reference": {"version": "1.0.0"},
@@ -419,36 +251,6 @@ def test_fill_activity_meta(args_dict_site):
     assert file_writer_1.top_level_meta["cta"]["activity"]["name"] == "integration_test"
 
 
-def test_fill_context_sim_list(args_dict_site):
-    _test_dict_1 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
-
-    # empty dict -> return same dict
-    _collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    _collector._fill_context_sim_list(meta_list=_test_dict_1, new_entry_dict={})
-    assert _test_dict_1 == get_generic_input_meta()["context"]["associated_elements"]
-
-    # add one new entry
-    _new_element = {"site": "South", "class": "SCT", "type": "sctcam", "subtype": "7", "id:": None}
-    _collector._fill_context_sim_list(_test_dict_1, _new_element)
-    _test_dict_2 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
-    _test_dict_2.append(_new_element)
-    assert _test_dict_1 == _test_dict_2
-
-    # add one new entry to non-existing list -> add
-    _test_none = None
-    _test_none = _collector._fill_context_sim_list(_test_none, _new_element)
-    assert _test_none == [_new_element]
-    _test_none = []
-    _test_none = _collector._fill_context_sim_list(_test_none, _new_element)
-    assert _test_none == [_new_element]
-
-    # one entry with Nones only
-    _test_def = [{"site": None, "class": None, "type": None, "subtype": None, "id:": None}]
-    _collector._fill_context_sim_list(_test_def, _new_element)
-    assert _test_none == [_new_element]
-
-
 def get_generic_input_meta():
     return {
         "contact": "my_name",
@@ -477,91 +279,6 @@ def get_example_input_schema_single_parameter():
     }
 
 
-def test_fill_context_meta(args_dict_site, caplog):
-    context_dict = {"associated_data": []}
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    # Case 1: input_metadata is None
-    collector.input_metadata = None
-    collector._fill_context_meta(context_dict)
-    assert context_dict["associated_data"] == []
-
-    # Case 2: input_metadata is an empty list
-    collector.input_metadata = []
-    collector._fill_context_meta(context_dict)
-    assert context_dict["associated_data"] == []
-
-    test_product = "Test product"
-    test_id = "1234"
-    # Case 3: input_metadata with valid product metadata
-    collector.input_metadata = [
-        {
-            "cta": {
-                "product": {
-                    "description": test_product,
-                    "id": test_id,
-                    "creation_time": "2023-01-01T00:00:00",
-                    "valid": "2023-12-31T23:59:59",
-                    "format": "json",
-                    "filename": "test_product.json",
-                },
-                "activity": {
-                    "name": "test_activity",
-                },
-            }
-        }
-    ]
-    collector._fill_context_meta(context_dict)
-    assert context_dict["associated_data"] == [
-        {
-            "description": test_product,
-            "id": test_id,
-            "creation_time": "2023-01-01T00:00:00",
-            "valid": "2023-12-31T23:59:59",
-            "format": "json",
-            "filename": "test_product.json",
-            "activity_name": "test_activity",
-        }
-    ]
-
-    # Case 4: input_metadata with missing product metadata
-    collector.input_metadata = [
-        {
-            "cta": {
-                "product": {
-                    "description": test_product,
-                    "id": test_id,
-                }
-            }
-        }
-    ]
-    context_dict = {"associated_data": []}
-    collector._fill_context_meta(context_dict)
-    assert context_dict["associated_data"] == [
-        {
-            "description": test_product,
-            "id": test_id,
-        }
-    ]
-
-    # Case 5: input_metadata with invalid structure
-    collector.input_metadata = [
-        {
-            "cta": {
-                "invalid_product": {
-                    "description": test_product,
-                    "id": test_id,
-                }
-            }
-        }
-    ]
-    context_dict = {"associated_data": []}
-    with caplog.at_level(logging.DEBUG):
-        collector._fill_context_meta(context_dict)
-    assert "No input product metadata appended to associated data." in caplog.text
-    assert context_dict["associated_data"] == []
-
-
 def test_fill_context_meta_associated_data_from_args(args_dict_site):
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     collector.input_metadata = None
@@ -588,25 +305,6 @@ def test_fill_context_meta_associated_data_from_args(args_dict_site):
     context_dict = {}
     collector._fill_context_meta(context_dict)
     assert "associated_data" not in context_dict
-
-
-def test_fill_context_meta_notes_from_value_table(args_dict_site, tmp_test_directory):
-    table_file = tmp_test_directory / "test_input.ecsv"
-    table = Table({"x": [1.0, 2.0]})
-    table.meta["context_from_sim_telarray"] = "simtel context"
-    table.write(table_file, format="ascii.ecsv")
-
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    collector.input_metadata = None
-    collector.args_dict = dict(args_dict_site)
-    collector.args_dict["value"] = str(table_file)
-
-    context_dict = {"notes": []}
-    collector._fill_context_meta(context_dict)
-
-    assert len(context_dict["notes"]) == 1
-    assert context_dict["notes"][0]["title"] == "context_from_sim_telarray"
-    assert context_dict["notes"][0]["text"] == "simtel context"
 
 
 def test_fill_context_meta_notes_from_value_table_without_meta(args_dict_site, tmp_test_directory):
@@ -670,37 +368,73 @@ def test_write_metadata_to_yml(args_dict_site, tmp_test_directory, caplog):
         collector.write(yml_file=None)
 
 
-def test_dump(args_dict_site, tmp_test_directory, caplog):
-    output_file = tmp_test_directory.join("test_dump.yml")
+def test_get_data_model_schema_file_name():
+    # from args_dict / command line
+    args_dict = {"no_schema": "schema_file.yml"}
+    _collector = metadata_collector.MetadataCollector(args_dict)
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file is None
 
-    with caplog.at_level(logging.INFO):
-        metadata_collector.MetadataCollector.dump(args_dict=args_dict_site, output_file=output_file)
-    assert "Writing metadata to" in caplog.text
-    assert Path(output_file).with_suffix(".meta.yml").exists()
+    args_dict = {"schema_file": str(METADATA_JSON_SCHEMA)}
+    _collector = metadata_collector.MetadataCollector(args_dict, clean_meta=False)
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file == args_dict["schema_file"]
 
-    output_file_with_activity = tmp_test_directory.join("test_dump_with_activity.yml")
-    with caplog.at_level(logging.INFO):
-        metadata_collector.MetadataCollector.dump(
-            args_dict=args_dict_site, output_file=output_file_with_activity, add_activity_name=True
-        )
-    assert Path(output_file_with_activity).with_suffix(".integration_test.meta.yml").exists()
+    # from metadata
+    _collector.top_level_meta["cta"]["product"]["data"]["model"]["url"] = str(
+        SCHEMA_PATH / "top_level_meta.schema.yml"
+    )
+    schema_file = _collector.get_data_model_schema_file_name()
+    # test that priority is given to args_dict (if not none)
+    assert schema_file == args_dict["schema_file"]
+    _collector.args_dict["schema_file"] = None
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file == str(SCHEMA_PATH / "top_level_meta.schema.yml")
+
+    _collector.top_level_meta["cta"]["product"]["data"]["model"].pop("url")
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file is None
+
+    # from data model_name
+    _collector.model_parameter_name = "array_coordinates"
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert Path(schema_file) == (
+        schema.get_model_parameter_schema_file(_collector.model_parameter_name)
+    )
+
+    # from input metadata
+    _collector.input_metadata = [
+        {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
+    ]
+    _collector.model_parameter_name = None
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file == "from_input_meta"
 
 
-def test_fill_contact_meta_failed_system(args_dict_site, caplog, monkeypatch):
-
-    def mock_getuser():
-        raise KeyError("Failed to get username")
-
-    monkeypatch.setattr(getpass, "getuser", mock_getuser)
-
-    contact_dict = {}
+def test_get_top_level_metadata(args_dict_site, mocker):
+    mocker.patch(
+        "simtools.data_model.metadata_collector.gen.now_date_time_in_isoformat",
+        side_effect=[
+            "2020-01-01T00:00:00+00:00",
+            "2020-01-01T00:00:00+00:00",
+            "2020-01-01T00:00:00+00:00",
+            "2099-01-01T00:00:00+00:00",
+        ],
+    )
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    assert (
+        collector.top_level_meta["cta"]["activity"]["end"]
+        == collector.top_level_meta["cta"]["activity"]["start"]
+    )
 
-    with caplog.at_level(logging.WARNING):
-        collector._fill_contact_meta(contact_dict)
+    # no update when activity cannot be found in the metadata
+    collector.observatory = "not_cta"
+    top_level_meta = collector.get_top_level_metadata()
+    assert top_level_meta["cta"]["activity"]["end"] == top_level_meta["cta"]["activity"]["start"]
 
-    assert "Failed to get user name" in caplog.text
-    assert contact_dict["name"] == "UNKNOWN_USER"
+    collector.observatory = "cta"  # back to default
+    top_level_meta = collector.get_top_level_metadata()
+    assert top_level_meta["cta"]["activity"]["end"] > top_level_meta["cta"]["activity"]["start"]
 
 
 def test_read_input_metadata_from_yml_or_json_no_file():

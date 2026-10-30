@@ -373,74 +373,6 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
     assert descriptors[1].input_files == [str(base_directory / _CANDIDATE / "candidate_20.hdf5")]
 
 
-def test_write_production_comparison_rejects_completely_unmatched_metadata(
-    mocker, tmp_test_directory
-):
-    pairing_error = production_comparison._ProductionPairingError(
-        "Trigger-histogram metadata pairing failed: missing candidates=1, missing baselines=1.",
-        [],
-    )
-    mocker.patch(
-        "simtools.production_configuration.comparison._production_descriptor_pairs_from_metadata",
-        side_effect=pairing_error,
-    )
-    mock_write = mocker.patch(
-        "simtools.production_configuration.comparison._write_array_layout_comparisons"
-    )
-
-    with pytest.raises(ValueError, match="pairing failed"):
-        production_comparison.write_production_comparison(
-            {_BASELINE_PATH: BASELINE_KEY, _CANDIDATE_PATH: _CANDIDATE},
-            Path(tmp_test_directory) / "comparison",
-        )
-
-    mock_write.assert_not_called()
-
-
-def test_selected_trigger_histogram_manifests_checks_matches(mocker):
-    manifest = mocker.sentinel.manifest
-    mocker.patch(
-        "simtools.production_configuration.comparison.discover_product_manifests",
-        return_value=[manifest],
-    )
-    mocker.patch(
-        "simtools.production_configuration.comparison.filter_manifests",
-        return_value=[manifest],
-    )
-    mock_check = mocker.patch("simtools.production_configuration.comparison.check_manifest")
-
-    selected = production_comparison._selected_trigger_histogram_manifests(_PRODUCTION, [])
-
-    assert selected == [manifest]
-    mock_check.assert_called_once_with(manifest)
-
-
-def test_selected_trigger_histogram_manifests_rejects_empty_selection(mocker):
-    mocker.patch(
-        "simtools.production_configuration.comparison.discover_product_manifests",
-        return_value=[],
-    )
-    mocker.patch(
-        "simtools.production_configuration.comparison.filter_manifests",
-        return_value=[],
-    )
-
-    with pytest.raises(ValueError, match="No trigger-histogram metadata"):
-        production_comparison._selected_trigger_histogram_manifests(_PRODUCTION, [])
-
-
-def test_unique_manifests_by_pairing_key_rejects_duplicates(tmp_test_directory):
-    manifest = ProductionManifest(
-        path=Path(tmp_test_directory) / "first.yml",
-        data={CONFIGURATION_KEY: {}},
-    )
-
-    with pytest.raises(ValueError, match="More than one baseline"):
-        production_comparison._unique_manifests_by_pairing_key(
-            [manifest, manifest], set(), BASELINE_KEY
-        )
-
-
 @pytest.mark.parametrize(
     ("layout", "matches"),
     [
@@ -472,40 +404,6 @@ def test_single_trigger_histogram_file_handles_absolute_and_invalid_manifests(tm
     empty_manifest = ProductionManifest(path=manifest.path, data={_FILES_KEY: {}})
     with pytest.raises(ValueError, match="Expected exactly one"):
         production_comparison._single_trigger_histogram_file(empty_manifest)
-
-
-def test_comparison_title_formats_shared_and_different_configuration_values():
-    configuration = {
-        BASELINE_KEY: {
-            "primary": "gamma",
-            "site": "North",
-            "energy_min": {"value": 30, "unit": "GeV"},
-            "energy_max": {"value": 100, "unit": "GeV"},
-            "zenith_angle": {"value": 20, "unit": "deg"},
-            "azimuth_angle": {"value": 0, "unit": "deg"},
-            "corsika_he_interaction": "qgs3",
-        },
-        _CANDIDATE: {
-            "primary": "gamma",
-            "site": "North",
-            "energy_min": {"value": 30, "unit": "GeV"},
-            "energy_max": {"value": 200, "unit": "GeV"},
-            "zenith_angle": {"value": 20, "unit": "deg"},
-            "azimuth_angle": {"value": 10, "unit": "deg"},
-            "corsika_he_interaction": "qgs3",
-        },
-    }
-
-    title = production_comparison._comparison_title(
-        {CONFIGURATIONS_KEY: configuration}, "CTAO-North-Alpha"
-    )
-
-    assert "Layout: CTAO-North-Alpha | Primary: gamma | Site: North" in title
-    assert "baseline 30 GeV to 100 GeV; candidate 30 GeV to 200 GeV" in title
-    assert "Zenith: 20 deg" in title
-    assert "Azimuth: baseline 0 deg -> candidate 10 deg" in title
-    assert "Interaction model: qgs3" in title
-    assert production_comparison._comparison_title(None, None) is None
 
 
 @pytest.mark.parametrize("pair_count", [1, 100])

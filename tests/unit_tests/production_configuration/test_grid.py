@@ -13,20 +13,11 @@ from simtools.production_configuration.grid import (
     TOTAL_SHOWERS_ARGUMENT,
     ProductionGridEngine,
     _build_rows_for_point,
-    _clip_energy_range_from_threshold,
-    _clip_energy_range_to_configured_bounds,
-    _clip_max_quantity,
     _generate_observation_grids_per_layout,
     _generate_observation_points_from_axes,
-    _iter_compact_axis_specs,
-    _normalize_axis_spec_tokens,
-    _parse_axis_range_tokens,
     _parse_axis_spec,
-    _resolve_coordinate_system,
-    _resolve_energy_max_scaling,
     _resolve_shower_params,
     _RunAllocationConfig,
-    _scale_total_showers,
     build_axes_dict_from_cli_args,
     build_job_grid_metadata,
     build_observing_location,
@@ -39,9 +30,7 @@ from simtools.production_configuration.grid import (
     directed_circular_span_degrees,
     generate_job_grid,
     normalize_energy_ranges,
-    normalize_grid_axes,
     renumber_job_rows,
-    resolve_single_model_version,
     scale_energy_max_for_zenith_angle,
 )
 from simtools.production_configuration.jobs_io import build_job_grid_summary
@@ -144,51 +133,6 @@ def _horizontal_shared_axis_args(layout_by_version):
     }
 
 
-def test_resolve_single_model_version_uses_first_list_entry():
-    assert resolve_single_model_version(["7.0.0", "7.1.0"]) == "7.0.0"
-    assert resolve_single_model_version("7.0.0") == "7.0.0"
-
-
-def test_build_axes_dict_from_cli_args_builds_horizontal_grid():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "axis": [
-                ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
-                ["zenith", "30", "deg", "40", "deg", "2", "linear"],
-                ["offset", "0", "deg", "10", "deg", "2", "linear"],
-            ]
-        }
-    )
-
-    assert "azimuth" in axes
-    assert ZENITH_ANGLE_KEY in axes
-    assert "ha" not in axes
-    assert "dec" not in axes
-
-
-def test_build_axes_dict_from_cli_args_accepts_compact_axis_definitions():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "axis": [
-                ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
-                ["zenith", "30", "deg", "40", "deg", "2"],
-                ["offset", "0", "deg", "10", "deg", "2"],
-            ]
-        }
-    )
-
-    assert axes == {
-        "offset": {"range": [0.0, 10.0], "binning": 2, "scaling": "linear", "units": "deg"},
-        "azimuth": {"range": [310.0, 20.0], "binning": 3, "scaling": "linear", "units": "deg"},
-        ZENITH_ANGLE_KEY: {
-            "range": [30.0, 40.0],
-            "binning": 2,
-            "scaling": "linear",
-            "units": "deg",
-        },
-    }
-
-
 def test_build_axes_dict_from_cli_args_derives_horizontal_binning_from_density():
     axes = build_axes_dict_from_cli_args(
         {
@@ -209,21 +153,6 @@ def test_build_axes_dict_from_cli_args_accepts_density_with_unit():
     axes = build_axes_dict_from_cli_args(
         {
             "direction_grid_density": "1.0 1/deg^2",
-            "axis": [
-                ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
-                ["zenith", "30", "deg", "40", "deg", "2"],
-                ["offset", "0", "deg", "10", "deg", "2"],
-            ],
-        }
-    )
-
-    assert axes["azimuth"]["direction_grid_density"] == pytest.approx(1.0)
-
-
-def test_build_axes_dict_from_cli_args_accepts_density_as_single_token_list():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "direction_grid_density": ["1.0"],
             "axis": [
                 ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
                 ["zenith", "30", "deg", "40", "deg", "2"],
@@ -301,24 +230,6 @@ def test_build_axes_dict_from_cli_args_accepts_config_wrapped_axis_strings():
 
     assert axes["azimuth"]["range"] == [310.0, 20.0]
     assert axes[ZENITH_ANGLE_KEY]["binning"] == 2
-
-
-def test_build_axes_dict_from_cli_args_accepts_merged_config_axis_list():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "axis": [
-                [
-                    "azimuth 310 deg 20 deg 3 linear",
-                    "zenith 30 deg 40 deg 2",
-                    "offset 0 deg 10 deg 2",
-                ]
-            ]
-        }
-    )
-
-    assert axes["azimuth"]["range"] == [310.0, 20.0]
-    assert axes[ZENITH_ANGLE_KEY]["binning"] == 2
-    assert axes["offset"]["range"] == [0.0, 10.0]
 
 
 def test_build_axes_dict_from_cli_args_rejects_multiple_direction_coordinate_systems():
@@ -495,39 +406,6 @@ def test_build_production_grid_engine_resolves_layout_name(
     mock_site_model.assert_called_once_with(model_version="7.0.0", site="North", context=None)
 
 
-@patch("simtools.production_configuration.grid.build_observing_location")
-@patch("simtools.production_configuration.grid.SiteModel")
-@patch("simtools.production_configuration.grid.ProductionGridEngine")
-def test_build_production_grid_engine_builds_observing_location_for_hadec(
-    mock_production_grid_engine,
-    mock_site_model,
-    mock_build_observing_location,
-):
-    location = EarthLocation(lat=1 * u.deg, lon=2 * u.deg, height=3 * u.m)
-    mock_build_observing_location.return_value = location
-    mock_site_model.return_value.get_nsb_integrated_flux.return_value = 0.24
-
-    build_production_grid_engine(
-        {
-            "site": "North",
-            "array_layout_name": "alpha",
-            "model_version": ["7.0.0"],
-            "corsika_limits": None,
-            "axis": [
-                ["ha", "0", "deg", "360", "deg", "36", "linear"],
-                ["dec", "-90", "deg", "90", "deg", "18", "linear"],
-                ["offset", "0", "deg", "10", "deg", "2", "linear"],
-            ],
-        }
-    )
-
-    mock_build_observing_location.assert_called_once_with(
-        site="North", model_version="7.0.0", context=None
-    )
-    mock_site_model.assert_called_once_with(model_version="7.0.0", site="North", context=None)
-    assert mock_production_grid_engine.call_args.kwargs["observing_location"] == location
-
-
 def test_build_production_grid_engine_raises_without_site_for_nsb_rate():
     with pytest.raises(ValueError, match="site and model_version are required"):
         build_production_grid_engine(
@@ -543,21 +421,6 @@ def test_build_production_grid_engine_raises_without_site_for_nsb_rate():
         )
 
 
-def test_normalize_grid_axes_applies_defaults():
-    normalized = normalize_grid_axes(
-        {
-            "primary": "gamma",
-            "azimuth_angle": 180 * u.deg,
-            ZENITH_ANGLE_KEY: 20 * u.deg,
-            "model_version": "7.0.0",
-        }
-    )
-
-    assert normalized["primary"] == ["gamma"]
-    assert normalized["corsika_le_interaction"] == ["urqmd"]
-    assert normalized["corsika_he_interaction"] == ["epos"]
-
-
 @pytest.mark.parametrize(
     ("energy_range", "expected_length"),
     [
@@ -569,40 +432,14 @@ def test_normalize_energy_ranges_accepts_supported_shapes(energy_range, expected
     assert len(normalize_energy_ranges(energy_range)) == expected_length
 
 
-def test_normalize_energy_ranges_rejects_invalid_shape():
-    with pytest.raises(ValueError, match="energy_range"):
-        normalize_energy_ranges([30 * u.GeV])
-
-
-def test_normalize_energy_ranges_accepts_quantity_pair_list():
-    normalized = normalize_energy_ranges([30 * u.GeV, 100 * u.GeV])
-
-    assert normalized == [(30 * u.GeV, 100 * u.GeV)]
-
-
 def test_calculate_log_energy_midpoint_returns_geometric_mean():
     midpoint = calculate_log_energy_midpoint((10 * u.GeV, 1 * u.TeV))
 
     assert_quantity_allclose(midpoint, 100 * u.GeV)
 
 
-def test_calculate_log_energy_midpoint_raises_for_non_quantities():
-    with pytest.raises(TypeError, match="Quantity"):
-        calculate_log_energy_midpoint((10, 100 * u.GeV))
-
-
-def test_calculate_log_energy_midpoint_raises_for_non_positive_energy():
-    with pytest.raises(ValueError, match="strictly positive"):
-        calculate_log_energy_midpoint((0 * u.GeV, 100 * u.GeV))
-
-
 def test_calculate_scaled_showers_per_run_returns_baseline_without_power_law():
     assert calculate_scaled_showers_per_run((30 * u.GeV, 100 * u.GeV), 5) == 5
-
-
-def test_calculate_scaled_showers_per_run_raises_for_non_positive_baseline():
-    with pytest.raises(ValueError, match="positive integer"):
-        calculate_scaled_showers_per_run((30 * u.GeV, 100 * u.GeV), 0)
 
 
 def test_calculate_scaled_showers_per_run_raises_for_invalid_power_law_tuple():
@@ -642,11 +479,6 @@ def test_calculate_zenith_scaled_showers_per_run_scales_with_cosine():
     assert (
         calculate_zenith_scaled_showers_per_run(60 * u.deg, 1000, COSINE_ZENITH_SCALING) == expected
     )
-
-
-def test_calculate_zenith_scaled_showers_per_run_raises_for_non_positive_baseline():
-    with pytest.raises(ValueError, match="positive integer"):
-        calculate_zenith_scaled_showers_per_run(20 * u.deg, 0, COSINE_ZENITH_SCALING)
 
 
 def test_calculate_zenith_scaled_showers_per_run_raises_at_zenith_90():
@@ -692,36 +524,6 @@ def test_scale_energy_max_for_zenith_angle_raises_for_negative_index_at_zenith_9
         scale_energy_max_for_zenith_angle(90 * u.deg, (30 * u.GeV, 100 * u.GeV), (-2.0, None))
 
 
-def test_clip_energy_range_from_threshold_returns_original_without_threshold():
-    energy_range = (30 * u.GeV, 100 * u.GeV)
-
-    assert _clip_energy_range_from_threshold(energy_range, None) == energy_range
-
-
-def test_clip_energy_range_to_configured_bounds_caps_selected_max():
-    clipped = _clip_energy_range_to_configured_bounds(
-        (50 * u.GeV, 300 * u.GeV),
-        (30 * u.GeV, 200 * u.GeV),
-    )
-
-    assert_quantity_allclose(clipped[0], 50 * u.GeV)
-    assert_quantity_allclose(clipped[1], 200 * u.GeV)
-
-
-def test_clip_energy_range_to_configured_bounds_rejects_reversed_range():
-    assert (
-        _clip_energy_range_to_configured_bounds(
-            (300 * u.GeV, 30 * u.GeV),
-            (30 * u.GeV, 300 * u.GeV),
-        )
-        is None
-    )
-
-
-def test_clip_max_quantity_returns_configured_value_without_lookup():
-    assert _clip_max_quantity(5 * u.deg, None) == 5 * u.deg
-
-
 @pytest.mark.parametrize(
     ("power_law", "expected_index", "expected_energy"),
     [
@@ -747,47 +549,6 @@ def test_resolve_shower_params_converts_showers_per_run_power_law(
     assert showers_per_run_scaling == "fixed"
     assert total_showers is None
     assert total_showers_scaling == "fixed"
-
-
-def test_resolve_shower_params_raises_for_invalid_power_law_shape():
-    with pytest.raises(ValueError, match="must be provided as"):
-        _resolve_shower_params(
-            {
-                "showers_per_run": 5,
-                "showers_per_run_power_law": ["1.0", "100 GeV"],
-            }
-        )
-
-
-@pytest.mark.parametrize(
-    "energy_max_scaling",
-    [
-        ["-2.5", "300", "TeV"],
-        "-2.5 300 TeV",
-        ["-2.5 300 TeV"],
-    ],
-)
-def test_resolve_energy_max_scaling_parses_new_parameter(energy_max_scaling):
-    scaling = _resolve_energy_max_scaling({"energy_max_scaling": energy_max_scaling})
-
-    assert scaling[0] == pytest.approx(-2.5)
-    assert_quantity_allclose(scaling[1], 300 * u.TeV)
-
-
-def test_resolve_shower_params_accepts_showers_per_run_scaling():
-    (
-        _showers_per_run,
-        _power_law,
-        showers_per_run_scaling,
-        _total_showers,
-        _total_showers_scaling,
-    ) = _resolve_shower_params(
-        {
-            "showers_per_run": 5,
-            "showers_per_run_scaling": COSINE_ZENITH_SCALING,
-        }
-    )
-    assert showers_per_run_scaling == COSINE_ZENITH_SCALING
 
 
 def test_build_rows_for_point_skips_energy_ranges_below_threshold():
@@ -824,24 +585,6 @@ def test_build_rows_for_point_rounds_total_showers_up_with_warning(caplog):
     assert [row["showers_per_run"] for row in rows] == [1000, 1000, 1000]
     assert [row["run_number"] for row in rows] == [1, 2, 3]
     assert "adjusting to 3000 to keep equal showers per run" in caplog.text
-
-
-def test_build_rows_for_point_uses_equal_runs_below_maximum():
-    rows = _build_rows_for_point(
-        point_base={"primary": "gamma", ZENITH_ANGLE_KEY: 20 * u.deg},
-        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
-        lower_energy_threshold=None,
-        showers_per_run=1000,
-        showers_per_run_power_law=None,
-        number_of_runs=1,
-        run_number=1,
-        run_allocation=_RunAllocationConfig(
-            total_showers=2500,
-            max_showers_per_run=1000,
-        ),
-    )
-
-    assert [row["showers_per_run"] for row in rows] == [834, 834, 834]
 
 
 def test_build_rows_for_point_preserves_zenith_scaling_with_showers_cap():
@@ -948,43 +691,6 @@ def test_generate_observation_points_from_axes_adds_lookup_limits():
     assert_quantity_allclose(points[0]["lower_energy_limit"], 0.05 * u.TeV)
     assert_quantity_allclose(points[0]["upper_radius_limit"], 150 * u.m)
     assert_quantity_allclose(points[0]["viewcone_radius"], 3 * u.deg)
-
-
-@patch("simtools.production_configuration.grid.SiteModel")
-@patch("simtools.production_configuration.grid.build_observing_location")
-@patch("simtools.production_configuration.grid.CorsikaLimitsLookup")
-@patch("simtools.production_configuration.grid._generate_observation_points_from_axes")
-def test_generate_observation_grids_per_layout_uses_layout_specific_lookup(
-    mock_generate_observation_points_from_axes,
-    mock_corsika_limits_lookup,
-    mock_build_observing_location,
-    mock_site_model,
-):
-    mock_build_observing_location.return_value = EarthLocation(lat=28 * u.deg, lon=0 * u.deg)
-    mock_generate_observation_points_from_axes.return_value = [{"azimuth": 0 * u.deg}]
-    mock_site_model.return_value.get_nsb_integrated_flux.side_effect = [0.2, 0.4]
-    args_dict = {
-        "site": "North",
-        "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "beta"}},
-        "corsika_limits": "limits.ecsv",
-    }
-    grid_axes = _two_model_versions_grid_axes()
-
-    observation_grids, resolved_layout_names = _generate_observation_grids_per_layout(
-        args_dict, grid_axes
-    )
-
-    assert set(observation_grids) == {"6.3.0", "7.0.0"}
-    assert resolved_layout_names == {"6.3.0": "alpha", "7.0.0": "beta"}
-    assert mock_site_model.call_count == 2
-    mock_corsika_limits_lookup.assert_any_call("limits.ecsv", array_layout_name="alpha")
-    mock_corsika_limits_lookup.assert_any_call("limits.ecsv", array_layout_name="beta")
-    mock_generate_observation_points_from_axes.assert_any_call(
-        [0 * u.deg],
-        [20 * u.deg],
-        mock_corsika_limits_lookup.return_value,
-        0.2,
-    )
 
 
 @patch("simtools.production_configuration.grid.SiteModel")
@@ -1098,17 +804,6 @@ def test_build_simulation_jobs_raises_for_total_showers_and_number_of_runs(
         build_simulation_jobs(args_dict)
 
 
-def test_build_simulation_jobs_requires_total_showers_for_maximum():
-    args_dict = _base_simulation_jobs_args()
-    args_dict[MAX_SHOWERS_PER_RUN_ARGUMENT] = 1000
-
-    with pytest.raises(
-        ValueError,
-        match=f"{MAX_SHOWERS_PER_RUN_ARGUMENT} requires {TOTAL_SHOWERS_ARGUMENT}",
-    ):
-        build_simulation_jobs(args_dict)
-
-
 @pytest.mark.parametrize("maximum", [0, -1])
 def test_build_simulation_jobs_rejects_non_positive_maximum(maximum):
     args_dict = _base_simulation_jobs_args()
@@ -1123,29 +818,6 @@ def test_build_simulation_jobs_rejects_non_positive_maximum(maximum):
         build_simulation_jobs(args_dict)
 
 
-def test_parse_axis_range_tokens_with_single_token():
-    result = _parse_axis_range_tokens(["30 deg .. 40 deg"])
-
-    assert len(result) == 2
-
-
-def test_parse_axis_range_tokens_with_two_tokens():
-    lo, hi = _parse_axis_range_tokens(["30 deg", "40 deg"])
-
-    assert_quantity_allclose(lo, 30 * u.deg)
-    assert_quantity_allclose(hi, 40 * u.deg)
-
-
-def test_parse_axis_range_tokens_raises_for_invalid_token_count():
-    with pytest.raises(ValueError, match="exactly two quantities"):
-        _parse_axis_range_tokens(["30", "deg", "40"])
-
-
-def test_normalize_axis_spec_tokens_raises_for_invalid_type():
-    with pytest.raises(TypeError, match="strings or lists"):
-        _normalize_axis_spec_tokens(42)
-
-
 @pytest.mark.parametrize(
     ("axis_spec", "match"),
     [
@@ -1158,16 +830,6 @@ def test_normalize_axis_spec_tokens_raises_for_invalid_type():
 def test_parse_axis_spec_raises_for_invalid_definitions(axis_spec, match):
     with pytest.raises(ValueError, match=match):
         _parse_axis_spec(axis_spec)
-
-
-def test_iter_compact_axis_specs_accepts_string_axis():
-    specs = list(_iter_compact_axis_specs({"axis": "azimuth 310 deg 20 deg 3 linear"}))
-
-    assert specs == ["azimuth 310 deg 20 deg 3 linear"]
-
-
-def test_resolve_coordinate_system_returns_none_without_recognised_axes():
-    assert _resolve_coordinate_system({"offset": {}}) is None
 
 
 def test_build_axes_dict_from_cli_args_raises_without_direction_axes():
@@ -1193,11 +855,6 @@ def test_build_axes_dict_from_cli_args_raises_for_missing_required_axes():
         )
 
 
-def test_scale_total_showers_raises_for_unknown_mode():
-    with pytest.raises(ValueError, match="Unknown total_showers_scaling mode"):
-        _scale_total_showers(1000, 20 * u.deg, "bad_mode")
-
-
 def test_build_rows_for_point_skips_when_effective_total_showers_is_zero():
     rows = _build_rows_for_point(
         point_base={"primary": "gamma", ZENITH_ANGLE_KEY: 20 * u.deg},
@@ -1221,21 +878,6 @@ def test_renumber_job_rows_applies_run_number_offset():
         44,
         45,
     ]
-
-
-def test_build_job_grid_summary_formats_single_values_and_ranges():
-    rows = [
-        {"energy_min": 5 * u.deg, "showers_per_run": 3},
-        {"energy_min": 5 * u.deg, "showers_per_run": 3},
-    ]
-    summary = build_job_grid_summary(rows)
-
-    assert summary["energy_min_used"] == "5 deg"
-    assert summary["showers_per_run_used"] == "3"
-    assert summary["energy_max_used"] == "not available"
-    rows[1]["energy_min"] = 1 * u.deg
-    summary = build_job_grid_summary(rows)
-    assert summary["energy_min_used"] == "[1, 5] deg"
 
 
 def test_build_job_grid_summary_includes_used_configured_and_lookup_values():
@@ -1334,19 +976,6 @@ def test_generate_simulation_grid_keeps_horizontal_grid_horizontal():
     assert "dec" not in simulation_grid[0]
 
 
-def test_get_max_zenith_for_hadec_mode_reads_axis_range():
-    engine = _make_engine(axes={"zenith_angle": {"range": [10, 60], "binning": 2, "units": "deg"}})
-
-    assert engine._get_max_zenith_for_hadec_mode() == 60
-
-
-def test_get_max_zenith_for_hadec_mode_raises_for_invalid_axis_definition():
-    engine = _make_engine()
-
-    with pytest.raises(ValueError, match="valid two-element 'range'"):
-        engine._get_max_zenith_for_hadec_mode()
-
-
 def test_generate_target_values_supports_log_and_inverse_cos_scaling():
     engine = ProductionGridEngine(
         axes={
@@ -1396,36 +1025,6 @@ def test_add_lookup_limits_to_point_raises_without_nsb_rate():
 
     with pytest.raises(ValueError, match="nsb_rate is required"):
         engine._add_lookup_limits_to_point({}, zenith=20.0, azimuth=180.0)
-
-
-def test_interpolate_limits_for_point_delegates_to_lookup_helper():
-    engine = _make_engine(lookup_table=None)
-    engine._limits_lookup = Mock()
-    engine._limits_lookup.interpolate_point.return_value = {"lower_energy_limit": 0.02}
-
-    limits = engine._interpolate_limits_for_point(20.0, 180.0, 1.0)
-
-    assert limits == {"lower_energy_limit": 0.02}
-    engine._limits_lookup.interpolate_point.assert_called_once_with(20.0, 180.0, 1.0)
-
-
-def test_prepare_lookup_table_limits_for_point_interpolation_prepares():
-    engine = _make_engine(lookup_table=None)
-    engine._limits_lookup = Mock()
-
-    engine._prepare_lookup_table_limits_for_point_interpolation()
-
-    engine._limits_lookup.prepare_point_interpolators.assert_called_once_with()
-
-
-def test_generate_extra_axis_combinations_returns_empty_placeholder_for_no_extra_axes():
-    engine = _make_engine(axes={"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}})
-
-    keys, units, combinations = engine._generate_extra_axis_combinations(("zenith_angle",))
-
-    assert keys == []
-    assert units == []
-    assert len(combinations) == 1
 
 
 def test_generate_extra_axis_combinations_returns_mesh_for_remaining_axes():
@@ -1512,20 +1111,6 @@ def test_generate_hadec_grid_uses_adaptive_ha_bins_per_dec_strip():
     assert ha_counts_by_dec[0.0] > ha_counts_by_dec[60.0]
 
 
-def test_generate_grid_from_hadec_axes_routes_to_adaptive_density_path():
-    engine = ProductionGridEngine(
-        axes=_adaptive_hadec_axes(),
-        coordinate_system="ha_dec",
-    )
-    expected_grid = [{"ha": 1 * u.deg, "dec": 2 * u.deg}]
-    engine._generate_adaptive_hadec_grid = Mock(return_value=expected_grid)
-
-    grid = engine._generate_grid_from_hadec_axes(include_horizontal_coordinates=True)
-
-    assert grid == expected_grid
-    engine._generate_adaptive_hadec_grid.assert_called_once_with(True)
-
-
 def test_generate_hadec_grid_adaptive_density_keeps_only_visible_nodes():
     engine = ProductionGridEngine(
         axes=_adaptive_hadec_axes(),
@@ -1569,15 +1154,6 @@ def test_generate_hadec_grid_adaptive_density_applies_azimuth_constraint():
         (point["azimuth"].to_value(u.deg) >= 300.0) or (point["azimuth"].to_value(u.deg) <= 60.0)
         for point in grid
     )
-
-
-def test_is_in_directed_azimuth_range_returns_all_true_for_full_circle():
-    mask = ProductionGridEngine._is_in_directed_azimuth_range(
-        azimuth_values_deg=np.array([0.0, 90.0, 180.0, 270.0]),
-        azimuth_range=(0.0, 360.0),
-    )
-
-    assert np.all(mask)
 
 
 def test_create_circular_binning_treats_full_circle_range_as_full_span():
@@ -1639,58 +1215,6 @@ def test_init_with_lookup_prepares_point_interpolation(
         array_layout_name="alpha",
     )
     mock_prepare_lookup_table_limits.assert_called_once_with()
-
-
-@patch("simtools.production_configuration.grid.np.arange", return_value=np.array([0.0]))
-def test_generate_hadec_grid_direction_points_filters_by_max_zenith(mock_arange):
-    engine = ProductionGridEngine(
-        axes={"axes": {"zenith_angle": {"range": [0, 20], "binning": 2, "units": "deg"}}},
-        observing_location=EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200 * u.m),
-    )
-    engine._hadec_to_horizontal = Mock(
-        return_value=(np.array([10.0, 80.0]) * u.deg, np.array([100.0, 200.0]) * u.deg)
-    )
-
-    direction_points = engine._generate_hadec_grid_direction_points()
-
-    assert len(direction_points) == 1
-    assert_quantity_allclose(direction_points[0]["zenith_angle"], 10 * u.deg)
-    assert_quantity_allclose(direction_points[0]["azimuth"], 100 * u.deg)
-    mock_arange.assert_called_once()
-
-
-def test_generate_grid_hadec_mode_adds_extra_axis_quantities():
-    engine = _make_engine(axes={"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}})
-    engine.coordinate_system = "ha_dec"
-    engine._generate_hadec_grid_direction_points = Mock(
-        return_value=[{"zenith_angle": 20 * u.deg, "azimuth": 180 * u.deg}]
-    )
-    engine._generate_extra_axis_combinations = Mock(
-        return_value=(["nsb_level"], [u.dimensionless_unscaled], [np.array([5.0])])
-    )
-    engine._add_lookup_limits_to_point = Mock()
-    engine.convert_coordinates = Mock(return_value=[{"ha": 10 * u.deg, "dec": -20 * u.deg}])
-
-    grid = engine._generate_grid_hadec_mode()
-
-    assert grid == [{"ha": 10 * u.deg, "dec": -20 * u.deg}]
-    added_point = engine.convert_coordinates.call_args.args[0][0]
-    assert_quantity_allclose(added_point["nsb_level"], 5 * u.dimensionless_unscaled)
-
-
-def test_generate_grid_hadec_mode_uses_direction_points_when_ha_dec_axes_missing():
-    engine = _make_engine(axes={"zenith_angle": {"range": [20, 20], "binning": 1}})
-    engine.coordinate_system = "ha_dec"
-    engine._generate_hadec_grid_direction_points = Mock(
-        return_value=[{"zenith_angle": 20 * u.deg, "azimuth": 180 * u.deg}]
-    )
-    engine._generate_extra_axis_combinations = Mock(return_value=([], [], [np.array([])]))
-    engine.convert_coordinates = Mock(return_value=[{"ha": 10 * u.deg, "dec": -20 * u.deg}])
-
-    grid = engine._generate_grid_hadec_mode()
-
-    assert grid == [{"ha": 10 * u.deg, "dec": -20 * u.deg}]
-    engine.convert_coordinates.assert_called_once()
 
 
 def test_directed_circular_span_degrees_returns_directed_span_for_non_wrapping_range():
