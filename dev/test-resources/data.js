@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793341732241,
+  "lastUpdate": 1793347608029,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33956,6 +33956,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 489.9609375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fe28d1433b140662b450b3be2fbe30be2199cc26",
+          "message": "Pass a run context instead of global settings; applications declare what they need (#2727)\n\n* Pass a run context instead of global settings; applications declare what they need\n\n- Remove simtools.settings, the IOHandler singleton and\n  require_model_reader. Library code receives a RunContext (model reader,\n  output paths, simulation software, arguments) explicitly; public entry\n  points take context=None and fall back to RunContext.from_environment().\n- ApplicationDefinition takes needs=(\"model\", \"corsika\", \"sim_telarray\",\n  \"output\", ...) instead of separate start-up flags; start() returns the\n  run context.\n- Workers rebuild the context from the job spec (RunContext.to_spec /\n  from_spec).\n- Tests use the run_context fixture instead of patching globals.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add change fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Pass the run context to every library call and helper\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Fix tests and two context bugs after merging main\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Fix duplicate context argument; keep modules under 1500 lines\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Pass the run context to workers, backends and metadata; copy mutable args\n\nLocal map_ordered jobs now receive the context spec (with the output path), backends\nbuilt via get_backend get the context, and classes that update their args copy them.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Read reduced-event metadata from the context; copy light-emission configuration\n\nwrite_reduced_event_lists takes its metadata arguments from the run context (SonarQube\nS107, 14 parameters).\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Share one copied light-emission configuration; accept any mapping in runner services\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Pass the application context to plot table rendering\n\n_plot_data called save_figure without a context, so --figure_format,\n--figure_dpi and --figure_png_palette were ignored for table plots. Thread\nthe context through plot_tables.plot and the parameter-report reader, and\nupdate the tests that stub or assert the call.\n\nCo-Authored-By: Claude Haiku 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T08:58:08+01:00",
+          "tree_id": "9b14fafebd8977a9014bc176f12182dea3c24a6d",
+          "url": "https://github.com/gammasim/simtools/commit/fe28d1433b140662b450b3be2fbe30be2199cc26"
+        },
+        "date": 1793347591676,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 65.76058579400001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 67.92,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 472.59765625,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
