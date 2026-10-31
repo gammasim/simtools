@@ -512,10 +512,10 @@ jobs:
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
           bash .github/scripts/install_python_dependencies.sh \
-            --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
+            --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-xdist pytest-retry
 
-      - name: Install resource benchmark dependency (prod container)
-        if: ${{ inputs.benchmark && contains(inputs.container_image, 'simtools-prod') }}
+      - name: Install resource benchmark dependency
+        if: ${{ inputs.benchmark }}
         run: |
           bash .github/scripts/install_python_dependencies.sh --no-cache-dir psutil
 
