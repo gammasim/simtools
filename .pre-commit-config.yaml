@@ -38,11 +38,6 @@ repos:
     entry: lint-imports
     language: system
     pass_filenames: false
-  - id: vulture
-    name: vulture
-    entry: vulture
-    language: system
-    pass_filenames: false
   - id: internal-patch-count
     name: internal patch count
     entry: python .github/scripts/count_internal_patches.py --max 1267
