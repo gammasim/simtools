@@ -302,19 +302,18 @@ class ReportGenerator:
     def _process_calibration_devices_for_version(self, version):
         """Process calibration devices for a specific model version."""
         try:
-            # Get all calibration devices for this version
-            calibration_array_elements = self.model_reader.get_array_elements(
+            devices = self.model_reader.get_array_elements(
                 version, collection="calibration_devices"
             )
-            array_elements = calibration_array_elements.copy()
-
-            # Add design models
-            for element in calibration_array_elements:
-                design_model = self.model_reader.get_design_model(
-                    version, element, "calibration_devices"
-                )
-                if design_model and design_model not in array_elements:
-                    array_elements.append(design_model)
+            array_elements = devices.copy()
+            production = self.model_reader.read_production_table("calibration_devices", version)
+            for element in production.get("parameters", {}):
+                if names.is_design_type(element) and element not in array_elements:
+                    array_elements.append(element)
+            for element in devices:
+                design = self.model_reader.get_design_model(version, element, "calibration_devices")
+                if design and design not in array_elements:
+                    array_elements.append(design)
 
             if array_elements:
                 # Create a copy of args with the current version for this iteration

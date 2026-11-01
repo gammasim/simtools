@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from simtools.data_model import parameter_catalog as catalog
+from simtools.model_repository.reader import SimulationModelReader
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.reporting.model_figures import (
     write_flasher_pulse_shape_plots,
@@ -151,6 +152,10 @@ def test__format_parameter_value(data, expected, tmp_path, run_context):
 
 
 def test_produce_observatory_report(mocker, tmp_path, run_context):
+    from astropy.table import QTable
+
+    from simtools.reporting import docs_parameter_plots
+
     rp = ReadParameters({"site": "North", "model_version": "6.0.0"}, tmp_path, context=run_context)
 
     # Empty data -> warning, no file
@@ -164,7 +169,10 @@ def test_produce_observatory_report(mocker, tmp_path, run_context):
     mock_params = {
         "site_elevation": {"value": 2200, "unit": "m", "parameter_version": "1.0"},
         "array_layouts": {
-            "value": [{"name": "L1", "elements": ["LST1"]}],
+            "value": [
+                {"name": "L1", "elements": ["LST1"]},
+                {"name": "L2", "elements": ["SSTS-01"]},
+            ],
             "unit": None,
             "parameter_version": "1.0",
         },
@@ -183,6 +191,37 @@ def test_produce_observatory_report(mocker, tmp_path, run_context):
         },
         "none_valued_param": {"value": None, "unit": None, "parameter_version": "1.0"},
     }
+    mock_read_layouts = mocker.patch.object(
+        docs_parameter_plots,
+        "read_layouts",
+        return_value=(
+            [
+                {
+                    "name": "L1",
+                    "site": "North",
+                    "array_elements": QTable(
+                        {
+                            "telescope_name": ["LSTN-01"],
+                            "position_x": [0.0],
+                            "position_y": [0.0],
+                        }
+                    ),
+                },
+                {
+                    "name": "L2",
+                    "site": "North",
+                    "array_elements": QTable(
+                        {
+                            "telescope_name": ["SSTS-01"],
+                            "position_x": [0.0],
+                            "position_y": [0.0],
+                        }
+                    ),
+                },
+            ],
+            None,
+        ),
+    )
     with patch.object(rp.model_reader, "get_model_parameters", return_value=mock_params):
         rp.produce_observatory_report()
     content = (tmp_path / "OBS-North.md").read_text()
@@ -190,7 +229,9 @@ def test_produce_observatory_report(mocker, tmp_path, run_context):
     assert "| site_elevation | 2200 m |" in content
     assert "none_valued_param" not in content
     assert "## Array Layouts" in content
+    assert "/_images/array_layout_" in content
     assert "## Array Trigger Configurations" in content
+    mock_read_layouts.assert_called_once()
 
 
 def test_produce_simulation_configuration_report(tmp_path, run_context):
@@ -296,7 +337,9 @@ def test_produce_calibration_reports(mocker, tmp_path, run_context):
         rp.produce_calibration_reports()
     content = (tmp_path / "ILLN-01.md").read_text()
     assert "# ILLN-01" in content
-    assert "laser events" in content
+    assert "laser_events" in content
+    assert "Short Description" not in content
+    assert "***" not in content
 
 
 def test_get_calibration_data(tmp_path, run_context):
@@ -392,7 +435,7 @@ def test_get_array_element_parameter_data_simple(tmp_test_directory, monkeypatch
         "North", "LSTN-01", "1.0.0", {"test_param": "1.0.0", "none_param": "1.0.0"}
     )
     data, _dt = rp.get_array_element_parameter_data(telescope_model=tel)
-    assert data == [["Telescope", "test_param", "1.0.0", "42 m", DESCRIPTION, SHORT_DESC]]
+    assert data == [["Telescope", "test_param", "1.0.0", "42 m", DESCRIPTION, SHORT_DESC, "OTHER"]]
 
     # Instrument match -> bold emphasis
     rp.model_reader.get_model_parameters.return_value = {
@@ -519,16 +562,27 @@ def test_flasher_gauss_exponential_uses_simtel_table_writer(tmp_test_directory, 
         fadc_sum_bins=10,
         time_margin_ns=5.0,
     )
-    assert "current sim_telarray configuration generator" in buf.getvalue()
+    assert "interpreted as a 10-90 rise time" in buf.getvalue()
+    assert "schema describes it as an RMS width" in buf.getvalue()
     assert list((Path(tmp_test_directory) / "_images").glob("flasher_pulse_shape_*.png"))
 
 
 def test_produce_array_element_report_writes_design_note_and_dict_table(
     tmp_path, mocker, run_context
 ):
+    output_path = tmp_path / "productions" / "6.0.0"
+    output_path.mkdir(parents=True)
+    (tmp_path / "parameters").mkdir()
+    (tmp_path / "parameters" / "LSTN-01.md").write_text("## param\n", encoding="utf-8")
+    model_reader = SimulationModelReader.from_memory(
+        {
+            "simulation-models/productions/6.0.0/info.yml": b"model_update: full_update\n",
+        }
+    )
     rp = ReadParameters(
         args={"site": "North", "telescope": "LSTN-01", "model_version": "6.0.0"},
-        output_path=tmp_path,
+        output_path=output_path,
+        model_reader=model_reader,
         context=run_context,
     )
     mocker.patch(
@@ -542,6 +596,14 @@ def test_produce_array_element_report_writes_design_note_and_dict_table(
         "get_array_element_parameter_data",
         return_value=(
             [
+                [
+                    "Structure",
+                    "array_element_position_ground",
+                    "1.0.0",
+                    "(1 m, 2 m, 3 m)",
+                    "Position",
+                    "Ground position",
+                ],
                 ["Structure", "inherited_param", "1.0.0", "1 m", "desc", "short"],
                 ["Structure", "***param***", "***1.0.0***", "***2 m***", "desc", "short"],
             ],
@@ -553,24 +615,33 @@ def test_produce_array_element_report_writes_design_note_and_dict_table(
     )
     write_dict_table = mocker.patch.object(rp, "_write_dict_table")
     mocker.patch("simtools.reporting.docs_read_parameters.write_telescope_structure_figure")
-
     rp.produce_array_element_report()
 
-    content = (tmp_path / "LSTN-01.md").read_text(encoding="utf-8")
-    assert "Parameters specific to LSTN-01" in content
-    assert "inherited from the design model [LSTN-design](LSTN-design.md)" in content
-    assert "***param***" in content
-    assert "inherited_param" not in content
-    assert write_dict_table.call_count == 1
-    assert write_dict_table.call_args[0][0] == "param"
+    content = (output_path / "LSTN-01.md").read_text(encoding="utf-8")
+    assert "All listed parameters are specific to this array element." not in content
+    assert "## Positions" in content
+    assert "array_element_position_ground" in content
+    assert "inherited from the design model" not in content
+    assert '<a href="../../parameters/LSTN-01.html#param">param</a>' in content
+    assert "Short Description" not in content
+    assert "inherited_param" in content
+    assert write_dict_table.call_count == 2
+    assert {call.args[0] for call in write_dict_table.call_args_list} == {
+        "dict_param",
+        "param",
+    }
 
 
 def test_produce_array_element_report_design_model_lists_all_parameters(
     tmp_path, mocker, run_context
 ):
+    output_path = tmp_path / "productions" / "6.0.0"
+    output_path.mkdir(parents=True)
+    (tmp_path / "parameters").mkdir()
+    (tmp_path / "parameters" / "LSTN-design.md").write_text("## param\n", encoding="utf-8")
     rp = ReadParameters(
         args={"site": "North", "telescope": "LSTN-design", "model_version": "6.0.0"},
-        output_path=tmp_path,
+        output_path=output_path,
         context=run_context,
     )
     mocker.patch(
@@ -590,10 +661,51 @@ def test_produce_array_element_report_design_model_lists_all_parameters(
 
     rp.produce_array_element_report()
 
-    content = (tmp_path / "LSTN-design.md").read_text(encoding="utf-8")
+    content = (output_path / "LSTN-design.md").read_text(encoding="utf-8")
     assert "inherited from the design model" not in content
-    assert "| param" in content
+    assert '<a href="../../parameters/LSTN-design.html#param">param</a>' in content
     assert write_dict_table.call_count == 1
+
+
+def test_production_table_keeps_parameter_name_plain_when_page_is_missing(
+    tmp_test_directory,
+):
+    output_path = Path(tmp_test_directory) / "productions" / "8.0.0"
+    rp = ReadParameters(args={"telescope": "SCTS-01"}, output_path=output_path)
+    output = StringIO()
+
+    rp._write_production_table(
+        [["Camera", "camera_body_shape", "1.0.0", "2", "Description", "Short", "SCTS-design"]],
+        output,
+    )
+
+    assert "| camera_body_shape | 1.0.0 | 2 |" in output.getvalue()
+    assert "../../parameters/" not in output.getvalue()
+
+
+def test_patch_report_uses_declared_previous_version(tmp_path, run_context):
+    class CapturingReadParameters(ReadParameters):
+        def _produce_array_element_delta_report(self, base_version):
+            self.delta_base_version = base_version
+            return True
+
+    model_reader = SimulationModelReader.from_memory(
+        {
+            "simulation-models/productions/8.0.0/info.yml": (
+                b"model_update: patch_update\nmodel_version_history:\n  - 1.0.0\n  - 7.3.2\n"
+            ),
+        }
+    )
+    rp = CapturingReadParameters(
+        args={"site": "North", "telescope": "LSTN-01", "model_version": "8.0.0"},
+        output_path=tmp_path,
+        model_reader=model_reader,
+        context=run_context,
+    )
+
+    rp.produce_array_element_report()
+
+    assert rp.delta_base_version == "7.3.2"
 
 
 def test_write_telescope_structure_figure_reports_missing_inputs(
@@ -668,3 +780,144 @@ def test_produce_model_parameter_reports_writes_latest_dict_table(tmp_path, mock
     assert write_dict_table.call_args[1] == {"heading_level": 3}
     content = (tmp_path / "LSTN-01.md").read_text(encoding="utf-8")
     assert "## dict_param\n\n**Description**: desc" in content
+
+
+def test_parameter_report_includes_software_and_schema_value_descriptions(tmp_path, mocker):
+    rp = ReadParameters(args={"telescope": "MSTN-01"}, output_path=tmp_path)
+    descriptions = {
+        "trigger_delay_compensation": {
+            "description": "Trigger delays.",
+            "simulation_software": [{"name": "sim_telarray"}],
+            "data": [
+                {"description": "Majority trigger delay.", "unit": "ns"},
+                {"description": "Analog sum trigger delay.", "unit": "ns"},
+            ],
+        }
+    }
+    mocker.patch.object(rp, "get_all_parameter_descriptions", return_value=descriptions)
+    comparison_data = {
+        "trigger_delay_compensation": [
+            {
+                "parameter_version": "1.0.0",
+                "model_version": "8.0.0",
+                "value": "0.0 ns, 0.0 ns",
+                "file_flag": False,
+            }
+        ]
+    }
+    output = StringIO()
+
+    rp._write_parameter_section(output, "trigger_delay_compensation", comparison_data, "telescopes")
+
+    content = output.getvalue()
+    assert "**Simulation software**: sim_telarray" in content
+    assert "| 1 | Majority trigger delay. | ns |" in content
+    assert "| 2 | Analog sum trigger delay. | ns |" in content
+
+
+def test_parameter_schema_metadata_includes_software_and_positional_descriptions(tmp_path):
+    rp = ReadParameters(args={}, output_path=tmp_path)
+
+    descriptions = rp.get_all_parameter_descriptions()
+
+    assert descriptions["trigger_delay_compensation"]["simulation_software"] == [
+        {"name": "sim_telarray"}
+    ]
+    assert descriptions["trigger_delay_compensation"]["data"][0]["description"] == (
+        "Delay applied for majority trigger."
+    )
+
+
+def test_parameter_repository_link_uses_original_export_source_name(tmp_path):
+    rp = ReadParameters(
+        args={"telescope": "LSTN-design", "site": "North"},
+        output_path=tmp_path,
+    )
+
+    url = rp._get_parameter_repository_url(
+        "camera_trigger_members",
+        "camera_trigger_members-1.0.0-LSTN-design.ecsv",
+        source_value="camera_trigger_members-1.0.0.ecsv",
+    )
+
+    assert url.endswith(
+        "/model_parameters/LSTN-design/camera_trigger_members/camera_trigger_members-1.0.0.ecsv"
+    )
+
+
+def test_calibration_production_reports_include_design_only_devices(
+    tmp_test_directory, mocker, run_context
+):
+    rp = ReadParameters(
+        args={"model_version": "8.0.0"}, output_path=Path(tmp_test_directory), context=run_context
+    )
+    mocker.patch.object(rp.model_reader, "get_array_elements", return_value=[])
+    mocker.patch.object(
+        rp.model_reader,
+        "read_production_table",
+        return_value={"parameters": {"LSFN-design": {}, "LSFS-design": {}}},
+    )
+    mocker.patch.object(rp.model_reader, "get_model_parameters", return_value={})
+    rp.produce_calibration_reports()
+    assert (Path(tmp_test_directory) / "LSFN-design.md").is_file()
+    assert (Path(tmp_test_directory) / "LSFS-design.md").is_file()
+
+
+def test_calibration_production_table_links_parameter(tmp_test_directory, run_context):
+    root = Path(tmp_test_directory)
+    output = root / "productions" / "8.0.0"
+    output.mkdir(parents=True)
+    parameters = root / "parameters"
+    parameters.mkdir()
+    (parameters / "LSFS-design.md").write_text("## flasher_pulse_shape\n", encoding="utf-8")
+    rp = ReadParameters(args={"model_version": "8.0.0"}, output_path=output, context=run_context)
+    rp._write_single_calibration_report(
+        output / "LSFS-design.md",
+        "LSFS-design",
+        [["Calibration", "flasher_pulse_shape", "1.0.0", "Gauss", "desc", "short", "LSFS-design"]],
+        "LSFS-design",
+    )
+    content = (output / "LSFS-design.md").read_text(encoding="utf-8")
+    assert "../../parameters/LSFS-design.html#flasher-pulse-shape" in content
+    assert "Short Description" not in content
+
+
+def test_observatory_file_link_uses_original_name(tmp_test_directory, run_context):
+    rp = ReadParameters(
+        args={"site": "North", "model_version": "6.0.0"},
+        output_path=Path(tmp_test_directory),
+        context=run_context,
+    )
+    output = StringIO()
+    rp._write_parameters_table(
+        output,
+        {
+            "atmospheric_profile": {
+                "value": "atmospheric_profile-1.0.0-OBS-North.ecsv",
+                "_simtools_export_source_value": "atmospheric_profile-1.0.0.ecsv",
+                "file": True,
+            }
+        },
+    )
+    assert "/atmospheric_profile/atmospheric_profile-1.0.0.ecsv" in output.getvalue()
+
+
+def test_configuration_file_link_uses_original_name(tmp_test_directory, mocker, run_context):
+    rp = ReadParameters(
+        args={"site": "North", "model_version": "6.0.0", "simulation_software": "sim_telarray"},
+        output_path=Path(tmp_test_directory),
+        context=run_context,
+    )
+    mocker.patch.object(
+        rp.model_reader,
+        "get_simulation_configuration_parameters",
+        return_value={
+            "correct_nsb_spectrum_to_telescope_altitude": {
+                "value": "nsb-1.0.0-LSTN-design.ecsv",
+                "_simtools_export_source_value": "nsb-1.0.0.ecsv",
+                "file": True,
+            }
+        },
+    )
+    rows, _ = rp._get_simulation_configuration_data_for_telescope_site("LSTN-design", "North")
+    assert "/correct_nsb_spectrum_to_telescope_altitude/nsb-1.0.0.ecsv" in rows[0][3]

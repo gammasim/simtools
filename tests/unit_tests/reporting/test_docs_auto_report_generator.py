@@ -704,6 +704,31 @@ def test__process_calibration_devices_for_version_with_devices(run_context):
         assert report_generator.args == original_args
 
 
+def test__process_calibration_devices_for_version_with_design_only(run_context):
+    args = {"all_telescopes": True, "all_sites": True, "model_version": "8.0.0"}
+    report_generator = ReportGenerator(
+        args, run_context.paths.get_output_directory(), context=run_context
+    )
+    production = {"parameters": {"LSFS-design": {}, "LSFN-design": {}}}
+
+    with (
+        patch.object(report_generator.model_reader, "get_array_elements", return_value=[]),
+        patch.object(
+            report_generator.model_reader,
+            "read_production_table",
+            return_value=production,
+        ),
+        patch(
+            "simtools.reporting.docs_auto_report_generator.ReadParameters"
+        ) as mock_read_params_class,
+    ):
+        report_generator._process_calibration_devices_for_version("8.0.0")
+
+    mock_read_params_class.return_value.generate_model_parameter_reports_for_devices.assert_called_once_with(
+        ["LSFS-design", "LSFN-design"]
+    )
+
+
 def test_auto_generate_simulation_configuration_reports(run_context):
     args = {"all_model_versions": True}
     output_path = run_context.paths.get_output_directory()

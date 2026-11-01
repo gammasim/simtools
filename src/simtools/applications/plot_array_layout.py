@@ -166,11 +166,12 @@ def main():
                 background_layout,
             )
     else:
+        run_args = app_context.args.copy()
         layouts, background_layout = layout_utils.read_layouts(
-            app_context.args, app_context.model_reader, context=app_context
+            run_args, app_context.model_reader, context=app_context
         )
         plot_array_layouts(
-            app_context.args,
+            run_args,
             app_context.paths.get_output_directory(),
             layouts,
             background_layout,

@@ -8,6 +8,7 @@ from typing import NamedTuple
 import numpy as np
 
 from simtools.data_model import parameter_catalog as catalog
+from simtools.model_repository.asset_names import SOURCE_VALUE_KEY
 
 
 class ParameterDelta(NamedTuple):
@@ -67,6 +68,7 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
             param_data.get("unit") or "",
             file_flag,
             parameter_version=None if file_flag else "delta",
+            source_value=param_data.get(SOURCE_VALUE_KEY),
         )
 
     def _write_delta_report_table(self, file, changes):
@@ -78,7 +80,8 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
         )
         for row in changes:
             file.write(
-                f"| {row.parameter} | {row.base_param_version} | "
+                f"| {row.parameter} | "
+                f"{row.base_param_version} | "
                 f"{row.new_param_version} | {row.base_value} | "
                 f"{row.new_value} |\n"
             )
@@ -96,7 +99,10 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
             if self._parameter_changed(base, current):
                 changes.append(
                     ParameterDelta(
-                        parameter,
+                        self._parameter_reference_link(
+                            parameter,
+                            (current or {}).get("instrument") or (base or {}).get("instrument"),
+                        ),
                         (base or {}).get("parameter_version", "-"),
                         (current or {}).get("parameter_version", "-"),
                         self._format_value_for_delta(parameter, base),

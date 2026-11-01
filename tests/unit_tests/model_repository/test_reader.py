@@ -32,6 +32,32 @@ def _parameter(instrument, name, version, value):
     }
 
 
+def test_reader_returns_production_update_type_and_history():
+    reader = SimulationModelReader.from_memory(
+        {
+            "simulation-models/productions/1.0.0/info.yml": b"model_update: full_update\n",
+            "simulation-models/productions/1.0.0/LSTN-design.json": b'{"parameters": {}}',
+            "simulation-models/productions/1.1.0/info.yml": (
+                b"model_update: patch_update\nmodel_version_history:\n  - 1.0.0\n"
+            ),
+            "simulation-models/productions/1.1.0/LSTN-01.json": b'{"parameters": {}}',
+        }
+    )
+
+    assert reader.get_model_update_info("1.0.0") == {
+        "model_update": "full_update",
+        "model_version_history": [],
+    }
+    assert reader.get_model_update_info("1.1.0") == {
+        "model_update": "patch_update",
+        "model_version_history": ["1.0.0"],
+    }
+    assert reader.get_model_update_info("2.0.0") == {
+        "model_update": None,
+        "model_version_history": [],
+    }
+
+
 @pytest.fixture
 def model_repository(tmp_test_directory):
     """Create a compact filesystem model repository."""

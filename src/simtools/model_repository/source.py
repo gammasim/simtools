@@ -83,6 +83,32 @@ class ModelSource:
 
         return files.collect_production_descriptions(info_files, read_info)
 
+    def get_model_update_info(self, model_version):
+        """Return update type and history declared by a production version.
+
+        Parameters
+        ----------
+        model_version : str
+            Production model version.
+
+        Returns
+        -------
+        dict
+            ``model_update`` and ``model_version_history`` values from the version's
+            ``info.yml`` or ``info.yaml``. Missing metadata yields ``None`` and an empty list.
+        """
+        prefix = _PRODUCTIONS_PATH / str(model_version)
+        paths = self._iter_files_or_empty(prefix)
+        for info_name in ("info.yml", "info.yaml"):
+            info_path = (prefix / info_name).as_posix()
+            if info_path in paths:
+                info = self._read_document(info_path)
+                return {
+                    "model_update": info.get("model_update"),
+                    "model_version_history": info.get("model_version_history", []),
+                }
+        return {"model_update": None, "model_version_history": []}
+
     def _warm_model_version(self, model_version):
         """Load production and referenced parameter data for one version."""
         model_version = str(model_version)

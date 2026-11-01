@@ -4,8 +4,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 import astropy.units as u
+import numpy as np
 import pytest
-from astropy.table import Table
+from astropy.table import QTable, Table
 
 from simtools.reporting import docs_parameter_plots
 from simtools.reporting.docs_read_parameters import ReadParameters
@@ -68,6 +69,18 @@ def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker, run_con
     [
         ("some_param", "1.0.0", "_plot_parameter_tables", ["plot2"]),
         ("camera_pixel_layout", "1.0.0", "plot_camera_config", ["camera_plot"]),
+        (
+            "camera_trigger_groups",
+            "1.0.0",
+            "_plot_camera_trigger_membership",
+            ["trigger_plot"],
+        ),
+        (
+            "camera_trigger_members",
+            "1.0.0",
+            "_plot_camera_trigger_membership",
+            ["trigger_plot"],
+        ),
         ("mirror_list", "1.0.0", "plot_mirror_config", ["mirror_plot"]),
         (
             "primary_mirror_segmentation",
@@ -128,6 +141,15 @@ def test__generate_plots(
                 read_parameters.model_reader,
                 context=run_context,
             )
+        elif patched_method == "_plot_camera_trigger_membership":
+            mock_plot.assert_called_once_with(
+                tmp_test_directory,
+                "LSTN-design",
+                "North",
+                "6.0.0",
+                read_parameters.model_reader,
+                context=run_context,
+            )
         elif patched_method == "plot_mirror_config":
             mock_plot.assert_called_once_with(
                 parameter,
@@ -141,6 +163,130 @@ def test__generate_plots(
             )
 
 
+def test_plot_camera_trigger_membership_summary(tmp_test_directory, mocker, run_context):
+    output_path = Path(tmp_test_directory)
+    model_reader = mocker.Mock()
+    model_reader.get_model_parameters.return_value = {
+        "camera_pixel_layout": {"parameter": "camera_pixel_layout"},
+        "camera_pixel_types": {
+            "parameter": "camera_pixel_types",
+            "value": [{"shape": 1, "diameter_cm": 1.0}],
+        },
+        "camera_rotate": {"parameter": "camera_rotate", "value": 0.0},
+        "camera_trigger_groups": {"parameter": "camera_trigger_groups"},
+        "camera_trigger_members": {"parameter": "camera_trigger_members"},
+    }
+    tables = {
+        "camera_pixel_layout": QTable(
+            {
+                "pixel_id": [1, 2, 3],
+                "x_cm": [0.0, 1.0, 0.0],
+                "y_cm": [0.0, 0.0, 1.0],
+                "enabled": [True, True, True],
+            }
+        ),
+        "camera_trigger_groups": Table({"group_id": [10, 11], "kind": ["L1", "L1"]}),
+        "camera_trigger_members": Table({"group_id": [10, 10, 11, 11], "pixel_id": [1, 2, 2, 3]}),
+    }
+    tables["camera_pixel_layout"]["x_cm"].unit = u.cm
+    tables["camera_pixel_layout"]["y_cm"].unit = u.cm
+    model_reader.get_parameter_table.side_effect = lambda parameter: tables[parameter["parameter"]]
+    plots = docs_parameter_plots._plot_camera_trigger_membership(
+        output_path,
+        "LSTN-design",
+        "North",
+        "8.0.0",
+        model_reader,
+        context=run_context,
+    )
+
+    assert len(plots) == 1
+    assert plots[0].startswith("camera_trigger_membership_LSTN-design_")
+    assert (output_path / f"{plots[0]}.png").is_file()
+
+    member_page_plots = docs_parameter_plots._plot_camera_trigger_membership(
+        output_path,
+        "LSTN-design",
+        "North",
+        "8.0.0",
+        model_reader,
+        context=run_context,
+    )
+    assert member_page_plots == plots
+
+
+def test_count_trigger_groups_per_pixel_counts_unique_memberships():
+    groups = Table({"group_id": [10, 11]})
+    members = Table({"group_id": [10, 10, 11, 11, 11], "pixel_id": [1, 2, 2, 3, 2]})
+
+    counts = docs_parameter_plots._count_trigger_groups_per_pixel([1, 2, 3, 4], groups, members)
+
+    assert counts.tolist() == [1, 2, 1, 0]
+
+
+def test_count_trigger_groups_per_pixel_rejects_unknown_member_pixel():
+    groups = Table({"group_id": [10]})
+    members = Table({"group_id": [10], "pixel_id": [99]})
+
+    with pytest.raises(ValueError, match="Trigger member pixel 99 is not in the camera"):
+        docs_parameter_plots._count_trigger_groups_per_pixel([1, 2], groups, members)
+
+
+@pytest.mark.parametrize(
+    ("pixel_ids", "groups", "members", "error"),
+    [
+        ([1, 1], {"group_id": [10]}, {"group_id": [10], "pixel_id": [1]}, "pixel IDs"),
+        ([1], {"group_id": [10, 10]}, {"group_id": [10], "pixel_id": [1]}, "group IDs"),
+        ([1], {"group_id": []}, {"group_id": [], "pixel_id": []}, "no trigger groups"),
+        ([1], {"group_id": [10]}, {"group_id": [11], "pixel_id": [1]}, "unknown trigger group"),
+        ([1], {"group_id": [10, 11]}, {"group_id": [10], "pixel_id": [1]}, "no members"),
+        (
+            [1],
+            {"id": [10]},
+            {"group_id": [10], "pixel_id": [1]},
+            "missing required column group_id",
+        ),
+    ],
+)
+def test_count_trigger_groups_per_pixel_rejects_invalid_configuration(
+    pixel_ids, groups, members, error
+):
+    with pytest.raises(ValueError, match=error):
+        docs_parameter_plots._count_trigger_groups_per_pixel(
+            pixel_ids, Table(groups), Table(members)
+        )
+
+
+@pytest.mark.parametrize(
+    ("telescope", "site", "model_version", "parameters"),
+    [
+        (None, "North", "8.0.0", {}),
+        ("LSTN-design", "North", "8.0.0", {}),
+        (
+            "LSTN-design",
+            "North",
+            "8.0.0",
+            {"camera_pixel_layout": {"parameter": "camera_pixel_layout"}},
+        ),
+    ],
+)
+def test_plot_camera_trigger_membership_skips_missing_context_or_parameters(
+    tmp_test_directory, mocker, run_context, telescope, site, model_version, parameters
+):
+    model_reader = mocker.Mock()
+    model_reader.get_model_parameters.return_value = parameters
+
+    result = docs_parameter_plots._plot_camera_trigger_membership(
+        Path(tmp_test_directory), telescope, site, model_version, model_reader, run_context
+    )
+
+    assert result == []
+    if telescope is None:
+        model_reader.get_model_parameters.assert_not_called()
+    else:
+        model_reader.get_parameter_table.assert_not_called()
+
+
 def test__plot_parameter_tables(tmp_test_directory, mocker, run_context):
     from pathlib import Path
 
@@ -151,7 +297,10 @@ def test__plot_parameter_tables(tmp_test_directory, mocker, run_context):
 
     # Mock plot_tables.generate_plot_configurations to return (configs, output_files) tuple
     mock_config = {
-        "tables": [{"table_name": "test_table"}],
+        "tables": [{"table_name": "test_table", "column_x": "x", "column_y": "y"}],
+        "title": "Test table",
+        "xtitle": "x",
+        "ytitle": "y",
         "plot_name": "pm_photoelectron_spectrum_1.0.0_North_LSTN-design",
     }
     mock_files = [Path("pm_photoelectron_spectrum_1.0.0_North_LSTN-design.png")]
@@ -160,15 +309,20 @@ def test__plot_parameter_tables(tmp_test_directory, mocker, run_context):
     )
 
     # Mock plot_tables.plot to avoid actual plotting
-    mocker.patch.object(plot_tables, "read_table_data", return_value={"test_table": []})
+    mocker.patch.object(
+        plot_tables,
+        "read_table_data",
+        return_value={
+            "test_table": np.array([(1.0, 2.0), (2.0, 3.0)], dtype=[("x", float), ("y", float)])
+        },
+    )
     mocker.patch.object(docs_parameter_plots, "_get_figure_cache_key", return_value="cached-key")
-    mock_render = mocker.patch.object(plot_tables, "_plot_data")
 
     result = read_parameters._plot_parameter_tables(
         "pm_photoelectron_spectrum", "1.0.0", Path(tmp_test_directory)
     )
-    assert result == ["pm_photoelectron_spectrum_1-0-0_North_LSTN-design_cached-key"]
-    mock_render.assert_called_once()
+    assert result == ["parameter_plot_cached-key"]
+    assert Path(tmp_test_directory, f"{result[0]}.png").is_file()
 
     args = {"telescope": None, "site": "North", "model_version": "6.0.0"}
     read_parameters = ReadParameters(args=args, output_path=tmp_test_directory, context=run_context)
@@ -182,58 +336,297 @@ def test__plot_parameter_tables(tmp_test_directory, mocker, run_context):
     assert result == []
 
 
-def test__plot_parameter_tables_reuses_only_identical_rendered_inputs(
-    tmp_path, mocker, run_context
+def test_table_plot_cache_key_uses_rendered_data_and_visible_settings(run_context):
+    data = {"sample": np.array([(1.0, 2.0)], dtype=[("x", float), ("y", float)])}
+    config = {
+        "title": "Sample",
+        "xtitle": "x",
+        "ytitle": "y",
+        "legend_location": "best",
+        "xlim": [0.0, 2.0],
+        "tables": [{"parameter": "example", "site": "North", "model_version": "8.0.0"}],
+    }
+    key = docs_parameter_plots._get_figure_cache_key(config, data, run_context)
+
+    assert (
+        docs_parameter_plots._get_figure_cache_key(
+            {**config, "tables": [{"parameter": "example", "site": "South"}]}, data, run_context
+        )
+        == key
+    )
+    assert (
+        docs_parameter_plots._get_figure_cache_key(
+            {**config, "title": "Different title"}, data, run_context
+        )
+        != key
+    )
+    changed_data = {"sample": np.array([(1.0, 3.0)], dtype=[("x", float), ("y", float)])}
+    assert docs_parameter_plots._get_figure_cache_key(config, changed_data, run_context) != key
+
+
+def test_parameter_plot_overlay_uses_latest_three_compatible_versions(
+    tmp_test_directory,
 ):
-    from pathlib import Path
+    all_versions = {
+        "6.0.0": {"fadc_pulse_shape": {"parameter_version": "1.0.0"}},
+        "7.0.0": {"fadc_pulse_shape": {"parameter_version": "2.0.0"}},
+        "8.0.0": {"fadc_pulse_shape": {"parameter_version": "3.0.0"}},
+        "9.0.0": {"fadc_pulse_shape": {"parameter_version": "4.0.0"}},
+    }
 
-    from simtools.visualization import plot_tables
+    assert docs_parameter_plots._parameter_plot_candidates(
+        all_versions, "fadc_pulse_shape", "3.0.0", "8.0.0"
+    ) == [("1.0.0", "6.0.0"), ("2.0.0", "7.0.0"), ("3.0.0", "8.0.0")]
 
+
+def test_parameter_plot_candidates_skips_missing_versions_and_newer_models():
+    all_versions = {
+        "6.0.0": {"pulse_shape": {"parameter_version": "1.0.0"}},
+        "7.0.0": {"pulse_shape": None},
+        "8.0.0": {"pulse_shape": {"parameter_version": "3.0.0"}},
+        "9.0.0": {"pulse_shape": {"parameter_version": "4.0.0"}},
+    }
+
+    assert docs_parameter_plots._parameter_plot_candidates(
+        all_versions, "pulse_shape", "3.0.0", "8.0.0"
+    ) == [("1.0.0", "6.0.0"), ("3.0.0", "8.0.0")]
+
+
+def test_matching_version_plot_config_requires_same_signature_and_axis_units(run_context, mocker):
+    current = {
+        "title": "Pulse shape",
+        "tables": [
+            {
+                "parameter": "pulse_shape",
+                "site": "North",
+                "model_version": "8.0.0",
+                "column_x": "x",
+                "column_y": "y",
+            }
+        ],
+    }
+    different_plot = {**current, "title": "Other plot"}
+    multiple_tables = {**current, "tables": [*current["tables"], current["tables"][0]]}
+    different_units = {
+        **current,
+        "tables": [{**current["tables"][0], "model_version": "7.0.0"}],
+    }
+    matching = {
+        **current,
+        "tables": [{**current["tables"][0], "model_version": "6.0.0"}],
+    }
+    model_reader = mocker.Mock()
+
+    def export_table(model_version, **_kwargs):
+        x_unit = u.cm if model_version == "7.0.0" else u.ns
+        return QTable({"x": [1.0] * x_unit, "y": [0.5] * u.dimensionless_unscaled})
+
+    model_reader.export_model_file.side_effect = export_table
+    result = docs_parameter_plots._matching_version_plot_config(
+        [different_plot, multiple_tables, different_units, matching],
+        docs_parameter_plots._plot_signature(current),
+        current["tables"][0],
+        model_reader,
+        run_context,
+    )
+
+    assert result == matching
+    assert model_reader.export_model_file.call_count == 4
+
+
+def test_table_axis_units_returns_none_when_export_or_columns_are_unavailable(run_context, mocker):
+    table_config = {"parameter": "pulse_shape", "site": "North", "column_x": "x", "column_y": "y"}
+    model_reader = mocker.Mock()
+    model_reader.export_model_file.side_effect = ValueError("table export unavailable")
+    assert docs_parameter_plots._table_axis_units(table_config, model_reader, run_context) is None
+
+    model_reader.export_model_file.side_effect = None
+    model_reader.export_model_file.return_value = QTable({"x": [1.0] * u.ns})
+    assert docs_parameter_plots._table_axis_units(table_config, model_reader, run_context) is None
+
+
+def test_read_parameter_plot_version_reuses_current_data_for_current_version(run_context, mocker):
+    data = {"series": np.array([(1.0, 2.0)], dtype=[("x", float), ("y", float)])}
+    model_reader = mocker.Mock()
+
+    result = docs_parameter_plots._read_parameter_plot_version(
+        "pulse_shape",
+        "3.0.0",
+        "3.0.0",
+        "8.0.0",
+        {"tables": [{}]},
+        data,
+        (),
+        "North",
+        "LSTN-design",
+        Path(),
+        model_reader,
+        run_context,
+    )
+
+    assert result is data
+    model_reader.assert_not_called()
+
+
+def test_read_parameter_plot_version_reads_older_schema_compatible_table(
+    tmp_test_directory, run_context, mocker
+):
+    table_config = {
+        "parameter": "fadc_pulse_shape",
+        "site": "North",
+        "telescope": "LSTN-design",
+        "parameter_version": "1.0.0",
+        "model_version": "8.0.0",
+        "column_x": "time",
+        "column_y": "amplitude",
+    }
+    plot_config = {
+        "type": "fadc_pulse_shape",
+        "title": "FADC pulse shape",
+        "xtitle": "Time [ns]",
+        "ytitle": "Amplitude [a.u.]",
+        "xscale": "linear",
+        "yscale": "linear",
+        "no_markers": True,
+        "tables": [table_config],
+    }
+    current_data = {
+        "time vs amplitude": np.array([(0.0, 1.0)], dtype=[("time", float), ("amplitude", float)])
+    }
+    table = QTable({"time": [0.0, 1.0] * u.ns, "amplitude": [1.0, 0.5]})
+    model_reader = mocker.Mock()
+    model_reader.get_model_parameter.return_value = {
+        "fadc_pulse_shape": {"model_parameter_schema_version": "0.2.0"}
+    }
+    model_reader.export_model_file.return_value = table
+
+    result = docs_parameter_plots._read_parameter_plot_version(
+        "fadc_pulse_shape",
+        "2.0.0",
+        "1.0.0",
+        "7.0.0",
+        plot_config,
+        current_data,
+        docs_parameter_plots._plot_signature(plot_config),
+        "North",
+        "LSTN-design",
+        Path(tmp_test_directory),
+        model_reader,
+        run_context,
+    )
+
+    assert len(result) == 1
+    np.testing.assert_allclose(result["time vs amplitude"]["amplitude"], [1.0, 0.5])
+
+
+def test_read_parameter_plot_version_skips_parameter_without_plot_configuration(
+    tmp_test_directory, run_context, mocker
+):
+    model_reader = mocker.Mock()
+    model_reader.get_model_parameter.return_value = {
+        "num_gains": {"model_parameter_schema_version": "0.1.0"}
+    }
+
+    result = docs_parameter_plots._read_parameter_plot_version(
+        "num_gains",
+        "2.0.0",
+        "1.0.0",
+        "7.0.0",
+        {"tables": [{}]},
+        {},
+        (),
+        "North",
+        "LSTN-design",
+        Path(tmp_test_directory),
+        model_reader,
+        run_context,
+    )
+
+    assert result is None
+    model_reader.export_model_file.assert_not_called()
+
+
+def test_read_parameter_plot_version_skips_incompatible_plot_configuration(
+    tmp_test_directory, run_context, mocker
+):
+    model_reader = mocker.Mock()
+    model_reader.get_model_parameter.return_value = {
+        "fadc_pulse_shape": {"model_parameter_schema_version": "0.2.0"}
+    }
+    model_reader.export_model_file.return_value = QTable(
+        {"time": [0.0, 1.0] * u.ns, "amplitude": [1.0, 0.5]}
+    )
+
+    result = docs_parameter_plots._read_parameter_plot_version(
+        "fadc_pulse_shape",
+        "2.0.0",
+        "1.0.0",
+        "7.0.0",
+        {"tables": [{"parameter": "fadc_pulse_shape", "site": "North"}]},
+        {},
+        ("different",),
+        "North",
+        "LSTN-design",
+        Path(tmp_test_directory),
+        model_reader,
+        run_context,
+    )
+
+    assert result is None
+    model_reader.export_model_file.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("telescope", "model_version", "plot_config", "current_data"),
+    [
+        (None, "8.0.0", {"tables": [{}]}, {"series": [1]}),
+        ("LSTN-design", None, {"tables": [{}]}, {"series": [1]}),
+        ("LSTN-design", "8.0.0", {"tables": [{}, {}]}, {"series": [1]}),
+        ("LSTN-design", "8.0.0", {"tables": [{}]}, {"first": [1], "second": [2]}),
+    ],
+)
+def test_compatible_parameter_plot_versions_skips_ineligible_overlay(
+    tmp_test_directory, run_context, telescope, model_version, plot_config, current_data
+):
     read_parameters = ReadParameters(
-        args={"telescope": "LSTN-design", "site": "North", "model_version": "8.0.0"},
-        output_path=tmp_path,
+        args={"site": "North", "telescope": "LSTN-design", "model_version": "8.0.0"},
+        output_path=tmp_test_directory,
         context=run_context,
     )
-    mocker.patch.object(read_parameters, "_get_telescope_identifier", return_value="LSTN-design")
-    image_base = Path("mirror_reflectivity_1.0.0_North_LSTN-design.pdf")
-    configs = [
-        {"tables": [{"model_version": version, "parameter": "mirror_reflectivity"}]}
-        for version in ("7.0.0", "8.0.0", "8.0.0")
-    ]
-    mocker.patch.object(
-        plot_tables,
-        "generate_plot_configurations",
-        side_effect=[([config], [image_base]) for config in configs],
-    )
-    mocker.patch.object(
-        plot_tables,
-        "read_table_data",
-        side_effect=[
-            {"Mirror": [(300.0, 0.91)]},
-            {"Mirror": [(300.0, 0.91)]},
-            {"Mirror": [(300.0, 0.89)]},
-        ],
+
+    result = read_parameters._get_compatible_parameter_plot_versions(
+        "pulse_shape",
+        "1.0.0",
+        plot_config,
+        current_data,
+        "North",
+        telescope,
+        model_version,
+        Path(tmp_test_directory),
     )
 
-    def save_figure(_data, _config, output_file, *, context=None):
-        Path(output_file).with_suffix(".png").touch()
+    assert result == []
 
-    render = mocker.patch.object(plot_tables, "_plot_data", side_effect=save_figure)
-    first = read_parameters._plot_parameter_tables(
-        "mirror_reflectivity", "1.0.0", tmp_path, model_version="7.0.0"
-    )
-    second = read_parameters._plot_parameter_tables(
-        "mirror_reflectivity", "1.0.0", tmp_path, model_version="8.0.0"
-    )
-    third = read_parameters._plot_parameter_tables(
-        "mirror_reflectivity", "1.0.0", tmp_path, model_version="8.0.0"
+
+def test_matching_version_plot_config_returns_none_without_matching_units(run_context, mocker):
+    config = {
+        "title": "Pulse shape",
+        "tables": [{"parameter": "pulse_shape", "site": "North", "column_x": "x", "column_y": "y"}],
+    }
+    model_reader = mocker.Mock()
+    model_reader.export_model_file.return_value = QTable(
+        {"x": [1.0] * u.ns, "y": [0.5] * u.dimensionless_unscaled}
     )
 
-    assert first == second
-    assert third != second
-    assert (tmp_path / f"{first[0]}.png").is_file()
-    assert (tmp_path / f"{third[0]}.png").is_file()
-    assert render.call_count == 2
+    result = docs_parameter_plots._matching_version_plot_config(
+        [config],
+        docs_parameter_plots._plot_signature({**config, "title": "Different"}),
+        config["tables"][0],
+        model_reader,
+        run_context,
+    )
+
+    assert result is None
 
 
 def test__plot_camera_components_reuses_resolved_camera_data(
@@ -254,7 +647,11 @@ def test__plot_camera_components_reuses_resolved_camera_data(
     )
     mocker.patch(
         "simtools.reporting.model_figures.resolve_camera_components",
-        return_value={"pixels": [(1.0, 2.0)]},
+        return_value={
+            "pixels": [{"pixel_id": 1, "x_cm": 1.0, "y_cm": 2.0}],
+            "pixel_types": [{"shape": 1, "diameter_cm": 1.0}],
+            "rotate": 0.0,
+        },
     )
     mocker.patch("simtools.reporting.model_figures.camera_model.Camera.from_configuration")
     mocker.patch("simtools.reporting.model_figures.plot_pixels.raw_pixels_from_configuration")
@@ -274,7 +671,7 @@ def test__plot_camera_components_reuses_resolved_camera_data(
     )
 
     assert first == second
-    assert first[0].startswith("camera_pixel_layout_LSTN-01_")
+    assert first[0].startswith("camera_pixel_layout_")
     mock_plot.assert_called_once()
 
 
@@ -422,7 +819,7 @@ def test__plot_mirror_config(
 
     assert result == [] if parameter_version is None else len(result) == 1
     if result:
-        assert result[0].startswith("mirror_list_LSTN-01_")
+        assert result[0].startswith("mirror_config_")
     if parameter_version is None:
         mock_plot.assert_not_called()
     else:

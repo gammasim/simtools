@@ -45,6 +45,7 @@ def test_source_combines_patch_history_and_descriptions():
             "simulation-models/productions/1.1.0/LSTN-01.json": _json(
                 {"parameters": {"LSTN-01": {"new_parameter": "1.0.0"}}}
             ),
+            "simulation-models/productions/2.0.0/info.yml": b"model_update: full_update\n",
         }
     )
     source = ModelSource(storage)
@@ -55,8 +56,20 @@ def test_source_combines_patch_history_and_descriptions():
         "LSTN-design": {"old_parameter": "1.0.0"},
         "LSTN-01": {"new_parameter": "1.0.0"},
     }
-    assert source.get_model_versions() == ["1.0.0", "1.1.0"]
-    assert source.get_production_descriptions() == [("1.1.0", "Updated")]
+    assert source.get_model_versions() == ["1.0.0", "1.1.0", "2.0.0"]
+    assert source.get_production_descriptions() == [("1.1.0", "Updated"), ("2.0.0", "")]
+    assert source.get_model_update_info("1.1.0") == {
+        "model_update": "patch_update",
+        "model_version_history": ["1.0.0"],
+    }
+    assert source.get_model_update_info("1.0.0") == {
+        "model_update": None,
+        "model_version_history": [],
+    }
+    assert source.get_model_update_info("2.0.0") == {
+        "model_update": "full_update",
+        "model_version_history": [],
+    }
 
 
 def test_source_reports_missing_tables_and_parameters():

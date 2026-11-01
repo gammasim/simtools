@@ -14,6 +14,7 @@ from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
 from simtools.visualization import visualize
+from simtools.visualization.array_layout_cache import array_layout_figure_name
 from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
@@ -91,6 +92,19 @@ def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
 
     """
     for layout in layouts:
+        plot_file_name = args_dict["figure_name"] or array_layout_figure_name(
+            layout, args_dict, background_layout
+        )
+        output_stem = output_path / plot_file_name
+        output_settings = visualize.figure_output_settings()
+        formats = args_dict.get("figure_format") or output_settings.get("figure_format") or ["png"]
+        if isinstance(formats, str):
+            formats = [formats]
+        existing_outputs = [
+            output_stem.with_suffix(f".{figure_format}") for figure_format in formats
+        ]
+        if args_dict["figure_name"] is None and all(path.is_file() for path in existing_outputs):
+            continue
         fig_out = plot_array_layout(
             telescopes=layout["array_elements"],
             show_tel_label=args_dict["show_labels"],
@@ -105,25 +119,6 @@ def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
             x_lim=tuple(args_dict["x_lim"]) if args_dict["x_lim"] else None,
             y_lim=tuple(args_dict["y_lim"]) if args_dict["y_lim"] else None,
         )
-        site_string = ""
-        if layout.get("site") is not None:
-            site_string = f"_{layout['site']}"
-        elif args_dict["site"] is not None:
-            site_string = f"_{args_dict['site']}"
-        coordinate_system_string = (
-            f"_{args_dict['coordinate_system']}"
-            if args_dict["coordinate_system"] not in layout["name"]
-            else ""
-        )
-
-        model_version_string = (
-            f"_{args_dict['model_version'].replace('.', '-')}" if args_dict["model_version"] else ""
-        )
-        plot_file_name = args_dict["figure_name"] or (
-            f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
-            f"{model_version_string}"
-        )
-
         visualize.save_figure(fig_out, output_path / plot_file_name, dpi=400)
         plt.close()
 

@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.reporting import figure_cache
+from simtools.visualization import visualize
 
 
 @dataclass
@@ -40,5 +41,5 @@ def test_figure_cache_key_tracks_data_configuration_and_rendering_inputs(
     kwargs["context"] = run_context.replace(args={"figure_dpi": 240})
     assert figure_cache.figure_cache_key(**kwargs) != initial_key
 
-    monkeypatch.setattr(figure_cache, "BACKEND_NAME", "svg")
+    monkeypatch.setattr(visualize, "BACKEND_NAME", "svg")
     assert figure_cache.figure_cache_key(**kwargs) != initial_key
