@@ -103,7 +103,7 @@ jobs:
             echo "${AUTOCONF_SHA256}  autoconf.tar.gz" | sha256sum --check --strict
           fi
       - name: upload-auxiliary-files
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: upload-auxiliary-files
           path: |
@@ -202,7 +202,7 @@ jobs:
           sha256sum corsika7-source.tar.gz > corsika7-source.tar.gz.sha256
 
       - name: Upload CORSIKA source
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: corsika7-source-${{ matrix.corsika_build_id }}
           path: |

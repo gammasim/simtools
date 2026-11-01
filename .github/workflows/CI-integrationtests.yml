@@ -234,7 +234,7 @@ jobs:
           key: corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}
 
       - name: Upload CORSIKA interaction tables
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: corsika-interaction-tables
           path: ${{ env.IT_NAME }}
@@ -360,7 +360,7 @@ jobs:
 
       - name: Upload simulation models repository
         # if: github.event_name != 'schedule'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: simulation-models-repo
           path: simulation-models.git.zip
@@ -410,7 +410,7 @@ jobs:
           sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.resource_version }}
 
       - name: Upload test resources
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: simtools-test-resources
           path: simtools-tests
@@ -549,7 +549,7 @@ jobs:
 
       - name: Upload integration resource benchmark
         if: ${{ always() && inputs.benchmark }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: resource-benchmark-${{ matrix.model_source }}-${{ matrix.model_version }}
           path: resource-benchmark-${{ matrix.model_source }}-${{ matrix.model_version }}

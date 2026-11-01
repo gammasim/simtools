@@ -92,7 +92,7 @@ jobs:
             echo "${GSL_SHA256}  gsl.tar.gz" | sha256sum --check --strict
           fi
       - name: upload-auxiliary-files
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: upload-auxiliary-files
           path: |
@@ -176,7 +176,7 @@ jobs:
           sha256sum simtel-source.tar.gz > simtel-source.tar.gz.sha256
 
       - name: Upload sim_telarray source
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: simtel-source-${{ matrix.simtel_build_id }}-${{ matrix.hessio_build_id }}-${{ matrix.stdtools_build_id }}
           path: |
