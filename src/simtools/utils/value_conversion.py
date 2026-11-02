@@ -728,3 +728,8 @@ def replace_placeholders_recursively(data, replacements):
         for placeholder, replacement in replacements.items():
             data = data.replace(placeholder, replacement)
     return data
+
+
+def normalize_model_enum(value):
+    """Return a case-insensitive key for a string model value, or None otherwise."""
+    return value.casefold() if isinstance(value, str) else None
