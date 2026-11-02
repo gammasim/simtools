@@ -41,7 +41,8 @@ def test_invalid_waveform(wave, dt):
 
 
 @pytest.mark.parametrize(
-    ("fraction", "threshold"), [(0, None), (1, None), (np.nan, None), (0.5, -1)]
+    ("fraction", "threshold"),
+    [(-1, None), (0, None), (1, None), (2, None), (np.nan, None), (0.5, -1)],
 )
 def test_invalid_threshold(fraction, threshold):
     with pytest.raises(ValueError, match=r"threshold|fraction"):
