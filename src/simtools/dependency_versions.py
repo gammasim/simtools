@@ -115,25 +115,7 @@ def _corsika_reference(component):
 
 
 def corsika_source_tag_for_build_id(build_id, catalog=None):
-    """Return the CORSIKA source tag matching a legacy build identifier.
-
-    Parameters
-    ----------
-    build_id : str or int
-        Legacy CORSIKA build identifier, for example ``78010``.
-    catalog : dict, optional
-        Validated dependency catalog. The installed catalog is loaded when omitted.
-
-    Returns
-    -------
-    str or None
-        Matching CORSIKA source tag, or ``None`` when the catalog has no match.
-
-    Raises
-    ------
-    ValueError
-        If more than one catalog entry matches the build identifier.
-    """
+    """Return the CORSIKA source tag matching a legacy build identifier."""
     if catalog is None:
         catalog = load_dependency_catalog()
     matches = [

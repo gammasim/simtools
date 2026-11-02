@@ -12,7 +12,7 @@ import simtools.configuration.argument_helpers as helpers
 import simtools.version
 from simtools import constants
 from simtools.configuration import defaults
-from simtools.corsika.primary_particle import PrimaryParticle
+from simtools.utils.primary_particle import PrimaryParticle
 
 
 @dataclass(frozen=True, init=False)
@@ -127,7 +127,7 @@ SIM_TELARRAY_PATH = _argument(
 CORSIKA_PATH = _argument(
     "corsika_path",
     "paths",
-    help=f"CORSIKA installation directory (default: {defaults.CORSIKA_PATH}).",
+    help=f"CORSIKA installation directory (default: {constants.CORSIKA_PATH}).",
     type=Path,
 )
 

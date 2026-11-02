@@ -58,7 +58,7 @@ RUN SIMTOOLS_PYTHON="python${PYTHON_VERSION}" \
       bash /workdir/install_python_dependencies.sh --no-cache-dir --upgrade packaging pyyaml && \
     python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \
       --pyproject /workdir/pyproject.toml --format python-requirements \
-      --extras dev doc tests obdeect > /workdir/requirements-dev.txt && \
+      --extras dev doc tests > /workdir/requirements-dev.txt && \
     python"${PYTHON_VERSION}" -m venv env && \
     . env/bin/activate && \
     bash /workdir/install_python_dependencies.sh \

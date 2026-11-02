@@ -10,12 +10,13 @@ from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
+from simtools.model.model_utils import export_model_files
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.simulation.configuration import export_model_files, get_model_writer
+from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 
 _CORSIKA_FILE = "corsika_file"

@@ -7,13 +7,13 @@ import pytest
 from astropy.table import Table
 
 from simtools.io import table_handler
-from simtools.production_configuration.trigger_histograms import TRIGGER_HISTOGRAM_DENSE_GROUP
-from simtools.sim_events import validate_run_outputs
-from simtools.sim_events.validate_run_outputs import (
+from simtools.sim_events import hdf5_output_validation as validate_run_outputs
+from simtools.sim_events.hdf5_output_validation import (
     validate_reduced_event_data_file,
     validate_sim_events,
     validate_trigger_histogram_file,
 )
+from simtools.sim_events.trigger_histogram_format import TRIGGER_HISTOGRAM_DENSE_GROUP
 
 
 def _reduced_event_tables(trigger_shower_id=1, duplicate_shower=False):
@@ -41,26 +41,26 @@ def _reduced_event_tables(trigger_shower_id=1, duplicate_shower=False):
 def _mock_reduced_event_dependencies(mocker, tables):
     """Mock file access and table-schema details for reduced-event validator tests."""
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_table_file_type",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_table_file_type",
         return_value="HDF5",
     )
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_table_list",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_table_list",
         return_value={
             name: [name]
             for name in ("SHOWERS", "TRIGGERS", "FILE_INFO", "METADATA", "SIMULATION_METADATA")
         },
     )
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_tables", return_value=tables
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_tables", return_value=tables
     )
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_metadata_document",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_metadata_document",
         return_value={},
     )
-    mocker.patch("simtools.sim_events.validate_run_outputs.schema.validate_dict_using_schema")
-    mocker.patch("simtools.sim_events.validate_run_outputs.validate_simulation_metadata")
-    return mocker.patch("simtools.sim_events.validate_run_outputs.validate_data.DataValidator")
+    mocker.patch("simtools.sim_events.hdf5_output_validation.schema.validate_dict_using_schema")
+    mocker.patch("simtools.sim_events.hdf5_output_validation.validate_simulation_metadata")
+    return mocker.patch("simtools.sim_events.hdf5_output_validation.validate_data.DataValidator")
 
 
 def test_validate_reduced_event_data_file_validates_all_tables(mocker):
@@ -80,7 +80,7 @@ def test_validate_reduced_event_data_file_rejects_unmatched_trigger(mocker):
 def test_validate_reduced_event_data_file_rejects_missing_entries(mocker):
     _mock_reduced_event_dependencies(mocker, _reduced_event_tables())
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_table_list",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_table_list",
         return_value={"SHOWERS": ["SHOWERS"], "TRIGGERS": [], "FILE_INFO": ["FILE_INFO"]},
     )
 
@@ -90,7 +90,7 @@ def test_validate_reduced_event_data_file_rejects_missing_entries(mocker):
 
 def test_validate_reduced_event_data_file_rejects_non_hdf5_input(mocker):
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_table_file_type",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_table_file_type",
         return_value="FITS",
     )
 
@@ -208,7 +208,7 @@ def test_validate_trigger_histogram_file_validates_references_and_payload(
 ):
     output_file = Path(tmp_test_directory) / "trigger_histograms.hdf5"
     _write_trigger_histogram_file(output_file)
-    mocker.patch("simtools.sim_events.validate_run_outputs.schema.validate_dict_using_schema")
+    mocker.patch("simtools.sim_events.hdf5_output_validation.schema.validate_dict_using_schema")
 
     assert validate_trigger_histogram_file(output_file) is True
 
@@ -218,7 +218,7 @@ def test_validate_trigger_histogram_file_rejects_unknown_table_reference(
 ):
     output_file = Path(tmp_test_directory) / "trigger_histograms.hdf5"
     _write_trigger_histogram_file(output_file, topology_reference_id="missing")
-    mocker.patch("simtools.sim_events.validate_run_outputs.schema.validate_dict_using_schema")
+    mocker.patch("simtools.sim_events.hdf5_output_validation.schema.validate_dict_using_schema")
 
     with pytest.raises(
         ValueError,
@@ -229,7 +229,7 @@ def test_validate_trigger_histogram_file_rejects_unknown_table_reference(
 
 def test_validate_trigger_histogram_file_rejects_non_hdf5_input(mocker):
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_table_file_type",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_table_file_type",
         return_value="FITS",
     )
 
@@ -239,11 +239,11 @@ def test_validate_trigger_histogram_file_rejects_non_hdf5_input(mocker):
 
 def test_validate_trigger_histogram_file_rejects_missing_entries(mocker):
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_table_file_type",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_table_file_type",
         return_value="HDF5",
     )
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_table_list",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_table_list",
         return_value={
             "TRIGGER_REFERENCE_METADATA": [],
             "TRIGGER_REFERENCE_BINS": ["TRIGGER_REFERENCE_BINS"],
@@ -351,7 +351,7 @@ def test_validate_trigger_histogram_file_rejects_missing_table_column(tmp_test_d
         file_type="HDF5",
         metadata_documents={"METADATA": {"cta": {}}},
     )
-    mocker.patch("simtools.sim_events.validate_run_outputs.schema.validate_dict_using_schema")
+    mocker.patch("simtools.sim_events.hdf5_output_validation.schema.validate_dict_using_schema")
 
     with pytest.raises(KeyError, match="Missing required column production_index"):
         validate_trigger_histogram_file(output_file)
@@ -363,7 +363,7 @@ def test_validate_trigger_histogram_file_rejects_malformed_edges(
 ):
     output_file = Path(tmp_test_directory) / f"trigger_histograms_{malformation}.hdf5"
     _write_trigger_histogram_file(output_file)
-    mocker.patch("simtools.sim_events.validate_run_outputs.schema.validate_dict_using_schema")
+    mocker.patch("simtools.sim_events.hdf5_output_validation.schema.validate_dict_using_schema")
 
     import h5py
 
@@ -390,7 +390,7 @@ def test_validate_sim_events_calls_validate_sim_events(tmp_path, monkeypatch):
 
     mock_tables = {"SHOWERS": [1, 2, 3, 4]}
     monkeypatch.setattr(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_tables",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_tables",
         lambda *args, **kwargs: mock_tables,
     )
 
@@ -411,7 +411,7 @@ def test_validate_event_numbers_single_file_mismatch(tmp_path, monkeypatch):
 
     mock_tables = {"SHOWERS": [1, 2, 3]}
     monkeypatch.setattr(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_tables",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_tables",
         lambda *args, **kwargs: mock_tables,
     )
 
@@ -425,7 +425,7 @@ def test_validate_event_numbers_missing_showers_table(tmp_path, monkeypatch):
 
     mock_tables = {"OTHER_TABLE": [1, 2, 3]}
     monkeypatch.setattr(
-        "simtools.sim_events.validate_run_outputs.table_handler.read_tables",
+        "simtools.sim_events.hdf5_output_validation.table_handler.read_tables",
         lambda *args, **kwargs: mock_tables,
     )
 

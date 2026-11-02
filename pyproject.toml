@@ -29,7 +29,6 @@ dynamic = [
 dependencies = [
   "adjusttext",
   "astropy",
-  "boost-histogram",
   "ctao-datamodel>=1.4,<2",
   "ctao-dpps-cosmic-ray-spectra",
   "eventio",
@@ -37,6 +36,7 @@ dependencies = [
   "jsonschema",
   "matplotlib",
   "numpy",
+  "obdeect>=0.6",
   "packaging",
   "particle",
   "pillow",
@@ -46,6 +46,7 @@ dependencies = [
   "pyyaml",
   "scipy",
 ]
+optional-dependencies.benchmark = [ "psutil" ]
 optional-dependencies.dev = [
   "flake8",
   "flake8-cognitive-complexity",
@@ -53,7 +54,6 @@ optional-dependencies.dev = [
   "pre-commit",
   "pylint",
   "ruff",
-  "vulture",
 ]
 optional-dependencies.doc = [
   "myst-parser",
@@ -66,18 +66,12 @@ optional-dependencies.doc = [
 optional-dependencies.htcondor = [
   "htcondor>=25.0.7; platform_system=='Linux'",
 ]
-optional-dependencies.obdeect = [
-  "obdeect>=0.6",
-]
 optional-dependencies.tests = [
-  "psutil",
   "pytest",
   "pytest-cov",
   "pytest-mock",
-  "pytest-profiling",
   "pytest-random-order",
   "pytest-repeat",
-  "pytest-requirements",
   "pytest-retry",
   "pytest-xdist",
 ]
@@ -321,91 +315,6 @@ main.min-public-methods = 1
 [tool.codespell]
 ignore-words-list = "chec,arrang,livetime,astroid"
 
-[tool.vulture]
-# Names kept deliberately although vulture reports them as unused (dynamic use,
-# test infrastructure, data fields read by callers).
-paths = [ "src/simtools" ]
-ignore_names = [
-  "_check_run_result",
-  "_export_file_parameter_data",
-  "_fill_activity_meta",
-  "_fill_contact_meta",
-  "_fill_context_meta",
-  "_fill_instrument_meta",
-  "_fill_process_meta",
-  "_fill_product_meta",
-  "_interpolate_corsika_limits",
-  "_parse_line",
-  "_plot_xy_heatmap",
-  "_read_query_parameter",
-  "_remove_line_feed",
-  "add_mirrored_options",
-  "area_weight",
-  "AtmosphericTransmissionWriter",
-  "auto_download",
-  "cache_hits",
-  "cache_misses",
-  "check_array_element",
-  "check_array_triggers_name",
-  "check_astropy_unit",
-  "check_astropy_unit_of_length",
-  "check_astropy_unit_of_time",
-  "check_common_particle_name",
-  "create_detailed_parameter_plot",
-  "curved_atmosphere_min_zenith_angle",
-  "EventReader",
-  "ExecutionBackend",
-  "final_percentage_diff",
-  "from_memory",
-  "get_dependency_manifest_digest",
-  "get_list_of_test_configurations",
-  "get_mirrored_option",
-  "GITHUB_BLOB_BASE",
-  "HESSHandler",
-  "HexEdgePixelHandler",
-  "HexOffPixelHandler",
-  # Legend handlers are looked up by name (getattr) in camera_plot_utils and by telescope type.
-  "HexPixelHandler",
-  "iers_degraded_accuracy",
-  "LightSourceRayTracingBackend",
-  "LSTHandler",
-  "MAGICHandler",
-  "ModelStorage",
-  "MSTHandler",
-  "number_of_telescopes",
-  "ObdeectBackend",
-  "peak_timing",
-  "read_legacy_lst_single_pe",
-  "register_stage",
-  "RpolMatrixWriter",
-  "SCTHandler",
-  "SimtelBackend",
-  "simulated_angular_distances",
-  "simulated_core_distances",
-  "simulated_energies",
-  "skip_multiple_version_test",
-  "SquareEdgePixelHandler",
-  "SquareOffPixelHandler",
-  "SquarePixelHandler",
-  "SSTHandler",
-  "TEST_RESOURCES_DOWNLOADED",
-  "TEST_RESOURCES_GENERATED",
-  "TEST_RESOURCES_STATIC",
-  "triggered_angular_distances",
-  "triggered_core_distances",
-  "triggered_energies",
-  "use_network",
-  "validate_application_output",
-  "validate_data_type",
-  "validate_release_tag",
-  "validate_trigger_histograms_file",
-  "VERITASHandler",
-  "write_config_file",
-  "X",
-  "Y",
-]
-min_confidence = 60
-
 [tool.pytest]
 ini_options.minversion = "6.0"
 ini_options.testpaths = "tests/unit_tests/"
@@ -422,8 +331,6 @@ ini_options.addopts = [
   "--cov-report=json",
   "--cov-report=term",
   "--import-mode=importlib",
-  "-p",
-  "pytest_requirements",
   "-rsxXf",
 ]
 ini_options.markers = [
@@ -509,39 +416,6 @@ layers = [
   "simtools.histogram",
   "simtools.utils",
 ]
-ignore_imports = [
-  "simtools.corsika.build_options -> simtools.configuration.defaults",
-  "simtools.data_model.format_checkers -> simtools.corsika.primary_particle",
-  "simtools.data_model.setting_workflow -> simtools.runners.simtools_runner",
-  "simtools.model.array_model -> simtools.simulation.configuration",
-  "simtools.model.model_utils -> simtools.simulation.configuration",
-  "simtools.model.site_model -> simtools.corsika.corsika_config",
-  "simtools.model.site_model -> simtools.simulation.configuration",
-  "simtools.model.telescope_model -> simtools.simulation.configuration",
-  "simtools.production_configuration.grid -> simtools.configuration.argument_helpers",
-  "simtools.production_configuration.grid -> simtools.configuration.defaults",
-  "simtools.sim_events.formats.eventio_reader -> simtools.corsika.primary_particle",
-  "simtools.sim_events.formats.eventio_reader -> simtools.simtel.simtel_io_metadata",
-  "simtools.sim_events.validate_run_outputs -> simtools.job_execution.log_inspector",
-  "simtools.sim_events.validate_run_outputs -> simtools.model.mirrors",
-  "simtools.sim_events.validate_run_outputs -> simtools.model_repository.asset_names",
-  "simtools.sim_events.validate_run_outputs -> simtools.production_configuration.trigger_histograms",
-  "simtools.sim_events.validate_run_outputs -> simtools.simtel.sim_telarray_metadata",
-  "simtools.sim_events.validate_run_outputs -> simtools.simtel.simtel_io_metadata",
-  "simtools.production_configuration.comparison -> simtools.camera.trace_analysis",
-  "simtools.production_configuration.comparison -> simtools.production_configuration.trigger_histograms",
-  "simtools.production_configuration.comparison -> simtools.simtel.simtel_event_reader",
-  "simtools.production_configuration.comparison -> simtools.simtel.simtel_io_metadata",
-  "simtools.sim_events.reader -> simtools.corsika.primary_particle",
-  "simtools.simtel.simulator_array -> simtools.runners.simtel_runner",
-  "simtools.simtel.simulator_light_emission -> simtools.runners.runner_services",
-  "simtools.simtel.simulator_light_emission -> simtools.runners.simtel_runner",
-  "simtools.simtel.simulator_ray_tracing -> simtools.runners.simtel_runner",
-  "simtools.visualization.plot_production_grid -> simtools.production_configuration.jobs_io",
-  "simtools.visualization.plot_simtel_events -> simtools.camera.trace_analysis",
-  "simtools.visualization.plot_simtel_events -> simtools.simtel.simtel_event_reader",
-  "simtools.visualization.plot_simtel_events -> simtools.simtel.simtel_io_metadata",
-]
 
 [[tool.importlinter.contracts]]
 name = "visualization receives model and engine data"
@@ -549,7 +423,3 @@ type = "forbidden"
 source_modules = [ "simtools.visualization" ]
 forbidden_modules = [ "simtools.ray_tracing", "simtools.camera", "simtools.model" ]
 allow_indirect_imports = true
-ignore_imports = [
-  "simtools.visualization.plot_simtel_events -> simtools.camera.trace_analysis",
-  "simtools.visualization.plot_simtel_events -> simtools.model.camera",
-]

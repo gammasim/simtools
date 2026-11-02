@@ -5,8 +5,8 @@ from dataclasses import dataclass
 import astropy.units as u
 import numpy as np
 
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.sim_events.formats.readers import get_reader
+from simtools.utils.primary_particle import PrimaryParticle
 
 CALIBRATION_RUN_MODES = frozenset(
     {"pedestals", "pedestals_dark", "pedestals_nsb_only", "direct_injection"}

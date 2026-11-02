@@ -11,6 +11,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from simtools import constants
 from simtools.application import model_reader as application_model_reader
 from simtools.configuration import defaults
 from simtools.constants import RAY_TRACING_BACKENDS
@@ -105,7 +106,7 @@ class SimulationSoftware:
                 default="sim_telarray",
             ),
             corsika_root=_config_value(
-                args, "corsika_path", "SIMTOOLS_CORSIKA_PATH", default=defaults.CORSIKA_PATH
+                args, "corsika_path", "SIMTOOLS_CORSIKA_PATH", default=constants.CORSIKA_PATH
             ),
             corsika_interaction_table_root=_config_value(
                 args,

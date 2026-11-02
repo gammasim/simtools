@@ -10,19 +10,21 @@ import numpy as np
 
 from simtools.configuration import defaults
 from simtools.context import RunContext
+from simtools.corsika import output_validation as corsika_output_validation
 from simtools.io import table_handler
 from simtools.io.file_type import product_value
-from simtools.job_execution import execution
+from simtools.job_execution import execution, runner_services
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
-from simtools.runners import runner_services
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.stages import SimulationChain, StageInputs
-from simtools.sim_events import file_info, validate_run_outputs, writer
+from simtools.sim_events import file_info, writer
+from simtools.sim_events.hdf5_output_validation import validate_sim_events
 from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
-from simtools.simulation.configuration import get_shower_configuration
-from simtools.simulation.parameters import SimulationParameters
+from simtools.sim_events.simulation_parameters import SimulationParameters
+from simtools.simtel import output_validation as simtel_output_validation
+from simtools.simulation.configuration import get_model_writer, get_shower_configuration
 from simtools.utils import general, value_conversion
 
 _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
@@ -194,7 +196,9 @@ class Simulator:
                     self.context.args, self.run_number, model.site_model
                 )
             self.simulation_parameters.append(parameters)
-            model.initialize_seeds(parameters.zenith_angle, parameters.azimuth_angle)
+            get_model_writer(model, context=self.context).initialize_seeds(
+                parameters.zenith_angle, parameters.azimuth_angle
+            )
 
             array_model.append(model)
             corsika_configurations.append(cfg)
@@ -663,7 +667,7 @@ class Simulator:
         )
 
         if self.chain.has("sim_telarray"):
-            validate_run_outputs.validate_sim_telarray(
+            simtel_output_validation.validate_sim_telarray(
                 data_files=self.get_files(file_type="sim_telarray_output"),
                 log_files=self.get_files(file_type="sim_telarray_log"),
                 array_models=self.array_models,
@@ -673,7 +677,7 @@ class Simulator:
                 allow_for_changes=["nsb_scaling_factor", "stars"],
             )
         if self.chain.has("corsika"):
-            validate_run_outputs.validate_corsika_output(
+            corsika_output_validation.validate_corsika_output(
                 data_files=self.get_files(file_type="corsika_output")
                 if self.chain.stages == ("corsika",) or self.context.args.get("save_corsika_output")
                 else None,
@@ -683,7 +687,7 @@ class Simulator:
             )
 
         if self.context.args.get("reduced_event_lists"):
-            validate_run_outputs.validate_sim_events(
+            validate_sim_events(
                 data_files=self.get_files(file_type="sim_telarray_event_data"),
                 expected_mc_events=expected_mc_events,
             )

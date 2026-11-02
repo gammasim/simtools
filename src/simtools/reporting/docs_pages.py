@@ -92,8 +92,6 @@ def read_version_switcher(switcher_file):
         errors.append("Exactly one entry must be marked as 'preferred'.")
     if len(set(versions)) != len(versions):
         errors.append("Duplicate versions listed.")
-    if not versions:
-        errors.append("No released version listed.")
     if errors:
         raise ValueError(f"Invalid version switcher file {switcher_file}: " + " ".join(errors))
     return sorted(versions, key=version_key, reverse=True)

@@ -22,6 +22,7 @@ from simtools.model.model_utils import compute_telescope_transmission
 from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.backends import interface
 from simtools.ray_tracing.backends.interface import StarImageRequest
+from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names, random
 from simtools.visualization import visualize
 
@@ -291,7 +292,7 @@ class RayTracing:
         changes = {}
         if self.single_mirror_mode and for_simulation:
             changes = parameter_changes.single_mirror(
-                self.telescope_model.get_single_mirror_list_file(
+                get_model_writer(self.telescope_model).get_single_mirror_list_file(
                     mirror_number, self.use_random_focal_length
                 ),
                 self.telescope_model.get_parameter_value("mirror_focal_length"),

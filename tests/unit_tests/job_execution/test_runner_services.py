@@ -6,8 +6,8 @@ import pathlib
 
 import pytest
 
-import simtools.runners.runner_services as runner_services
-from simtools.corsika.primary_particle import PrimaryParticle
+import simtools.job_execution.runner_services as runner_services
+from simtools.utils.primary_particle import PrimaryParticle
 
 logger = logging.getLogger()
 

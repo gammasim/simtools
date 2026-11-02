@@ -1,6 +1,6 @@
 import pytest
 
-from simtools.sim_events.validate_run_outputs import (
+from simtools.corsika.output_validation import (
     validate_corsika_event_numbers,
     validate_corsika_logs,
     validate_corsika_output,
@@ -12,11 +12,9 @@ def test_validate_corsika_output_with_valid_files(tmp_test_directory, mocker):
     log_file = tmp_test_directory / "corsika.log"
 
     mock_validate_events = mocker.patch(
-        "simtools.sim_events.validate_run_outputs.validate_corsika_event_numbers"
+        "simtools.corsika.output_validation.validate_corsika_event_numbers"
     )
-    mock_validate_logs = mocker.patch(
-        "simtools.sim_events.validate_run_outputs.validate_corsika_logs"
-    )
+    mock_validate_logs = mocker.patch("simtools.corsika.output_validation.validate_corsika_logs")
 
     validate_corsika_output([data_file], [log_file], expected_shower_events=1000)
 
@@ -36,7 +34,7 @@ def test_validate_corsika_event_numbers_accepts_counts_within_tolerance(
     data_file = tmp_test_directory / "corsika.data"
 
     mock_get_events = mocker.patch(
-        "simtools.sim_events.validate_run_outputs.file_info.get_simulated_events",
+        "simtools.corsika.output_validation.file_info.get_simulated_events",
         return_value=(shower_events, 100),
     )
 
@@ -50,7 +48,7 @@ def test_validate_corsika_event_numbers_with_mismatch_raises_error(tmp_test_dire
     data_file = tmp_test_directory / "corsika.data"
 
     mocker.patch(
-        "simtools.sim_events.validate_run_outputs.file_info.get_simulated_events",
+        "simtools.corsika.output_validation.file_info.get_simulated_events",
         return_value=(900, 100),
     )
 
@@ -61,7 +59,7 @@ def test_validate_corsika_event_numbers_with_mismatch_raises_error(tmp_test_dire
 def test_validate_corsika_logs_without_expected_patterns_raises_error(tmp_path, mocker):
     log_file = tmp_path / "corsika.log"
 
-    mocker.patch("simtools.sim_events.validate_run_outputs.check_plain_logs", return_value=False)
+    mocker.patch("simtools.corsika.output_validation.check_plain_logs", return_value=False)
 
     with pytest.raises(ValueError, match="do not contain expected patterns"):
         validate_corsika_logs([log_file], expected_shower_events=1000)
@@ -72,7 +70,7 @@ def test_validate_corsika_event_numbers_multiple_files(tmp_path, mocker):
     data_file2 = tmp_path / "corsika2.data"
 
     mock_get_events = mocker.patch(
-        "simtools.sim_events.validate_run_outputs.file_info.get_simulated_events",
+        "simtools.corsika.output_validation.file_info.get_simulated_events",
         side_effect=[(500, 50), (500, 50)],
     )
 
@@ -84,7 +82,7 @@ def test_validate_corsika_event_numbers_multiple_files(tmp_path, mocker):
 def test_validate_corsika_event_numbers_skips_check_without_expected_count(tmp_path, mocker):
     data_file = tmp_path / "corsika.data"
     mock_get_events = mocker.patch(
-        "simtools.sim_events.validate_run_outputs.file_info.get_simulated_events"
+        "simtools.corsika.output_validation.file_info.get_simulated_events"
     )
 
     validate_corsika_event_numbers([data_file], expected_shower_events=None)
@@ -96,7 +94,7 @@ def test_validate_corsika_logs_with_curved_atmosphere(tmp_path, mocker):
     log_file = tmp_path / "corsika.log"
 
     mock_check = mocker.patch(
-        "simtools.sim_events.validate_run_outputs.check_plain_logs", return_value=True
+        "simtools.corsika.output_validation.check_plain_logs", return_value=True
     )
 
     validate_corsika_logs([log_file], expected_shower_events=500, curved_atmo=True)
@@ -109,7 +107,7 @@ def test_validate_corsika_logs_without_expected_events_specified(tmp_path, mocke
     log_file = tmp_path / "corsika.log"
 
     mock_check = mocker.patch(
-        "simtools.sim_events.validate_run_outputs.check_plain_logs", return_value=True
+        "simtools.corsika.output_validation.check_plain_logs", return_value=True
     )
 
     validate_corsika_logs([log_file], expected_shower_events=None, curved_atmo=False)

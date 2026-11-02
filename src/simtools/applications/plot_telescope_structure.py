@@ -4,7 +4,7 @@
 
 The nominal geometry comes from the model parameters, without random alignment
 errors. With ``--shadowing``, the telescope structure is coloured by the light each
-element stops on its own; this needs the optional obdeect package.
+element stops on its own; this needs the obdeect package.
 """
 
 from pathlib import Path
@@ -13,9 +13,9 @@ from tempfile import TemporaryDirectory
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.model import telescope_geometry
+from simtools.model.model_utils import export_model_files
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing.telescope_shadowing import shadowing_shares
-from simtools.simulation.configuration import export_model_files
 from simtools.visualization import plot_telescope_structure as structure
 
 _ARGUMENTS = (

@@ -9,7 +9,6 @@ from astropy.table import Table
 
 from simtools.visualization.plot_production_grid import (
     DEFAULT_OUTPUT_FILE_STEM,
-    PLOT_VALUE_KEYS,
     ProductionGridPlotter,
 )
 
@@ -52,6 +51,16 @@ def _create_plotter(grid_file, output_path):
     return ProductionGridPlotter(
         grid_points_file=grid_file,
         output_path=output_path,
+        column_units={
+            "azimuth_angle": "deg",
+            "zenith_angle": "deg",
+            "ha": "deg",
+            "dec": "deg",
+            "energy_min": "GeV",
+            "energy_max": "GeV",
+            "core_scatter_max": "m",
+            "view_cone_max": "deg",
+        },
     )
 
 
@@ -303,7 +312,7 @@ def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
 
     plotter.plot_limit_projections()
 
-    for value_key in PLOT_VALUE_KEYS:
+    for value_key in plotter.plot_value_keys:
         assert (output_path / f"production_grid_altaz_{value_key}.png").exists()
         assert (output_path / f"production_grid_zenith_profile_{value_key}.png").exists()
 

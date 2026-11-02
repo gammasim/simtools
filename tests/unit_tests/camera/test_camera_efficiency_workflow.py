@@ -8,9 +8,24 @@ from simtools.camera import camera_efficiency_workflow as workflow
 _SUMMARY_FILE_TYPE = "telescope_throughput_summary"
 
 
+def _fake_model(output):
+    """Model stand-in with the attributes used when exporting its model files."""
+    exports = []
+    reader = SimpleNamespace(
+        export_model_files=lambda parameters, dest: exports.append(dest),
+    )
+    return SimpleNamespace(
+        model_reader=reader,
+        parameters={},
+        config_file_directory=output,
+        model_files_exported=False,
+        exports=exports,
+    )
+
+
 def test_run_camera_efficiency_reuses_models_and_exports_products(tmp_test_directory, monkeypatch):
     output = Path(tmp_test_directory)
-    model = object()
+    model = _fake_model(output)
     calls = []
     file_types = []
 
@@ -45,7 +60,7 @@ def test_run_camera_efficiency_reuses_models_and_exports_products(tmp_test_direc
     monkeypatch.setattr(
         workflow,
         "initialize_simulation_models",
-        lambda **kwargs: (model, object(), None),
+        lambda **kwargs: (model, _fake_model(output), None),
     )
 
     def generate_file_name(**kwargs):
@@ -77,3 +92,4 @@ def test_run_camera_efficiency_reuses_models_and_exports_products(tmp_test_direc
     assert ("nsb",) in calls
     assert ("muon",) in calls
     assert all(call[-1] is model for call in calls if call[0] == "init")
+    assert model.exports == [output]

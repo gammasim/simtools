@@ -51,3 +51,10 @@ etc.) are required inputs.
 .. automodule:: simtools.camera.waveform_metrics
    :members:
 ```
+
+## event_images
+
+```{eval-rst}
+.. automodule:: simtools.camera.event_images
+   :members:
+```

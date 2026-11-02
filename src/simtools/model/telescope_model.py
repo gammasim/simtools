@@ -10,7 +10,16 @@ from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.model_repository.asset_names import get_simtel_table_file_name
-from simtools.simulation.configuration import get_model_writer
+from simtools.utils.value_conversion import normalize_model_enum
+
+
+def trigger_threshold_parameter(trigger):
+    """Return the threshold parameter for a model trigger type, or None if unknown."""
+    return {
+        "analogsum": "asum_threshold",
+        "digitalsum": "dsum_threshold",
+        "majority": "discriminator_threshold",
+    }.get(normalize_model_enum(trigger))
 
 
 class TelescopeModel(ModelParameter):
@@ -80,43 +89,6 @@ class TelescopeModel(ModelParameter):
         if self._camera is None:
             self._load_camera()
         return self._camera
-
-    def export_single_mirror_list_file(self, mirror_number: int, set_focal_length_to_zero: bool):
-        """
-        Export a mirror list file with a single mirror in it.
-
-        Parameters
-        ----------
-        mirror_number: int
-            Number index of the mirror.
-        set_focal_length_to_zero: bool
-            Set the focal length to zero if True.
-        """
-        return get_model_writer(self, context=self.context).export_single_mirror_list_file(
-            mirror_number=mirror_number, set_focal_length_to_zero=set_focal_length_to_zero
-        )
-
-    def get_single_mirror_list_file(
-        self, mirror_number: int, set_focal_length_to_zero: bool = False
-    ):
-        """
-        Get the path to the single mirror list file.
-
-        Parameters
-        ----------
-        mirror_number: int
-            Mirror number.
-        set_focal_length_to_zero: bool
-            Flag to set the focal length to zero.
-
-        Returns
-        -------
-        Path
-            Path of the single mirror list file.
-        """
-        return get_model_writer(self, context=self.context).get_single_mirror_list_file(
-            mirror_number, set_focal_length_to_zero
-        )
 
     def _load_mirrors(self):
         """Load the attribute mirrors by creating a Mirrors object with the mirror list file."""

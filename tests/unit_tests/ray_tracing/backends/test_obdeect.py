@@ -2,13 +2,9 @@
 
 import math
 
+import astropy.units as u
 import numpy as np
 import pytest
-
-pytest.importorskip("obdeect")
-
-# pylint: disable-next=wrong-import-position
-import astropy.units as u
 from astropy.constants import c as speed_of_light
 from astropy.table import QTable
 
@@ -20,6 +16,7 @@ from simtools.ray_tracing.backends.obdeect import (
     _at_plane,
     star_direction,
 )
+from simtools.simulation.configuration import get_model_writer
 
 
 def test_star_direction():
@@ -83,7 +80,10 @@ def toy_telescope(tmp_test_directory, mocker):
     telescope.name = "TOY-01"
     telescope.model_files_exported = False
     telescope.get_parameter_value.side_effect = lambda name: parameters[name]["value"]
-    telescope.get_single_mirror_list_file.return_value = tmp_test_directory / "single_mirror.dat"
+    # Writer cached on the model (as get_model_writer would store it) providing the single-mirror file
+    writer = mocker.Mock()
+    writer.get_single_mirror_list_file.return_value = tmp_test_directory / "single_mirror.dat"
+    telescope.configuration_writers = {"sim_telarray": writer}
     return telescope
 
 
@@ -136,7 +136,7 @@ def test_perfect_and_single_mirror(toy_telescope, has_structure):
             _STRUCTURE_FILE, file=True
         )
     single_mirror = perfect | parameter_changes.single_mirror(
-        toy_telescope.get_single_mirror_list_file(0), 800.0, 1600.0
+        get_model_writer(toy_telescope).get_single_mirror_list_file(0), 800.0, 1600.0
     )
     optics = tracer.optical_model(20.0, 1, single_mirror).document["optics"]
     assert len(optics["primary"]["facets"]) == 1
