@@ -155,7 +155,8 @@ SIMTOOLS_USER_NAME='Max Mustermann'
 SIMTOOLS_USER_ORCID='0000-1234-5678-0000'
 ```
 
-In case you want to point to a local checkout of the simulation-model repository, use the following environment variable:
+If you want to point to a local checkout, use the following environment variable instead of the Git settings above;
+filesystem and Git sources cannot be configured together:
 
 ```console
 # Path to a checked-out simulation-model repository
