@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import astropy.units as u
 import pytest
 
-from simtools.simulation.parameters import CALIBRATION_RUN_MODES, SimulationParameters
+from simtools.sim_events.simulation_parameters import CALIBRATION_RUN_MODES, SimulationParameters
 from simtools.utils.primary_particle import PrimaryParticle
 
 SHOWERS_PER_RUN = "showers_per_run"
@@ -79,7 +79,9 @@ def test_input_file_uses_selected_reader(height, cli_defaults, mocker):
         "observation_levels": [] if height is None else [height],
     }
     reader = SimpleNamespace(read_simulation_parameters=lambda: metadata.copy())
-    factory = mocker.patch("simtools.simulation.parameters.get_reader", return_value=reader)
+    factory = mocker.patch(
+        "simtools.sim_events.simulation_parameters.get_reader", return_value=reader
+    )
     site = mocker.Mock()
     site.get_parameter_value_with_unit.return_value = 2200 * u.m
     args = {

@@ -1,6 +1,7 @@
 """Simulation runner for array simulations."""
 
-from simtools.runners.simtel_runner import SimtelRunner
+from simtools.simtel.simtel_runner import SimtelRunner
+from simtools.simulation.configuration import get_model_writer
 
 
 class SimulatorArray(SimtelRunner):
@@ -124,7 +125,7 @@ class SimulatorArray(SimtelRunner):
         output_file = self.runner_service.get_file_name(
             file_type="sim_telarray_output", run_number=run_number
         )
-        self.array_model.export_config_files("sim_telarray")
+        get_model_writer(self.array_model, "sim_telarray").export_config_files()
 
         cmd = [
             str(self.context.software.sim_telarray_exe),

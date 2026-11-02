@@ -28,10 +28,10 @@ from simtools.production_configuration.trigger_histograms import (
     load_dense_histogram_payloads,
     validate_derived_products,
 )
-from simtools.simtel.simtel_event_reader import read_events_for_telescopes
-from simtools.simtel.simtel_io_metadata import (
+from simtools.sim_events.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
 )
+from simtools.simtel.simtel_event_reader import read_events_for_telescopes
 from simtools.utils.general import resolve_file_patterns
 from simtools.utils.value_conversion import ensure_string_lists
 from simtools.visualization import plot_production_comparison

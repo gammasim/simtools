@@ -3,6 +3,7 @@
 """Plot simulated events from sim_telarray files."""
 
 from simtools.application.definition import ApplicationDefinition
+from simtools.camera import event_images
 from simtools.configuration import arguments as cli
 from simtools.utils import value_conversion
 from simtools.visualization.plot_simtel_events import (
@@ -111,7 +112,27 @@ def main():
     app_context = APPLICATION.start()
 
     plots = value_conversion.ensure_list(app_context.args.get("plots"))
-    generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.paths)
+    prepared_events = event_images.prepare_event_images(
+        app_context.args.get("simtel_file"),
+        app_context.args.get("telescope"),
+        value_conversion.ensure_list(app_context.args.get("event_id")),
+        max_events=app_context.args.get("max_events"),
+    )
+    if (
+        app_context.args.get("pedestal_source", PEDESTAL_SOURCE_WAVEFORM)
+        == PEDESTAL_SOURCE_MONITORING
+    ):
+        prepared_events = event_images.apply_monitoring_pedestals(
+            prepared_events,
+            app_context.args.get("simtel_file"),
+            app_context.args.get("telescope"),
+        )
+    app_context.args["_prepared_events"] = prepared_events
+    generate_and_save_plots(
+        plots=plots,
+        args=app_context.args,
+        ioh=app_context.paths,
+    )
 
 
 if __name__ == "__main__":

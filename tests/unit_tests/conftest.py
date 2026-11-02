@@ -650,6 +650,8 @@ def corsika_config_mock_array_model(corsika_config_data, model_version, run_cont
     array_model.site_model = mock.MagicMock()
     array_model.site_model._parameters = {
         "geomag_rotation": -4.533,
+        "geomag_horizontal": 20.0,
+        "geomag_vertical": -23.0,
         "corsika_observation_level": 2200.0,
     }
     array_model.model_version = model_version
@@ -660,6 +662,21 @@ def corsika_config_mock_array_model(corsika_config_data, model_version, run_cont
 
     # Set the mock behavior
     array_model.site_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    def mock_get_parameter_value_with_unit(par_name):
+        if par_name == "corsika_observation_level":
+            return 2200.0 * u.m
+        # Other parameters use the mock's return_value, as set by individual tests
+        return mock.DEFAULT
+
+    array_model.site_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_parameter_value_with_unit
+    )
+    # Site model writer: supplies the atmospheric profile file name for the SITE PARAMETERS block
+    # and absorbs the atmospheric transmission export (no file I/O in these unit tests)
+    site_model_writer = mock.MagicMock()
+    site_model_writer.get_atmospheric_profile_file_name.return_value = "atmprof_south.dat"
+    array_model.site_model.configuration_writers = {"sim_telarray": site_model_writer}
 
     corsika_params_from_repository = {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},

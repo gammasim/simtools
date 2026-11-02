@@ -15,8 +15,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation
 from astropy.units import Quantity
 
-from simtools.configuration import defaults
-from simtools.configuration.argument_helpers import parse_quantity_pair
+from simtools import constants
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.corsika_limits_lookup import (
@@ -31,7 +30,7 @@ from simtools.production_configuration.jobs_io import (
 from simtools.production_configuration.production_definition import (
     production_definition_from_arguments,
 )
-from simtools.utils.value_conversion import ensure_list
+from simtools.utils.value_conversion import ensure_list, parse_quantity_pair
 
 logger = logging.getLogger(__name__)
 
@@ -455,7 +454,7 @@ class _RunAllocationConfig:
 
     total_showers: int | None = None
     total_showers_scaling: str = "fixed"
-    zenith_angle_scaling_factor: float = defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT
+    zenith_angle_scaling_factor: float = constants.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT
     max_showers_per_run: int | None = None
     rounding_warning_state: dict | None = None
 
@@ -757,8 +756,8 @@ def build_job_grid_metadata(args_dict):
 def normalize_grid_axes(args_dict):
     """Return normalized grid axes for cartesian product expansion."""
     axis_defaults = {
-        "corsika_le_interaction": defaults.CORSIKA_LE_INTERACTION,
-        "corsika_he_interaction": defaults.CORSIKA_HE_INTERACTION,
+        "corsika_le_interaction": constants.CORSIKA_LE_INTERACTION,
+        "corsika_he_interaction": constants.CORSIKA_HE_INTERACTION,
     }
     return {
         axis: (
@@ -986,7 +985,7 @@ def _scale_total_showers(
     total_showers,
     zenith_angle,
     total_showers_scaling,
-    cos_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+    cos_scaling_factor=constants.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
 ):
     """Return total showers adjusted for the selected scaling mode."""
     if total_showers_scaling == "fixed":
@@ -1245,7 +1244,7 @@ def _build_run_allocation(args_dict, total_showers, total_showers_scaling):
         total_showers_scaling=total_showers_scaling,
         zenith_angle_scaling_factor=float(
             args_dict.get(
-                "zenith_angle_scaling_factor", defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT
+                "zenith_angle_scaling_factor", constants.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT
             )
         ),
         max_showers_per_run=max_showers_per_run,

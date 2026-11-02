@@ -12,7 +12,7 @@ import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.sim_events import file_info
-from simtools.simulation.parameters import SimulationParameters
+from simtools.sim_events.simulation_parameters import SimulationParameters
 from simtools.simulator import Simulator
 from simtools.utils.primary_particle import PrimaryParticle
 
@@ -1089,10 +1089,10 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
     array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
-        "simtools.simulator.validate_run_outputs.validate_sim_telarray"
+        "simtools.simulator.simtel_output_validation.validate_sim_telarray"
     )
     mock_corsika_validator = mocker.patch(
-        "simtools.simulator.validate_run_outputs.validate_corsika_output"
+        "simtools.simulator.corsika_output_validation.validate_corsika_output"
     )
 
     mock_output_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
@@ -1130,10 +1130,10 @@ def test_validate_simulations_corsika(shower_simulator, mocker):
     shower_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
-        "simtools.simulator.validate_run_outputs.validate_sim_telarray"
+        "simtools.simulator.simtel_output_validation.validate_sim_telarray"
     )
     mock_corsika_validator = mocker.patch(
-        "simtools.simulator.validate_run_outputs.validate_corsika_output"
+        "simtools.simulator.corsika_output_validation.validate_corsika_output"
     )
 
     mock_corsika_log_files = ["corsika_run_001.log"]
@@ -1176,10 +1176,10 @@ def test_validate_simulations_corsika_sim_telarray(
     shower_array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
-        "simtools.simulator.validate_run_outputs.validate_sim_telarray"
+        "simtools.simulator.simtel_output_validation.validate_sim_telarray"
     )
     mock_corsika_validator = mocker.patch(
-        "simtools.simulator.validate_run_outputs.validate_corsika_output"
+        "simtools.simulator.corsika_output_validation.validate_corsika_output"
     )
 
     mock_simtel_output_files = ["output_file.simtel.zst"]
@@ -1224,11 +1224,9 @@ def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, 
 
     array_simulator.simulation_parameters = [mock_corsika_config]
 
-    mocker.patch("simtools.simulator.validate_run_outputs.validate_sim_telarray")
-    mocker.patch("simtools.simulator.validate_run_outputs.validate_corsika_output")
-    mock_output_validator = mocker.patch(
-        "simtools.simulator.validate_run_outputs.validate_sim_events"
-    )
+    mocker.patch("simtools.simulator.simtel_output_validation.validate_sim_telarray")
+    mocker.patch("simtools.simulator.corsika_output_validation.validate_corsika_output")
+    mock_output_validator = mocker.patch("simtools.simulator.validate_sim_events")
 
     mock_output_files = ["output_file.simtel.zst"]
     mock_log_files = ["log_file.log.gz"]

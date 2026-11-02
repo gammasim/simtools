@@ -4,7 +4,7 @@
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.data_model import metadata_collector, schema, validate_data
-from simtools.sim_events import validate_run_outputs
+from simtools.sim_events import hdf5_output_validation as validate_run_outputs
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(

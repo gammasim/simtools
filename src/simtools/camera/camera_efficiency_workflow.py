@@ -6,6 +6,7 @@ from pathlib import Path
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.model.model_utils import initialize_simulation_models
+from simtools.simulation.configuration import export_model_files
 from simtools.utils import names
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
@@ -42,6 +43,8 @@ def run_camera_efficiency(
             telescope_name=config["telescope"],
             context=context,
         )
+        export_model_files(initialized_telescope)
+        export_model_files(initialized_site)
         telescope_model = telescope_model or initialized_telescope
         site_model = site_model or initialized_site
 

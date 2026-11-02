@@ -14,7 +14,7 @@ from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.io.file_type import product_suffixes
-from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
+from simtools.sim_events.simtel_io_metadata import read_sim_telarray_metadata
 
 SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
 

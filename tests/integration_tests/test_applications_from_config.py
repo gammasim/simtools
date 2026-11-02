@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from simtools.job_execution import log_inspector
+from simtools.io import log_inspector
 from simtools.testing import configuration, helpers, options
 from simtools.testing.output_validation.runner import validate_application_output
 

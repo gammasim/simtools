@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+from simtools.camera import event_images
 from simtools.visualization import plot_simtel_events
 
 SIGNALS = "signals"
@@ -71,12 +72,42 @@ def mock_camera():
 @pytest.fixture
 def mock_plotter(mock_event_data, mock_camera):
     """Create PlotSimtelEvent with mocked data."""
-    with mock.patch("simtools.visualization.plot_simtel_events.read_events") as mock_read:
-        mock_read.return_value = mock_event_data
-        with mock.patch("simtools.visualization.plot_simtel_events.Camera") as mock_cam_class:
-            mock_cam_class.return_value = mock_camera
-            plotter = plot_simtel_events._StreamingPlotter("fake.simtel", "LSTN-01", 0)
+    rng = np.random.default_rng(42)
+    number_of_pixels, n_samples = 100, 50
+    samples = rng.uniform(50, 100, (number_of_pixels, n_samples))
+    samples[:, -10:] = 60
+    samples[10, 20:30] = 200
+    pedestals = np.full(number_of_pixels, 60.0)
+    prepared = event_images.EventImages(
+        event_data={
+            0: event_images.EventData(
+                event_id=0,
+                adc_samples=samples,
+                number_of_pixels=number_of_pixels,
+                n_samples=n_samples,
+                pedestals=pedestals,
+                image=np.sum(samples[:, 4:] - pedestals[:, None], axis=1),
+            )
+        },
+        time_axis=np.arange(n_samples),
+        camera=mock_camera,
+        trace_maxima=event_images.trace_maxima,
+    )
+    plotter = plot_simtel_events._StreamingPlotter(
+        "fake.simtel", "LSTN-01", 0, prepared_events=prepared
+    )
+    plotter.prepared_events = prepared
     return plotter
+
+
+def _mock_event_images(plotter):
+    """Return a preparation record around plotter fixture data."""
+    return event_images.EventImages(
+        event_data=plotter.event_data,
+        time_axis=plotter.time_axis,
+        camera=plotter.camera,
+        trace_maxima=event_images.trace_maxima,
+    )
 
 
 def test_plot_simtel_event_init(mock_plotter):
@@ -93,7 +124,7 @@ def test_plot_simtel_event_init(mock_plotter):
 
 def test_monitoring_pedestal_is_used_for_signal(mock_plotter, mocker):
     event = mock_plotter.event_data[0]
-    second_event = plot_simtel_events.EventData(
+    second_event = event_images.EventData(
         event_id=1,
         adc_samples=event.adc_samples.copy(),
         number_of_pixels=event.number_of_pixels,
@@ -102,12 +133,14 @@ def test_monitoring_pedestal_is_used_for_signal(mock_plotter, mocker):
         image=event.image.copy(),
     )
     mock_plotter.event_data[1] = second_event
+    prepared = _mock_event_images(mock_plotter)
+    prepared.event_data = mock_plotter.event_data
     monitoring = {
         N_PEDESTAL_SLICES_KEY: 40,
         PEDESTAL_KEY: np.stack((np.full(100, 400 * 40), np.full(100, 600 * 40))),
     }
-    simtel = mocker.patch.object(plot_simtel_events, "SimTelFile")
-    simtel.return_value.__enter__.return_value = iter(
+    simtel = mocker.patch.object(event_images, "SimTelFile")
+    simtel.return_value.__iter__.return_value = iter(
         [
             {EVENT_ID_KEY: 42, TELESCOPE_MONITORING: {}},
             {EVENT_ID_KEY: 0, TELESCOPE_MONITORING: {1: monitoring}},
@@ -115,17 +148,18 @@ def test_monitoring_pedestal_is_used_for_signal(mock_plotter, mocker):
         ]
     )
     mocker.patch.object(
-        plot_simtel_events,
+        event_images,
         "get_sim_telarray_telescope_id_to_telescope_name_mapping",
         return_value={1: "LSTN-01"},
     )
+    event_images.apply_monitoring_pedestals(
+        prepared, mock_plotter.file_name, mock_plotter.telescope
+    )
 
-    plot_simtel_events._apply_monitoring_pedestals(mock_plotter)
-
-    assert np.all(event.pedestals == 400)
-    expected = np.sum(event.adc_samples[:, 4:] - 400, axis=1)
-    np.testing.assert_allclose(event.image, expected)
-    assert np.all(second_event.pedestals == 400)
+    assert np.all(prepared.event_data[0].pedestals == 400)
+    expected = np.sum(prepared.event_data[0].adc_samples[:, 4:] - 400, axis=1)
+    np.testing.assert_allclose(prepared.event_data[0].image, expected)
+    assert np.all(prepared.event_data[1].pedestals == 400)
 
 
 @pytest.mark.parametrize(
@@ -139,52 +173,61 @@ def test_monitoring_pedestal_is_used_for_signal(mock_plotter, mocker):
     ],
 )
 def test_missing_monitoring_pedestal_is_an_error(mock_plotter, mocker, monitoring):
-    simtel = mocker.patch.object(plot_simtel_events, "SimTelFile")
+    simtel = mocker.patch.object(event_images, "SimTelFile")
     simtel.return_value.__enter__.return_value = iter(
         [{EVENT_ID_KEY: 0, TELESCOPE_MONITORING: {1: monitoring}}]
     )
     mocker.patch.object(
-        plot_simtel_events,
+        event_images,
         "get_sim_telarray_telescope_id_to_telescope_name_mapping",
         return_value={1: "LSTN-01"},
     )
     with pytest.raises(ValueError, match="monitoring pedestal"):
-        plot_simtel_events._apply_monitoring_pedestals(mock_plotter)
+        event_images.apply_monitoring_pedestals(
+            _mock_event_images(mock_plotter), mock_plotter.file_name, mock_plotter.telescope
+        )
 
 
 def test_monitoring_pedestal_rejects_unknown_telescope(mock_plotter, mocker):
     mocker.patch.object(
-        plot_simtel_events,
+        event_images,
         "get_sim_telarray_telescope_id_to_telescope_name_mapping",
         return_value={},
     )
     with pytest.raises(ValueError, match="not present in the sim_telarray file"):
-        plot_simtel_events._apply_monitoring_pedestals(mock_plotter)
+        event_images.apply_monitoring_pedestals(
+            _mock_event_images(mock_plotter), mock_plotter.file_name, mock_plotter.telescope
+        )
 
 
 def test_monitoring_pedestal_rejects_unavailable_selected_event(mock_plotter, mocker):
-    simtel = mocker.patch.object(plot_simtel_events, "SimTelFile")
+    simtel = mocker.patch.object(event_images, "SimTelFile")
     simtel.return_value.__enter__.return_value = iter([])
     mocker.patch.object(
-        plot_simtel_events,
+        event_images,
         "get_sim_telarray_telescope_id_to_telescope_name_mapping",
         return_value={1: "LSTN-01"},
     )
     with pytest.raises(ValueError, match="No monitoring pedestal found for event IDs \\[0\\]"):
-        plot_simtel_events._apply_monitoring_pedestals(mock_plotter)
+        event_images.apply_monitoring_pedestals(
+            _mock_event_images(mock_plotter), mock_plotter.file_name, mock_plotter.telescope
+        )
 
 
 def test_monitoring_pedestal_accepts_no_selected_events(mock_plotter, mocker):
+    mock_plotter.prepared_events.event_data = {}
     mock_plotter.event_data = {}
-    simtel = mocker.patch.object(plot_simtel_events, "SimTelFile")
+    simtel = mocker.patch.object(event_images, "SimTelFile")
     simtel.return_value.__enter__.return_value = iter([])
     mocker.patch.object(
-        plot_simtel_events,
+        event_images,
         "get_sim_telarray_telescope_id_to_telescope_name_mapping",
         return_value={1: "LSTN-01"},
     )
 
-    plot_simtel_events._apply_monitoring_pedestals(mock_plotter)
+    event_images.apply_monitoring_pedestals(
+        _mock_event_images(mock_plotter), mock_plotter.file_name, mock_plotter.telescope
+    )
 
 
 def test_make_title(mock_plotter):
@@ -379,15 +422,7 @@ def test_save_method_no_figures(mock_plotter, tmp_path):
             mock_dump.assert_not_called()
 
 
-def test_read_and_init_event_no_events():
-    with mock.patch("simtools.visualization.plot_simtel_events.read_events") as mock_read:
-        mock_read.return_value = ([], {}, [])
-        with mock.patch("simtools.visualization.plot_simtel_events.Camera"):
-            with pytest.raises(ValueError, match="No events read from file"):
-                plot_simtel_events.PlotSimtelEvent("fake.simtel", "LSTN-01", 0)
-
-
-def test_generate_and_save_plots(mock_event_data, mock_camera, io_handler, tmp_path):
+def test_generate_and_save_plots(mock_camera, io_handler, tmp_path):
     simtel_file = tmp_path / "test.simtel"
     simtel_file.touch()
 
@@ -400,51 +435,56 @@ def test_generate_and_save_plots(mock_event_data, mock_camera, io_handler, tmp_p
         "figure_dpi": 300,
     }
 
-    with mock.patch("simtools.visualization.plot_simtel_events.read_events") as mock_read:
-        mock_read.return_value = mock_event_data
-        with mock.patch("simtools.visualization.plot_simtel_events.Camera") as mock_cam:
-            mock_cam.return_value = mock_camera
-            with mock.patch("simtools.visualization.plot_simtel_events.pdf_report") as mock_save:
-                with mock.patch(
-                    "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
-                ) as mock_dump:
-                    plot_simtel_events.generate_and_save_plots(["time_traces"], args, io_handler)
-                    mock_save.assert_called_once()
-                    mock_save.return_value.__enter__.return_value.add.assert_called_once()
-                    mock_dump.assert_called_once()
+    rng = np.random.default_rng(42)
+    samples = rng.uniform(50, 100, (100, 50))
+    prepared = event_images.EventImages(
+        event_data={
+            0: event_images.EventData(
+                0, samples, 100, 50, np.full(100, 60), np.sum(samples[:, 4:] - 60, axis=1)
+            )
+        },
+        time_axis=np.arange(50),
+        camera=mock_camera,
+        trace_maxima=event_images.trace_maxima,
+    )
+    args["_prepared_events"] = prepared
+    with mock.patch("simtools.visualization.plot_simtel_events.pdf_report") as mock_save:
+        with mock.patch(
+            "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
+        ) as mock_dump:
+            plot_simtel_events.generate_and_save_plots(
+                ["time_traces"], args | {"_prepared_events": prepared}, io_handler
+            )
+            mock_save.assert_called_once()
+            mock_save.return_value.__enter__.return_value.add.assert_called_once()
+            mock_dump.assert_called_once()
 
 
 def test_generate_and_save_plots_applies_monitoring_before_plot(
     mock_plotter, io_handler, tmp_test_directory
 ):
     args = {PEDESTAL_SOURCE_KEY: plot_simtel_events.PEDESTAL_SOURCE_MONITORING}
+    args["_prepared_events"] = mock_plotter.prepared_events
     output_file = tmp_test_directory / "events.pdf"
 
-    def apply_monitoring_pedestals(plotter):
-        plotter.event_data[0].pedestals = np.full(plotter.event_data[0].number_of_pixels, 400)
-
     def generate_figure(_plot_name, event_index, _args):
-        assert np.all(mock_plotter.event_data[event_index].pedestals == 400)
+        assert np.all(mock_plotter.event_data[event_index].pedestals == 60)
         return plt.figure()
 
     with (
         mock.patch.object(plot_simtel_events, "_StreamingPlotter", return_value=mock_plotter),
         mock.patch.object(mock_plotter, "make_output_paths", return_value=output_file),
-        mock.patch.object(
-            plot_simtel_events,
-            "_apply_monitoring_pedestals",
-            side_effect=apply_monitoring_pedestals,
-        ) as apply_pedestals,
         mock.patch.object(mock_plotter, "_generate_single_plot", side_effect=generate_figure),
         mock.patch.object(plot_simtel_events.MetadataCollector, "dump"),
     ):
-        plot_simtel_events.generate_and_save_plots([SIGNALS], args, io_handler)
-
-    apply_pedestals.assert_called_once_with(mock_plotter)
+        plot_simtel_events.generate_and_save_plots(
+            [SIGNALS], args | {"_prepared_events": mock_plotter.prepared_events}, io_handler
+        )
 
 
 def test_generate_many_plots_closes_figures(mock_plotter, io_handler, tmp_test_directory, caplog):
     mock_plotter.event_data = dict.fromkeys(range(25))
+    mock_plotter.prepared_events.event_data = mock_plotter.event_data
     output_file = tmp_test_directory / "events.pdf"
 
     def generate_figure(_plot_name, event_index, _args):
@@ -458,7 +498,9 @@ def test_generate_many_plots_closes_figures(mock_plotter, io_handler, tmp_test_d
         mock.patch.object(mock_plotter, "_generate_single_plot", side_effect=generate_figure),
         mock.patch.object(plot_simtel_events.MetadataCollector, "dump"),
     ):
-        plot_simtel_events.generate_and_save_plots([SIGNALS], {}, io_handler)
+        plot_simtel_events.generate_and_save_plots(
+            [SIGNALS], {"_prepared_events": mock_plotter.prepared_events}, io_handler
+        )
 
     assert output_file.exists()
     assert Path(output_file).stat().st_size > 0
@@ -502,7 +544,9 @@ def test_streamed_plot_closes_figure_on_pdf_error(mock_plotter, io_handler, tmp_
         mock.patch.object(plot_simtel_events, "pdf_report", return_value=FailedReport()),
         pytest.raises(RuntimeError, match=PDF_SAVE_FAILED),
     ):
-        plot_simtel_events.generate_and_save_plots([SIGNALS], {}, io_handler)
+        plot_simtel_events.generate_and_save_plots(
+            [SIGNALS], {"_prepared_events": mock_plotter.prepared_events}, io_handler
+        )
     assert fig.number not in plt.get_fignums()
 
 
@@ -514,7 +558,9 @@ def test_streamed_plots_skip_missing_figures(mock_plotter, io_handler, tmp_test_
         mock.patch.object(plot_simtel_events, "pdf_report") as save_document,
         mock.patch.object(plot_simtel_events.MetadataCollector, "dump") as dump,
     ):
-        plot_simtel_events.generate_and_save_plots([SIGNALS], {}, io_handler)
+        plot_simtel_events.generate_and_save_plots(
+            [SIGNALS], {"_prepared_events": mock_plotter.prepared_events}, io_handler
+        )
     save_document.assert_not_called()
     dump.assert_not_called()
     assert "No figures produced" in caplog.text

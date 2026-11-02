@@ -38,6 +38,13 @@ from simtools.production_configuration.production_file_selection import (
 )
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.sim_events.metadata import build_standard_metadata
+from simtools.sim_events.trigger_histogram_format import (
+    TRIGGER_HISTOGRAM_BINS_TABLE,
+    TRIGGER_HISTOGRAM_DENSE_GROUP,
+    TRIGGER_HISTOGRAM_METADATA_TABLE,
+    TRIGGER_SUBSET_HISTOGRAMS_TABLE,
+    TRIGGER_TOPOLOGY_COUNTS_TABLE,
+)
 from simtools.utils import value_conversion
 
 _RUN_NUMBERS = "run_numbers"
@@ -66,11 +73,6 @@ _DEFAULT_HISTOGRAM_SETTINGS = {
 
 _logger = logging.getLogger(__name__)
 
-TRIGGER_HISTOGRAM_METADATA_TABLE = "TRIGGER_REFERENCE_METADATA"
-TRIGGER_HISTOGRAM_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
-TRIGGER_TOPOLOGY_COUNTS_TABLE = "TRIGGER_TOPOLOGY_COUNTS"
-TRIGGER_SUBSET_HISTOGRAMS_TABLE = "TRIGGER_SUBSET_HISTOGRAMS"
-TRIGGER_HISTOGRAM_DENSE_GROUP = "TRIGGER_HISTOGRAM_DENSE"
 _DENSE_HISTOGRAM_FORMAT_VERSION = 2
 
 _DERIVED_HISTOGRAM_SUFFIXES = ("_eff", "_cumulative")

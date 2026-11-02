@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 
-import simtools.simtel.simtel_io_metadata as simtel_io_metadata
+import simtools.sim_events.simtel_io_metadata as simtel_io_metadata
 
 
 class _FakeHistoryMeta:
@@ -115,6 +115,19 @@ def test_normalize_sim_telarray_metadata_resolves_corsika_source_tag():
         "simtools_corsika_build_id": "78010",
         "simtools_corsika_source_tag": "v7.8010",
     }
+
+
+def test_corsika_source_tag_for_build_id_handles_missing_and_ambiguous_values():
+    assert (
+        simtel_io_metadata.corsika_source_tag_for_build_id(
+            "78050", {"corsika": [{"tag": "v7.8010"}]}
+        )
+        is None
+    )
+    with pytest.raises(ValueError, match="Multiple CORSIKA source tags"):
+        simtel_io_metadata.corsika_source_tag_for_build_id(
+            "78010", {"corsika": [{"tag": "v7.8010"}, {"tag": "v7.8010"}]}
+        )
 
 
 def test_normalize_sim_telarray_metadata_rejects_conflicting_aliases():
@@ -277,7 +290,7 @@ def test_get_telescope_list_from_input_card_input_card_no_match(monkeypatch):
 def test_guess_telescope_name_for_legacy_files(monkeypatch):
     # Patch _get_telescope_list_from_input_card to return a known list
     monkeypatch.setattr(
-        "simtools.simtel.simtel_io_metadata._get_telescope_list_from_input_card",
+        "simtools.sim_events.simtel_io_metadata._get_telescope_list_from_input_card",
         lambda file: ["LSTN-01", "MSTN-02", "SSTC-03"],
     )
 
@@ -298,12 +311,12 @@ def test_get_sim_telarray_telescope_id_to_telescope_name_mapping_value_error(mon
     )
     # Patch _guess_telescope_name_for_legacy_files to return a fallback name
     monkeypatch.setattr(
-        "simtools.simtel.simtel_io_metadata._guess_telescope_name_for_legacy_files",
+        "simtools.sim_events.simtel_io_metadata._guess_telescope_name_for_legacy_files",
         lambda idx, file: f"FAKE-{idx}",
     )
     # Patch read_sim_telarray_metadata to return dummy telescope_meta
     monkeypatch.setattr(
-        "simtools.simtel.simtel_io_metadata.read_sim_telarray_metadata",
+        "simtools.sim_events.simtel_io_metadata.read_sim_telarray_metadata",
         lambda file: ({}, {1: {"optics_config_name": "bad"}, 2: {"optics_config_name": "bad2"}}),
     )
     mapping = simtel_io_metadata.get_sim_telarray_telescope_id_to_telescope_name_mapping(

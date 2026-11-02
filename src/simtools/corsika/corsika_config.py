@@ -11,8 +11,8 @@ from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.input_writer import format_parameter
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
+from simtools.sim_events.simulation_parameters import SimulationParameters
 from simtools.simulation.configuration import get_model_writer
-from simtools.simulation.parameters import SimulationParameters
 from simtools.utils import value_conversion
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 from simtools.utils.primary_particle import PrimaryParticle
@@ -532,8 +532,8 @@ class CorsikaConfig:
             file.write("\n* [ SITE PARAMETERS ]\n")
             file.write(
                 self._get_text_single_line(
-                    self.array_model.site_model.get_corsika_site_parameters(
-                        config_file_style=True,
+                    get_site_config_parameters(
+                        self.array_model.site_model,
                         model_directory=self.array_model.get_config_directory(),
                     )
                 )
@@ -573,7 +573,9 @@ class CorsikaConfig:
         # Write out the atmospheric transmission file to the model directory.
         # This is done explicitly because it is not done "automatically" when CORSIKA is not piped
         # to sim_telarray.
-        self.array_model.site_model.export_atmospheric_transmission_file(
+        get_model_writer(
+            self.array_model.site_model, context=self.context
+        ).export_atmospheric_transmission_file(
             model_directory=self.array_model.get_config_directory()
         )
 

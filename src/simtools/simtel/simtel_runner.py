@@ -4,7 +4,7 @@ import logging
 
 from simtools.context import RunContext
 from simtools.job_execution import execution
-from simtools.runners.runner_services import RunnerServices
+from simtools.job_execution.runner_services import RunnerServices
 
 SIM_TELARRAY_ENV = {
     "SIM_TELARRAY_CONFIG_PATH": "",
