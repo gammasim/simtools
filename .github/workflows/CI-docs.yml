@@ -77,6 +77,8 @@ jobs:
 
       - name: Build docs
         shell: bash -l {0}
+        env:
+          SIMTOOLS_DOCS_SWITCHER_URL: https://gammasim.github.io/simtools/_static/switcher.json
         run: |
           make -C docs/ html
           exit_code=$?

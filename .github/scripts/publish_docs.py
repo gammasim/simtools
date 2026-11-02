@@ -15,29 +15,31 @@ MAX_SITE_BYTES = 1_000_000_000
 MAX_ARCHIVE_MEMBERS = 200_000
 
 
+def _normalize_entry(entry):
+    """Validate one switcher entry and return a copy with a stable name."""
+    if not isinstance(entry, dict) or not isinstance(entry.get("version"), str):
+        raise ValueError("Each switcher entry must contain a version")
+    version = entry["version"]
+    if version != "latest" and not VERSION.fullmatch(version):
+        raise ValueError(f"Invalid switcher version: {version}")
+    if not isinstance(entry.get("url"), str) or not entry["url"].startswith("https://"):
+        raise ValueError(f"Switcher entry {version} must contain an https url")
+    normalized = dict(entry)
+    normalized.setdefault("name", version)
+    if not isinstance(normalized["name"], str) or not SWITCHER_NAME.fullmatch(normalized["name"]):
+        raise ValueError(f"Invalid switcher name: {normalized['name']}")
+    return normalized
+
+
 def read_manifest(path):
     """Read a switcher list and return entries with stable names."""
     entries = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(entries, list) or not entries:
         raise ValueError("Switcher must be a nonempty list")
-    versions = set()
-    normalized = []
-    for entry in entries:
-        if not isinstance(entry, dict) or not isinstance(entry.get("version"), str):
-            raise ValueError("Each switcher entry must contain a version")
-        version = entry["version"]
-        if version != "latest" and not VERSION.fullmatch(version):
-            raise ValueError(f"Invalid switcher version: {version}")
-        if version in versions:
-            raise ValueError(f"Duplicate switcher version: {version}")
-        versions.add(version)
-        normalized_entry = dict(entry)
-        normalized_entry.setdefault("name", version)
-        if not isinstance(normalized_entry["name"], str) or not SWITCHER_NAME.fullmatch(
-            normalized_entry["name"]
-        ):
-            raise ValueError(f"Invalid switcher name: {normalized_entry['name']}")
-        normalized.append(normalized_entry)
+    normalized = [_normalize_entry(entry) for entry in entries]
+    versions = [entry["version"] for entry in normalized]
+    if len(set(versions)) != len(versions):
+        raise ValueError("Duplicate switcher version in switcher")
     if "latest" not in versions:
         raise ValueError("Switcher must include latest")
     return normalized
@@ -78,8 +80,6 @@ def _write_member(archive, member, target, total_size):
     if member.size < 0 or total_size + member.size > MAX_SITE_BYTES:
         raise ValueError("Assembled documentation exceeds the 1 GB Pages limit")
     for parent in target.parents:
-        if parent == target.anchor:
-            break
         if parent.exists() and not parent.is_dir():
             raise ValueError(f"Archive member conflicts with a file: {member.name}")
     target.parent.mkdir(parents=True, exist_ok=True)

@@ -33,15 +33,17 @@ digests and source revisions for a release that requires immutable build inputs.
 
 The default branch's `docs/_static/switcher.json` selects the published documentation
 versions. Each release workflow stores its documentation as `docs-site.tar.gz` on the
-corresponding GitHub release. Add a version to the switcher only when its archive exists
-or when publishing that version. Remove an entry to omit its documentation from the next
+corresponding GitHub release. Each switcher entry requires `version` and an `https` `url`.
+Add a version to the switcher only when its archive exists or when publishing that version. Remove an entry to omit its documentation from the next
 site deployment; the release asset remains available for restoration. Run the documentation
 workflow manually on the default branch to apply switcher changes. The root serves the
 latest stable documentation when its release archive exists; otherwise a manual run uses
 the current default branch build until a stable release provides an archive. The test
 resource dashboard is included in each deployment.
 
-GitHub Pages must be configured to use GitHub Actions as its publishing source. The
+GitHub Pages must be configured to use GitHub Actions as its publishing source, and the
+`github-pages` environment must allow deployments from the default branch and from release
+tags (`v*`). The
 `benchmark-data` draft release stores the two latest benchmark snapshots as release
 assets outside Git. Its tag points to source code; generated benchmark data is not
 committed. A new installation starts a fresh benchmark history.

@@ -158,42 +158,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          script=.github/scripts/benchmark_snapshot.py
           mkdir -p benchmark-state
-          release_json=$(gh api --paginate --slurp \
-            "repos/${GITHUB_REPOSITORY}/releases?per_page=100")
-          asset_name=$(python -c '
-          import json
-          import re
-          import sys
-          releases = [release for page in json.load(sys.stdin) for release in page]
-          matches = [
-              release
-              for release in releases
-              if release["draft"] and release["tag_name"] == "benchmark-data"
-          ]
-          if len(matches) > 1:
-              raise SystemExit("Found multiple draft benchmark-data releases")
-          assets = matches[0]["assets"] if matches else []
-          candidates = [
-              asset
-              for asset in assets
-              if re.fullmatch(
-                  r"resource-benchmark-snapshot-[0-9]+-[0-9]+\.tar\.gz",
-                  asset["name"],
-              ) and asset["state"] == "uploaded"
-          ]
-          if assets and len(candidates) != len(assets):
-              raise SystemExit("Draft benchmark release contains an unknown asset")
-          candidates.sort(key=lambda asset: (asset["created_at"], asset["id"]))
-          print(json.dumps({
-              "release_exists": bool(matches),
-              "asset_name": candidates[-1]["name"] if candidates else "",
-          }))
-          ' <<< "$release_json")
-          release_exists=$(python -c 'import json,sys; print(str(json.load(sys.stdin)["release_exists"]).lower())' \
-            <<< "$asset_name")
-          asset_name=$(python -c 'import json,sys; print(json.load(sys.stdin)["asset_name"])' \
-            <<< "$asset_name")
+          gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+            > "$RUNNER_TEMP/benchmark-releases.json"
+          selection=$(python "$script" select "$RUNNER_TEMP/benchmark-releases.json")
+          release_exists=$(jq -r '.release_exists' <<< "$selection")
+          asset_name=$(jq -r '.asset_name' <<< "$selection")
           if [[ "$release_exists" == "false" ]]; then
             if git ls-remote --exit-code --tags origin refs/tags/benchmark-data \
               >/dev/null 2>&1; then
@@ -215,36 +186,9 @@ jobs:
               --dir benchmark-state
             python .github/scripts/publish_docs.py extract \
               "benchmark-state/$asset_name" benchmark-state
-            python - <<'PY'
-          import json
-          from pathlib import Path
-
-          state_path = Path("benchmark-state/state.json")
-          if not state_path.is_file():
-              raise SystemExit("Benchmark snapshot is missing state.json")
-          state = json.loads(state_path.read_text(encoding="utf-8"))
-          if not isinstance(state, dict) or not isinstance(state.get("entries"), dict):
-              raise SystemExit("Benchmark snapshot has invalid history state")
-          PY
-          elif [[ "$release_exists" == "true" ]]; then
-            gh api --paginate --slurp \
-              "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
-              > "$RUNNER_TEMP/benchmark-releases.json"
-            assets_count=$(python -c '
-          import json,sys
-          releases = [release for page in json.load(sys.stdin) for release in page]
-          target = [release for release in releases if release["draft"] and release["tag_name"] == "benchmark-data"]
-          print(len(target[0]["assets"]))
-          ' < "$RUNNER_TEMP/benchmark-releases.json")
-            if [[ "$assets_count" != "0" ]]; then
-              echo "No valid benchmark snapshot was found in the draft release" >&2
-              exit 1
-            fi
-            printf '{"lastUpdate":0,"repoUrl":"https://github.com/gammasim/simtools","entries":{}}\n' \
-              > benchmark-state/state.json
+            python "$script" validate-state benchmark-state/state.json
           else
-            printf '{"lastUpdate":0,"repoUrl":"https://github.com/gammasim/simtools","entries":{}}\n' \
-              > benchmark-state/state.json
+            python "$script" init-state benchmark-state/state.json
           fi
 
       - name: Store benchmark history
@@ -264,40 +208,20 @@ jobs:
       - name: Build benchmark dashboard snapshot
         run: |
           set -euo pipefail
-          dashboard_dir=benchmark-snapshot/dev/test-resources
-          mkdir -p "$dashboard_dir"
-          cp .github/benchmark-dashboard/index.html "$dashboard_dir/index.html"
-          cp benchmark-state/state.json benchmark-snapshot/state.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          state = json.loads(Path("benchmark-snapshot/state.json").read_text(encoding="utf-8"))
-          if not isinstance(state, dict) or not isinstance(state.get("entries"), dict):
-              raise SystemExit("Benchmark action wrote an invalid history state")
-          data = "window.BENCHMARK_DATA = " + json.dumps(state, separators=(",", ":")) + ";\n"
-          Path("benchmark-snapshot/dev/test-resources/data.js").write_text(data, encoding="utf-8")
-          PY
           snapshot="resource-benchmark-snapshot-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
-          tar -C benchmark-snapshot -czf "$snapshot" state.json dev/test-resources/index.html dev/test-resources/data.js
-          python .github/scripts/publish_docs.py extract "$snapshot" benchmark-validated
-          python - <<'PY'
-          from pathlib import Path
-
-          required = (
-              Path("benchmark-validated/state.json"),
-              Path("benchmark-validated/dev/test-resources/index.html"),
-              Path("benchmark-validated/dev/test-resources/data.js"),
-          )
-          if not all(path.is_file() for path in required):
-              raise SystemExit("Benchmark snapshot is incomplete")
-          PY
+          python .github/scripts/benchmark_snapshot.py build \
+            --state benchmark-state/state.json \
+            --dashboard .github/benchmark-dashboard/index.html \
+            --snapshot "$snapshot" \
+            --work-directory benchmark-snapshot
+          python .github/scripts/benchmark_snapshot.py verify "$snapshot" benchmark-validated
 
       - name: Upload and retain benchmark snapshots
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          script=.github/scripts/benchmark_snapshot.py
           snapshot="resource-benchmark-snapshot-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
           gh release upload benchmark-data "$snapshot"
           mkdir -p benchmark-verify
@@ -308,40 +232,11 @@ jobs:
             echo "Uploaded benchmark snapshot checksum does not match" >&2
             exit 1
           fi
-          python .github/scripts/publish_docs.py extract \
-            "benchmark-verify/$snapshot" benchmark-verify/extracted
+          python "$script" verify "benchmark-verify/$snapshot" benchmark-verify/extracted
           gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
             > "$RUNNER_TEMP/benchmark-releases.json"
-          python - "$RUNNER_TEMP/benchmark-releases.json" \
-            > "$RUNNER_TEMP/old-benchmark-assets.txt" <<'PY'
-          import json
-          import re
-          import sys
-
-          with open(sys.argv[1], encoding="utf-8") as stream:
-              pages = json.load(stream)
-          releases = [release for page in pages for release in page]
-          matches = [
-              release
-              for release in releases
-              if release["draft"] and release["tag_name"] == "benchmark-data"
-          ]
-          if len(matches) != 1:
-              raise SystemExit("Expected exactly one draft benchmark-data release")
-          assets = [
-              asset
-              for asset in matches[0]["assets"]
-              if re.fullmatch(
-                  r"resource-benchmark-snapshot-[0-9]+-[0-9]+\.tar\.gz",
-                  asset["name"],
-              )
-          ]
-          if any(asset["state"] != "uploaded" for asset in assets):
-              raise SystemExit("Found an incomplete benchmark snapshot asset")
-          assets.sort(key=lambda asset: (asset["created_at"], asset["id"]))
-          for asset in assets[:-2]:
-              print(asset["name"])
-          PY
+          python "$script" old-assets "$RUNNER_TEMP/benchmark-releases.json" \
+            > "$RUNNER_TEMP/old-benchmark-assets.txt"
           while IFS= read -r asset; do
             [[ -n "$asset" ]] || continue
             gh release delete-asset benchmark-data "$asset" --yes
