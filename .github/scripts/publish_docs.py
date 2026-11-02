@@ -9,6 +9,8 @@ import tarfile
 import tempfile
 from pathlib import Path, PurePosixPath
 
+from simtools.reporting.docs_pages import read_version_switcher
+
 VERSION = re.compile(r"v\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?\Z")
 SWITCHER_NAME = re.compile(r"[A-Za-z0-9._-]+\Z")
 MAX_SITE_BYTES = 1_000_000_000
@@ -25,7 +27,8 @@ def _normalize_entry(entry):
     if not isinstance(entry.get("url"), str) or not entry["url"].startswith("https://"):
         raise ValueError(f"Switcher entry {version} must contain an https url")
     normalized = dict(entry)
-    normalized.setdefault("name", version)
+    if "name" not in normalized:
+        normalized["name"] = "Latest" if version == "latest" else version.removeprefix("v")
     if not isinstance(normalized["name"], str) or not SWITCHER_NAME.fullmatch(normalized["name"]):
         raise ValueError(f"Invalid switcher name: {normalized['name']}")
     return normalized
@@ -42,6 +45,10 @@ def read_manifest(path):
         raise ValueError("Duplicate switcher version in switcher")
     if "latest" not in versions:
         raise ValueError("Switcher must include latest")
+    try:
+        read_version_switcher(path)
+    except ValueError as exc:
+        raise ValueError(f"Invalid version switcher: {exc}") from exc
     return normalized
 
 

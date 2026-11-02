@@ -15,7 +15,16 @@ SPEC.loader.exec_module(PUBLISH_DOCS)
 
 
 def _entries(*versions):
-    return [{"version": v, "url": f"https://example.org/{v}/"} for v in versions]
+    return [
+        {
+            "version": version,
+            "url": "https://example.org/"
+            if version == "latest"
+            else f"https://example.org/{version}/",
+            "preferred": version == "latest",
+        }
+        for version in versions
+    ]
 
 
 def _write_manifest(directory, entries):
@@ -38,7 +47,7 @@ def _write_archive(path, files, extra=None):
 def test_read_manifest_adds_names(tmp_test_directory):
     manifest = _write_manifest(tmp_test_directory, _entries("latest", "v1.2.3"))
     entries = PUBLISH_DOCS.read_manifest(manifest)
-    assert [entry["name"] for entry in entries] == ["latest", "v1.2.3"]
+    assert [entry["name"] for entry in entries] == ["Latest", "1.2.3"]
 
 
 @pytest.mark.parametrize(
@@ -52,6 +61,17 @@ def test_read_manifest_adds_names(tmp_test_directory):
         ([{"version": "latest"}], "https url"),
         ([{"version": "latest", "url": "http://example.org/"}], "https url"),
         ([{"version": "latest", "url": "https://x/", "name": "a b"}], "Invalid switcher name"),
+        (
+            [{"version": "latest", "url": "https://example.org/"}],
+            "Exactly one entry must be marked as 'preferred'",
+        ),
+        (
+            [
+                {"version": "latest", "url": "https://example.org/", "preferred": True},
+                {"version": "v1.0.0", "url": "https://other.org/v1.0.0/"},
+            ],
+            "URL of v1.0.0 must be",
+        ),
     ],
 )
 def test_read_manifest_errors(tmp_test_directory, entries, message):
@@ -134,7 +154,7 @@ def test_assemble(tmp_test_directory):
     assert (site / ".nojekyll").is_file()
     assert not (site / "stale.html").exists()
     switcher = json.loads((site / "_static/switcher.json").read_text(encoding="utf-8"))
-    assert [entry["name"] for entry in switcher] == ["latest", "v1.0.0"]
+    assert [entry["name"] for entry in switcher] == ["Latest", "1.0.0"]
 
 
 def test_assemble_missing_inputs(tmp_test_directory):

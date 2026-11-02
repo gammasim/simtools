@@ -23,13 +23,8 @@ def _skip_empty_docs_switcher(config, simtools_root_path):
     if config.get("application") != "simtools-docs-assemble-pages":
         return
     switcher_file = Path(simtools_root_path) / config["configuration"]["switcher_file"]
-    try:
-        read_version_switcher(switcher_file)
-    except ValueError as exc:
-        expected = f"Invalid version switcher file {switcher_file}: No released version listed."
-        if str(exc) == expected:
-            pytest.skip("The documentation switcher has no released versions")
-        raise
+    if not read_version_switcher(switcher_file):
+        pytest.skip("The documentation switcher has no released versions")
 
 
 def _get_simulation_model_source(config, request, simtools_root_path):

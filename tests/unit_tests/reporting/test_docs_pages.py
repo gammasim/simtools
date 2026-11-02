@@ -104,7 +104,6 @@ def test_read_version_switcher_site_with_base_path(tmp_test_directory):
             "Exactly one entry must be marked",
         ),
         (_switcher_entries(VERSION, VERSION), "Duplicate versions"),
-        (_switcher_entries(), "No released version"),
     ],
 )
 def test_read_version_switcher_invalid(tmp_test_directory, entries, message):
@@ -121,6 +120,14 @@ def test_read_version_switcher_rejects_non_objects(tmp_test_directory, entry, wi
     switcher = _write_switcher(Path(tmp_test_directory) / SWITCHER_JSON, entries)
     with pytest.raises(ValueError, match="each version entry must be an object"):
         docs_pages.read_version_switcher(switcher)
+
+
+def test_read_version_switcher_allows_latest_only(tmp_test_directory):
+    switcher = _write_switcher(
+        Path(tmp_test_directory) / SWITCHER_JSON,
+        [{VERSION_KEY: LATEST, "url": f"{HOST}/", PREFERRED: True}],
+    )
+    assert docs_pages.read_version_switcher(switcher) == []
 
 
 def test_download_version(tmp_test_directory):
