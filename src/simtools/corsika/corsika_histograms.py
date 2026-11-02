@@ -2,13 +2,53 @@
 
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 
-import boost_histogram as bh
 import numpy as np
 from astropy import units as u
 from eventio import IACTFile
 
 from simtools.utils.geometry import rotate
+
+
+class _WeightedHistogram:
+    """Accumulate weighted bin contents and variances, including flow bins."""
+
+    def __init__(self, edges, scales=None):
+        self.axes = tuple(SimpleNamespace(edges=edge) for edge in edges)
+        self._scales = scales or ["linear"] * len(edges)
+        self._values = np.zeros(
+            tuple(len(edge) + 1 for edge in edges), dtype=[("value", "f8"), ("variance", "f8")]
+        )
+
+    def fill(self, *coordinates, weight):
+        """Add weighted observations to the histogram."""
+        samples = []
+        bins = []
+        for coordinate, axis, scale in zip(coordinates, self.axes, self._scales):
+            edges = axis.edges
+            values = np.asarray(coordinate)
+            start, stop = edges[0], edges[-1]
+            if scale == "log":
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    values = np.log(values)
+                start, stop = np.log(start), np.log(stop)
+            # Regular-axis arithmetic preserves boundary and flow-bin assignments.
+            with np.errstate(invalid="ignore", over="ignore"):
+                indices = np.floor((values - start) / (stop - start) * (len(edges) - 1))
+            indices = np.nan_to_num(indices, nan=len(edges) - 1)
+            samples.append(np.clip(indices, -1, len(edges) - 1))
+            bins.append(np.arange(-1, len(edges) + 1))
+        samples = np.column_stack(samples)
+        weights = np.asarray(weight, dtype=float)
+        self._values["value"] += np.histogramdd(samples, bins=bins, weights=weights)[0]
+        self._values["variance"] += np.histogramdd(samples, bins=bins, weights=weights**2)[0]
+
+    def view(self, flow=False):
+        """Return the weighted bins, optionally including flow bins."""
+        if flow:
+            return self._values
+        return self._values[(slice(1, -1),) * self._values.ndim]
 
 
 class CorsikaHistograms:
@@ -97,25 +137,19 @@ class CorsikaHistograms:
         Returns
         -------
         list:
-            List of boost_histogram axis instances.
+            List of arrays containing bin edges.
         """
-        transform = {"log": bh.axis.transform.log, "linear": None}
-
-        boost_axes = []
+        edges = []
         for axis in axes:
             bins, start, stop = hist[axis][:3]
             scale = hist[axis][3] if len(hist[axis]) > 3 else "linear"
             if isinstance(start, u.quantity.Quantity):
                 start, stop = start.value, stop.value
-            boost_axes.append(
-                bh.axis.Regular(
-                    bins=bins,
-                    start=start,
-                    stop=stop,
-                    transform=transform[scale],
-                )
-            )
-        return boost_axes
+            if scale == "log":
+                edges.append(np.geomspace(start, stop, bins + 1))
+            else:
+                edges.append(np.linspace(start, stop, bins + 1))
+        return edges
 
     def _fill_histograms(self, photons, event_counter, telescope_positions, rotate_photons=True):
         """
@@ -204,8 +238,8 @@ class CorsikaHistograms:
 
         Parameters
         ----------
-        hist: boost_histogram.Histogram
-            Histogram.
+        hist: histogram
+            Histogram with axes and a weighted or unweighted view.
 
         Returns
         -------
@@ -226,8 +260,8 @@ class CorsikaHistograms:
             counts = np.asarray([view.T])
             uncertainties = None
 
-        x_edges = np.asarray([hist.axes.edges[0].flatten()])
-        y_edges = np.asarray([hist.axes.edges[1].flatten()])
+        x_edges = np.asarray([hist.axes[0].edges])
+        y_edges = np.asarray([hist.axes[1].edges])
 
         return counts, x_edges, y_edges, uncertainties
 
@@ -251,7 +285,7 @@ class CorsikaHistograms:
 
     def get_hist_1d_projection(self, label, hist):
         """
-        Get 1D distributions from numpy or boost histograms (1D and 2D).
+        Get 1D distributions from event data or weighted histograms.
 
         Parameters
         ----------
@@ -277,15 +311,12 @@ class CorsikaHistograms:
         ):
             return self._get_hist_1d_from_numpy(label, hist)
 
-        # boost 1D histogram
         if hist.get("projection") is None:
-            # Use histogram from hist dict if available, otherwise from self.hist
             if "histogram" in hist:
                 histo_1d = hist["histogram"]
             else:
-                # No histogram available, return None values
                 return None, None, None
-            edges = histo_1d.axes.edges.T.flatten()[0]
+            edges = histo_1d.axes[0].edges
             view = histo_1d.view()
             if self._check_for_all_attributes(view):
                 counts = np.asarray([view["value"].T])
@@ -295,14 +326,10 @@ class CorsikaHistograms:
                 uncertainties = None
             return counts, np.asarray([edges]), uncertainties
 
-        # boost 2D histogram projection
         histo_2d = self.hist[hist["projection"][0]]["histogram"]
-        if hist["projection"][1] == "x":
-            h = histo_2d[:, sum]
-        else:
-            h = histo_2d[sum, :]
-        edges = h.axes.edges.T.flatten()[0]
-        view = h.view()
+        retained_axis = 0 if hist["projection"][1] == "x" else 1
+        edges = histo_2d.axes[retained_axis].edges
+        view = self._project_weighted_bins(histo_2d, retained_axis)
         if self._check_for_all_attributes(view):
             counts = np.asarray([view["value"].T])
             uncertainties = np.asarray([np.sqrt(view["variance"].T)])
@@ -310,6 +337,16 @@ class CorsikaHistograms:
             counts = np.asarray([view.T])
             uncertainties = None
         return counts, np.asarray([edges]), uncertainties
+
+    def _project_weighted_bins(self, histo_2d, retained_axis):
+        """Project bins while retaining flow along the summed axis."""
+        full_view = histo_2d.view(flow=True)
+        if self._check_for_all_attributes(full_view):
+            view = np.zeros(len(histo_2d.axes[retained_axis].edges) - 1, dtype=full_view.dtype)
+            for field in ("value", "variance"):
+                view[field] = full_view[field].sum(axis=1 - retained_axis)[1:-1]
+            return view
+        return full_view.sum(axis=1 - retained_axis)[1:-1]
 
     def _set_1d_distributions(self, r_max=2000 * u.m, bins=100):
         """
@@ -429,8 +466,10 @@ class CorsikaHistograms:
                     value[x_axis_title] = self.hist[hist_2d_name]["y_axis_title"]
                     value[x_axis_unit] = self.hist[hist_2d_name]["y_axis_unit"]
             elif value.get("event_type", False) is False:
-                boost_axes = self._create_regular_axes(value, ["x_bins"])
-                value["histogram"] = bh.Histogram(boost_axes[0], storage=bh.storage.Weight())
+                scale = value["x_bins"][3] if len(value["x_bins"]) > 3 else "linear"
+                value["histogram"] = _WeightedHistogram(
+                    self._create_regular_axes(value, ["x_bins"]), [scale]
+                )
         return hist_1d
 
     def _set_2d_distributions(self, xy_maximum=1000 * u.m, xy_bin=100):
@@ -528,10 +567,9 @@ class CorsikaHistograms:
             value[z_axis_unit] = (
                 u.dimensionless_unscaled if value.get(z_axis_unit) is None else value[z_axis_unit]
             )
-            boost_axes = self._create_regular_axes(value, ["x_bins", "y_bins"])
-            value["histogram"] = bh.Histogram(
-                boost_axes[0], boost_axes[1], storage=bh.storage.Weight()
-            )
+            axes = ["x_bins", "y_bins"]
+            scales = [value[axis][3] if len(value[axis]) > 3 else "linear" for axis in axes]
+            value["histogram"] = _WeightedHistogram(self._create_regular_axes(value, axes), scales)
 
         return hist_2d
 
