@@ -6,10 +6,10 @@ from unittest.mock import Mock
 import astropy.units as u
 import pytest
 
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.model_writer import SimtelModelWriter
 from simtools.simulation.configuration import get_model_writer
+from simtools.utils.primary_particle import PrimaryParticle
 
 _NORTH = "North"
 _NSB_FLUX = "get_nsb_integrated_flux"

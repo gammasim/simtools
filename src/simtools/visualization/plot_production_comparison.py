@@ -4,6 +4,7 @@ import logging
 from collections import Counter
 from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -134,9 +135,7 @@ def plot_event_level_comparison(
         output_path = output_path / array_layout_name
     output_path.mkdir(parents=True, exist_ok=True)
     suppressed = _metadata_suppressed_distributions(comparison_context)
-
-    def render_top_level(quantity_name, cumulative):
-        return _render_quantity(quantity_name, cumulative, report_mode, suppressed)
+    render_top_level = partial(_render_quantity, report_mode=report_mode, suppressed=suppressed)
 
     with _comparison_report(output_path, report_mode, compact_figures, comparison_title):
         _record_plots(
@@ -171,14 +170,7 @@ def plot_event_level_comparison(
 
     participation = comparison_statistics[PLOT_STATISTICS_KEY].get(_PARTICIPATION_PLOT)
     if participation is not None:
-        participation[TELESCOPE_TYPES_KEY] = sorted(
-            {
-                telescope
-                for metrics in metrics_per_production
-                for telescope in metrics.per_type
-                if telescope not in _SPECIAL_TRIGGER_SUBSETS
-            }
-        )
+        participation[TELESCOPE_TYPES_KEY] = _telescope_types(metrics_per_production)
 
     # Keep JSON scalar-only in every mode; detailed histograms are already in the plots.
     comparison_statistics[PLOT_STATISTICS_KEY] = compact_plot_statistics(
@@ -237,6 +229,18 @@ def _plot_distributions(
     ]
 
 
+def _telescope_types(metrics_per_production):
+    """Return the sorted per-telescope-type subsets, excluding the special trigger subsets."""
+    return sorted(
+        {
+            tel_type
+            for metrics in metrics_per_production
+            for tel_type in metrics.per_type
+            if tel_type not in _SPECIAL_TRIGGER_SUBSETS
+        }
+    )
+
+
 def _render_quantity(quantity_name, cumulative, report_mode, suppressed):
     """Suppress redundant compact pages while retaining their numerical statistics."""
     if report_mode != COMPACT_REPORT:
@@ -261,19 +265,20 @@ def _metadata_suppressed_distributions(comparison_context):
     return suppressed
 
 
+def _bound_in_unit(value, unit):
+    """Return a metadata bound (plain number or value/unit mapping) in the given unit."""
+    if isinstance(value, dict):
+        return float(u.Quantity(value[VALUE_KEY], value["unit"]).to_value(unit))
+    return float(u.Quantity(value, unit).to_value(unit))
+
+
 def _constant_metadata_bounds(configurations, lower_key, upper_key, unit, target=None):
     """Return True if all finite metadata bounds agree within floating-point tolerance."""
     bounds = []
     for configuration in configurations:
         for key in (lower_key, upper_key):
             try:
-                value = configuration[key]
-                quantity = (
-                    u.Quantity(value[VALUE_KEY], value["unit"])
-                    if isinstance(value, dict)
-                    else u.Quantity(value, unit)
-                )
-                bounds.append(float(quantity.to_value(unit)))
+                bounds.append(_bound_in_unit(configuration[key], unit))
             except KeyError, TypeError, ValueError:
                 return False
     if not bounds or not np.all(np.isfinite(bounds)):
@@ -292,15 +297,7 @@ def _plot_per_type_comparisons(
     suppressed,
 ):
     """Plot per-telescope-type comparisons and collect their statistics."""
-    all_types = sorted(
-        {
-            tel_type
-            for metrics in metrics_per_production
-            for tel_type in metrics.per_type
-            if tel_type not in _SPECIAL_TRIGGER_SUBSETS
-        }
-    )
-    for tel_type in all_types:
+    for tel_type in _telescope_types(metrics_per_production):
         type_metrics = [
             metrics.per_type[tel_type]
             for metrics in metrics_per_production
@@ -375,8 +372,6 @@ def _plot_stairs(ax, bin_edges, values, label, errors=None, **style):
 
 def _artist_color(artist):
     """Return a representative color from a matplotlib artist."""
-    if artist is None:
-        return "black"
     if hasattr(artist, "get_edgecolor"):
         color = artist.get_edgecolor()
         return color[0] if isinstance(color, np.ndarray) and color.ndim > 1 else color
@@ -733,14 +728,13 @@ def _get_global_quantity_bin_edges(metrics_per_production, quantity_name, x_scal
     if histogram_edges:
         return np.unique(np.concatenate(histogram_edges))
 
-    simulated_values = []
-    for metrics in metrics_per_production:
-        simulated, _ = _get_quantity_arrays(metrics, quantity_name)
-        if simulated.size > 0:
-            simulated_values.append(np.asarray(simulated))
-    if not simulated_values:
-        return compute_bin_edges(np.array([]), scale=x_scale, bins=bins)
-    return compute_bin_edges(np.concatenate(simulated_values), scale=x_scale, bins=bins)
+    simulated_values = [
+        np.asarray(_get_quantity_arrays(metrics, quantity_name)[0])
+        for metrics in metrics_per_production
+    ]
+    simulated_values = [values for values in simulated_values if values.size > 0]
+    samples = np.concatenate(simulated_values) if simulated_values else np.array([])
+    return compute_bin_edges(samples, scale=x_scale, bins=bins)
 
 
 def _get_quantity_counts(metrics, quantity_name, bin_edges, event_kind):

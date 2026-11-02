@@ -11,10 +11,10 @@ from unittest.mock import call
 import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.sim_events import file_info
 from simtools.simulation.parameters import SimulationParameters
 from simtools.simulator import Simulator
+from simtools.utils.primary_particle import PrimaryParticle
 
 logger = logging.getLogger()
 

@@ -14,13 +14,15 @@ from simtools.utils.value_conversion import get_value_as_quantity
 
 _ANGULAR_DISTANCE = "Angular Distance (deg)"
 _CORE_DISTANCE = "Core Distance (m)"
+_ENERGY = "Energy (TeV)"
+_EVENT_COUNT = "Event Count"
 _REUSE_STAT_LABELS = {
     "mean": "Mean Reuse",
     "max": "Max Reuse",
     "std": "Reuse Std Dev",
 }
 _AXIS_NAMES_AND_UNITS = {
-    "Energy (TeV)": ("energy", "TeV"),
+    _ENERGY: ("energy", "TeV"),
     _CORE_DISTANCE: ("core_distance", "m"),
     _ANGULAR_DISTANCE: ("angular_distance", "deg"),
     "Core X (m)": ("core_x", "m"),
@@ -34,21 +36,22 @@ _PLOT_ONLY_KEYS = (
     "plot_scales",
     "suffix",
 )
-_EXPOSURE_INFO_KEYS = (
-    "primary_particle",
-    "zenith",
-    "azimuth",
-    "nsb_level",
-    "spectral_index",
-    "energy_min",
-    "energy_max",
-    "core_scatter_min",
-    "core_scatter_max",
-    "viewcone_min",
-    "viewcone_max",
-    "solid_angle",
-    "scatter_area",
-)
+# Exposure metadata of an event-data file and the unit each value is converted to.
+_EXPOSURE_INFO_UNITS = {
+    "primary_particle": None,
+    "zenith": "deg",
+    "azimuth": "deg",
+    "nsb_level": None,
+    "spectral_index": None,
+    "energy_min": "TeV",
+    "energy_max": "TeV",
+    "core_scatter_min": "m",
+    "core_scatter_max": "m",
+    "viewcone_min": "deg",
+    "viewcone_max": "deg",
+    "solid_angle": "sr",
+    "scatter_area": "cm2",
+}
 
 
 @dataclass
@@ -106,25 +109,17 @@ class EventDataHistograms:
         """Initialize."""
         self._logger = logging.getLogger(__name__)
         self.event_data_files = self._normalize_event_data_files(event_data_file)
-        self.array_name = array_name
-        self.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
-        self.angular_distance_bin_count = max(int(angular_distance_bin_count), 2)
-        self.angular_distance_bin_width = self._validate_angular_distance_bin_width(
-            angular_distance_bin_width
-        )
-        self._core_distance_binning = (
-            max(int(core_distance_bin_count), 2),
-            self._validate_core_distance_bin_width(core_distance_bin_width),
-        )
         self.skip_invalid_event_data_files = skip_invalid_event_data_files
         self.require_triggered_data = require_triggered_data
-        self.telescope_list = telescope_list
-
-        self.histograms = {}
-        self._fill_state = _FillState()
-        self.file_info = {}
-        self.data_ranges = {}
-        self.loaded_bin_edges = {}
+        self._set_binning_state(
+            array_name,
+            telescope_list,
+            energy_bins_per_decade,
+            angular_distance_bin_count,
+            angular_distance_bin_width,
+            core_distance_bin_count,
+            core_distance_bin_width,
+        )
 
         self.reader = None
         if not self.skip_invalid_event_data_files:
@@ -152,28 +147,49 @@ class EventDataHistograms:
         instance = cls.__new__(cls)
         instance._logger = logging.getLogger(__name__)
         instance.event_data_files = []
-        instance.array_name = array_name
-        instance.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
-        instance.angular_distance_bin_count = max(int(angular_distance_bin_count), 2)
-        instance.angular_distance_bin_width = cls._validate_angular_distance_bin_width(
-            angular_distance_bin_width
-        )
-        instance._core_distance_binning = (
-            max(int(core_distance_bin_count), 2),
-            cls._validate_core_distance_bin_width(core_distance_bin_width),
-        )
         instance.skip_invalid_event_data_files = False
         instance.require_triggered_data = True
-        instance.telescope_list = telescope_list
-        instance.histograms = {}
-        instance._fill_state = _FillState(
-            contains_triggered_data=True, release_event_data_after_fill=True
+        instance._set_binning_state(
+            array_name,
+            telescope_list,
+            energy_bins_per_decade,
+            angular_distance_bin_count,
+            angular_distance_bin_width,
+            core_distance_bin_count,
+            core_distance_bin_width,
         )
-        instance.file_info = {}
-        instance.data_ranges = {}
-        instance.loaded_bin_edges = {}
+        instance._fill_state.contains_triggered_data = True
+        instance._fill_state.release_event_data_after_fill = True
         instance.reader = None
         return instance
+
+    def _set_binning_state(
+        self,
+        array_name,
+        telescope_list,
+        energy_bins_per_decade,
+        angular_distance_bin_count,
+        angular_distance_bin_width,
+        core_distance_bin_count,
+        core_distance_bin_width,
+    ):
+        """Set binning configuration and empty accumulation state."""
+        self.array_name = array_name
+        self.telescope_list = telescope_list
+        self.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
+        self.angular_distance_bin_count = max(int(angular_distance_bin_count), 2)
+        self.angular_distance_bin_width = self._validate_angular_distance_bin_width(
+            angular_distance_bin_width
+        )
+        self._core_distance_binning = (
+            max(int(core_distance_bin_count), 2),
+            self._validate_core_distance_bin_width(core_distance_bin_width),
+        )
+        self.histograms = {}
+        self.file_info = {}
+        self.data_ranges = {}
+        self.loaded_bin_edges = {}
+        self._fill_state = _FillState()
 
     def set_loaded_histograms(
         self,
@@ -241,6 +257,12 @@ class EventDataHistograms:
         """Check if a reader exposes triggered event tables."""
         return any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in reader.data_sets)
 
+    def _has_triggered_data(self):
+        """Return whether triggered event tables were seen in the input."""
+        return self._fill_state.contains_triggered_data or self._reader_has_triggered_data(
+            self.reader
+        )
+
     def _log_skipped_event_data_file(self, event_data_file, exception):
         """Log skipped invalid event-data file."""
         self._logger.warning(f"Skipping invalid event data file '{event_data_file}': {exception}")
@@ -268,16 +290,6 @@ class EventDataHistograms:
             )
             yield event_data_file, self.reader
 
-    def _read_data_set(self, reader, event_data_file, data_set, file_index=None, total_files=None):
-        """Read one dataset and return reduced file information with event tables."""
-        progress = f" ({file_index}/{total_files})" if file_index and total_files else ""
-        self._logger.info(f"Reading event data from {event_data_file} for {data_set}{progress}")
-        file_info_table, shower_data, event_data, triggered_data = reader.read_event_data(
-            event_data_file, table_name_map=data_set
-        )
-        file_info_table = reader.get_reduced_simulation_file_info(file_info_table)
-        return file_info_table, shower_data, event_data, triggered_data
-
     def _get_file_info_value(self, file_info_table, key, unit=None):
         """Return file-info value, converting to the requested unit when provided."""
         value = file_info_table.get(key)
@@ -302,28 +314,16 @@ class EventDataHistograms:
 
     def _update_file_info(self, file_info_table, source_file=None):
         """Store normalized metadata and reject incompatible exposures."""
-        spectral_index = self._get_file_info_value(file_info_table, "spectral_index")
-        if spectral_index is None:
-            spectral_index = np.nan
         file_info = {
-            "primary_particle": self._get_file_info_value(file_info_table, "primary_particle"),
-            "zenith": self._get_file_info_value(file_info_table, "zenith", "deg"),
-            "azimuth": self._get_file_info_value(file_info_table, "azimuth", "deg"),
-            "nsb_level": self._get_file_info_value(file_info_table, "nsb_level"),
-            "spectral_index": spectral_index,
-            "energy_min": self._get_file_info_value(file_info_table, "energy_min", "TeV"),
-            "energy_max": self._get_file_info_value(file_info_table, "energy_max", "TeV"),
-            "core_scatter_min": self._get_file_info_value(file_info_table, "core_scatter_min", "m"),
-            "core_scatter_max": self._get_file_info_value(file_info_table, "core_scatter_max", "m"),
-            "viewcone_min": self._get_file_info_value(file_info_table, "viewcone_min", "deg"),
-            "viewcone_max": self._get_file_info_value(file_info_table, "viewcone_max", "deg"),
-            "solid_angle": self._get_file_info_value(file_info_table, "solid_angle", "sr"),
-            "scatter_area": self._get_file_info_value(file_info_table, "scatter_area", "cm2"),
+            key: self._get_file_info_value(file_info_table, key, unit)
+            for key, unit in _EXPOSURE_INFO_UNITS.items()
         }
+        if file_info["spectral_index"] is None:
+            file_info["spectral_index"] = np.nan
         if self.file_info:
             differing_keys = [
                 key
-                for key in _EXPOSURE_INFO_KEYS
+                for key in _EXPOSURE_INFO_UNITS
                 if not self._file_info_values_equal(self.file_info.get(key), file_info.get(key))
             ]
             if differing_keys:
@@ -420,20 +420,21 @@ class EventDataHistograms:
         total_files = len(self.event_data_files)
         for file_index, (event_data_file, reader) in enumerate(self._iter_readers(), start=1):
             for data_set in reader.data_sets:
+                self._logger.info(
+                    f"Reading event data from {event_data_file} for {data_set}"
+                    f" ({file_index}/{total_files})"
+                )
                 try:
-                    values = self._read_data_set(
-                        reader,
-                        event_data_file,
-                        data_set,
-                        file_index=file_index,
-                        total_files=total_files,
+                    file_info_table, shower_data, event_data, triggered_data = (
+                        reader.read_event_data(event_data_file, table_name_map=data_set)
                     )
+                    file_info_table = reader.get_reduced_simulation_file_info(file_info_table)
                 except (OSError, KeyError, ValueError) as exc:
                     if self.skip_invalid_event_data_files:
                         self._log_skipped_event_data_file(event_data_file, exc)
                         break
                     raise
-                yield reader, values
+                yield reader, (file_info_table, shower_data, event_data, triggered_data)
 
     def fill(self, fill_efficiency_histogram=True):
         """
@@ -456,19 +457,10 @@ class EventDataHistograms:
 
     def _define_histograms(self, event_data, triggered_data, shower_data):
         """
-        Define histograms including event data, binning, naming, and labels.
+        Define the simulated and triggered histograms, including reuse summaries.
 
-        All histograms are defined for simulated and triggered events (note
-        the subtlety of triggered events being read from event_data and triggered_data).
-
-        Parameters
-        ----------
-        event_data : EventData
-            The event data to use for filling the histograms.
-        triggered_data : TriggeredData
-            The triggered data to use for filling the histograms.
-        shower_data : ShowerData
-            The shower data to use for filling the histograms.
+        Triggered histograms read event_data and triggered_data; the simulated (``_mc``)
+        counterparts read shower_data.
 
         Returns
         -------
@@ -480,31 +472,26 @@ class EventDataHistograms:
             self.core_distance_bins.max(),
             len(self.core_distance_bins),
         )
-        hists = {}
-
-        energy_axis_title = "Energy (TeV)"
-        event_count_axis_title = "Event Count"
-
         definitions = {
             "energy": {
                 "event_data_column": "simulated_energy",
                 "event_data": event_data,
                 "bin_edges": self.energy_bins,
-                "axis_titles": [energy_axis_title, event_count_axis_title],
+                "axis_titles": [_ENERGY, _EVENT_COUNT],
                 "plot_scales": {"x": "log", "y": "log"},
             },
             "core_distance": {
                 "event_data_column": "core_distance_shower",
                 "event_data": event_data,
                 "bin_edges": self.core_distance_bins,
-                "axis_titles": [_CORE_DISTANCE, event_count_axis_title],
+                "axis_titles": [_CORE_DISTANCE, _EVENT_COUNT],
                 "plot_scales": {"y": "log"},
             },
             "angular_distance": {
                 "event_data_column": "angular_distance",
                 "event_data": triggered_data,
                 "bin_edges": self.view_cone_bins,
-                "axis_titles": [_ANGULAR_DISTANCE, event_count_axis_title],
+                "axis_titles": [_ANGULAR_DISTANCE, _EVENT_COUNT],
                 "plot_scales": {"y": "log"},
             },
             "x_core_shower_vs_y_core_shower": {
@@ -512,14 +499,14 @@ class EventDataHistograms:
                 "event_data": (event_data, event_data),
                 "bin_edges": (xy_bins, xy_bins),
                 "is_1d": False,
-                "axis_titles": ["Core X (m)", "Core Y (m)", event_count_axis_title],
+                "axis_titles": ["Core X (m)", "Core Y (m)", _EVENT_COUNT],
             },
             "core_distance_vs_energy": {
                 "event_data_column": ("core_distance_shower", "simulated_energy"),
                 "event_data": (event_data, event_data),
                 "bin_edges": (self.core_distance_bins, self.energy_bins),
                 "is_1d": False,
-                "axis_titles": [_CORE_DISTANCE, energy_axis_title, event_count_axis_title],
+                "axis_titles": [_CORE_DISTANCE, _ENERGY, _EVENT_COUNT],
                 "plot_scales": {"y": "log"},
             },
             "angular_distance_vs_energy": {
@@ -527,11 +514,7 @@ class EventDataHistograms:
                 "event_data": (triggered_data, event_data),
                 "bin_edges": (self.view_cone_bins, self.energy_bins),
                 "is_1d": False,
-                "axis_titles": [
-                    _ANGULAR_DISTANCE,
-                    energy_axis_title,
-                    event_count_axis_title,
-                ],
+                "axis_titles": [_ANGULAR_DISTANCE, _ENERGY, _EVENT_COUNT],
                 "plot_scales": {"y": "log"},
             },
             "angular_distance_vs_energy_vs_core_distance": {
@@ -543,12 +526,7 @@ class EventDataHistograms:
                 "event_data": (triggered_data, event_data, event_data),
                 "bin_edges": (self.view_cone_bins, self.energy_bins, self.core_distance_bins),
                 "is_1d": False,
-                "axis_titles": [
-                    _ANGULAR_DISTANCE,
-                    energy_axis_title,
-                    _CORE_DISTANCE,
-                    event_count_axis_title,
-                ],
+                "axis_titles": [_ANGULAR_DISTANCE, _ENERGY, _CORE_DISTANCE, _EVENT_COUNT],
                 "plot_scales": {"y": "log"},
             },
         }
@@ -557,84 +535,69 @@ class EventDataHistograms:
             name: self.get_histogram_definition(**cfg) | {"suffix": "", "title": "Triggered Events"}
             for name, cfg in definitions.items()
         }
-
-        hists_mc = {}
-        for key, hist in hists.items():
-            key_mc = f"{key}_mc"
-            hists_mc[key_mc] = copy.copy(hist)
-            hists_mc[key_mc]["suffix"] = "_mc"
-            hists_mc[key_mc]["title"] = "Simulated Events"
-            hists_mc[key_mc]["event_data"] = (
-                shower_data if hist["1d"] else tuple(shower_data for _ in hist["event_data_column"])
-            )
-
-        hists.update(hists_mc)
+        for key, hist in list(hists.items()):
+            hists[f"{key}_mc"] = copy.copy(hist) | {
+                "suffix": "_mc",
+                "title": "Simulated Events",
+                "event_data": (
+                    shower_data
+                    if hist["1d"]
+                    else tuple(shower_data for _ in hist["event_data_column"])
+                ),
+            }
         hists.update(self._define_reuse_histograms())
         for definition in hists.values():
             labels = definition.get("axis_titles") or []
-            if labels:
-                axis_metadata = [_AXIS_NAMES_AND_UNITS[label] for label in labels[:-1]]
-                definition["axis_names"] = [name for name, _ in axis_metadata]
-                definition["axis_units"] = [unit for _, unit in axis_metadata]
-            else:
-                definition["axis_names"] = None
-                definition["axis_units"] = None
+            axis_metadata = [_AXIS_NAMES_AND_UNITS[label] for label in labels[:-1]]
+            definition["axis_names"] = [name for name, _ in axis_metadata] if labels else None
+            definition["axis_units"] = [unit for _, unit in axis_metadata] if labels else None
             for key in _PLOT_ONLY_KEYS:
                 definition.pop(key, None)
         return hists
 
-    def _define_reuse_histograms(self):
-        """Return definitions for reuse summary histograms."""
-        energy_axis_title = "Energy (TeV)"
-        reuse_histograms = {}
-        definitions = (
-            (
-                "energy",
-                self.energy_bins,
-                [energy_axis_title],
-                {"x": "log", "y": "linear"},
-            ),
-            (
-                "core_distance",
+    def _reuse_definitions(self):
+        """Return bin edges, axis titles and plot scales of each reuse summary base."""
+        return {
+            "energy": (self.energy_bins, [_ENERGY], {"x": "log", "y": "linear"}),
+            "core_distance": (
                 self.core_distance_bins,
                 [_CORE_DISTANCE],
                 {"x": "linear", "y": "linear"},
             ),
-            (
-                "angular_distance",
+            "angular_distance": (
                 self.view_cone_bins,
                 [_ANGULAR_DISTANCE],
                 {"x": "linear", "y": "linear"},
             ),
-            (
-                "core_distance_vs_energy",
+            "core_distance_vs_energy": (
                 (self.core_distance_bins, self.energy_bins),
-                [_CORE_DISTANCE, energy_axis_title],
+                [_CORE_DISTANCE, _ENERGY],
                 {"x": "linear", "y": "log"},
             ),
-            (
-                "angular_distance_vs_energy",
+            "angular_distance_vs_energy": (
                 (self.view_cone_bins, self.energy_bins),
-                [_ANGULAR_DISTANCE, energy_axis_title],
+                [_ANGULAR_DISTANCE, _ENERGY],
                 {"x": "linear", "y": "log"},
             ),
-        )
+        }
 
-        for statistic, label in _REUSE_STAT_LABELS.items():
-            for base_name, bin_edges, axis_titles, plot_scales in definitions:
-                reuse_histograms[f"reuse_{statistic}_vs_{base_name}"] = (
-                    self.get_histogram_definition(
-                        event_data_column=() if isinstance(bin_edges, tuple) else None,
-                        histogram=None,
-                        bin_edges=bin_edges,
-                        title=f"Triggered reuse {statistic}",
-                        axis_titles=[*axis_titles, label],
-                        suffix="",
-                        is_1d=not isinstance(bin_edges, tuple),
-                        plot_scales=plot_scales,
-                    )
-                )
-        return reuse_histograms
+    def _define_reuse_histograms(self):
+        """Return definitions for reuse summary histograms."""
+        definitions = self._reuse_definitions()
+        return {
+            f"reuse_{statistic}_vs_{base_name}": self.get_histogram_definition(
+                event_data_column=() if isinstance(bin_edges, tuple) else None,
+                histogram=None,
+                bin_edges=bin_edges,
+                title=f"Triggered reuse {statistic}",
+                axis_titles=[*axis_titles, label],
+                suffix="",
+                is_1d=not isinstance(bin_edges, tuple),
+                plot_scales=plot_scales,
+            )
+            for statistic, label in _REUSE_STAT_LABELS.items()
+            for base_name, (bin_edges, axis_titles, plot_scales) in definitions.items()
+        }
 
     def _accumulate_reuse_histograms(self, event_data, triggered_data):
         """Accumulate reuse summary statistics into their histogram definitions."""
@@ -643,33 +606,27 @@ class EventDataHistograms:
 
         try:
             reuse_counts = self._triggered_reuse_counts(triggered_data)
-            coordinates = {
-                "energy": np.asarray(event_data.simulated_energy, dtype=float),
-                "core_distance": np.asarray(event_data.core_distance_shower, dtype=float),
-                "angular_distance": np.asarray(triggered_data.angular_distance, dtype=float),
-            }
+            energy = np.asarray(event_data.simulated_energy, dtype=float)
+            core_distance = np.asarray(event_data.core_distance_shower, dtype=float)
+            angular_distance = np.asarray(triggered_data.angular_distance, dtype=float)
         except AttributeError, TypeError, ValueError:
             return
-        histogram_specs = {
-            "energy": (coordinates["energy"], self.energy_bins),
-            "core_distance": (coordinates["core_distance"], self.core_distance_bins),
-            "angular_distance": (coordinates["angular_distance"], self.view_cone_bins),
-            "core_distance_vs_energy": (
-                (coordinates["core_distance"], coordinates["energy"]),
-                (self.core_distance_bins, self.energy_bins),
-            ),
-            "angular_distance_vs_energy": (
-                (coordinates["angular_distance"], coordinates["energy"]),
-                (self.view_cone_bins, self.energy_bins),
-            ),
+        values_by_base = {
+            "energy": energy,
+            "core_distance": core_distance,
+            "angular_distance": angular_distance,
+            "core_distance_vs_energy": (core_distance, energy),
+            "angular_distance_vs_energy": (angular_distance, energy),
         }
+        definitions = self._reuse_definitions()
 
         for statistic in _REUSE_STAT_LABELS:
-            for name, (values, bin_edges) in histogram_specs.items():
-                histogram_name = f"reuse_{statistic}_vs_{name}"
+            for base_name, values in values_by_base.items():
+                histogram_name = f"reuse_{statistic}_vs_{base_name}"
                 spec = self._fill_state.histogram_specs.get(histogram_name)
                 if spec is None:
                     continue
+                bin_edges = definitions[base_name][0]
                 accumulator = self._fill_state.reuse_stat_accumulators.setdefault(
                     histogram_name,
                     self._create_reuse_stat_accumulator(bin_edges),
@@ -725,62 +682,42 @@ class EventDataHistograms:
         }
 
     def _update_reuse_stat_accumulator(self, accumulator, values, reuse_counts, bin_edges):
-        """Update one reuse-statistic accumulator with one dataset."""
-        if isinstance(values, tuple):
-            x_values, y_values = values
-            shape = accumulator["count"].shape
-            x_indices = np.digitize(x_values, bin_edges[0]) - 1
-            y_indices = np.digitize(y_values, bin_edges[1]) - 1
-            valid = (
-                np.isfinite(reuse_counts)
-                & np.isfinite(x_values)
-                & np.isfinite(y_values)
-                & (x_indices >= 0)
-                & (x_indices < shape[0])
-                & (y_indices >= 0)
-                & (y_indices < shape[1])
-            )
-            self._accumulate_reuse_bin_values(
-                accumulator,
-                np.column_stack((x_indices[valid], y_indices[valid])),
-                reuse_counts[valid],
-            )
-            return
-
-        indices = np.digitize(values, bin_edges) - 1
-        valid = (
-            np.isfinite(reuse_counts)
-            & np.isfinite(values)
-            & (indices >= 0)
-            & (indices < accumulator["count"].shape[0])
+        """Update one reuse-statistic accumulator with one dataset (1D or 2D values)."""
+        value_arrays = values if isinstance(values, tuple) else (values,)
+        edge_arrays = bin_edges if isinstance(bin_edges, tuple) else (bin_edges,)
+        valid = np.isfinite(reuse_counts)
+        index_arrays = []
+        for value, edges, size in zip(value_arrays, edge_arrays, accumulator["count"].shape):
+            indices = np.digitize(value, edges) - 1
+            valid &= np.isfinite(value) & (indices >= 0) & (indices < size)
+            index_arrays.append(indices)
+        self._accumulate_reuse_bin_values(
+            accumulator, [indices[valid] for indices in index_arrays], reuse_counts[valid]
         )
-        self._accumulate_reuse_bin_values(accumulator, indices[valid], reuse_counts[valid])
 
     @staticmethod
-    def _accumulate_reuse_bin_values(accumulator, indices, reuse_counts):
+    def _accumulate_reuse_bin_values(accumulator, index_arrays, reuse_counts):
         """Update count, sum, sum-of-squares, and max for addressed bins."""
         reuse_counts = np.asarray(reuse_counts, dtype=float)
         positive = reuse_counts > 0.0
         if not np.any(positive):
             return
 
-        indices = np.asarray(indices, dtype=np.int64)
         shape = accumulator["count"].shape
-        if indices.ndim == 1:
-            flat_indices = indices[positive]
-        else:
-            flat_indices = np.ravel_multi_index(indices[positive].T, shape)
-
+        flat_indices = np.ravel_multi_index(
+            tuple(np.asarray(indices, dtype=np.int64)[positive] for indices in index_arrays),
+            shape,
+        )
         values = reuse_counts[positive]
         flat_size = int(np.prod(shape, dtype=np.int64))
 
-        count = np.bincount(flat_indices, minlength=flat_size).reshape(shape)
-        sum_ = np.bincount(flat_indices, weights=values, minlength=flat_size).reshape(shape)
-        sum_sq = np.bincount(flat_indices, weights=values**2, minlength=flat_size).reshape(shape)
-
-        accumulator["count"] += count
-        accumulator["sum"] += sum_
-        accumulator["sum_sq"] += sum_sq
+        accumulator["count"] += np.bincount(flat_indices, minlength=flat_size).reshape(shape)
+        accumulator["sum"] += np.bincount(
+            flat_indices, weights=values, minlength=flat_size
+        ).reshape(shape)
+        accumulator["sum_sq"] += np.bincount(
+            flat_indices, weights=values**2, minlength=flat_size
+        ).reshape(shape)
         np.fmax.at(accumulator["max"].reshape(-1), flat_indices, values)
 
     @staticmethod
@@ -841,19 +778,18 @@ class EventDataHistograms:
 
         Adds to existing histogram if present, otherwise initializes it.
         """
+        if data["event_data"] is None:
+            return
         if data["1d"]:
-            if data["event_data"] is None:
-                return
-            values = [getattr(data["event_data"], data["event_data_column"])]
+            event_data_list, columns = [data["event_data"]], [data["event_data_column"]]
         else:
-            if data["event_data"] is None:
-                return
-            if any(event_data is None for event_data in data["event_data"]):
-                return
-            values = [
-                getattr(event_data, column_name)
-                for event_data, column_name in zip(data["event_data"], data["event_data_column"])
-            ]
+            event_data_list, columns = data["event_data"], data["event_data_column"]
+        if any(event_data is None for event_data in event_data_list):
+            return
+        values = [
+            getattr(event_data, column_name)
+            for event_data, column_name in zip(event_data_list, columns)
+        ]
         histogram = self.histograms.get(name)
         if histogram is None:
             histogram = self._create_histogram(data)
@@ -882,9 +818,7 @@ class EventDataHistograms:
         dict
             Dictionary containing the efficiency histograms.
         """
-        if not self._fill_state.contains_triggered_data and not self._reader_has_triggered_data(
-            self.reader
-        ):
+        if not self._has_triggered_data():
             return None
 
         eff_histograms = {}
@@ -1002,9 +936,7 @@ class EventDataHistograms:
         dict
             Dictionary containing the cumulative histograms.
         """
-        if not self._fill_state.contains_triggered_data and not self._reader_has_triggered_data(
-            self.reader
-        ):
+        if not self._has_triggered_data():
             return None
 
         cumulative_data = {}

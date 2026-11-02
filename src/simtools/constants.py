@@ -4,6 +4,8 @@ import os
 from importlib.resources import files
 from pathlib import Path
 
+CORSIKA_PATH = "/workdir/simulation_software/corsika7"
+
 # Schema path
 SCHEMA_PATH = files("simtools") / "schemas"
 # Schema URL

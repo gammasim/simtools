@@ -102,6 +102,15 @@ def command_runner(mocker):
 
 
 @pytest.fixture(autouse=True)
+def restore_environment():
+    """Undo environment changes of a test (e.g. a ``.env`` file loaded while parsing arguments)."""
+    saved = dict(os.environ)
+    yield
+    os.environ.clear()
+    os.environ.update(saved)
+
+
+@pytest.fixture(autouse=True)
 def mock_simulator_paths(request, tmp_test_directory):
     """Mock sim_telarray and corsika paths for unit tests.
 

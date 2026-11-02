@@ -5,8 +5,8 @@ import re
 import astropy.units as u
 import jsonschema
 
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.utils import names
+from simtools.utils.primary_particle import PrimaryParticle
 
 format_checker = jsonschema.FormatChecker()
 

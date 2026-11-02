@@ -506,8 +506,6 @@ layers = [
   "simtools.utils",
 ]
 ignore_imports = [
-  "simtools.corsika.build_options -> simtools.configuration.defaults",
-  "simtools.data_model.format_checkers -> simtools.corsika.primary_particle",
   "simtools.data_model.setting_workflow -> simtools.runners.simtools_runner",
   "simtools.model.array_model -> simtools.simulation.configuration",
   "simtools.model.model_utils -> simtools.simulation.configuration",
@@ -516,7 +514,6 @@ ignore_imports = [
   "simtools.model.telescope_model -> simtools.simulation.configuration",
   "simtools.production_configuration.grid -> simtools.configuration.argument_helpers",
   "simtools.production_configuration.grid -> simtools.configuration.defaults",
-  "simtools.sim_events.formats.eventio_reader -> simtools.corsika.primary_particle",
   "simtools.sim_events.formats.eventio_reader -> simtools.simtel.simtel_io_metadata",
   "simtools.sim_events.validate_run_outputs -> simtools.job_execution.log_inspector",
   "simtools.sim_events.validate_run_outputs -> simtools.model.mirrors",
@@ -528,7 +525,6 @@ ignore_imports = [
   "simtools.production_configuration.comparison -> simtools.production_configuration.trigger_histograms",
   "simtools.production_configuration.comparison -> simtools.simtel.simtel_event_reader",
   "simtools.production_configuration.comparison -> simtools.simtel.simtel_io_metadata",
-  "simtools.sim_events.reader -> simtools.corsika.primary_particle",
   "simtools.simtel.simulator_array -> simtools.runners.simtel_runner",
   "simtools.simtel.simulator_light_emission -> simtools.runners.runner_services",
   "simtools.simtel.simulator_light_emission -> simtools.runners.simtel_runner",

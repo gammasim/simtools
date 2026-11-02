@@ -9,13 +9,13 @@ from astropy import units as u
 
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.input_writer import format_parameter
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.simulation.configuration import get_model_writer
 from simtools.simulation.parameters import SimulationParameters
 from simtools.utils import value_conversion
 from simtools.utils.geometry import geographic_to_corsika_azimuth
+from simtools.utils.primary_particle import PrimaryParticle
 from simtools.utils.random import seeds
 
 CALIBRATION_RUN_MODES = ["pedestals", "pedestals_dark", "pedestals_nsb_only", "direct_injection"]

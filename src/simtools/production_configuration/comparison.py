@@ -51,6 +51,30 @@ PLOT_STATISTICS_KEY = "plot_statistics"
 COMPARISONS_KEY = "comparisons"
 ARRAY_LAYOUT_KEY = "array_layout_name"
 REPORT_PAGE_COLUMN = "report_page"
+_METRIC_FIELDS = [
+    "pair",
+    "array_layout",
+    "plot",
+    REPORT_PAGE_COLUMN,
+    "scope",
+    "telescope_type",
+    "population",
+    "metric",
+    "value",
+    "normalized_value",
+    "valid",
+    "reason",
+    "baseline_count",
+    "candidate_count",
+]
+_DENSE_HISTOGRAM_MAP = {
+    "energy_mc": ("energy", "simulated"),
+    "energy": ("energy", "triggered"),
+    "core_distance_mc": ("core_distance", "simulated"),
+    "core_distance": ("core_distance", "triggered"),
+    "angular_distance_mc": ("angular_distance", "simulated"),
+    "angular_distance": ("angular_distance", "triggered"),
+}
 
 _logger = logging.getLogger(__name__)
 
@@ -205,21 +229,17 @@ def _comparison_title(comparison_context, array_layout_name):
     labels = list(configurations)
     baseline = configurations[labels[0]]
     candidate = configurations[labels[-1]]
-    first_line = [layout]
-    for key, label in (("primary", "Primary"), ("site", "Site")):
-        value = _shared_configuration_value(baseline, candidate, key)
-        if value is not None:
-            first_line.append(f"{label}: {value}")
-    first_line.append(_format_energy_range(baseline, candidate, labels))
-    first_line.append(
-        _format_pair_value("zenith_angle", "Zenith", baseline, candidate, labels, unit="deg")
-    )
-    second_line = [
-        _format_pair_value("azimuth_angle", "Azimuth", baseline, candidate, labels, unit="deg")
+    first_line = [
+        layout,
+        _shared_value_text(baseline, candidate, "primary", "Primary"),
+        _shared_value_text(baseline, candidate, "site", "Site"),
+        _format_energy_range(baseline, candidate, labels),
+        _format_pair_value("zenith_angle", "Zenith", baseline, candidate, labels, unit="deg"),
     ]
-    interaction = _shared_configuration_value(baseline, candidate, "corsika_he_interaction")
-    if interaction is not None:
-        second_line.append(f"Interaction model: {interaction}")
+    second_line = [
+        _format_pair_value("azimuth_angle", "Azimuth", baseline, candidate, labels, unit="deg"),
+        _shared_value_text(baseline, candidate, "corsika_he_interaction", "Interaction model"),
+    ]
     return (
         " | ".join(value for value in first_line if value)
         + "\n"
@@ -227,16 +247,21 @@ def _comparison_title(comparison_context, array_layout_name):
     )
 
 
+def _energy_limits(configuration):
+    """Return formatted minimum and maximum energies of one configuration."""
+    return (
+        _format_configuration_value(configuration.get("energy_min"), "energy"),
+        _format_configuration_value(configuration.get("energy_max"), "energy"),
+    )
+
+
 def _format_energy_range(baseline, candidate, labels):
     """Format matching energy limits as one readable energy range."""
-    baseline_min = _format_configuration_value(baseline.get("energy_min"), "energy")
-    baseline_max = _format_configuration_value(baseline.get("energy_max"), "energy")
-    candidate_min = _format_configuration_value(candidate.get("energy_min"), "energy")
-    candidate_max = _format_configuration_value(candidate.get("energy_max"), "energy")
-    if baseline_min == "None" and baseline_max == "None":
+    baseline_limits = _energy_limits(baseline)
+    if baseline_limits == ("None", "None"):
         return None
-    baseline_range = _join_limits(baseline_min, baseline_max)
-    candidate_range = _join_limits(candidate_min, candidate_max)
+    baseline_range = _join_limits(*baseline_limits)
+    candidate_range = _join_limits(*_energy_limits(candidate))
     if baseline_range == candidate_range:
         return f"Energy: {baseline_range}"
     return f"Energy: {labels[0]} {baseline_range}; {labels[-1]} {candidate_range}"
@@ -258,12 +283,11 @@ def _format_pair_value(key, label, baseline, candidate, labels, unit=None):
     return f"{label}: {labels[0]} {baseline_value} -> {labels[-1]} {candidate_value}"
 
 
-def _shared_configuration_value(baseline, candidate, key):
-    """Return a compact value only when both pair configurations agree."""
+def _shared_value_text(baseline, candidate, key, label):
+    """Return 'label: value' only when both pair configurations agree on a value."""
     baseline_value = _format_configuration_value(baseline.get(key))
-    candidate_value = _format_configuration_value(candidate.get(key))
-    if baseline_value == candidate_value and baseline_value != "None":
-        return baseline_value
+    if baseline_value == _format_configuration_value(candidate.get(key)) != "None":
+        return f"{label}: {baseline_value}"
     return None
 
 
@@ -274,11 +298,8 @@ def _format_configuration_value(value, quantity=None):
         value_unit = value["unit"]
         if quantity == "energy" and str(value_unit).lower() == "gev" and float(magnitude) >= 1000:
             return f"{float(magnitude) / 1000:g} TeV"
-        return (
-            f"{magnitude:g} {value_unit}"
-            if isinstance(magnitude, int | float)
-            else f"{magnitude} {value_unit}"
-        )
+        text = f"{magnitude:g}" if isinstance(magnitude, int | float) else magnitude
+        return f"{text} {value_unit}"
     if quantity and isinstance(value, int | float):
         return f"{value:g} {quantity}"
     return str(value)
@@ -376,10 +397,9 @@ def _compact_statistic_rows(pair, array_layout, statistics, report_pages):
 
 def _comparison_coordinates(statistics_file, output_directory, comparison_label):
     """Identify one pair/layout consistently for scalar rows and coverage checks."""
-    path_parts = statistics_file.relative_to(output_directory).parts
     if comparison_label is not None:
-        pair, array_layout = comparison_label
-        return pair, array_layout
+        return comparison_label
+    path_parts = statistics_file.relative_to(output_directory).parts
     if len(path_parts) > 2:
         return path_parts[0], path_parts[1]
     if len(path_parts) == 1:
@@ -389,27 +409,11 @@ def _comparison_coordinates(statistics_file, output_directory, comparison_label)
 
 def _write_compact_statistics_csv(rows, output_directory):
     """Write scalar comparison results without count arrays or expanded JSON."""
-    fields = [
-        "pair",
-        "array_layout",
-        "plot",
-        REPORT_PAGE_COLUMN,
-        "scope",
-        "telescope_type",
-        "population",
-        "metric",
-        "value",
-        "normalized_value",
-        "valid",
-        "reason",
-        "baseline_count",
-        "candidate_count",
-    ]
     output_directory.mkdir(parents=True, exist_ok=True)
     with (output_directory / _COMPARISON_METRICS_FILE).open(
         "w", encoding=_ENCODING, newline=""
     ) as output_file:
-        writer = csv.DictWriter(output_file, fieldnames=fields)
+        writer = csv.DictWriter(output_file, fieldnames=_METRIC_FIELDS)
         writer.writeheader()
         writer.writerows(rows)
 
@@ -665,10 +669,7 @@ def _normalize_production_arguments(production_arguments):
     for item in production_arguments:
         if not isinstance(item, list | tuple) or not all(isinstance(value, str) for value in item):
             raise ValueError(_INVALID_PRODUCTION_ARGUMENTS)
-        if len(item) == 2:
-            normalized.append((item[0], item[1]))
-        else:
-            normalized.extend(_pairwise_label_file_arguments(list(item)))
+        normalized.extend(_pairwise_label_file_arguments(list(item)))
     return normalized
 
 
@@ -797,15 +798,7 @@ def _collect_metrics_from_trigger_histogram_file(
 
 def _accumulate_quantity_histograms_from_dense_payload(histograms, accumulators):
     """Accumulate base simulated and triggered histograms from dense payloads."""
-    histogram_map = {
-        "energy_mc": ("energy", "simulated"),
-        "energy": ("energy", "triggered"),
-        "core_distance_mc": ("core_distance", "simulated"),
-        "core_distance": ("core_distance", "triggered"),
-        "angular_distance_mc": ("angular_distance", "simulated"),
-        "angular_distance": ("angular_distance", "triggered"),
-    }
-    for histogram_name, (quantity, event_kind) in histogram_map.items():
+    for histogram_name, (quantity, event_kind) in _DENSE_HISTOGRAM_MAP.items():
         histogram = histograms.get(histogram_name)
         if histogram is None or histogram.ndim != 1:
             continue

@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from simtools.corsika.primary_particle import PrimaryParticle
+from simtools.utils.primary_particle import PrimaryParticle
 
 logger = logging.getLogger()
 

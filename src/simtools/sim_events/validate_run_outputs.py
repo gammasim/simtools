@@ -375,9 +375,6 @@ def validate_sim_telarray_event_numbers(data_files, expected_mc_events, expected
             )
 
     if event_errors:
-        _logger.error("Inconsistent event counts found:")
-        for error in event_errors:
-            _logger.error(f" - {error}")
         _raise_inconsistent("Inconsistent event counts found:", event_errors)
 
 
@@ -691,9 +688,6 @@ def validate_sim_events(data_files, expected_mc_events):
             )
 
     if event_errors:
-        _logger.error("Inconsistent event counts found in reduced event lists:")
-        for error in event_errors:
-            _logger.error(f" - {error}")
         _raise_inconsistent("Inconsistent event counts found in reduced event lists:", event_errors)
 
 
@@ -711,9 +705,7 @@ def validate_reduced_event_data_file(data_file):
     bool
         True when the file passes all checks.
     """
-    if table_handler.read_table_file_type([data_file]) != "HDF5":
-        raise ValueError(f"Reduced event data file '{data_file}' must be an HDF5 file.")
-
+    _check_hdf5_file(data_file, "Reduced event data")
     required_entries = [*_REDUCED_EVENT_TABLE_SCHEMAS, "METADATA", "SIMULATION_METADATA"]
     _check_entries_present(
         data_file, table_handler.read_table_list(data_file, required_entries), "Reduced event data"
@@ -722,19 +714,19 @@ def validate_reduced_event_data_file(data_file):
     tables = table_handler.read_tables(
         data_file, list(_REDUCED_EVENT_TABLE_SCHEMAS), file_type="HDF5"
     )
-    for table_name, schema_file in _REDUCED_EVENT_TABLE_SCHEMAS.items():
-        validate_data.DataValidator(
-            schema_file=schema_file,
-            data_table=tables[table_name],
-        ).validate_and_transform()
-
-    standard_metadata = table_handler.read_metadata_document(data_file, "METADATA")
-    schema.validate_dict_using_schema(standard_metadata, schema_file=METADATA_JSON_SCHEMA)
+    _validate_tables_against_schemas(tables, _REDUCED_EVENT_TABLE_SCHEMAS)
+    _validate_standard_metadata(data_file)
     validate_simulation_metadata(
         table_handler.read_metadata_document(data_file, "SIMULATION_METADATA")
     )
     _validate_reduced_event_table_references(tables, data_file)
     return True
+
+
+def _check_hdf5_file(data_file, label):
+    """Raise ValueError if a file is not an HDF5 file."""
+    if table_handler.read_table_file_type([data_file]) != "HDF5":
+        raise ValueError(f"{label} file '{data_file}' must be an HDF5 file.")
 
 
 def _check_entries_present(data_file, available_entries, label):
@@ -744,6 +736,21 @@ def _check_entries_present(data_file, available_entries, label):
         raise ValueError(
             f"{label} file '{data_file}' is missing required entries: {', '.join(missing_entries)}."
         )
+
+
+def _validate_tables_against_schemas(tables, schema_files):
+    """Validate each table against its schema file."""
+    for table_name, schema_file in schema_files.items():
+        validate_data.DataValidator(
+            schema_file=schema_file,
+            data_table=tables[table_name],
+        ).validate_and_transform()
+
+
+def _validate_standard_metadata(data_file):
+    """Validate the standard METADATA document of an HDF5 file."""
+    standard_metadata = table_handler.read_metadata_document(data_file, "METADATA")
+    schema.validate_dict_using_schema(standard_metadata, schema_file=METADATA_JSON_SCHEMA)
 
 
 def validate_trigger_histogram_file(data_file):
@@ -760,22 +767,15 @@ def validate_trigger_histogram_file(data_file):
     bool
         True when the file passes all checks.
     """
-    if table_handler.read_table_file_type([data_file]) != "HDF5":
-        raise ValueError(f"Trigger histogram file '{data_file}' must be an HDF5 file.")
-
+    _check_hdf5_file(data_file, "Trigger histogram")
     _check_entries_present(
         data_file,
         table_handler.read_table_list(data_file, list(_TRIGGER_HISTOGRAM_TABLES)),
         "Trigger histogram",
     )
-    standard_metadata = table_handler.read_metadata_document(data_file, "METADATA")
-    schema.validate_dict_using_schema(standard_metadata, schema_file=METADATA_JSON_SCHEMA)
+    _validate_standard_metadata(data_file)
     tables = table_handler.read_tables(data_file, list(_TRIGGER_HISTOGRAM_TABLES), file_type="HDF5")
-    for table_name, schema_file in _TRIGGER_HISTOGRAM_TABLE_SCHEMAS.items():
-        validate_data.DataValidator(
-            schema_file=schema_file,
-            data_table=tables[table_name],
-        ).validate_and_transform()
+    _validate_tables_against_schemas(tables, _TRIGGER_HISTOGRAM_TABLE_SCHEMAS)
     reference_ids = _validate_trigger_histogram_table_references(tables, data_file)
     _validate_trigger_histogram_dense_payload(data_file, reference_ids)
     return True

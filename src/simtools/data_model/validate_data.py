@@ -354,6 +354,7 @@ class DataValidator:
             )
         else:
             self._check_data_type(np.array(value).dtype, index, value)
+            self._check_allowed_values(value, index)
 
         if entry.get("type") not in ("string", "dict", "file"):
             self._check_for_not_a_number(value, index)
@@ -361,6 +362,17 @@ class DataValidator:
             for range_type in ("allowed_range", "required_range"):
                 self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
         return value, unit
+
+    def _check_allowed_values(self, value, column_name):
+        """Check a value against the schema's allowed values (ValueError otherwise)."""
+        entry = self._get_data_description(column_name)
+        allowed_values = entry.get("allowed_values")
+        if allowed_values is not None and value not in allowed_values:
+            raise ValueError(
+                f"Value '{value}' for column '{entry.get('name', column_name)}' "
+                f"is not in allowed values "
+                f"{allowed_values}."
+            )
 
     def _get_value_and_units_as_lists(self):
         """Return value and unit as lists (value scaled to the target unit, if required)."""

@@ -117,7 +117,7 @@ class ProductionGridEngine:
             self._limits_lookup = CorsikaLimitsLookup(
                 lookup_table=lookup_table, array_layout_name=array_layout_name
             )
-            self._prepare_lookup_table_limits_for_point_interpolation()
+            self._limits_lookup.prepare_point_interpolators()
         self.target_values = self._generate_target_values()
 
     def _get_max_zenith_for_hadec_mode(self):
@@ -129,10 +129,6 @@ class ProductionGridEngine:
                 "two-element 'range' in the axes definition."
             )
         return float(zenith_range[1])
-
-    def _prepare_lookup_table_limits_for_point_interpolation(self):
-        """Prepare lookup arrays for per-point interpolation."""
-        self._limits_lookup.prepare_point_interpolators()
 
     def _generate_target_values(self):
         """Generate target axis values and store them as Quantities."""
@@ -175,26 +171,18 @@ class ProductionGridEngine:
                 direction_points.append({"zenith_angle": zenith[idx], "azimuth": azimuth[idx]})
         return direction_points
 
-    def _generate_extra_axis_combinations(self, excluded_keys):
-        """Generate combinations for all axes except the excluded ones."""
-        extra_axes = {k: v for k, v in self.target_values.items() if k not in excluded_keys}
-        if not extra_axes:
-            return list(extra_axes.keys()), [], [np.array([])]
-        extra_grid = np.meshgrid(*[v.value for v in extra_axes.values()], indexing="ij")
-        extra_combinations = np.vstack(list(map(np.ravel, extra_grid))).T
-        return list(extra_axes.keys()), [v.unit for v in extra_axes.values()], extra_combinations
-
     def _extra_axis_points(self, excluded_keys):
         """Return one ``{axis: Quantity}`` dict per combination of the remaining axes."""
-        keys, units, combinations = self._generate_extra_axis_combinations(excluded_keys)
+        extra_axes = {k: v for k, v in self.target_values.items() if k not in excluded_keys}
+        if not extra_axes:
+            return [{}]
+        extra_grid = np.meshgrid(*[v.value for v in extra_axes.values()], indexing="ij")
+        combinations = np.vstack(list(map(np.ravel, extra_grid))).T
+        units = [v.unit for v in extra_axes.values()]
         return [
-            {key: Quantity(combination[i], units[i]) for i, key in enumerate(keys)}
+            {key: Quantity(combination[i], units[i]) for i, key in enumerate(extra_axes)}
             for combination in combinations
         ]
-
-    def _interpolate_limits_for_point(self, zenith, azimuth, nsb):
-        """Interpolate lookup-table limits for a single point."""
-        return self._limits_lookup.interpolate_point(zenith, azimuth, nsb)
 
     def _add_lookup_limits_to_point(self, point, zenith, azimuth):
         """Interpolate and attach lookup-table limits to a grid point."""
@@ -208,12 +196,8 @@ class ProductionGridEngine:
         if isinstance(nsb_value, Quantity):
             nsb_value = nsb_value.value
         point["nsb_rate"] = float(nsb_value)
-        limits = self._interpolate_limits_for_point(
-            zenith=zenith, azimuth=azimuth, nsb=float(nsb_value)
-        )
-        attach_lookup_limits_to_point(
-            point, limits, getattr(self._limits_lookup, "lookup_field_units", None)
-        )
+        limits = self._limits_lookup.interpolate_point(zenith, azimuth, float(nsb_value))
+        attach_lookup_limits_to_point(point, limits, self._limits_lookup.lookup_field_units)
 
     def _generate_grid_from_hadec_axes(self, include_horizontal_coordinates=False):
         """Generate grid points from explicit HA/Dec axes definitions."""
@@ -311,8 +295,6 @@ class ProductionGridEngine:
         """Return the visible HA/Dec grid points of one declination strip."""
         cos_dec = np.cos(np.deg2rad(dec_deg))
         ha_values = np.arange(-180.0, 180.0, spacing / cos_dec)
-        if len(ha_values) == 0:
-            ha_values = np.array([0.0])
         hour_angles = ha_values * u.deg
         zenith, azimuth = self._hadec_to_horizontal(
             hour_angles, np.full(len(hour_angles), dec_deg) * u.deg
@@ -540,8 +522,8 @@ def _parse_axis_spec(axis_spec):
     }
 
 
-def _iter_compact_axis_specs(args_dict):
-    """Iterate over compact axis definitions from CLI or configuration."""
+def _resolve_axis_configs(args_dict):
+    """Resolve compact axis definitions from CLI or configuration into one mapping."""
     axis_specs = args_dict.get("axis") or []
     if isinstance(axis_specs, str):
         axis_specs = [axis_specs]
@@ -559,12 +541,7 @@ def _iter_compact_axis_specs(args_dict):
             normalized_specs.extend(axis_spec)
         else:
             normalized_specs.append(axis_spec)
-    return normalized_specs
-
-
-def _resolve_axis_configs(args_dict):
-    """Resolve compact axis definitions into one normalized mapping."""
-    return dict(map(_parse_axis_spec, _iter_compact_axis_specs(args_dict)))
+    return dict(map(_parse_axis_spec, normalized_specs))
 
 
 def _parse_direction_grid_density(density_value):
@@ -967,11 +944,7 @@ def _clip_max_quantity(configured_max, lookup_max):
 
 def _parse_power_index_quantity(tokens, parameter_name):
     """Parse ``<power_index> <reference_value> <reference_unit>`` tokens."""
-    if isinstance(tokens, str):
-        tokens = shlex.split(tokens)
-    elif len(tokens) == 1 and isinstance(tokens[0], str):
-        tokens = shlex.split(tokens[0])
-
+    tokens = _normalize_axis_spec_tokens(tokens)
     if len(tokens) != 3:
         raise ValueError(
             f"{parameter_name} must be provided as "
@@ -1053,8 +1026,6 @@ def _compute_per_point_runs(run_allocation, zenith_angle, selected_showers_per_r
     if effective_total_showers <= 0:
         return 0, selected_showers_per_run
     if run_allocation.max_showers_per_run is not None:
-        if run_allocation.max_showers_per_run < 1:
-            raise ValueError(f"{MAX_SHOWERS_PER_RUN_ARGUMENT} must be a positive integer.")
         showers_per_run_limit = min(selected_showers_per_run, run_allocation.max_showers_per_run)
         per_point_number_of_runs = int(np.ceil(effective_total_showers / showers_per_run_limit))
         selected_showers_per_run = int(np.ceil(effective_total_showers / per_point_number_of_runs))
@@ -1147,7 +1118,7 @@ def _generate_observation_points_from_axes(
             attach_lookup_limits_to_point(
                 point,
                 corsika_limits.interpolate_point(zenith, azimuth, nsb=nsb_rate),
-                getattr(corsika_limits, "lookup_field_units", None),
+                corsika_limits.lookup_field_units,
             )
         points.append(point)
     return points

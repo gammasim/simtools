@@ -5,8 +5,8 @@ from types import SimpleNamespace
 import astropy.units as u
 import pytest
 
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.simulation.parameters import CALIBRATION_RUN_MODES, SimulationParameters
+from simtools.utils.primary_particle import PrimaryParticle
 
 SHOWERS_PER_RUN = "showers_per_run"
 CORE_SCATTER = "core_scatter"
