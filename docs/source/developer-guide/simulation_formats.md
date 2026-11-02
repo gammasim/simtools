@@ -38,7 +38,7 @@ model's parameter dictionary.
    written configuration path from `write_config_file`.
 3. Select a supported writer with
    `get_model_writer(model, simulation_software=software_name).write_config_file()` or
-   `array_model.export_config_files(simulation_software=software_name)`.
+   `get_model_writer(array_model, simulation_software=software_name).export_config_files()`.
 4. Test native syntax, unit conversions, and preservation of model parameters.
    Add an API reference entry and a real-file integration example when the
    format is supported.

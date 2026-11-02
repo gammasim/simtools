@@ -294,6 +294,8 @@ class ProductionGridEngine:
         """Return the visible HA/Dec grid points of one declination strip."""
         cos_dec = np.cos(np.deg2rad(dec_deg))
         ha_values = np.arange(-180.0, 180.0, spacing / cos_dec)
+        if len(ha_values) == 0:
+            ha_values = np.array([0.0])
         hour_angles = ha_values * u.deg
         zenith, azimuth = self._hadec_to_horizontal(
             hour_angles, np.full(len(hour_angles), dec_deg) * u.deg

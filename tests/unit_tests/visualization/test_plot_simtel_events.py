@@ -459,6 +459,11 @@ def test_generate_and_save_plots(mock_camera, io_handler, tmp_path):
             mock_dump.assert_called_once()
 
 
+def test_generate_and_save_plots_requires_prepared_events(io_handler):
+    with pytest.raises(ValueError, match="prepared_events must be supplied"):
+        plot_simtel_events.generate_and_save_plots([], {}, io_handler)
+
+
 def test_generate_and_save_plots_applies_monitoring_before_plot(
     mock_plotter, io_handler, tmp_test_directory
 ):

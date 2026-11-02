@@ -54,9 +54,11 @@ def generate_and_save_plots(plots, args, ioh, prepared_events=None):
         Additional arguments for plot functions.
     ioh : OutputPaths
         Paths used for output files and metadata.
-    prepared_events : PreparedEvents, optional
-        Events prepared by ``camera.event_images``; read from the file if not given.
+    prepared_events : PreparedEvents
+        Events prepared by ``camera.event_images``. Required to generate plots.
     """
+    if prepared_events is None:
+        raise ValueError("prepared_events must be supplied before generating plots.")
     plotter = _StreamingPlotter(
         file_name=args.get("simtel_file", None),
         telescope=args.get("telescope", None),
@@ -103,16 +105,13 @@ class PlotSimtelEvent:
         self.figures = []
         self.camera = None
 
+        if prepared_events is None:
+            raise ValueError("prepared_events must be supplied when constructing a plotter.")
         self.prepared_events = prepared_events
-        if prepared_events is not None:
-            self.event_data = prepared_events.event_data
-            self.time_axis = prepared_events.time_axis
-            self.camera = prepared_events.camera
-            self._trace_maxima = prepared_events.trace_maxima
-        else:
-            self.event_data = {}
-            self.time_axis = None
-            self._trace_maxima = None
+        self.event_data = prepared_events.event_data
+        self.time_axis = prepared_events.time_axis
+        self.camera = prepared_events.camera
+        self._trace_maxima = prepared_events.trace_maxima
 
     def make_output_paths(self, ioh, base):
         """Return output file path based on base name and input file."""
