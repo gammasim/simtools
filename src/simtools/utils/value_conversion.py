@@ -731,6 +731,14 @@ def replace_placeholders_recursively(data, replacements):
     return data
 
 
+def _quantity_repr_value(text):
+    """Return the value part of a ``<Quantity ...>`` item (without the closing ``>``), or None."""
+    prefix = "<Quantity"
+    if not text.startswith(prefix) or not text[len(prefix) :][:1].isspace():
+        return None
+    return text[len(prefix) :].strip() or None
+
+
 def _parse_serialized_quantity_pair(string):
     """Parse ``(<Quantity ...>, <Quantity ...>)`` representations.
 
@@ -738,11 +746,23 @@ def _parse_serialized_quantity_pair(string):
     -------
     ``"(<Quantity 200. GeV>, <Quantity 500. GeV>)"``
     """
-    match = re.fullmatch(r"\(\s*<Quantity\s+([^>]++)>\s*,\s*<Quantity\s+([^>]++)>\s*\)", string)
-    if match is None:
+    text = string.strip()
+    if not (text.startswith("(") and text.endswith(")")):
+        return None
+    items = text[1:-1].split(">")
+    if len(items) != 3 or items[2].strip():
+        return None
+    separator_and_second = items[1].strip()
+    if not separator_and_second.startswith(","):
+        return None
+    values = (
+        _quantity_repr_value(items[0].strip()),
+        _quantity_repr_value(separator_and_second[1:].strip()),
+    )
+    if None in values:
         return None
     try:
-        return tuple(u.Quantity(quantity_repr) for quantity_repr in match.groups())
+        return tuple(u.Quantity(quantity_repr) for quantity_repr in values)
     except (TypeError, ValueError, UnitsError) as exc:
         raise ValueError(f"Could not parse quantities: {exc}") from exc
 
