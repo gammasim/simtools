@@ -11,15 +11,16 @@ from pathlib import Path
 
 import numpy as np
 
-from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model_repository.reader import resolve_model_reader
 from simtools.reporting.docs_parameter_delta import ParameterDeltaMixin
 from simtools.reporting.docs_parameter_plots import ParameterPlotMixin, scope_kwargs, version_key
 from simtools.reporting.model_figures import (
     write_flasher_pulse_shape_plots,
     write_telescope_structure_figure,
 )
+from simtools.runtime.context import RunContext
 from simtools.utils import names
 from simtools.version import base_version_for_patch_delta, sort_versions
 
@@ -42,7 +43,7 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
         self.context = context or RunContext.from_environment()
-        self.model_reader = model_reader or self.context.model_reader
+        self.model_reader = resolve_model_reader(model_reader, self.context)
         self.array_element = args.get("telescope", None)
         self.site = args.get("site", None)
         self.model_version = args.get("model_version", None)

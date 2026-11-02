@@ -20,11 +20,11 @@ from astropy.constants import c as speed_of_light  # pylint: disable=no-name-in-
 from astropy.table import QTable
 from obdeect.model import DETECTED, OpticalModel
 
-from simtools.context import RunContext
 from simtools.model.model_utils import export_model_files
 from simtools.ray_tracing.backends.interface import image_file_name
 from simtools.ray_tracing.parameter_changes import TELESCOPE_STRUCTURE
 from simtools.ray_tracing.psf_analysis import PSFImage
+from simtools.runtime.context import RunContext
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
 from simtools.utils import geometry
 

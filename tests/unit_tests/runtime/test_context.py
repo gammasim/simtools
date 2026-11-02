@@ -6,8 +6,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from simtools.context import Activity, RunContext, SimulationSoftware
+from simtools.corsika import build_options
 from simtools.io.output_paths import OutputPaths
+from simtools.runtime.context import Activity, RunContext, SimulationSoftware
 
 
 def test_run_context_from_arguments_reads_arguments(tmp_test_directory):
@@ -17,7 +18,7 @@ def test_run_context_from_arguments_reads_arguments(tmp_test_directory):
         "output_path": str(tmp_test_directory),
     }
 
-    context = RunContext.from_arguments(args, resolve_sim_software_executables=False)
+    context = RunContext.from_arguments(args)
 
     assert context.activity.activity_id == "activity-1"
     assert context.activity.activity_name == "unit-test"
@@ -29,7 +30,7 @@ def test_run_context_from_arguments_reads_arguments(tmp_test_directory):
 
 def test_run_context_args_are_a_view_of_the_given_arguments():
     args = {"model_version": "6"}
-    context = RunContext.from_arguments(args, resolve_sim_software_executables=False)
+    context = RunContext.from_arguments(args)
 
     args["model_version"] = "6.0.0"
 
@@ -51,8 +52,7 @@ def test_simulation_software_prefers_arguments_over_environment(monkeypatch, tmp
     monkeypatch.setenv("SIMTOOLS_RAY_TRACING_BACKEND", "sim_telarray")
 
     software = SimulationSoftware.from_arguments(
-        {"sim_telarray_path": str(tmp_test_directory), "corsika_path": None},
-        resolve_sim_software_executables=False,
+        {"sim_telarray_path": str(tmp_test_directory), "corsika_path": None}
     )
 
     assert software.sim_telarray_path == Path(tmp_test_directory)
@@ -79,7 +79,7 @@ def test_simulation_software_reports_missing_installations(tmp_test_directory):
     with pytest.raises(FileNotFoundError, match="CORSIKA interaction table path not found"):
         _ = software.corsika_interaction_table_path
     with pytest.raises(FileNotFoundError, match="CORSIKA build manifest has not been loaded"):
-        software.corsika_executable("curved")
+        build_options.corsika_executable(software, "curved")
     assert software.corsika_exe is None
     assert SimulationSoftware().corsika_dummy_file is None
 

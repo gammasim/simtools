@@ -111,7 +111,7 @@ tools should be connected to the rest of the package through interfaces. This wa
 will be easier to replace these tools in the future.
 
 One example of this approach is
-[simulator module](https://github.com/gammasim/simtools/blob/main/src/simtools/simulator.py),
+[simulator module](https://github.com/gammasim/simtools/blob/main/src/simtools/runners/simulator.py),
 which connects to the tools used to manage and run simulations.
 
 ## Data files

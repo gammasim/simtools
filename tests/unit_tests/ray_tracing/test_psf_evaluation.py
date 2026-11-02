@@ -80,3 +80,24 @@ def test_dispatch_mounts_external_model_and_output_roots(
     binds = HTCondorBackend._build_container_bind_paths(True, None, working / "runs", jobs)
     assert output in binds
     assert (model in binds) == bool(source)
+
+
+def test_dispatch_carries_environment_configured_model_source(
+    tmp_test_directory, mocker, monkeypatch, run_context
+):
+    """A model source configured only in the environment reaches the job payload and mounts."""
+    root = Path(tmp_test_directory).resolve()
+    output = root / "output"
+    model = root / "models"
+    for required in ("simulation-models/productions", "simulation-models/model_parameters"):
+        (model / required).mkdir(parents=True)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(model))
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+    context = run_context.replace(args={}, model_reader=None)
+    execute = mocker.patch.object(evaluation, EXECUTE_JOBS, return_value=[])
+
+    evaluation.dispatch_evaluations([{}], {}, {}, None, output, 1, str, context=context)
+
+    job = execute.call_args.args[0][0]
+    assert job.context_spec["model_source"] == {"type": "filesystem", "path": str(model)}
+    assert job.mount_paths == (output, model)

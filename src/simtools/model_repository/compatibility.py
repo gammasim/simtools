@@ -24,7 +24,7 @@ DEVELOPMENT_STATUS = "development; not production-qualified"
 TAG_SELECTION_ERROR = "Tags at selected revision: {tags}. Required: exactly one stable release tag."
 
 
-def _contract(catalog):
+def get_contract(catalog):
     """Read a model range, including catalogs bundled with historical images."""
     model = catalog.get(MODEL_KEY) or catalog.get(LEGACY_MODEL_KEY)
     if not model:
@@ -56,7 +56,7 @@ def _contract(catalog):
 
 def validate_release(path, catalog, revision=None, development=False):
     """Check an exact release tag without changing the selected model checkout."""
-    contract = _contract(catalog)
+    contract = get_contract(catalog)
     source = str(Path(path).expanduser().resolve())
     result = {**contract, SOURCE_KEY: source, STATUS_KEY: DEVELOPMENT_STATUS}
     try:

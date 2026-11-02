@@ -9,14 +9,14 @@ import astropy.units as u
 import numpy as np
 
 import simtools.version
-from simtools import dependencies
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
-from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
 from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.runtime import dependencies
+from simtools.runtime.context import RunContext
 from simtools.simtel import (
     segmentation,
     sim_telarray_metadata,

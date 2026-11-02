@@ -9,12 +9,12 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools.context import RunContext
 from simtools.data_model import model_data_writer
 from simtools.data_model import parameter_catalog as catalog
 from simtools.job_execution.execution import map_ordered
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
+from simtools.runtime.context import RunContext
 from simtools.visualization import plot_psf
 
 

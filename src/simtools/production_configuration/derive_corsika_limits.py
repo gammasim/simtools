@@ -13,7 +13,6 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Column, Table
 
 from simtools.constants import SCHEMA_PATH
-from simtools.context import RunContext
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.histogram.histogram import Histogram
 from simtools.io import ascii_handler, table_handler
@@ -24,6 +23,7 @@ from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_METADATA_TABLE,
     load_event_data_histograms,
 )
+from simtools.runtime.context import RunContext
 from simtools.utils.general import resolve_file_patterns
 from simtools.visualization import plot_simtel_event_histograms
 
