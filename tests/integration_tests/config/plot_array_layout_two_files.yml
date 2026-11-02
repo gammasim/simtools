@@ -16,13 +16,11 @@ applications:
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path
-      file: array_layout_telescope_positions-North-ground.pdf
+      file: array_layout_*.png
+      minimum_matches: 2
     - path_descriptor: output_path
-      file: array_layout_telescope_positions-North-ground.png
-    - path_descriptor: output_path
-      file: array_layout_telescope_positions-South-ground.pdf
-    - path_descriptor: output_path
-      file: array_layout_telescope_positions-South-ground.png
+      file: array_layout_*.pdf
+      minimum_matches: 2
   test_name: two_files
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.8.0

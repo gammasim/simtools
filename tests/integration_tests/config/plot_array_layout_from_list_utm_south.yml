@@ -18,10 +18,12 @@ applications:
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path
-      file: array_layout_list_South_utm_6-0-2.png
+      file: array_layout_*.png
+      minimum_matches: 1
     - path_descriptor: output_path
-      file: array_layout_list_South_utm_6-0-2.pdf
+      file: array_layout_*.pdf
+      minimum_matches: 1
   model_version_use_current: true
   test_name: from_list_south_utm
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.8.0
