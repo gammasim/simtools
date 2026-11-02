@@ -13,6 +13,7 @@ from simtools.job_execution import execution, runner_services
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.model_utils import (
+    export_model_files,
     initialize_simulation_models,
     read_overwrite_model_parameter_dict,
 )
@@ -27,7 +28,6 @@ from simtools.simtel.photon_bunch_file import (
 from simtools.simtel.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_seeds import instance_seed_pairs
 from simtools.simulation.configuration import (
-    export_model_files,
     get_light_source_writer,
     get_model_writer,
 )

@@ -127,11 +127,11 @@ def main():
             app_context.args.get("simtel_file"),
             app_context.args.get("telescope"),
         )
-    app_context.args["_prepared_events"] = prepared_events
     generate_and_save_plots(
         plots=plots,
         args=app_context.args,
         ioh=app_context.paths,
+        prepared_events=prepared_events,
     )
 
 

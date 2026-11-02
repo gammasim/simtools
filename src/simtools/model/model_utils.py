@@ -11,6 +11,27 @@ from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 
 
+def export_model_files(model, destination=None, update_if_necessary=False):
+    """Export the parameter files of a model into its model directory.
+
+    Parameters
+    ----------
+    model : ModelParameter
+        Model whose parameter files are exported.
+    destination : pathlib.Path, optional
+        Target directory. Defaults to the model configuration directory.
+    update_if_necessary : bool
+        Skip the export if the model files were already exported and not changed since.
+    """
+    if update_if_necessary and model.model_files_exported:
+        return
+    model.model_reader.export_model_files(
+        parameters=model.parameters,
+        dest=destination or model.config_file_directory,
+    )
+    model.model_files_exported = True
+
+
 def initialize_simulation_models(
     label,
     model_version,
@@ -72,6 +93,8 @@ def initialize_simulation_models(
         )
     else:
         calibration_model = None
+    for model in tel_model, site_model:
+        export_model_files(model)
     return tel_model, site_model, calibration_model
 
 

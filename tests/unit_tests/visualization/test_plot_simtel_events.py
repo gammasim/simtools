@@ -447,13 +447,12 @@ def test_generate_and_save_plots(mock_camera, io_handler, tmp_path):
         camera=mock_camera,
         trace_maxima=event_images.trace_maxima,
     )
-    args["_prepared_events"] = prepared
     with mock.patch("simtools.visualization.plot_simtel_events.pdf_report") as mock_save:
         with mock.patch(
             "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
         ) as mock_dump:
             plot_simtel_events.generate_and_save_plots(
-                ["time_traces"], args | {"_prepared_events": prepared}, io_handler
+                ["time_traces"], args, io_handler, prepared_events=prepared
             )
             mock_save.assert_called_once()
             mock_save.return_value.__enter__.return_value.add.assert_called_once()
@@ -464,7 +463,6 @@ def test_generate_and_save_plots_applies_monitoring_before_plot(
     mock_plotter, io_handler, tmp_test_directory
 ):
     args = {PEDESTAL_SOURCE_KEY: plot_simtel_events.PEDESTAL_SOURCE_MONITORING}
-    args["_prepared_events"] = mock_plotter.prepared_events
     output_file = tmp_test_directory / "events.pdf"
 
     def generate_figure(_plot_name, event_index, _args):
@@ -478,7 +476,7 @@ def test_generate_and_save_plots_applies_monitoring_before_plot(
         mock.patch.object(plot_simtel_events.MetadataCollector, "dump"),
     ):
         plot_simtel_events.generate_and_save_plots(
-            [SIGNALS], args | {"_prepared_events": mock_plotter.prepared_events}, io_handler
+            [SIGNALS], args, io_handler, prepared_events=mock_plotter.prepared_events
         )
 
 
@@ -499,7 +497,7 @@ def test_generate_many_plots_closes_figures(mock_plotter, io_handler, tmp_test_d
         mock.patch.object(plot_simtel_events.MetadataCollector, "dump"),
     ):
         plot_simtel_events.generate_and_save_plots(
-            [SIGNALS], {"_prepared_events": mock_plotter.prepared_events}, io_handler
+            [SIGNALS], {}, io_handler, prepared_events=mock_plotter.prepared_events
         )
 
     assert output_file.exists()
@@ -545,7 +543,7 @@ def test_streamed_plot_closes_figure_on_pdf_error(mock_plotter, io_handler, tmp_
         pytest.raises(RuntimeError, match=PDF_SAVE_FAILED),
     ):
         plot_simtel_events.generate_and_save_plots(
-            [SIGNALS], {"_prepared_events": mock_plotter.prepared_events}, io_handler
+            [SIGNALS], {}, io_handler, prepared_events=mock_plotter.prepared_events
         )
     assert fig.number not in plt.get_fignums()
 
@@ -559,7 +557,7 @@ def test_streamed_plots_skip_missing_figures(mock_plotter, io_handler, tmp_test_
         mock.patch.object(plot_simtel_events.MetadataCollector, "dump") as dump,
     ):
         plot_simtel_events.generate_and_save_plots(
-            [SIGNALS], {"_prepared_events": mock_plotter.prepared_events}, io_handler
+            [SIGNALS], {}, io_handler, prepared_events=mock_plotter.prepared_events
         )
     save_document.assert_not_called()
     dump.assert_not_called()

@@ -40,7 +40,7 @@ PLOT_CHOICES = [
 ]
 
 
-def generate_and_save_plots(plots, args, ioh):
+def generate_and_save_plots(plots, args, ioh, prepared_events=None):
     """
     Generate events plots from a sim-telarray file and save a multi-page PDF per input.
 
@@ -54,13 +54,15 @@ def generate_and_save_plots(plots, args, ioh):
         Additional arguments for plot functions.
     ioh : OutputPaths
         Paths used for output files and metadata.
+    prepared_events : PreparedEvents, optional
+        Events prepared by ``camera.event_images``; read from the file if not given.
     """
     plotter = _StreamingPlotter(
         file_name=args.get("simtel_file", None),
         telescope=args.get("telescope", None),
         event_ids=value_conversion.ensure_list(args.get(EVENT_ID_KEY, None)),
         max_events=args.get("max_events", None),
-        prepared_events=args.get("_prepared_events"),
+        prepared_events=prepared_events,
     )
     output_file = plotter.make_output_paths(ioh, args.get("output_file"))
     with closing(plotter.stream_figures(plots, args, output_file)) as figures:

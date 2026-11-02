@@ -5,8 +5,7 @@ from pathlib import Path
 
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.model.model_utils import initialize_simulation_models
-from simtools.simulation.configuration import export_model_files
+from simtools.model.model_utils import export_model_files, initialize_simulation_models
 from simtools.utils import names
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
