@@ -181,7 +181,7 @@ def test_scan_rejects_ambiguous_steps():
         pulse_response.flasher_responses(["a", "b"], [1, 2, 3], [1], TELESCOPE, [0])
 
 
-def test_summary_and_outputs(pulse_model, tmp_test_directory, mocker):
+def test_summary_and_outputs(pulse_model, tmp_test_directory):
     table, waves = pulse_response.template_responses(pulse_model, [5, 15])
     path = pulse_response.write_response(table, waves, tmp_test_directory, RESPONSE)
     loaded = Table.read(path)

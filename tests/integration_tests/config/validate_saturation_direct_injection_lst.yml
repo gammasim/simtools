@@ -23,6 +23,8 @@ applications:
     sim_telarray_seed:
     - 101
     - 102
+    - 103
+    - 104
     overwrite_model_parameters: '{"LSTN-01": {"fadc_bins": 120, "fadc_sum_bins": 100}}'
   test_name: validate_saturation_direct_injection_lst
 - application: simtools-analyze-flasher-response

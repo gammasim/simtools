@@ -1,7 +1,5 @@
 """Measure baseline-subtracted digitized pulses."""
 
-import math
-
 import numpy as np
 
 
@@ -37,8 +35,7 @@ def measure_waveform(samples, dt_ns, width_fraction=0.95, threshold_adc=None):
         raise ValueError("A waveform requires at least two samples in one dimension")
     if not np.all(np.isfinite(wave)) or not np.isfinite(dt_ns) or dt_ns <= 0:
         raise ValueError("Waveform values must be finite and the sample interval positive")
-    if not math.isfinite(width_fraction) or width_fraction <= 0 or width_fraction >= 1:
-        raise ValueError("Width fraction must be between zero and one")
+    _validate_width_fraction(width_fraction)
     if threshold_adc is not None and (not np.isfinite(threshold_adc) or threshold_adc <= 0):
         raise ValueError("Absolute width threshold must be finite and positive")
     peak_index = int(np.argmax(wave))
@@ -54,6 +51,12 @@ def measure_waveform(samples, dt_ns, width_fraction=0.95, threshold_adc=None):
         "width_ns": width,
         "truncated": truncated,
     }
+
+
+def _validate_width_fraction(fraction):
+    """Require a fraction strictly between zero and one."""
+    if not 0 < fraction < 1:
+        raise ValueError("Width fraction must be between zero and one")
 
 
 def _pulse_width(wave, peak_index, threshold, dt_ns):

@@ -2,15 +2,39 @@
 
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 from astropy.table import Table
 
-from simtools.visualization.plot_pulse_response import plot_response
+from simtools.visualization.plot_pulse_response import _plot_metrics, plot_response
 
 ILLUMINATION = "illumination"
 RESPONSE = "response"
 PIXEL = "pixel"
 FLASHER = "flasher"
+
+
+@pytest.mark.parametrize(("sums", "scale"), [([1, 2], "log"), ([-1, 2], "linear")])
+def test_adc_sum_scale(sums, scale):
+    table = Table(
+        {
+            ILLUMINATION: [1, 2],
+            RESPONSE: [FLASHER, FLASHER],
+            "peak_adc": [1, 2],
+            "adc_sum": sums,
+            "width_ns": [1, 1],
+            "peak_adc_std": [0, 0],
+            "adc_sum_std": [0, 0],
+            "width_ns_std": [0, 0],
+        }
+    )
+    fig, axes = plt.subplots(2, 2)
+    try:
+        _plot_metrics(axes, table, ("peak", "sum", "width"), "photons")
+        assert axes[0, 1].get_yscale() == scale
+    finally:
+        plt.close(fig)
 
 
 def test_plot_response(tmp_test_directory):

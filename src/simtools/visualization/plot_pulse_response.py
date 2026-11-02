@@ -63,7 +63,7 @@ def _plot_metrics(axes, selected, labels, axis):
                 label=label,
             )
             ax.set(xscale="log", xlabel=f"Illumination [{axis}]", ylabel=ylabel)
-            if metric == ADC_SUM:
+            if metric == ADC_SUM and np.all(selected[ADC_SUM] > 0):
                 ax.set_yscale("log")
             ax.grid(alpha=0.3)
             ax.legend(fontsize="small")
