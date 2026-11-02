@@ -16,17 +16,14 @@ def test_star_image_request_key():
     assert changed == request
 
 
-def test_get_backend(mocker):
+def test_get_backend(run_context):
     from simtools.ray_tracing.backends.sim_telarray import SimtelBackend
 
     assert interface.get_backend("sim_telarray") is SimtelBackend
-    settings = mocker.patch.object(interface, "settings")
-    settings.config.ray_tracing_backend = "sim_telarray"
-    assert interface.get_backend() is SimtelBackend
+    assert interface.get_backend(context=run_context) is SimtelBackend
 
 
 def test_get_backend_obdeect():
-    pytest.importorskip("obdeect")
     from simtools.ray_tracing.backends.obdeect import ObdeectBackend
 
     assert interface.get_backend("obdeect") is ObdeectBackend
@@ -99,8 +96,6 @@ def test_get_backend_obdeect():
     ],
 )
 def test_backend_contract(backend_name, class_name, expected_methods):
-    if backend_name == "obdeect":
-        pytest.importorskip("obdeect")
     backend = interface.get_backend(backend_name)
     assert backend.__name__ == class_name
     for method_name, expected_parameters in expected_methods.items():

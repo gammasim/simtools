@@ -11,6 +11,54 @@ class CommandLineParser(argparse.ArgumentParser):
         kwargs["allow_abbrev"] = False
         super().__init__(*args, **kwargs)
         self.preserve_by_version = set()
+        self.argument_definitions = {}
+
+    def declared_defaults(self):
+        """Return declared argument defaults and argparse action defaults."""
+        defaults = {}
+        action_defaults = {"store_true": False, "store_false": True}
+        for name, definition in self.argument_definitions.items():
+            defaults[name] = definition.kwargs.get(
+                "default", action_defaults.get(definition.kwargs.get("action"))
+            )
+        for action in self._actions:  # pylint: disable=protected-access
+            if action.default is not argparse.SUPPRESS:
+                defaults.setdefault(action.dest, action.default)
+        return defaults
+
+    def parse_explicit_args(self, args):
+        """Return only the options given on the command line, converted by their types.
+
+        Defaults are not filled in and required arguments are not checked, so that values
+        from other sources can be merged first.
+
+        Parameters
+        ----------
+        args : list of str
+            Command-line arguments.
+
+        Returns
+        -------
+        dict
+            Explicitly given options.
+        """
+        actions = [action for action in self._actions if action.dest != argparse.SUPPRESS]
+        saved_actions = [(action, action.default, action.required) for action in actions]
+        groups = self._mutually_exclusive_groups
+        saved_groups = [(group, group.required) for group in groups]
+        try:
+            for action in actions:
+                action.default = argparse.SUPPRESS
+                action.required = False
+            for group in groups:
+                group.required = False
+            return vars(self.parse_args(args))
+        finally:
+            for action, default, required in saved_actions:
+                action.default = default
+                action.required = required
+            for group, required in saved_groups:
+                group.required = required
 
     def add_argument_definitions(self, arguments):
         """Register a sequence of explicit argument definitions.
@@ -23,6 +71,7 @@ class CommandLineParser(argparse.ArgumentParser):
         display_groups = {}
         exclusive_groups = {}
         for argument in arguments:
+            self.argument_definitions[argument.name] = argument
             container = self._display_container(argument, display_groups)
             if argument.preserve_by_version:
                 self.preserve_by_version.add(argument.name)

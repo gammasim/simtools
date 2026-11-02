@@ -2,13 +2,9 @@
 
 import math
 
+import astropy.units as u
 import numpy as np
 import pytest
-
-pytest.importorskip("obdeect")
-
-# pylint: disable-next=wrong-import-position
-import astropy.units as u
 from astropy.constants import c as speed_of_light
 from astropy.table import QTable
 
@@ -20,6 +16,7 @@ from simtools.ray_tracing.backends.obdeect import (
     _at_plane,
     star_direction,
 )
+from simtools.simulation.configuration import get_model_writer
 
 
 def test_star_direction():
@@ -81,15 +78,21 @@ def toy_telescope(tmp_test_directory, mocker):
         parameters=parameters, config_file_directory=tmp_test_directory, model_version="9.9.9"
     )
     telescope.name = "TOY-01"
+    telescope.model_files_exported = False
     telescope.get_parameter_value.side_effect = lambda name: parameters[name]["value"]
-    telescope.get_single_mirror_list_file.return_value = tmp_test_directory / "single_mirror.dat"
+    # Writer cached on the model (as get_model_writer would store it) providing the single-mirror file
+    writer = mocker.Mock()
+    writer.get_single_mirror_list_file.return_value = tmp_test_directory / "single_mirror.dat"
+    telescope.configuration_writers = {"sim_telarray": writer}
     return telescope
 
 
 def test_trace_star(toy_telescope):
     seeds = [(3, 4), (5, 6)]  # (instrument seed, simulation seed) of two instances
     tracer = ObdeectRayTracer(toy_telescope)
-    toy_telescope.export_model_files.assert_called_once_with(update_if_necessary=True)
+    toy_telescope.model_reader.export_model_files.assert_called_once_with(
+        parameters=toy_telescope.parameters, dest=toy_telescope.config_file_directory
+    )
     arrivals = tracer.trace_star(20.0, 0.0, 0.0, 10000.0, 10000, seeds)
     assert arrivals["total_photons"] == 20000
     assert not arrivals["has_structure"]
@@ -133,7 +136,7 @@ def test_perfect_and_single_mirror(toy_telescope, has_structure):
             _STRUCTURE_FILE, file=True
         )
     single_mirror = perfect | parameter_changes.single_mirror(
-        toy_telescope.get_single_mirror_list_file(0), 800.0, 1600.0
+        get_model_writer(toy_telescope).get_single_mirror_list_file(0), 800.0, 1600.0
     )
     optics = tracer.optical_model(20.0, 1, single_mirror).document["optics"]
     assert len(optics["primary"]["facets"]) == 1
@@ -159,13 +162,13 @@ def _request(off_axis_x=0.0):
 
 
 @pytest.fixture
-def backend(toy_telescope):
+def backend(toy_telescope, run_context):
     toy_telescope.site = "North"
-    return ObdeectBackend(toy_telescope, None, "test", 20.0, False)
+    return ObdeectBackend(toy_telescope, None, "test", 20.0, False, context=run_context)
 
 
 @pytest.mark.parametrize("save_photons", [False, True])
-def test_backend_psf_image(backend, io_handler, save_photons):
+def test_backend_psf_image(backend, run_context, save_photons):
     request = _request()
     with pytest.raises(RuntimeError, match="simulate first"):
         backend.psf_image(request, 800.0, 0.8)
@@ -177,7 +180,7 @@ def test_backend_psf_image(backend, io_handler, save_photons):
     assert request.key not in backend._images
     area = image.get_effective_area()
     assert area == pytest.approx(7 * math.pi / 4 - 0.36, rel=0.05)
-    files = list(io_handler.get_output_directory().glob("ray_tracing_photons*.ecsv"))
+    files = list(run_context.paths.get_output_directory().glob("ray_tracing_photons*.ecsv"))
     assert len(files) == int(save_photons)
     if save_photons:
         photons = QTable.read(files[0])

@@ -99,8 +99,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
-    initialize_model_reader=False,
+    needs=("corsika", "output"),
 )
 
 
@@ -108,7 +107,9 @@ def main():
     """Run the Monte Carlo statistics estimator CLI application."""
     app_context = APPLICATION.start()
     estimate_monte_carlo_statistics(
-        metadata=MetadataCollector(app_context.args).get_top_level_metadata()
+        args_dict=app_context.args,
+        metadata=MetadataCollector(app_context.args, context=app_context).get_top_level_metadata(),
+        context=app_context,
     )
 
 

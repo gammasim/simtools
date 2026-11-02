@@ -12,7 +12,7 @@ import pytest
 
 import simtools.applications.simulate_prod as app
 from simtools.configuration.commandline_parser import CommandLineParser
-from simtools.production_configuration import job_grid_io
+from simtools.production_configuration import jobs_io
 
 pytestmark = pytest.mark.usefixtures("_mock_settings_env_vars")
 
@@ -41,7 +41,7 @@ def job_grid_file(tmp_test_directory):
         "corsika_le_interaction": "urqmd",
         "corsika_he_interaction": "epos",
     }
-    job_grid_io.serialize_job_grid(
+    jobs_io.serialize_job_grid(
         [
             row,
             {
@@ -71,11 +71,8 @@ def _parse_with_config_sources(job_grid_file, cli_keys=(), yaml_keys=()):
     app.resolve_job_grid_arguments(
         args,
         {
-            "defaults": set(),
-            "environment": set(),
-            "constructor": set(),
-            "yaml": set(yaml_keys),
-            "cli": set(cli_keys),
+            **dict.fromkeys(yaml_keys, "yaml"),
+            **dict.fromkeys(cli_keys, "cli"),
         },
         argparse.ArgumentParser(),
     )
@@ -387,8 +384,7 @@ def test_main_uses_explicit_application_definition(mock_application_start, mock_
         app.main()
 
     mock_application_start.assert_called_once_with()
-    assert app.APPLICATION.setup_io_handler is False
-    assert app.APPLICATION.validate_simulation_dependencies is True
+    assert "sim_telarray" in app.APPLICATION.needs
     assert app.APPLICATION.post_parse == app._post_parse
     mock_write_metadata.assert_called_once()
 
@@ -403,7 +399,9 @@ def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_
     with patch("simtools.applications.simulate_prod._write_job_metadata") as mock_write_metadata:
         app.main()
 
-    mock_simulator_class.assert_called_once_with(label="myprod")
+    mock_simulator_class.assert_called_once_with(
+        label="myprod", context=mock_application_start.return_value
+    )
     mock_simulator.simulate.assert_called_once()
     mock_simulator.validate_simulations.assert_called_once()
     mock_simulator.report.assert_called_once()

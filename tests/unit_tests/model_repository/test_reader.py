@@ -1,9 +1,6 @@
 """Tests for source-neutral simulation-model reading."""
 
 import json
-import subprocess
-import sys
-import textwrap
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -12,7 +9,7 @@ from astropy.table import Table
 
 from simtools.application.model_reader import create_model_reader
 from simtools.model_repository import reader as reader_module
-from simtools.model_repository.reader import SimulationModelReader
+from simtools.model_repository.reader import SimulationModelReader, resolve_model_reader
 
 
 def _write_json(path, data):
@@ -93,118 +90,6 @@ def test_reader_reads_resolved_parameters_and_design(model_repository):
         "North", "LSTN-01", "telescopes", "1.0.0", parameter_names={"camera_body_diameter"}
     )
     assert list(selected) == ["camera_body_diameter"]
-
-
-def test_reader_preserves_generator_parameter_names(model_repository):
-    """Filtering accepts one-shot iterables without dropping later names."""
-    production_file = model_repository / "simulation-models/productions/1.0.0/LSTN-design.json"
-    production = json.loads(production_file.read_text(encoding="utf-8"))
-    production["parameters"]["LSTN-design"]["camera_body_diameter_2"] = "1.0.0"
-    production_file.write_text(json.dumps(production), encoding="utf-8")
-    _write_json(
-        model_repository
-        / "simulation-models/model_parameters/LSTN-design/camera_body_diameter_2/"
-        / "camera_body_diameter_2-1.0.0.json",
-        _parameter("LSTN-design", "camera_body_diameter_2", "1.0.0", 349.0),
-    )
-
-    reader = SimulationModelReader.from_files(model_repository)
-    parameter_names = (name for name in ("camera_body_diameter_2", "camera_body_diameter"))
-
-    selected = reader.get_model_parameters(
-        "North", "LSTN-design", "telescopes", "1.0.0", parameter_names=parameter_names
-    )
-
-    assert list(selected) == ["camera_body_diameter", "camera_body_diameter_2"]
-
-
-def test_reader_reads_global_parameter_by_version(model_repository):
-    """A versioned global parameter does not require a global caller scope."""
-    reader = SimulationModelReader.from_files(model_repository)
-
-    parameter = reader.get_model_parameter(
-        "iobuf_maximum", "North", "LSTN-01", parameter_version="1.0.0"
-    )
-
-    assert parameter["iobuf_maximum"]["value"] == pytest.approx(1000.0)
-
-
-def test_reader_factory_selects_filesystem(model_repository):
-    """A configured repository path selects the filesystem source."""
-    reader = create_model_reader(simulation_models_path=model_repository)
-
-    assert reader.source_name == str(model_repository.resolve())
-
-
-def test_reader_factory_selects_memory_storage():
-    """The in-memory constructor provides a source for generated model files."""
-    production_path = "simulation-models/productions/1.0.0/LSTN-01.json"
-    files = {
-        production_path: json.dumps({"parameters": {"LSTN-01": {}}}).encode(),
-    }
-
-    reader = SimulationModelReader.from_memory(files)
-
-    assert reader.source_name == "memory"
-    assert reader.source_config["type"] == "memory"
-    assert reader.get_model_versions() == ["1.0.0"]
-
-
-def test_model_repository_import_has_no_external_source_dependency():
-    """Filesystem reading has no external source dependency."""
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            (
-                "import sys; import simtools.model_repository.reader; "
-                "raise SystemExit(any(name.startswith('simtools.model_source') for name in sys.modules))"
-            ),
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-
-    assert result.returncode == 0, result.stderr
-
-
-def test_path_first_startup_has_no_optional_source_dependency(tmp_test_directory):
-    """A filesystem reader starts without optional source dependencies."""
-    repository = Path(tmp_test_directory)
-    (repository / "simulation-models/productions").mkdir(parents=True)
-    (repository / "simulation-models/model_parameters").mkdir(parents=True)
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            textwrap.dedent(
-                """
-                import builtins
-                import sys
-
-                real_import = builtins.__import__
-                blocked = ("simtools.model_source",)
-
-                def guarded(name, *args, **kwargs):
-                    if any(name == item or name.startswith(item + ".") for item in blocked):
-                        raise ModuleNotFoundError(name=name)
-                    return real_import(name, *args, **kwargs)
-
-                builtins.__import__ = guarded
-                from simtools.application.model_reader import create_model_reader
-
-                create_model_reader(sys.argv[1])
-                """
-            ),
-            str(repository),
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-
-    assert result.returncode == 0, result.stderr
 
 
 def test_reader_facade_routes_source_operations_and_branches():
@@ -322,65 +207,87 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
     assert reader.export_model_files.call_count == 3
 
 
-def test_reader_caches_table_records(mocker):
-    """Repeated camera-table record access does not rebuild row dictionaries."""
-    source = Mock()
-    source.get_parameter_table.return_value = Table({"pixel_id": [1, 2]})
-    reader = SimulationModelReader(source)
-    parameter = {
-        "parameter": "camera_pixel_layout",
-        "parameter_version": "1.0.0",
-        "instrument": "LSTN-design",
-        "site": "North",
-        "value": "layout.ecsv",
-    }
-
-    first = reader.get_parameter_table_records(parameter)
-    second = reader.get_parameter_table_records(parameter)
-
-    assert first == second
-    assert first is not second
-    source.get_parameter_table.assert_called_once_with(parameter)
+def test_from_files_requires_model_directories(tmp_test_directory):
+    """A missing checkout or missing model directories raise before any read."""
+    root = Path(tmp_test_directory)
+    with pytest.raises(FileNotFoundError, match="does not exist"):
+        SimulationModelReader.from_files(root / "missing")
+    (root / "partial" / "simulation-models" / "productions").mkdir(parents=True)
+    with pytest.raises(FileNotFoundError, match="model_parameters"):
+        SimulationModelReader.from_files(root / "partial")
 
 
-def test_reader_caches_parameter_tables():
-    """Repeated table access uses the parsed table from the reader cache."""
-    source = Mock()
-    source.get_parameter_table.return_value = Table({"pixel_id": [1, 2]})
-    reader = SimulationModelReader(source)
-    parameter = {
-        "parameter": "camera_pixel_layout",
-        "parameter_version": "1.0.0",
-        "instrument": "LSTN-design",
-        "site": "North",
-        "value": "layout.ecsv",
-    }
-
-    first = reader.get_parameter_table(parameter)
-    second = reader.get_parameter_table(parameter)
-
-    assert first["pixel_id"].tolist() == second["pixel_id"].tolist()
-    assert first is not second
-    source.get_parameter_table.assert_called_once_with(parameter)
-
-
-def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):
-    """Git construction and source metadata are exposed by the facade."""
-    git_storage = Mock(name="storage", name_attr="models@commit")
-    git_storage.name = "models@commit"
-    git_storage.config = {"type": "git"}
-    git_storage_class = mocker.patch(
-        "simtools.model_repository.reader.GitStorage", return_value=git_storage
+def test_reader_preserves_generator_parameter_names(model_repository):
+    """Filtering accepts one-shot iterables without dropping later names."""
+    production_file = model_repository / "simulation-models/productions/1.0.0/LSTN-design.json"
+    production = json.loads(production_file.read_text(encoding="utf-8"))
+    production["parameters"]["LSTN-design"]["camera_body_diameter_2"] = "1.0.0"
+    production_file.write_text(json.dumps(production), encoding="utf-8")
+    _write_json(
+        model_repository
+        / "simulation-models/model_parameters/LSTN-design/camera_body_diameter_2/"
+        / "camera_body_diameter_2-1.0.0.json",
+        _parameter("LSTN-design", "camera_body_diameter_2", "1.0.0", 349.0),
     )
 
-    reader = SimulationModelReader.from_git("models.git", "abc", object_store="store")
+    reader = SimulationModelReader.from_files(model_repository)
+    parameter_names = (name for name in ("camera_body_diameter_2", "camera_body_diameter"))
 
-    git_storage_class.assert_called_once_with("models.git", "abc", object_store="store")
-    assert reader.source_name == "models@commit"
-    assert reader.source_config == {"type": "git"}
+    selected = reader.get_model_parameters(
+        "North", "LSTN-design", "telescopes", "1.0.0", parameter_names=parameter_names
+    )
 
-    source_without_config = Mock(spec=["source_name", "is_configured"])
-    assert SimulationModelReader(source_without_config).source_config is None
+    assert list(selected) == ["camera_body_diameter", "camera_body_diameter_2"]
+
+
+def test_reader_reads_global_parameter_by_version(model_repository):
+    """A versioned global parameter does not require a global caller scope."""
+    reader = SimulationModelReader.from_files(model_repository)
+
+    parameter = reader.get_model_parameter(
+        "iobuf_maximum", "North", "LSTN-01", parameter_version="1.0.0"
+    )
+
+    assert parameter["iobuf_maximum"]["value"] == pytest.approx(1000.0)
+
+
+def test_reader_factory_selects_filesystem(model_repository):
+    """A configured repository path selects the filesystem source."""
+    reader = create_model_reader(simulation_models_path=model_repository)
+
+    assert reader.source_name == str(model_repository.resolve())
+
+
+def test_resolve_model_reader_uses_explicit_reader_and_context(mocker):
+    """Explicit and contextual readers take precedence over environment settings."""
+    explicit_reader = mocker.Mock()
+    context_reader = mocker.Mock()
+    context = mocker.Mock(model_reader=context_reader)
+
+    assert resolve_model_reader(explicit_reader, context) is explicit_reader
+    assert resolve_model_reader(context=context) is context_reader
+
+
+def test_resolve_model_reader_returns_none_without_configuration(monkeypatch):
+    """No configured model source leaves model loading optional."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+
+    assert resolve_model_reader() is None
+
+
+def test_reader_factory_selects_memory_storage():
+    """The in-memory constructor provides a source for generated model files."""
+    production_path = "simulation-models/productions/1.0.0/LSTN-01.json"
+    files = {
+        production_path: json.dumps({"parameters": {"LSTN-01": {}}}).encode(),
+    }
+
+    reader = SimulationModelReader.from_memory(files)
+
+    assert reader.source_name == "memory"
+    assert reader.source_config["type"] == "memory"
+    assert reader.get_model_versions() == ["1.0.0"]
 
 
 def test_reader_facade_handles_value_errors_across_model_versions():
@@ -426,23 +333,30 @@ def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
     source = Mock()
     source.read_production_table.return_value = {"design_model": {"LSTN-01": "LSTN-design"}}
     reader = SimulationModelReader(source)
-    args = {"ignore_missing_design_model": False}
-    mocker.patch.object(reader_module.settings.config, "_args", new=args)
+    ignore_missing_design_model = False
 
-    assert reader._get_sim_telarray_array_element_list("LSTN-01", {"model_version": "1.0.0"}) == [
+    assert reader._get_sim_telarray_array_element_list(
+        "LSTN-01", {"model_version": "1.0.0"}, ignore_missing_design_model
+    ) == [
         "global",
         "LSTN-design",
         "LSTN-01",
     ]
-    assert reader._get_sim_telarray_array_element_list("global", {}) == ["global"]
-    assert reader._get_sim_telarray_array_element_list("LSTN-design", {}) == [
+    assert reader._get_sim_telarray_array_element_list(
+        "global", {}, ignore_missing_design_model
+    ) == ["global"]
+    assert reader._get_sim_telarray_array_element_list(
+        "LSTN-design", {}, ignore_missing_design_model
+    ) == [
         "global",
         "LSTN-design",
     ]
 
     source.read_production_table.return_value = {"design_model": {}}
-    args["ignore_missing_design_model"] = True
-    assert reader._get_sim_telarray_array_element_list("LSTN-01", {"model_version": "1.0.0"}) == [
+    ignore_missing_design_model = True
+    assert reader._get_sim_telarray_array_element_list(
+        "LSTN-01", {"model_version": "1.0.0"}, ignore_missing_design_model
+    ) == [
         "global",
         "LSTN-01",
         "LSTN-01",
@@ -459,11 +373,113 @@ def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
     scopes.assert_called_once()
 
 
-def test_from_files_requires_model_directories(tmp_test_directory):
-    """A missing checkout or missing model directories raise before any read."""
-    root = Path(tmp_test_directory)
-    with pytest.raises(FileNotFoundError, match="does not exist"):
-        SimulationModelReader.from_files(root / "missing")
-    (root / "partial" / "simulation-models" / "productions").mkdir(parents=True)
-    with pytest.raises(FileNotFoundError, match="model_parameters"):
-        SimulationModelReader.from_files(root / "partial")
+def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):
+    """Git construction and source metadata are exposed by the facade."""
+    git_storage = Mock(name="storage", name_attr="models@commit")
+    git_storage.name = "models@commit"
+    git_storage.config = {"type": "git"}
+    git_storage_class = mocker.patch(
+        "simtools.model_repository.reader.GitStorage", return_value=git_storage
+    )
+
+    reader = SimulationModelReader.from_git("models.git", "abc", object_store="store")
+
+    git_storage_class.assert_called_once_with("models.git", "abc", object_store="store")
+    assert reader.source_name == "models@commit"
+    assert reader.source_config == {"type": "git"}
+
+    source_without_config = Mock(spec=["source_name", "is_configured"])
+    assert SimulationModelReader(source_without_config).source_config is None
+
+
+def test_resolve_model_reader_selects_filesystem_from_environment(monkeypatch, model_repository):
+    """A configured filesystem path selects a filesystem reader."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(model_repository))
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+
+    reader = resolve_model_reader()
+
+    assert reader.source_name == str(model_repository.resolve())
+
+
+def test_resolve_model_reader_rejects_filesystem_and_git_together(monkeypatch, tmp_test_directory):
+    """Only one simulation-model source may be configured."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(tmp_test_directory))
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(tmp_test_directory))
+
+    with pytest.raises(ValueError, match="cannot be configured together"):
+        resolve_model_reader()
+
+
+def test_resolve_model_reader_rejects_empty_git_revision(monkeypatch, tmp_test_directory):
+    """An explicitly empty Git revision is an error, not a catalog lookup."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(tmp_test_directory))
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "")
+
+    with pytest.raises(ValueError, match="A Git simulation-model revision is required"):
+        resolve_model_reader()
+
+
+def test_resolve_model_reader_git_revision_defaults_to_catalog(monkeypatch, tmp_test_directory):
+    """Without a revision, the Git source uses the revision from the dependency catalog."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", raising=False)
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(tmp_test_directory / "absent"))
+
+    with pytest.raises(FileNotFoundError, match="Git model repository does not exist"):
+        resolve_model_reader()
+
+
+def test_get_model_parameters_honours_context_flag(mocker):
+    """The context keyword carries the design-model flag to the element lookup."""
+    source = Mock()
+    source.read_production_table.return_value = {"design_model": {}, "parameters": {}}
+    source.get_model_versions.return_value = ["1.0.0"]
+    reader = SimulationModelReader(source)
+    element_list = mocker.patch.object(reader, "_get_array_element_list", return_value=[])
+    context = Mock(args={"ignore_missing_design_model": True})
+
+    reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0", context=context)
+
+    assert element_list.call_args.args[-1] is True
+    reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0")
+    assert element_list.call_args.args[-1] is False
+
+
+class _ContextStub:
+    """Minimal context with the replace() interface used by RunContext."""
+
+    def __init__(self, model_reader=None):
+        self.model_reader = model_reader
+
+    def replace(self, **changes):
+        """Return a copy with the given fields replaced."""
+        return _ContextStub(**{"model_reader": self.model_reader, **changes})
+
+
+def test_with_resolved_model_reader_attaches_environment_source(monkeypatch, model_repository):
+    """An environment-configured source is carried by the context for worker payloads."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(model_repository))
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+    context = _ContextStub()
+
+    resolved = reader_module.with_resolved_model_reader(context)
+
+    assert resolved is not context
+    assert resolved.model_reader.source_config == {
+        "type": "filesystem",
+        "path": str(model_repository.resolve()),
+    }
+
+
+def test_with_resolved_model_reader_keeps_existing_or_absent_reader(monkeypatch):
+    """Contexts with a reader, or without any configured source, are returned unchanged."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+    unconfigured = _ContextStub()
+    existing = _ContextStub(model_reader=Mock())
+
+    assert reader_module.with_resolved_model_reader(unconfigured) is unconfigured
+    assert reader_module.with_resolved_model_reader(existing) is existing

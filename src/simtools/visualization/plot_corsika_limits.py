@@ -9,7 +9,6 @@ from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.visualize import save_figure
 
-colors = lazy_module("matplotlib.colors")
 lines = lazy_module("matplotlib.lines")
 
 _logger = logging.getLogger(__name__)
@@ -20,113 +19,75 @@ BROAD_RANGE_COLUMN_ALIASES = {
     "upper_radius_limit": ["br_core_scatter_max", "br_upper_radius_limit"],
     "viewcone_radius": ["br_viewcone_max", "br_viewcone_radius"],
 }
-_LIMIT_COLUMNS = (
-    "lower_energy_limit",
-    "upper_radius_limit",
-    "viewcone_radius",
+_LIMIT_COLUMNS = ("lower_energy_limit", "upper_radius_limit", "viewcone_radius")
+_PANELS = (
+    ("Lower Energy Limit vs Zenith", "Lower Energy Limit [TeV]"),
+    ("Upper Radius Limit vs Zenith", "Upper Radius Limit [m]"),
+    ("Viewcone Radius vs Zenith", "Viewcone Radius [deg]"),
 )
 _AZIMUTH_LINESTYLES = ("-", "--")
 
 
-def _get_primary_particle_label(table):
-    """Return a primary particle label derived from table content."""
-    if "primary_particle" not in table.colnames:
-        return "unknown"
-
-    unique_particles = np.unique(np.array(table["primary_particle"], dtype=str))
-    if len(unique_particles) == 1:
-        return unique_particles[0]
-
-    return "/".join(unique_particles)
-
-
 def _resolve_broad_range_columns(limits_table):
-    """Resolve broad-range column names from supported aliases."""
-    resolved_columns = {}
-    for column_key, aliases in BROAD_RANGE_COLUMN_ALIASES.items():
-        for alias in aliases:
-            if alias in limits_table.colnames:
-                resolved_columns[column_key] = alias
-                break
-
-    if len(resolved_columns) != len(BROAD_RANGE_COLUMN_ALIASES):
+    """Return broad-range column names per limit, or None if any limit is missing."""
+    resolved = {
+        key: next((alias for alias in aliases if alias in limits_table.colnames), None)
+        for key, aliases in BROAD_RANGE_COLUMN_ALIASES.items()
+    }
+    if any(column is None for column in resolved.values()):
         return None
+    return resolved
 
-    return resolved_columns
+
+def _mean_by_zenith(group, columns):
+    """Average the given columns per zenith angle, sorted by zenith."""
+    agg_data = group[columns].group_by("zenith").groups.aggregate(np.mean)
+    return agg_data[np.argsort(agg_data["zenith"])]
 
 
-def _plot_limit_series(axes, zeniths, values, color, filled_marker, linestyle):
-    """Plot the three derived limit series with a common azimuth marker style."""
-    for axis, value in zip(axes, values, strict=True):
+def _plot_broad_range(axes, azimuth_group, zeniths, broad_range_columns):
+    """Plot the broad-range limit series of one azimuth direction as dashed gray lines."""
+    broad_columns = [broad_range_columns[column] for column in _LIMIT_COLUMNS]
+    broad_data = _mean_by_zenith(azimuth_group, ["zenith", *broad_columns])
+    for axis, column in zip(axes, broad_columns):
+        axis.plot(zeniths, broad_data[column], linestyle="--", color="gray", linewidth=1.5)
+
+
+def _plot_azimuth_group(axes, azimuth_group, color, azimuth_index, broad_range_columns):
+    """Plot the limit series, and optionally the broad-range series, of one azimuth direction."""
+    linestyle = _AZIMUTH_LINESTYLES[azimuth_index % len(_AZIMUTH_LINESTYLES)]
+    agg_data = _mean_by_zenith(azimuth_group, ["zenith", *_LIMIT_COLUMNS])
+    zeniths = agg_data["zenith"].value
+    for axis, column in zip(axes, _LIMIT_COLUMNS):
         axis.plot(
             zeniths,
-            value,
+            agg_data[column],
             "o",
             color=color,
             linestyle=linestyle,
-            markerfacecolor=color if filled_marker else "none",
+            markerfacecolor=color if azimuth_index == 0 else "none",
         )
-
-
-def _plot_broad_range_series(axes, zeniths, broad_data, broad_range_columns):
-    """Plot broad-range reference limits on the corresponding derived-limit axes."""
-    for axis, column in zip(axes, _LIMIT_COLUMNS, strict=True):
-        axis.plot(
-            zeniths,
-            broad_data[broad_range_columns[column]],
-            linestyle="--",
-            color="gray",
-            linewidth=1.5,
-        )
-
-
-def _value_in_degrees(value):
-    """Return a plain azimuth value for labels and filenames."""
-    return value.value if hasattr(value, "value") else value
+    if broad_range_columns:
+        _plot_broad_range(axes, azimuth_group, zeniths, broad_range_columns)
 
 
 def _plot_limit_group(axes, group, broad_range_columns):
     """Plot all NSB and azimuth limit series for one layout and particle."""
     legend_handles, legend_labels = [], []
-    grouped_by_nsb = group.group_by("nsb_level")
     palette = plt.get_cmap("Set1").colors  # don't expect more than 9 NSB levels
     azimuth_values = [
-        _value_in_degrees(azimuth_group["azimuth"][0])
-        for azimuth_group in group.group_by("azimuth").groups
+        getattr(g["azimuth"][0], "value", g["azimuth"][0]) for g in group.group_by("azimuth").groups
     ]
 
-    for index, nsb_group in enumerate(grouped_by_nsb.groups):
-        nsb_level = nsb_group["nsb_level"][0]
+    for index, nsb_group in enumerate(group.group_by("nsb_level").groups):
         color = palette[index]
         legend_handles.append(lines.Line2D([0], [0], color=color))
-        legend_labels.append(f"NSB={nsb_level} GHz")
+        legend_labels.append(f"NSB={nsb_group['nsb_level'][0]} GHz")
 
         for azimuth_group in nsb_group.group_by("azimuth").groups:
-            plot_columns = ["zenith", *_LIMIT_COLUMNS]
-            agg_data = azimuth_group[plot_columns].group_by("zenith").groups.aggregate(np.mean)
-            agg_data.sort("zenith")
-            zeniths = agg_data["zenith"].value
-            azimuth_value = _value_in_degrees(azimuth_group["azimuth"][0])
-            azimuth_index = azimuth_values.index(azimuth_value)
-            _plot_limit_series(
-                axes,
-                zeniths,
-                [agg_data[column] for column in _LIMIT_COLUMNS],
-                color,
-                filled_marker=azimuth_index == 0,
-                linestyle=_AZIMUTH_LINESTYLES[azimuth_index % len(_AZIMUTH_LINESTYLES)],
-            )
-
-            if broad_range_columns:
-                broad_columns = [
-                    "zenith",
-                    *(broad_range_columns[column] for column in _LIMIT_COLUMNS),
-                ]
-                broad_data = (
-                    azimuth_group[broad_columns].group_by("zenith").groups.aggregate(np.mean)
-                )
-                broad_data.sort("zenith")
-                _plot_broad_range_series(axes, zeniths, broad_data, broad_range_columns)
+            azimuth = getattr(azimuth_group["azimuth"][0], "value", azimuth_group["azimuth"][0])
+            azimuth_index = azimuth_values.index(azimuth)
+            _plot_azimuth_group(axes, azimuth_group, color, azimuth_index, broad_range_columns)
 
     return legend_handles, legend_labels, azimuth_values
 
@@ -155,43 +116,32 @@ def plot_limits(limits_table, output_dir):
     output_dir.mkdir(parents=True, exist_ok=True)
     output_files = []
 
-    group_columns = ["array_name"]
-    if "primary_particle" in limits_table.colnames:
-        group_columns.append("primary_particle")
-    grouped_by_layout = limits_table.group_by(group_columns)
+    has_particle = "primary_particle" in limits_table.colnames
+    group_columns = ["array_name", "primary_particle"] if has_particle else ["array_name"]
     broad_range_columns = _resolve_broad_range_columns(limits_table)
 
-    for group in grouped_by_layout.groups:
+    for group in limits_table.group_by(group_columns).groups:
         array_name = group["array_name"][0]
-        primary_particle = _get_primary_particle_label(group)
+        primary_particle = "unknown"
+        if has_particle:
+            primary_particle = "/".join(np.unique(np.array(group["primary_particle"], dtype=str)))
 
         fig, axes = plt.subplots(1, 3, figsize=(18, 6))
         legend_handles, legend_labels, azimuth_values = _plot_limit_group(
             axes, group, broad_range_columns
         )
 
-        for axis in axes:
+        for axis, (title, ylabel) in zip(axes, _PANELS):
             axis.relim()
             axis.autoscale_view()
-
-        axes[0].set_title("Lower Energy Limit vs Zenith")
-        axes[0].set_xlabel(ZENITH_LABEL)
-        axes[0].set_ylabel("Lower Energy Limit [TeV]")
-        axes[0].grid(True)
-        axes[1].set_title("Upper Radius Limit vs Zenith")
-        axes[1].set_xlabel(ZENITH_LABEL)
-        axes[1].set_ylabel("Upper Radius Limit [m]")
-        axes[1].grid(True)
-        axes[2].set_title("Viewcone Radius vs Zenith")
-        axes[2].set_xlabel(ZENITH_LABEL)
-        axes[2].set_ylabel("Viewcone Radius [deg]")
-        axes[2].grid(True)
+            axis.set_title(title)
+            axis.set_xlabel(ZENITH_LABEL)
+            axis.set_ylabel(ylabel)
+            axis.grid(True)
 
         if broad_range_columns:
-            legend_handles += [
-                lines.Line2D([0], [0], linestyle="--", color="gray"),
-            ]
-            legend_labels += ["broad-range limits"]
+            legend_handles.append(lines.Line2D([0], [0], linestyle="--", color="gray"))
+            legend_labels.append("broad-range limits")
         legend_handles += [
             lines.Line2D(
                 [0],
@@ -201,7 +151,7 @@ def plot_limits(limits_table, output_dir):
                 linestyle=_AZIMUTH_LINESTYLES[index % len(_AZIMUTH_LINESTYLES)],
                 markerfacecolor="black" if index == 0 else "none",
             )
-            for index, _ in enumerate(azimuth_values)
+            for index in range(len(azimuth_values))
         ]
         legend_labels += [f"Az={azimuth} deg" for azimuth in azimuth_values]
         fig.legend(legend_handles, legend_labels, loc="lower center", ncol=len(legend_labels))

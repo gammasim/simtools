@@ -9,7 +9,7 @@ Follows CTAO top-level data model definition.
 """
 
 import simtools.data_model.schema
-import simtools.utils.general as gen
+from simtools.utils import value_conversion
 
 
 def get_default_metadata_dict(
@@ -39,7 +39,7 @@ def get_default_metadata_dict(
 
     """
     schema = simtools.data_model.schema.load_schema(schema_file, schema_version=schema_version)
-    return gen.change_dict_keys_case(
+    return value_conversion.change_dict_keys_case(
         data_dict=_fill_defaults(schema["definitions"], observatory.lower()),
         lower_case=lower_case,
     )

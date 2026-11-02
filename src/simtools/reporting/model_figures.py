@@ -9,13 +9,14 @@ from pathlib import Path
 import numpy as np
 from astropy.table import Table
 
-from simtools.io import io_handler
 from simtools.model import camera as camera_model
 from simtools.model import mirrors as mirror_model
+from simtools.model import telescope_geometry
 from simtools.model_repository.asset_names import get_export_file_name
 from simtools.reporting.figure_cache import figure_cache_key
+from simtools.runtime.context import RunContext
 from simtools.simtel import simtel_file_writer
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 from simtools.visualization import (
     camera_plot_utils,
     plot_mirrors,
@@ -33,12 +34,13 @@ _NSB_X_LABEL = "Wavelength [nm]"
 _NSB_Y_LABEL = "Emission altitude [km]"
 
 
-def write_telescope_structure_figure(file, telescope_model, logger):
+def write_telescope_structure_figure(file, telescope_model, logger, context=None):
     """Generate and link the nominal telescope structure for this model version."""
     _use_exported_model_filenames(telescope_model)
-    image_dir = io_handler.IOHandler().get_output_directory("_images")
+    context = context or RunContext.from_environment()
+    image_dir = context.paths.get_output_directory("_images")
     try:
-        geometry = plot_telescope_structure.telescope_geometry(telescope_model)
+        geometry = telescope_geometry.telescope_geometry(telescope_model)
     except (FileNotFoundError, KeyError, ValueError) as exc:
         logger.warning(
             "Telescope structure plot unavailable for %s (%s): %s",
@@ -57,6 +59,7 @@ def write_telescope_structure_figure(file, telescope_model, logger):
         },
         plot_config={"name": telescope_model.name, "shares": None},
         rendered_data=geometry,
+        context=context,
     )
     image_name = f"telescope_structure_{telescope_model.name}_{cache_key}"
     image_stem = image_dir / image_name
@@ -83,10 +86,11 @@ def _use_exported_model_filenames(telescope_model):
 
 
 def write_flasher_pulse_shape_plots(
-    file, comparison_items, collection, model_reader, site, calibration_device
+    file, comparison_items, collection, model_reader, site, calibration_device, context=None
 ):
     """Render Gauss-Exponential tables using the production pulse-table writer."""
-    image_dir = Path(io_handler.IOHandler().get_output_directory("_images"))
+    context = context or RunContext.from_environment()
+    image_dir = Path(context.paths.get_output_directory("_images"))
     for item in comparison_items:
         _write_flasher_pulse_version(
             file,
@@ -96,11 +100,12 @@ def write_flasher_pulse_shape_plots(
             site,
             calibration_device,
             image_dir,
+            context,
         )
 
 
 def _write_flasher_pulse_version(
-    file, item, collection, model_reader, site, calibration_device, image_dir
+    file, item, collection, model_reader, site, calibration_device, image_dir, context
 ):
     """Write pulse plots for associated telescope designs at one selected model version."""
     model_version = _latest_model_version(item["model_version"])
@@ -130,6 +135,7 @@ def _write_flasher_pulse_version(
             width,
             exp_decay,
             fadc_bins,
+            context,
         )
 
 
@@ -138,7 +144,9 @@ def _supported_gauss_exponential(value):
     if not isinstance(value, (list, tuple)) or len(value) != 3:
         return None
     shape, width, exp_decay = value
-    if shape != "Gauss-Exponential" or width <= 0 or exp_decay <= 0:
+    if value_conversion.normalize_model_enum(shape) != "gauss-exponential":
+        return None
+    if width <= 0 or exp_decay <= 0:
         return None
     return shape, width, exp_decay
 
@@ -151,6 +159,7 @@ def _write_flasher_model_figure(
     width,
     exp_decay,
     fadc_bins,
+    context,
 ):
     """Generate and link one telescope design's exact pulse table."""
     try:
@@ -172,6 +181,7 @@ def _write_flasher_model_figure(
             "y_label": _FLASHER_Y_LABEL,
         },
         rendered_data={"time_ns": time, "amplitude": amplitude},
+        context=context,
     )
     image_name = f"flasher_pulse_shape_{telescope_model}_{cache_key}"
     image_path = (Path(image_dir) / image_name).with_suffix(".png")
@@ -241,7 +251,7 @@ def _save_flasher_figure(image_path, telescope_model, time, amplitude):
     save_figure(figure, image_path.with_suffix(""), figure_format=["png"], close=True)
 
 
-def plot_nsb_altitude_correction(input_file, output_path):
+def plot_nsb_altitude_correction(input_file, output_path, context=None):
     """Plot the spectral extinction grid used to correct the NSB by altitude."""
     table = Table.read(input_file, format="ascii.ecsv")
     wavelength = np.unique(np.asarray(table["wavelength"], dtype=float))
@@ -264,6 +274,7 @@ def plot_nsb_altitude_correction(input_file, output_path):
             "colorbar": "Extinction",
         },
         rendered_data=_file_digest(input_file),
+        context=context,
     )
     image_name = f"{Path(input_file).stem.replace('.', '-')}_{cache_key}"
     image_path = (Path(output_path) / image_name).with_suffix(".png")
@@ -285,14 +296,13 @@ def plot_nsb_altitude_correction(input_file, output_path):
 
 
 def plot_camera_config(
-    parameter,
     parameter_version,
-    input_file,
     output_path,
     telescope,
     site,
     model_version,
     model_reader,
+    context=None,
 ):
     """Plot the camera layout file using the selected model version."""
     if not parameter_version:
@@ -322,21 +332,16 @@ def plot_camera_config(
         },
         plot_config={"telescope": telescope, "focal_length": 1.0},
         rendered_data=camera_components,
+        context=context,
     )
     plot_name = f"camera_pixel_layout_{telescope}_{cache_key}"
     plot_path = (Path(output_path) / plot_name).with_suffix(".png")
     if not plot_path.is_file():
+        camera = camera_model.Camera.from_configuration(telescope, camera_components, 1.0)
         plot_pixels.plot(
-            config={
-                "file_name": input_file.name,
-                "telescope": telescope,
-                "parameter_version": parameter_version,
-                "site": site,
-                "model_version": model_version,
-                "parameter": parameter,
-            },
             output_file=Path(output_path) / plot_name,
-            model_reader=model_reader,
+            camera=camera,
+            raw_pixels=plot_pixels.raw_pixels_from_configuration(camera_components),
         )
     return [plot_name]
 
@@ -349,7 +354,7 @@ def plot_mirror_config(
     telescope,
     site,
     model_version,
-    model_reader,
+    context=None,
 ):
     """Plot the mirror configuration file using the selected model version."""
     if not parameter_version:
@@ -363,6 +368,7 @@ def plot_mirror_config(
         },
         plot_config={"parameter": parameter, "telescope": telescope},
         rendered_data=_file_digest(input_file),
+        context=context,
     )
     plot_name = f"{parameter}_{telescope}_{cache_key}"
     plot_path = (Path(output_path) / plot_name).with_suffix(".png")
@@ -376,8 +382,8 @@ def plot_mirror_config(
                 "model_version": model_version,
             },
             output_file=Path(output_path) / plot_name,
-            model_reader=model_reader,
             data_file_path=input_file,
+            mirrors=(mirror_model.Mirrors(input_file) if parameter == "mirror_list" else None),
         )
     return [plot_name]
 

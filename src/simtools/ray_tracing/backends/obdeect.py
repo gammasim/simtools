@@ -20,10 +20,11 @@ from astropy.constants import c as speed_of_light  # pylint: disable=no-name-in-
 from astropy.table import QTable
 from obdeect.model import DETECTED, OpticalModel
 
-from simtools.io import io_handler
+from simtools.model.model_utils import export_model_files
 from simtools.ray_tracing.backends.interface import image_file_name
 from simtools.ray_tracing.parameter_changes import TELESCOPE_STRUCTURE
 from simtools.ray_tracing.psf_analysis import PSFImage
+from simtools.runtime.context import RunContext
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
 from simtools.utils import geometry
 
@@ -51,7 +52,7 @@ class ObdeectRayTracer:
 
     def __init__(self, telescope_model):
         self.telescope_model = telescope_model
-        telescope_model.export_model_files(update_if_necessary=True)
+        export_model_files(telescope_model, update_if_necessary=True)
         self._models = {}
 
     def optical_model(self, telescope_zenith, instrument_seed, changes=None):
@@ -218,9 +219,12 @@ class ObdeectBackend:
     traces_light_sources = True
     traces_shower_photons = True
 
-    def __init__(self, telescope_model, site_model, label, zenith_angle, single_mirror_mode):
+    def __init__(
+        self, telescope_model, site_model, label, zenith_angle, single_mirror_mode, *, context=None
+    ):
         del site_model
         self.telescope_model = telescope_model
+        self.context = context or RunContext.from_environment()
         self.label = label
         self.zenith_angle = zenith_angle
         self.single_mirror_mode = single_mirror_mode
@@ -276,7 +280,11 @@ class ObdeectBackend:
         if traced is None:
             raise RuntimeError(f"Image {request.key} was not traced; run simulate first")
         position_cm = traced["position_cm"]
-        image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
+        image = PSFImage(
+            focal_length=focal_length,
+            containment_fraction=containment_fraction,
+            context=self.context,
+        )
         image.set_photon_positions(
             position_cm[:, 0], position_cm[:, 1], traced["total_photons"], traced["total_area_m2"]
         )
@@ -287,7 +295,7 @@ class ObdeectBackend:
 
     def _write_photons(self, request, traced, position_cm):
         """Write the photons of an image as an ECSV table (camera-entrance positions)."""
-        file_name = io_handler.IOHandler().get_output_directory() / image_file_name(
+        file_name = self.context.paths.get_output_directory() / image_file_name(
             self, request, "ray_tracing_photons", ".ecsv"
         )
         table = QTable(

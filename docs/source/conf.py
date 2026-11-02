@@ -5,7 +5,7 @@
 # documentation root, use Path.resolve() to make it absolute, like shown here.
 
 # pylint: skip-file
-import json
+import os
 import tomllib
 from importlib import import_module
 from pathlib import Path
@@ -18,12 +18,13 @@ path[:0] = [
     str(Path(p).resolve())
     for p in [
         "../../src",
-        "../../src/simtools",
         "../../src/simtools/applications",
         "../..",
         "./_ext",
     ]
 ]
+# Keep legacy short API module paths available after the standard library paths.
+path.append(str(Path("../../src/simtools").resolve()))
 
 simtools_version = import_module("simtools.version")
 
@@ -98,8 +99,6 @@ nitpicky = True
 # targets, so keep type information in the source API while omitting it from
 # generated signatures.
 autodoc_typehints = "none"
-# Optional ray-tracing backend; documented without installing it.
-autodoc_mock_imports = ["obdeect"]
 nitpick_ignore = [
     ("py:class", "astropy.table.table.Table"),
     ("py:class", "astropy.units.core.Unit"),
@@ -154,11 +153,13 @@ html_title = f"{project}"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_logo = "../_static/simtools_logo.png"
-switcher_versions = json.loads(
-    (Path(__file__).parent.parent / "_static/switcher.json").read_text(encoding="utf-8")
-)
-for switcher_entry in switcher_versions:
-    switcher_entry["name"] = switcher_entry["version"].removeprefix("v").capitalize()
+# Published builds read the version list from the deployed site; other builds embed the
+# list from the repository so that the switcher works offline and in forks.
+switcher_url = os.environ.get("SIMTOOLS_DOCS_SWITCHER_URL")
+if not switcher_url:
+    switcher_url = "data:application/json," + quote(
+        (Path(__file__).parent.parent / "_static/switcher.json").read_text(encoding="utf-8")
+    )
 
 html_theme_options = {
     "navbar_start": ["navbar-logo"],
@@ -173,10 +174,9 @@ html_theme_options = {
     ],
     "navigation_with_keys": False,
     "switcher": {
-        "json_url": "data:application/json," + quote(json.dumps(switcher_versions)),
+        "json_url": switcher_url,
         "version_match": "latest",
     },
-    # The version list is parsed above and embedded for offline browsing.
     "check_switcher": False,
     "logo": {
         "alt_text": "simtools",
@@ -186,7 +186,8 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
+html_static_path = ["../_static"]
+html_js_files = [("version_match.js", {"defer": "defer"})]
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "simtoolsdoc"

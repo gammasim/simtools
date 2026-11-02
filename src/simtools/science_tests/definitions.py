@@ -17,7 +17,7 @@ from pathlib import Path
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA, SCIENCE_TEST_SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
-from simtools.utils.general import replace_placeholders_recursively
+from simtools.utils.value_conversion import replace_placeholders_recursively
 
 CANDIDATE_PATH = "__SCIENCE_CANDIDATE_PATH__"
 BASELINE_PATH = "__SCIENCE_BASELINE_PATH__"

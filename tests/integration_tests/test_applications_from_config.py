@@ -10,11 +10,21 @@ from pathlib import Path
 
 import pytest
 
-from simtools.job_execution import log_inspector
+from simtools.io import log_inspector
+from simtools.reporting.docs_pages import read_version_switcher
 from simtools.testing import configuration, helpers, options
 from simtools.testing.output_validation.runner import validate_application_output
 
 logger = logging.getLogger()
+
+
+def _skip_empty_docs_switcher(config, simtools_root_path):
+    """Skip documentation validation when no releases are listed."""
+    if config.get("application") != "simtools-docs-assemble-pages":
+        return
+    switcher_file = Path(simtools_root_path) / config["configuration"]["switcher_file"]
+    if not read_version_switcher(switcher_file):
+        pytest.skip("The documentation switcher has no released versions")
 
 
 def _get_simulation_model_source(config, request, simtools_root_path):
@@ -101,7 +111,7 @@ def _set_simulation_model_source_configuration(config, simulation_models_path, g
     if not simulation_models_path and not git_source:
         return
     source_config = config.get("configuration")
-    if source_config is None:  # e.g. 'auto-no_config' tests running without any argument
+    if source_config is None:
         return
     model_source_arguments = _get_model_source_arguments(config["application"])
     if simulation_models_path and "simulation_models_path" not in model_source_arguments:
@@ -222,6 +232,7 @@ def test_applications_from_config(
 
     if tmp_config.get("skip_integration_test"):
         pytest.skip(tmp_config["skip_integration_test"])
+    _skip_empty_docs_switcher(tmp_config, simtools_root_path)
     simulation_models_path, git_source = _get_simulation_model_source(
         tmp_config, request, simtools_root_path
     )

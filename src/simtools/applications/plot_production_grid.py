@@ -4,6 +4,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.production_configuration.jobs_io import JOB_GRID_SCHEMA
 from simtools.visualization.plot_production_grid import ProductionGridPlotter
 
 _ARGUMENTS = (
@@ -34,18 +35,19 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_model_reader=False,
+    needs=("corsika",),
 )
 
 
 def main():
     """Run the ProductionGridPlotter."""
     app_context = APPLICATION.start()
-    output_path = app_context.io_handler.get_output_directory()
+    output_path = app_context.paths.get_output_directory()
 
     plotter = ProductionGridPlotter(
         grid_points_file=app_context.args["grid_points_file"],
         output_path=output_path,
+        column_units=JOB_GRID_SCHEMA.column_units,
     )
 
     plotter.plot_sky_projection()

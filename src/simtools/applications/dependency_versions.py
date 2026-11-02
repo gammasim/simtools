@@ -39,8 +39,7 @@ if __package__:
                 default=None,
             ),
         ),
-        setup_io_handler=False,
-        resolve_sim_software_executables=False,
+        needs=(),
     )
 
 
@@ -80,7 +79,7 @@ def _main_standalone():
 def _export_dependency_configuration(pyproject_path, output_format, extras):
     """Load the library exporter without requiring the full application stack."""
     # pylint: disable=import-outside-toplevel
-    from simtools.dependency_versions import export_dependency_configuration
+    from simtools.model_repository.dependency_versions import export_dependency_configuration
 
     return export_dependency_configuration(pyproject_path, output_format, extras)
 
@@ -88,7 +87,7 @@ def _export_dependency_configuration(pyproject_path, output_format, extras):
 def _update_source_revisions(updates_path):
     """Write resolved source revisions to the catalog in the current checkout."""
     # pylint: disable=import-outside-toplevel
-    from simtools.dependency_versions import (
+    from simtools.model_repository.dependency_versions import (
         find_dependency_versions,
         update_dependency_source_revisions,
     )

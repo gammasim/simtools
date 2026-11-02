@@ -6,20 +6,6 @@ from simtools.model import model_utils
 
 
 @pytest.mark.parametrize(
-    ("telescope_name", "expected"),
-    [
-        ("LSTN-01", False),
-        ("MSTN-01", False),
-        ("MSTS-01", False),
-        ("SSTS-01", True),
-        ("SCTS-25", True),
-    ],
-)
-def test_is_two_mirror_telescope(telescope_name, expected):
-    assert model_utils.is_two_mirror_telescope(telescope_name) == expected
-
-
-@pytest.mark.parametrize(
     ("pars", "off_axis", "expected"),
     [
         ([0.8, 0, 0.0, 0.0, 0.0], 0.0, 0.8),
@@ -66,47 +52,6 @@ def test_initialize_simulation_models_with_calibration_device(mocker):
     assert calibration_model == mock_cal_model.return_value
 
 
-def test_initialize_simulation_models_uses_custom_model_directory(mocker):
-    """Pass a custom generated-model directory to every initialized model."""
-    mock_tel_model = mocker.patch("simtools.model.model_utils.TelescopeModel")
-    mock_site_model = mocker.patch("simtools.model.model_utils.SiteModel")
-    mock_cal_model = mocker.patch("simtools.model.model_utils.CalibrationModel")
-    mock_tel_model.return_value.get_calibration_device_name.return_value = "ILLS-01"
-
-    model_utils.initialize_simulation_models(
-        label="test_label",
-        site="South",
-        telescope_name="MSTS-01",
-        model_version="test_version",
-        model_directory="output/model/test_version/ILLS-01_MSTS-01_355nm",
-    )
-
-    for model in mock_tel_model, mock_site_model, mock_cal_model:
-        assert model.call_args.kwargs["model_directory"] == (
-            "output/model/test_version/ILLS-01_MSTS-01_355nm"
-        )
-
-
-def test_read_overwrite_model_parameter_dict_with_file(mocker):
-    mock_collect = mocker.patch("simtools.model.model_utils.ascii_handler.collect_data_from_file")
-    mock_collect.return_value = {"changes": {"param1": "value1"}}
-
-    result = model_utils.read_overwrite_model_parameter_dict("test_file.yml")
-
-    assert result == {"param1": "value1"}
-    mock_collect.assert_called_once_with(file_name="test_file.yml")
-
-
-def test_read_overwrite_model_parameter_dict_with_none():
-    assert model_utils.read_overwrite_model_parameter_dict(None) == {}
-
-
-def test_read_overwrite_model_parameter_dict_with_dict():
-    result = model_utils.read_overwrite_model_parameter_dict({"changes": {"param1": "value1"}})
-
-    assert result == {"param1": "value1"}
-
-
 def test_read_overwrite_model_parameter_dict_with_dict_no_changes_key():
     result = model_utils.read_overwrite_model_parameter_dict({"param1": "value1"})
 
@@ -139,18 +84,6 @@ def test_read_overwrite_model_parameter_dict_with_file_non_dict_data(mocker):
     result = model_utils.read_overwrite_model_parameter_dict("test_file.yml")
 
     assert result == {}
-
-
-def test_read_overwrite_model_parameter_dict_uses_settings_config(mocker):
-    mocker.patch.object(
-        model_utils.settings.config,
-        "_args",
-        {"overwrite_model_parameters": {"changes": {"param1": "value1"}}},
-    )
-
-    result = model_utils.read_overwrite_model_parameter_dict()
-
-    assert result == {"param1": "value1"}
 
 
 @pytest.mark.parametrize(

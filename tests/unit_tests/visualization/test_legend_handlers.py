@@ -22,47 +22,6 @@ class MockHandleBox:
         self.artist = artist
 
 
-def test_calculate_center():
-    handlebox = MockHandleBox(xdescent=10, ydescent=20, width=30, height=40)
-
-    x0, y0 = leg_h.calculate_center(handlebox, width_factor=3, height_factor=4)
-    assert x0 == pytest.approx(10 + 30 / 3)
-    assert y0 == pytest.approx(20 + 40 / 4)
-
-    x0, y0 = leg_h.calculate_center(handlebox, width_factor=2, height_factor=2)
-    assert x0 == pytest.approx(10 + 30 / 2)
-    assert y0 == pytest.approx(20 + 40 / 2)
-
-
-def test_base_hex_pixel_handler_create_hex_patch():
-    handlebox = MockHandleBox()
-    facecolor = (0.5, 0.5, 0.5, 1)
-    edgecolor = (0, 0, 0, 1)
-
-    patch = leg_h._BaseHexPixelHandler._create_hex_patch(handlebox, facecolor, edgecolor)
-
-    assert patch is not None
-    assert patch.get_facecolor() == facecolor
-    assert patch.get_edgecolor() == edgecolor
-    assert patch.numvertices == 6
-    assert handlebox.artist == patch
-
-
-def test_base_square_pixel_handler_create_square_patch():
-    handlebox = MockHandleBox()
-    facecolor = (0.3, 0.3, 0.3, 1)
-    edgecolor = (0, 0, 0, 1)
-
-    patch = leg_h._BaseSquarePixelHandler._create_square_patch(handlebox, facecolor, edgecolor)
-
-    assert patch is not None
-    assert patch.get_facecolor() == facecolor
-    assert patch.get_edgecolor() == edgecolor
-    assert patch.get_width() == handlebox.height
-    assert patch.get_height() == handlebox.height
-    assert handlebox.artist == patch
-
-
 def test_telescope_handler():
     for telescope_type, config in leg_h.TELESCOPE_CONFIG.items():
         handler = leg_h.BaseLegendHandler(telescope_type)

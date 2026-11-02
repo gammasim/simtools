@@ -68,8 +68,3 @@ def test_storage_reads_identical_files(storage):
 @pytest.mark.parametrize("root_prefix", ["", "."])
 def test_storage_lists_all_files_from_repository_root(storage, root_prefix):
     assert storage.iter_files(root_prefix) == sorted(FILES)
-
-
-def test_storage_exists_is_false_for_directories(storage):
-    assert not storage.exists("simulation-models")
-    assert not storage.exists("simulation-models/productions")

@@ -1,10 +1,7 @@
 """Construct the configured simulation-model reader."""
 
-import os
-
-from simtools import dependency_versions
-from simtools.model_repository.reader import SimulationModelReader
-from simtools.settings import config
+from simtools.model_repository import dependency_versions
+from simtools.model_repository import reader as model_repository_reader
 
 
 def create_model_reader(
@@ -32,9 +29,10 @@ def create_model_reader(
         Reader backed by the selected source.
     """
     if simulation_models_path is None and simulation_models_git_path is None:
-        simulation_models_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_PATH")
-        simulation_models_git_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH")
-        simulation_models_git_revision = os.getenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION")
+        reader = model_repository_reader.resolve_model_reader()
+        if reader is None:
+            raise ValueError("A filesystem path or Git simulation-model source is required.")
+        return reader
 
     if simulation_models_path and simulation_models_git_path:
         raise ValueError(
@@ -42,7 +40,7 @@ def create_model_reader(
         )
 
     if simulation_models_path:
-        return SimulationModelReader.from_files(simulation_models_path)
+        return model_repository_reader.SimulationModelReader.from_files(simulation_models_path)
 
     if simulation_models_git_path:
         revision = simulation_models_git_revision
@@ -52,7 +50,9 @@ def create_model_reader(
             )
         if not revision:
             raise ValueError("A Git simulation-model revision is required.")
-        return SimulationModelReader.from_git(simulation_models_git_path, revision)
+        return model_repository_reader.SimulationModelReader.from_git(
+            simulation_models_git_path, revision
+        )
 
     raise ValueError("A filesystem path or Git simulation-model source is required.")
 
@@ -95,46 +95,4 @@ def create_model_reader_from_source_config(source_config):
     ValueError
         If the source configuration is missing or unsupported.
     """
-    if not isinstance(source_config, dict):
-        raise ValueError("Model source configuration must be a dictionary.")
-    source_type = source_config.get("type")
-    if source_type == "filesystem":
-        path = source_config.get("path")
-        if not path:
-            raise ValueError("Filesystem model source configuration requires a path.")
-        return create_model_reader(simulation_models_path=path)
-    if source_type == "git":
-        repository = source_config.get("repository")
-        commit = source_config.get("commit")
-        if not repository or not commit:
-            raise ValueError("Git model source configuration requires repository and commit.")
-        return create_model_reader(
-            simulation_models_git_path=repository,
-            simulation_models_git_revision=commit,
-        )
-    raise ValueError(f"Unsupported model source type: {source_type!r}.")
-
-
-def require_model_reader(model_reader=None):
-    """Return an explicit or application-configured model reader.
-
-    Parameters
-    ----------
-    model_reader : SimulationModelReader, optional
-        Reader explicitly supplied by a caller outside an application context.
-
-    Returns
-    -------
-    SimulationModelReader
-        The supplied reader or the reader selected during application startup.
-
-    Raises
-    ------
-    RuntimeError
-        If no simulation-model reader has been selected.
-    """
-    if model_reader is not None:
-        return model_reader
-    if config.model_reader is None:
-        raise RuntimeError("No simulation model reader is configured.")
-    return config.model_reader
+    return model_repository_reader.create_model_reader_from_source_config(source_config)

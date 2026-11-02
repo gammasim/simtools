@@ -25,13 +25,17 @@ def test_main_writes_plots_to_output_path(mocker):
             "azimuth_center": 180.0,
             "azimuth_width": 1.0,
         },
-        io_handler=io_handler,
+        paths=io_handler,
     )
     plotter = mocker.patch("simtools.applications.plot_production_grid.ProductionGridPlotter")
 
     app.main()
 
-    plotter.assert_called_once_with(grid_points_file="grid.ecsv", output_path=output_path)
+    plotter.assert_called_once_with(
+        grid_points_file="grid.ecsv",
+        output_path=output_path,
+        column_units=app.JOB_GRID_SCHEMA.column_units,
+    )
     plotter.return_value.plot_sky_projection.assert_called_once_with()
     plotter.return_value.plot_limit_projections.assert_called_once_with()
     plotter.return_value.plot_shower_statistics_vs_zenith.assert_called_once_with(

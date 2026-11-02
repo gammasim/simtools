@@ -16,7 +16,7 @@ LABEL = "test_simulator_ray_tracing"
 
 
 @pytest.fixture
-def ray_tracing_sst(telescope_model_sst, site_model_south):
+def ray_tracing_sst(telescope_model_sst, site_model_south, run_context):
     return RayTracing(
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
@@ -25,11 +25,12 @@ def ray_tracing_sst(telescope_model_sst, site_model_south):
         zenith_angle=20 * u.deg,
         off_axis_angle=[0, 2] * u.deg,
         single_mirror_mode=False,
+        context=run_context,
     )
 
 
 @pytest.fixture
-def ray_tracing_mst(telescope_model_mst, site_model_south):
+def ray_tracing_mst(telescope_model_mst, site_model_south, run_context):
     return RayTracing(
         telescope_model=telescope_model_mst,
         site_model=site_model_south,
@@ -38,6 +39,7 @@ def ray_tracing_mst(telescope_model_mst, site_model_south):
         zenith_angle=20 * u.deg,
         off_axis_angle=[0, 2] * u.deg,
         single_mirror_mode=False,
+        context=run_context,
     )
 
 
@@ -55,6 +57,7 @@ def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, site_model_s
             "mirror_numbers": 0,
         },
         label=LABEL,
+        context=ray_tracing_sst.context,
     )
 
 
@@ -73,6 +76,7 @@ def simulator_ray_tracing_single_mirror(ray_tracing_mst, telescope_model_mst, si
             "parameter_changes": parameter_changes.single_mirror("mirror.dat", 1600.0, 3200.0),
         },
         label=LABEL,
+        context=ray_tracing_mst.context,
     )
 
 
@@ -192,7 +196,7 @@ def test_check_run_result(simulator_ray_tracing_sst):
 
 
 @pytest.mark.parametrize("count", [None, 123456])
-def test_explicit_total_photons(count, telescope_model_sst, site_model_south, mocker):
+def test_explicit_total_photons(count, telescope_model_sst, site_model_south, mocker, run_context):
     """The photons per run; one run per random instrument instance."""
     mocker.patch.object(SimulatorRayTracing, "_load_required_files")
     simulator = SimulatorRayTracing(
@@ -208,6 +212,7 @@ def test_explicit_total_photons(count, telescope_model_sst, site_model_south, mo
             "mirror_numbers": 0,
             "seeds": [(1, 2), (3, 4)],
         },
+        context=run_context,
     )
     assert simulator.photons_per_run == (100000 if count is None else count)
     assert simulator.runs_per_set == 2

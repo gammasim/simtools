@@ -73,6 +73,7 @@ simulation_software:
       value_column: reflectivity
       float_format: ".12g"
       write_comments: false
+  - name: obdeect
 plot_configuration:
   - type: mirror_reflectivity
     title: Mirror reflectivity

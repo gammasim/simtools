@@ -38,7 +38,7 @@ _ARGUMENTS = (
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(*_ARGUMENTS, *cli.OUTPUT_ARGUMENTS),
-    initialize_output=False,
+    needs=("corsika",),
 )
 
 

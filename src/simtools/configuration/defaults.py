@@ -1,24 +1,17 @@
 """Default values for CLI and settings configuration."""
 
-CORSIKA_PATH = "/workdir/simulation_software/corsika7"
-CORSIKA_INTERACTION_TABLE_PATH = (
-    "/workdir/external/simpipe/simulation_software/corsika7-interaction-tables/interaction-tables/"
-)
-CORSIKA_HE_INTERACTION = "epos"
-CORSIKA_LE_INTERACTION = "urqmd"
+from simtools import constants
+
+CORSIKA_HE_INTERACTION = constants.CORSIKA_HE_INTERACTION
+CORSIKA_LE_INTERACTION = constants.CORSIKA_LE_INTERACTION
+ZENITH_ANGLE_SCALING_FACTOR_DEFAULT = constants.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT
+
+CORSIKA_INTERACTION_TABLE_PATH = constants.CORSIKA_INTERACTION_TABLE_PATH
 
 # Minimum zenith angle (degrees) above which CORSIKA uses a curved-atmosphere binary.
 CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG = 65
 
 # Simulation software identifiers and the external executables each requires.
-SIMULATION_SOFTWARE_DEPENDENCIES = {
-    "corsika": frozenset({"corsika"}),
-    "sim_telarray": frozenset({"sim_telarray"}),
-    "corsika_sim_telarray": frozenset({"corsika", "sim_telarray"}),
-}
-SIMULATION_SOFTWARE_CHOICES = tuple(SIMULATION_SOFTWARE_DEPENDENCIES)
-SIMULATION_SOFTWARE_DEFAULT = "corsika_sim_telarray"
-
-# Default exponential factor for zenith-dependent total shower scaling
-# Derived by the LST team for a 4-LST array, likely different for other array layouts.
-ZENITH_ANGLE_SCALING_FACTOR_DEFAULT = 3.9781
+SIMULATION_SOFTWARE_DEPENDENCIES = constants.SIMULATION_SOFTWARE_DEPENDENCIES
+SIMULATION_SOFTWARE_CHOICES = constants.SIMULATION_SOFTWARE_CHOICES
+SIMULATION_SOFTWARE_DEFAULT = constants.SIMULATION_SOFTWARE_DEFAULT

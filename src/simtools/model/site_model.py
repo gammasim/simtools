@@ -7,7 +7,6 @@ import numpy as np
 from astropy import units as u
 
 from simtools.model.model_parameter import ModelParameter
-from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 
 
@@ -51,6 +50,7 @@ class SiteModel(ModelParameter):
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        context=None,
         model_directory=None,
         parameter_names=None,
         load_simulation_software_parameters=True,
@@ -66,6 +66,7 @@ class SiteModel(ModelParameter):
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
+            context=context,
             model_directory=model_directory,
             parameter_names=parameter_names,
             load_simulation_software_parameters=load_simulation_software_parameters,
@@ -89,31 +90,15 @@ class SiteModel(ModelParameter):
             "epsg_code": self.get_parameter_value("epsg_code"),
         }
 
-    def get_corsika_site_parameters(self, config_file_style=False, model_directory=None):
+    def get_corsika_site_parameters(self):
         """
         Get site-related CORSIKA parameters.
-
-        Parameters are returned with units wherever possible ('config_file_style=False')
-        or in CORSIKA-expected coordinates.
-
-        Parameters
-        ----------
-        config_file_style: bool
-            Return using CORSIKA config file syntax
-        model_directory: Path, optional
-            Model directory to use for file paths
 
         Returns
         -------
         dict
             Site-related CORSIKA parameters.
         """
-        if config_file_style:
-            # pylint: disable-next=import-outside-toplevel
-            from simtools.corsika.corsika_config import get_site_config_parameters
-
-            return get_site_config_parameters(self, model_directory)
-
         return {
             "corsika_observation_level": self.get_parameter_value_with_unit(
                 "corsika_observation_level"
@@ -220,19 +205,6 @@ class SiteModel(ModelParameter):
             List of available array layouts
         """
         return [layout["name"] for layout in self.get_parameter_value("array_layouts")]
-
-    def export_atmospheric_transmission_file(self, model_directory):
-        """
-        Export the atmospheric profile source and sim_telarray table files.
-
-        Parameters
-        ----------
-        model_directory: Path
-            Model directory to export the file to.
-        """
-        return get_model_writer(self).export_atmospheric_transmission_file(
-            model_directory=model_directory
-        )
 
     def get_nsb_integrated_flux(self, wavelength_min=300 * u.nm, wavelength_max=650 * u.nm):
         """

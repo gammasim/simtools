@@ -4,10 +4,10 @@ import logging
 import math
 from collections import namedtuple
 
-from simtools import settings
-from simtools.io import io_handler
 from simtools.ray_tracing import parameter_changes
-from simtools.runners.simtel_runner import SimtelRunner
+from simtools.runtime.context import RunContext
+from simtools.simtel.simtel_runner import SimtelRunner
+from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 
 # pylint: disable=no-member
@@ -60,16 +60,18 @@ class SimulatorRayTracing(SimtelRunner):
         config_data=None,
         force_simulate=False,
         test=False,
+        context=None,
     ):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
-        super().__init__(label=label)
+        self.context = context or RunContext.from_environment()
+        super().__init__(label=label, context=self.context)
 
         self.telescope_model = telescope_model
         self.site_model = site_model
         self.label = label if label is not None else self.telescope_model.label
 
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
         self._base_directory = self.io_handler.get_output_directory()
 
         self.config = (
@@ -160,7 +162,7 @@ class SimulatorRayTracing(SimtelRunner):
         The run_number and input_file parameters are not relevant for the ray tracing simulation.
         """
         if self._write_config:
-            self.telescope_model.write_sim_telarray_config_file(
+            get_model_writer(self.telescope_model).write_sim_telarray_config_file(
                 additional_models=self.site_model,
                 label=self.label,
             )
@@ -204,14 +206,14 @@ class SimulatorRayTracing(SimtelRunner):
         options.update(parameter_changes.sim_telarray_options(self.config.parameter_changes))
 
         cmd = [
-            str(settings.config.sim_telarray_exe),
+            str(self.context.software.sim_telarray_exe),
             "-c",
             str(config_file_path),
             f"-I{self.telescope_model.config_file_directory}",
         ]
         for key, value in options.items():
             cmd.extend(["-C", f"{key}={value}"])
-        cmd.append(str(settings.config.corsika_dummy_file))
+        cmd.append(str(self.context.software.corsika_dummy_file))
 
         return cmd, self._log_file, self._log_file.with_suffix(".err")
 

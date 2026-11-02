@@ -5,12 +5,13 @@ import logging
 from simtools.model.calibration_model import CalibrationModel
 
 
-def test_calibration_model_init(caplog):
+def test_calibration_model_init(caplog, run_context):
     with caplog.at_level(logging.DEBUG):
         model = CalibrationModel(
             site="North",
             calibration_device_model_name="ILLN-01",
             model_version="1.0.0",
+            context=run_context,
         )
 
     assert model.site == "North"

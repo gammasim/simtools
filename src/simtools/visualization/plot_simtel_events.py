@@ -3,21 +3,12 @@
 
 import logging
 from contextlib import closing
-from dataclasses import dataclass
 from pathlib import Path
 
-import astropy.units as u
 import numpy as np
-from eventio import SimTelFile
 
-from simtools.camera import trace_analysis as trace
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.model.camera import Camera
-from simtools.simtel.simtel_event_reader import read_events
-from simtools.simtel.simtel_io_metadata import (
-    get_sim_telarray_telescope_id_to_telescope_name_mapping,
-)
-from simtools.utils import general as gen
+from simtools.utils import value_conversion
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_camera import plot_pixel_layout_with_image
 from simtools.visualization.visualize import pdf_report, save_figure
@@ -33,9 +24,7 @@ PEDESTAL_SOURCE_WAVEFORM = "waveform"
 PEDESTAL_SOURCE_MONITORING = "monitoring"
 EVENT_ID_KEY = "event_id"
 
-PEDESTAL_WINDOW_START = trace.PEDESTAL_WINDOW_START
-INTEGRATION_WINDOW_START = trace.INTEGRATION_WINDOW_START
-DEFAULT_SUM_THRESHOLD = trace.DEFAULT_SUM_THRESHOLD
+DEFAULT_SUM_THRESHOLD = 10.0
 DEFAULT_HISTOGRAM_BINS = 50
 DEFAULT_TIME_TRACES_PIXELS = 3
 DEFAULT_STEP_TRACES_INTERVAL = 10
@@ -51,7 +40,7 @@ PLOT_CHOICES = [
 ]
 
 
-def generate_and_save_plots(plots, args, ioh):
+def generate_and_save_plots(plots, args, ioh, prepared_events=None):
     """
     Generate events plots from a sim-telarray file and save a multi-page PDF per input.
 
@@ -63,17 +52,20 @@ def generate_and_save_plots(plots, args, ioh):
         List of plot names to generate.
     args : dict
         Additional arguments for plot functions.
-    ioh : IOHandler
-        IOHandler for managing output paths and metadata.
+    ioh : OutputPaths
+        Paths used for output files and metadata.
+    prepared_events : PreparedEvents
+        Events prepared by ``camera.event_images``. Required to generate plots.
     """
+    if prepared_events is None:
+        raise ValueError("prepared_events must be supplied before generating plots.")
     plotter = _StreamingPlotter(
         file_name=args.get("simtel_file", None),
         telescope=args.get("telescope", None),
-        event_ids=gen.ensure_list(args.get(EVENT_ID_KEY, None)),
+        event_ids=value_conversion.ensure_list(args.get(EVENT_ID_KEY, None)),
         max_events=args.get("max_events", None),
+        prepared_events=prepared_events,
     )
-    if args.get("pedestal_source", PEDESTAL_SOURCE_WAVEFORM) == PEDESTAL_SOURCE_MONITORING:
-        _apply_monitoring_pedestals(plotter)
     output_file = plotter.make_output_paths(ioh, args.get("output_file"))
     with closing(plotter.stream_figures(plots, args, output_file)) as figures:
         first = next(figures, None)
@@ -86,56 +78,6 @@ def generate_and_save_plots(plots, args, ioh):
                 report.add(figure)
     _logger.info(SAVED_PDF_MESSAGE, output_file)
     MetadataCollector.dump(args, output_file, add_activity_name=True)
-
-
-def _apply_monitoring_pedestals(plotter):
-    """Apply high-gain monitoring pedestals to the selected event waveforms."""
-    tel_map = get_sim_telarray_telescope_id_to_telescope_name_mapping(plotter.file_name)
-    tel_id = next((key for key, name in tel_map.items() if name == plotter.telescope), None)
-    if tel_id is None:
-        raise ValueError(f"Telescope {plotter.telescope!r} is not present in the sim_telarray file")
-    remaining = set(plotter.event_data)
-    with SimTelFile(plotter.file_name, skip_calibration=False) as simtel_file:
-        for event in simtel_file:
-            event_id = event[EVENT_ID_KEY]
-            if event_id not in remaining:
-                continue
-            monitoring = event.get("camera_monitorings", {}).get(tel_id)
-            data = plotter.event_data[event_id]
-            pedestals = _monitoring_pedestals(monitoring, data.number_of_pixels, event_id)
-            data.pedestals = pedestals
-            data.image = trace.trace_integration(
-                data.adc_samples, pedestals, (INTEGRATION_WINDOW_START, data.n_samples)
-            )
-            remaining.remove(event_id)
-            if not remaining:
-                return
-    if remaining:
-        raise ValueError(f"No monitoring pedestal found for event IDs {sorted(remaining)}")
-
-
-def _monitoring_pedestals(monitoring, number_of_pixels, event_id):
-    """Extract calibrated per-sample high-gain pedestal values."""
-    try:
-        n_slices = monitoring["n_ped_slices"]
-        values = np.asarray(monitoring["pedestal"], dtype=float)[0]
-        if n_slices <= 0 or values.shape != (number_of_pixels,) or not np.all(np.isfinite(values)):
-            raise ValueError
-        return values / n_slices
-    except (KeyError, TypeError, IndexError, ValueError) as exc:
-        raise ValueError(f"Missing or invalid monitoring pedestal for event {event_id}") from exc
-
-
-@dataclass
-class EventData:
-    """Event data for plotting."""
-
-    event_id: int
-    adc_samples: np.ndarray = None
-    number_of_pixels: int = 0
-    n_samples: int = 0
-    pedestals: np.ndarray = None
-    image: np.ndarray = None
 
 
 class PlotSimtelEvent:
@@ -154,7 +96,7 @@ class PlotSimtelEvent:
         Maximum number of events to process.
     """
 
-    def __init__(self, file_name, telescope, event_ids=None, max_events=None):
+    def __init__(self, file_name, telescope, event_ids=None, max_events=None, prepared_events=None):
         """Initialize plotter for one or more events."""
         self.file_name = Path(file_name) if file_name else None
         self.telescope = telescope
@@ -163,51 +105,13 @@ class PlotSimtelEvent:
         self.figures = []
         self.camera = None
 
-        self.event_data = self._read_and_init_events()
-
-    def _read_and_init_events(self):
-        """
-        Read and initialize event data.
-
-        Calculates pedestals, integrated image, time axis, and defines camera model.
-        """
-        _event_index, tel_desc, _events = read_events(
-            self.file_name,
-            self.telescope,
-            self.event_ids,
-            max_events=self.max_events,
-            verbose=True,
-        )
-        if not _events:
-            raise ValueError(f"No events read from file {self.file_name}")
-
-        event_data = {}
-        n_samples = None
-        for idx, event in zip(_event_index, _events):
-            adc_samples, pedestals, image = trace.get_trace_data(event["adc_samples"])
-            number_of_pixels, n_samples = adc_samples.shape
-            event_data[idx] = EventData(
-                event_id=idx,
-                adc_samples=adc_samples,
-                number_of_pixels=number_of_pixels,
-                n_samples=n_samples,
-                pedestals=pedestals,
-                image=image,
-            )
-        self.time_axis = None
-        if len(event_data):
-            self.time_axis = trace.get_time_axis(
-                time_slice=tel_desc["pixel_settings"]["time_slice"] * u.ns,
-                n_samples=n_samples,  # assume all pixels with same number of samples
-            )
-
-        self.camera = Camera(
-            telescope_name=self.telescope,
-            camera_config_file=None,
-            focal_length=tel_desc["camera_settings"]["focal_length"],
-            camera_config_dict=tel_desc["camera_settings"],
-        )
-        return event_data
+        if prepared_events is None:
+            raise ValueError("prepared_events must be supplied when constructing a plotter.")
+        self.prepared_events = prepared_events
+        self.event_data = prepared_events.event_data
+        self.time_axis = prepared_events.time_axis
+        self.camera = prepared_events.camera
+        self._trace_maxima = prepared_events.trace_maxima
 
     def make_output_paths(self, ioh, base):
         """Return output file path based on base name and input file."""
@@ -291,7 +195,7 @@ class PlotSimtelEvent:
         """Generate list of plots to run based on user input."""
         if "all" in plots:
             return list(self._plot_definitions.keys())
-        return gen.ensure_list(plots)
+        return value_conversion.ensure_list(plots)
 
     @property
     def _plot_definitions(self):
@@ -317,6 +221,10 @@ class PlotSimtelEvent:
     def _make_title(self, subject, event_index):
         """Generate consistent plot title."""
         return f"{self.telescope} {subject} (event {event_index})"
+
+    def trace_maxima(self, samples, sum_threshold):
+        """Call the trace analysis function supplied with prepared event data."""
+        return self._trace_maxima(samples, sum_threshold)
 
     def plot_time_traces(self, event_index, number_of_pixels=DEFAULT_TIME_TRACES_PIXELS):
         """
@@ -448,7 +356,7 @@ class PlotSimtelEvent:
         matplotlib.figure.Figure | None
             The created figure, or None if no pixels exceed threshold.
         """
-        trace_max_time, pix_ids, found_count = trace.trace_maxima(
+        trace_max_time, pix_ids, found_count = self.trace_maxima(
             self.event_data[event_index].adc_samples, sum_threshold=sum_threshold
         )
 

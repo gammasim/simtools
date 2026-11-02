@@ -42,7 +42,7 @@ def mock_models(monkeypatch):
     tel.name = "LST-1"
     tel.config_file_path = Path("cfg.cfg")
     tel.config_file_directory = Path()
-    tel.write_sim_telarray_config_file = MagicMock()
+    tel.configuration_writers = {"sim_telarray": MagicMock()}
     tel.get_parameter_value.side_effect = lambda key: {
         "focal_length": 280.0,
         "mirror_class": 2,
@@ -83,18 +83,20 @@ def test_initialization(calculator, config_data):
 @pytest.mark.parametrize("debug", [False, True])
 @pytest.mark.parametrize("fails", [False, True])
 def test_application_cleans_working_directory_and_controls_plots(
-    monkeypatch, tmp_test_directory, debug, fails
+    monkeypatch, tmp_test_directory, debug, fails, run_context
 ):
     from simtools.applications import derive_incident_angle as app
 
-    context = MagicMock()
-    context.args = {
-        "application_label": "test",
-        "telescope": "SSTS-01",
-        "debug_plots": debug,
-        "model_version": "7.0.0",
-    }
-    context.io_handler.get_output_directory.return_value = Path(tmp_test_directory)
+    context = run_context.replace(
+        args={
+            "application_label": "test",
+            "telescope": "SSTS-01",
+            "debug_plots": debug,
+            "model_version": "7.0.0",
+        },
+        logger=MagicMock(),
+    )
+    output_dir = context.paths.get_output_directory()
     monkeypatch.setattr(app, "APPLICATION", MagicMock(start=MagicMock(return_value=context)))
     factory = MagicMock()
     factory.return_value.run_for_offsets.return_value = {0: [1]}
@@ -112,7 +114,7 @@ def test_application_cleans_working_directory_and_controls_plots(
         return
     app.main()
     assert plot.call_count == int(debug)
-    cleanup.assert_called_once_with(Path(tmp_test_directory), files=[])
+    cleanup.assert_called_once_with(output_dir, files=[])
     factory.return_value.save_model_parameters.assert_called_once()
 
 
@@ -122,25 +124,6 @@ def test_mirror_angles_follow_model(mock_models, config_data, tmp_test_directory
     mock_models.tel.get_parameter_value.return_value = mirror_class
     calculator = IncidentAnglesCalculator(config_data, tmp_test_directory)
     assert calculator.calculate_primary_secondary_angles is (mirror_class == 2)
-
-
-@pytest.mark.parametrize(("arguments", "expected"), [([], 0), (["--zenith_angle", "40"], 40)])
-def test_zenith_angle_cli_default_and_override(arguments, expected):
-    from simtools.applications.derive_incident_angle import APPLICATION
-
-    args = APPLICATION.build_parser().parse_args(arguments)
-    assert args.zenith_angle.to_value(u.deg) == pytest.approx(expected)
-
-
-def test_mirror_angle_cli_option_removed():
-    from simtools.applications.derive_incident_angle import APPLICATION
-
-    parser = APPLICATION.build_parser()
-    assert not hasattr(parser.parse_args([]), "calculate_primary_secondary_angles")
-    with pytest.raises(SystemExit):
-        parser.parse_args(["--calculate_primary_secondary_angles"])
-    with pytest.raises(SystemExit):
-        parser.parse_args(["--no-calculate_primary_secondary_angles"])
 
 
 def test_run_for_offsets_restores_label_and_collects(monkeypatch, calculator):
@@ -159,16 +142,6 @@ def test_run_for_offsets_restores_label_and_collects(monkeypatch, calculator):
     assert set(res.keys()) == {0.0, 1.5, 3.0}
     assert all(isinstance(v, QTable) for v in res.values())
     assert calculator.label == base_label  # restored
-
-
-def test_save_results_no_data_logs_warning(caplog, calculator, tmp_test_directory):
-    calculator.results = QTable()  # empty
-    caplog.set_level(logging.WARNING, logger=ia.__name__)
-    calculator._save_results()
-    assert any("No results to save" in rec.message for rec in caplog.records)
-    # No file should be created
-    out = list(calculator.results_dir.glob("incident_angles_*.ecsv"))
-    assert not out
 
 
 def test_save_model_parameters(calculator, tmp_test_directory, monkeypatch):
@@ -193,6 +166,158 @@ def test_save_model_parameters(calculator, tmp_test_directory, monkeypatch):
     assert mock_writer.write_model_parameter.call_count > 0
 
 
+@pytest.mark.parametrize("bins", [100, 1000])
+def test_calculate_histogram_probability_density(bins):
+    """Normalize the integral, including endpoints and ignoring non-finite rays."""
+    centers, density = IncidentAnglesCalculator._calculate_histogram(
+        [0.0, 0.0, 90.0, float("nan"), float("inf")], bins=bins
+    )
+    width = 90.0 / bins
+    assert len(centers) == bins
+    assert centers[[0, -1]] == pytest.approx([width / 2, 90 - width / 2])
+    assert sum(density) * width == pytest.approx(1)
+    assert density[0] == pytest.approx(2 / (3 * width))
+    assert density[-1] == pytest.approx(1 / (3 * width))
+
+
+def test_build_incidence_distribution_table():
+    """Cover _build_incidence_distribution_table static method."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    data = [1.0, 2.0, 3.0, 4.0, 5.0]
+    table = calc._build_incidence_distribution_table(data)
+
+    assert isinstance(table, QTable)
+    assert "incidence_angle" in table.colnames
+    assert "fraction" in table.colnames
+    assert table["incidence_angle"].unit == u.deg
+    assert len(table) == 100
+
+
+def test_filter_distribution_includes_rays_without_pixel_hits(calculator, monkeypatch):
+    """Rays that miss the pixels (focal angles 30 and 60 deg) count in the distribution."""
+    calculator.telescope_model.get_parameter_value.side_effect = None
+    calculator.telescope_model.get_parameter_value.return_value = 1
+    writer = MagicMock()
+    monkeypatch.setattr(ia, "ModelDataWriter", writer)
+    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
+    table = QTable({"angle_incidence_focal": [30, 60] * u.deg})
+    calculator.save_model_parameters({0: table})
+    exported = writer.write_product_data.call_args.kwargs["product_data"]
+    nonzero = exported[exported["fraction"] > 0]
+    assert list(nonzero["fraction"]) == pytest.approx([0.5 / 0.9, 0.5 / 0.9])
+    assert nonzero["incidence_angle"].to_value(u.deg) == pytest.approx([30.15, 59.85])
+    assert exported.meta["angle_reference"] == "optical axis at focal surface"
+
+
+@pytest.fixture
+def fake_backend(monkeypatch):
+    """Backend returning one photon with angles and mirror hit points."""
+    backend = MagicMock()
+    backend.return_value.incidence_angles.return_value = (
+        {
+            "angle_incidence_focal": [36.87],
+            "angle_incidence_primary": [10.0],
+            "angle_incidence_secondary": [20.0],
+            "primary_hit_x": [3.0],
+            "primary_hit_y": [4.0],
+            "secondary_hit_x": [0.3],
+            "secondary_hit_y": [-0.4],
+        },
+        [Path("run.sh")],
+    )
+    monkeypatch.setattr(ia.interface, "get_backend", lambda context=None: backend)
+    monkeypatch.setattr(ia.simtel_seeds, "instance_seed_pairs", lambda context=None: [(11, 22)])
+    return backend
+
+
+@pytest.mark.parametrize("perfect_mirror", [False, True])
+def test_run_with_backend(calculator, fake_backend, perfect_mirror):
+    calculator.perfect_mirror = perfect_mirror
+    calculator.config_data["off_axis_angle"] = 1.5 * u.deg
+
+    result = calculator.run()
+
+    fake_backend.assert_called_once_with(
+        calculator.telescope_model,
+        calculator.site_model,
+        calculator.label,
+        0.0,
+        False,
+        context=calculator.context,
+    )
+    request, work_directory, name, with_mirrors = (
+        fake_backend.return_value.incidence_angles.call_args.args
+    )
+    assert (request.off_axis_x, request.off_axis_y, request.source_distance_km) == (1.5, 0, 10)
+    assert request.seeds == ((11, 22),)
+    assert request.photons_per_instance == 1000
+    assert request.parameter_changes == (parameter_changes.PERFECT_MIRROR if perfect_mirror else {})
+    assert work_directory == calculator.output_dir
+    assert name == f"{calculator.label}_LSTN-01_off1.5"
+    assert with_mirrors is calculator.calculate_primary_secondary_angles
+    assert Path("run.sh") in calculator._intermediate_files
+    assert result.colnames[:3] == [
+        "angle_incidence_focal",
+        "angle_incidence_primary",
+        "angle_incidence_secondary",
+    ]
+    assert result["primary_hit_radius"][0].to_value(u.m) == pytest.approx(5.0)
+    assert result["secondary_hit_y"][0].to_value(u.m) == pytest.approx(-0.4)
+    assert (calculator.results_dir / f"incident_angles_{name}.ecsv").exists()
+
+
+@pytest.mark.parametrize("keep_photons", [False, True])
+def test_cleanup_intermediate_files(mock_models, config_data, tmp_test_directory, keep_photons):
+    root = Path(tmp_test_directory)
+    config_data.update(debug_plots=False, keep_photon_files=keep_photons)
+    calc = IncidentAnglesCalculator(config_data, root / "output")
+    photons = calc.photons_dir / "photons.lis"
+    stars = calc.scripts_dir / "stars.lis"
+    for file in (photons, stars):
+        file.write_text("data", encoding="utf-8")
+    calc._intermediate_files.update([stars] if keep_photons else [stars, photons])
+    calc.model_dir.mkdir(parents=True)
+    model_file = calc.model_dir / "model.cfg"
+    model_file.write_text("model", encoding="utf-8")
+    unrelated = calc.scripts_dir / "unrelated.sh"
+    unrelated.write_text("unrelated", encoding="utf-8")
+    cleanup_intermediate_files(calc.output_dir, **calc.cleanup_options)
+    assert photons.exists() is keep_photons
+    assert not stars.exists()
+    assert not model_file.exists()
+    assert unrelated.exists()
+    assert calc.results_dir.is_dir()
+
+
+@pytest.mark.parametrize(("arguments", "expected"), [([], 0), (["--zenith_angle", "40"], 40)])
+def test_zenith_angle_cli_default_and_override(arguments, expected):
+    from simtools.applications.derive_incident_angle import APPLICATION
+
+    args = APPLICATION.build_parser().parse_args(arguments)
+    assert args.zenith_angle.to_value(u.deg) == pytest.approx(expected)
+
+
+def test_mirror_angle_cli_option_removed():
+    from simtools.applications.derive_incident_angle import APPLICATION
+
+    parser = APPLICATION.build_parser()
+    assert not hasattr(parser.parse_args([]), "calculate_primary_secondary_angles")
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--calculate_primary_secondary_angles"])
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--no-calculate_primary_secondary_angles"])
+
+
+def test_save_results_no_data_logs_warning(caplog, calculator, tmp_test_directory):
+    calculator.results = QTable()  # empty
+    caplog.set_level(logging.WARNING, logger=ia.__name__)
+    calculator._save_results()
+    assert any("No results to save" in rec.message for rec in caplog.records)
+    # No file should be created
+    out = list(calculator.results_dir.glob("incident_angles_*.ecsv"))
+    assert not out
+
+
 def test_save_model_parameters_no_results_logs_warning(
     caplog, calculator, tmp_test_directory, monkeypatch
 ):
@@ -210,9 +335,6 @@ def test_save_model_parameters_no_results_logs_warning(
     assert not list(Path(tmp_test_directory).glob("*.json"))
 
 
-# --- Tests for 100% coverage ---
-
-
 def test_source_distance_km_with_plain_float(calculator):
     """Cover _source_distance_km when source_distance is a plain float."""
     calculator.config_data["source_distance"] = 15.0
@@ -226,20 +348,6 @@ def test_calculate_histogram_empty_after_filtering():
     )
     assert len(bin_centers) == 0
     assert len(hist) == 0
-
-
-@pytest.mark.parametrize("bins", [100, 1000])
-def test_calculate_histogram_probability_density(bins):
-    """Normalize the integral, including endpoints and ignoring non-finite rays."""
-    centers, density = IncidentAnglesCalculator._calculate_histogram(
-        [0.0, 0.0, 90.0, float("nan"), float("inf")], bins=bins
-    )
-    width = 90.0 / bins
-    assert len(centers) == bins
-    assert centers[[0, -1]] == pytest.approx([width / 2, 90 - width / 2])
-    assert sum(density) * width == pytest.approx(1)
-    assert density[0] == pytest.approx(2 / (3 * width))
-    assert density[-1] == pytest.approx(1 / (3 * width))
 
 
 def test_save_model_parameters_mirror_class_2(tmp_test_directory, monkeypatch, mock_models):
@@ -304,19 +412,6 @@ def test_save_model_parameters_no_results(tmp_test_directory, monkeypatch, caplo
     assert mock_writer.write_product_data.call_count == 0
 
 
-def test_build_incidence_distribution_table():
-    """Cover _build_incidence_distribution_table static method."""
-    calc = object.__new__(IncidentAnglesCalculator)
-    data = [1.0, 2.0, 3.0, 4.0, 5.0]
-    table = calc._build_incidence_distribution_table(data)
-
-    assert isinstance(table, QTable)
-    assert "incidence_angle" in table.colnames
-    assert "fraction" in table.colnames
-    assert table["incidence_angle"].unit == u.deg
-    assert len(table) == 100
-
-
 @pytest.mark.parametrize("mirror_class", [0, 1, 2])
 def test_exports_only_incidence_parameters(calculator, monkeypatch, mirror_class):
     """Keep the laboratory lightguide file intact while exporting ray-traced angles."""
@@ -352,94 +447,3 @@ def test_exports_only_incidence_parameters(calculator, monkeypatch, mirror_class
         assert table.meta["normalization"] == "probability density per degree"
         assert sum(table["fraction"]) * table.meta["bin_width_deg"] == pytest.approx(1)
     assert lab_file.read_text(encoding="utf-8") == original_data
-
-
-def test_filter_distribution_includes_rays_without_pixel_hits(calculator, monkeypatch):
-    """Rays that miss the pixels (focal angles 30 and 60 deg) count in the distribution."""
-    calculator.telescope_model.get_parameter_value.side_effect = None
-    calculator.telescope_model.get_parameter_value.return_value = 1
-    writer = MagicMock()
-    monkeypatch.setattr(ia, "ModelDataWriter", writer)
-    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
-    table = QTable({"angle_incidence_focal": [30, 60] * u.deg})
-    calculator.save_model_parameters({0: table})
-    exported = writer.write_product_data.call_args.kwargs["product_data"]
-    nonzero = exported[exported["fraction"] > 0]
-    assert list(nonzero["fraction"]) == pytest.approx([0.5 / 0.9, 0.5 / 0.9])
-    assert nonzero["incidence_angle"].to_value(u.deg) == pytest.approx([30.15, 59.85])
-    assert exported.meta["angle_reference"] == "optical axis at focal surface"
-
-
-@pytest.fixture
-def fake_backend(monkeypatch):
-    """Backend returning one photon with angles and mirror hit points."""
-    backend = MagicMock()
-    backend.return_value.incidence_angles.return_value = (
-        {
-            "angle_incidence_focal": [36.87],
-            "angle_incidence_primary": [10.0],
-            "angle_incidence_secondary": [20.0],
-            "primary_hit_x": [3.0],
-            "primary_hit_y": [4.0],
-            "secondary_hit_x": [0.3],
-            "secondary_hit_y": [-0.4],
-        },
-        [Path("run.sh")],
-    )
-    monkeypatch.setattr(ia.interface, "get_backend", lambda: backend)
-    monkeypatch.setattr(ia.simtel_seeds, "instance_seed_pairs", lambda: [(11, 22)])
-    return backend
-
-
-@pytest.mark.parametrize("perfect_mirror", [False, True])
-def test_run_with_backend(calculator, fake_backend, perfect_mirror):
-    calculator.perfect_mirror = perfect_mirror
-    calculator.config_data["off_axis_angle"] = 1.5 * u.deg
-
-    result = calculator.run()
-
-    fake_backend.assert_called_once_with(
-        calculator.telescope_model, calculator.site_model, calculator.label, 0.0, False
-    )
-    request, work_directory, name, with_mirrors = (
-        fake_backend.return_value.incidence_angles.call_args.args
-    )
-    assert (request.off_axis_x, request.off_axis_y, request.source_distance_km) == (1.5, 0, 10)
-    assert request.seeds == ((11, 22),)
-    assert request.photons_per_instance == 1000
-    assert request.parameter_changes == (parameter_changes.PERFECT_MIRROR if perfect_mirror else {})
-    assert work_directory == calculator.output_dir
-    assert name == f"{calculator.label}_LSTN-01_off1.5"
-    assert with_mirrors is calculator.calculate_primary_secondary_angles
-    assert Path("run.sh") in calculator._intermediate_files
-    assert result.colnames[:3] == [
-        "angle_incidence_focal",
-        "angle_incidence_primary",
-        "angle_incidence_secondary",
-    ]
-    assert result["primary_hit_radius"][0].to_value(u.m) == pytest.approx(5.0)
-    assert result["secondary_hit_y"][0].to_value(u.m) == pytest.approx(-0.4)
-    assert (calculator.results_dir / f"incident_angles_{name}.ecsv").exists()
-
-
-@pytest.mark.parametrize("keep_photons", [False, True])
-def test_cleanup_intermediate_files(mock_models, config_data, tmp_test_directory, keep_photons):
-    root = Path(tmp_test_directory)
-    config_data.update(debug_plots=False, keep_photon_files=keep_photons)
-    calc = IncidentAnglesCalculator(config_data, root / "output")
-    photons = calc.photons_dir / "photons.lis"
-    stars = calc.scripts_dir / "stars.lis"
-    for file in (photons, stars):
-        file.write_text("data", encoding="utf-8")
-    calc._intermediate_files.update([stars] if keep_photons else [stars, photons])
-    calc.model_dir.mkdir(parents=True)
-    model_file = calc.model_dir / "model.cfg"
-    model_file.write_text("model", encoding="utf-8")
-    unrelated = calc.scripts_dir / "unrelated.sh"
-    unrelated.write_text("unrelated", encoding="utf-8")
-    cleanup_intermediate_files(calc.output_dir, **calc.cleanup_options)
-    assert photons.exists() is keep_photons
-    assert not stars.exists()
-    assert not model_file.exists()
-    assert unrelated.exists()
-    assert calc.results_dir.is_dir()

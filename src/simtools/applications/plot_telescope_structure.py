@@ -4,7 +4,7 @@
 
 The nominal geometry comes from the model parameters, without random alignment
 errors. With ``--shadowing``, the telescope structure is coloured by the light each
-element stops on its own; this needs the optional obdeect package.
+element stops on its own; this needs the obdeect package.
 """
 
 from pathlib import Path
@@ -12,7 +12,10 @@ from tempfile import TemporaryDirectory
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.model import telescope_geometry
+from simtools.model.model_utils import export_model_files
 from simtools.model.telescope_model import TelescopeModel
+from simtools.ray_tracing.telescope_shadowing import shadowing_shares
 from simtools.visualization import plot_telescope_structure as structure
 
 _ARGUMENTS = (
@@ -60,6 +63,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -76,13 +80,14 @@ def main():
             label=label,
             model_reader=app_context.model_reader,
             model_directory=model_directory,
+            context=app_context,
         )
         parameters = tel_model.parameters
         if args["shadowing"]:
             original_structure = None
             if args["telescope_structure_file"] is not None:
                 original_structure = parameters.pop("telescope_structure", None)
-            tel_model.export_model_files()
+            export_model_files(tel_model)
             if original_structure is not None:
                 parameters["telescope_structure"] = original_structure
         model_files = {}
@@ -103,13 +108,13 @@ def main():
                 parameters=model_files,
                 dest=tel_model.config_file_directory,
             )
-        geometry = structure.telescope_geometry(tel_model)
+        geometry = telescope_geometry.telescope_geometry(tel_model)
         shares = None
         if args["shadowing"]:
-            shares = structure.shadowing_shares(
+            shares = shadowing_shares(
                 tel_model, args["zenith_angle"], args["photons"], args["seed"]
             )
-        output_dir = app_context.io_handler.get_output_directory()
+        output_dir = app_context.paths.get_output_directory()
         structure.plot_telescope_structure(
             geometry, output_dir.joinpath(f"{label}_{tel_model.name}"), shares
         )

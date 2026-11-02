@@ -136,20 +136,22 @@ def _route_kwargs(telescope_ids=(0,), input_plane_height_m=INPUT_PLANE_HEIGHT_M)
         "phi_deg": PHI_DEG,
         "input_plane_height_m_by_telescope": dict.fromkeys(telescope_ids, input_plane_height_m),
         "seed": SEED,
-        "observation_level_m": OBSERVATION_LEVEL_M,
         "telescope_radius_m": RADIUS_M,
-        "atmospheric_profile": _atmospheric_profile(),
     }
+
+
+def _inputs(tracers):
+    return RouteInputs(
+        tracers=tracers,
+        observation_level_m=OBSERVATION_LEVEL_M,
+        atmospheric_profile=_atmospheric_profile(),
+    )
 
 
 def _fake_inputs_factory(routes, *, simulation_models_path=None, backend=None):
     """Route inputs with fake tracers (replaces the telescope models in the CLI test)."""
     del simulation_models_path, backend
-    return RouteInputs(
-        tracers={telescope_id: _FakeTracer() for telescope_id in routes},
-        observation_level_m=OBSERVATION_LEVEL_M,
-        atmospheric_profile=_atmospheric_profile(),
-    )
+    return _inputs({telescope_id: _FakeTracer() for telescope_id in routes})
 
 
 def _read_back(data):
@@ -164,7 +166,7 @@ def test_route_stream_writes_one_event_per_telescope_block():
     tracers = {0: _FakeTracer(), 1: _FakeTracer()}
     out = io.BytesIO()
 
-    count = route_stream(stream, out, tracers, **_route_kwargs(telescope_ids=(0, 1)))
+    count = route_stream(stream, out, _inputs(tracers), **_route_kwargs(telescope_ids=(0, 1)))
 
     assert count == 4
     events = _read_back(out.getvalue())
@@ -184,7 +186,7 @@ def test_route_stream_passes_tracing_arguments():
     stream = _stream([(0, _bunches(2))])
     tracer = _FakeTracer()
 
-    route_stream(stream, io.BytesIO(), {0: tracer}, **_route_kwargs(), threads=3)
+    route_stream(stream, io.BytesIO(), _inputs({0: tracer}), **_route_kwargs(), threads=3)
 
     _, kwargs = tracer.model.calls[0]
     # Tracing seed of the block: event number 1, array id 0, telescope id 0.
@@ -257,7 +259,7 @@ def test_route_stream_unknown_telescope_id_raises():
     stream = _stream([(0, _bunches(2)), (2, _bunches(2))])
 
     with pytest.raises(ValueError, match="Telescope id 2 of event 2 is not in the telescope map"):
-        route_stream(stream, io.BytesIO(), {0: _FakeTracer()}, **_route_kwargs())
+        route_stream(stream, io.BytesIO(), _inputs({0: _FakeTracer()}), **_route_kwargs())
 
 
 def test_route_stream_empty_event_is_written_and_not_traced():
@@ -265,7 +267,7 @@ def test_route_stream_empty_event_is_written_and_not_traced():
     tracer = _FakeTracer()
     out = io.BytesIO()
 
-    count = route_stream(stream, out, {0: tracer}, **_route_kwargs())
+    count = route_stream(stream, out, _inputs({0: tracer}), **_route_kwargs())
 
     assert count == 1
     events = _read_back(out.getvalue())
@@ -278,7 +280,9 @@ def test_route_stream_input_plane_below_minimum_writes_nothing():
     out = io.BytesIO()
 
     with pytest.raises(ValueError, match="below the minimum"):
-        route_stream(stream, out, {0: _FakeTracer()}, **_route_kwargs(input_plane_height_m=20.0))
+        route_stream(
+            stream, out, _inputs({0: _FakeTracer()}), **_route_kwargs(input_plane_height_m=20.0)
+        )
     assert out.getvalue() == b""
 
 
@@ -290,7 +294,11 @@ def test_route_stream_skipped_telescope_writes_event_without_blocks():
     out = io.BytesIO()
 
     count = route_stream(
-        stream, out, {0: tracer}, **_route_kwargs(telescope_ids=(0,)), skipped_telescope_ids={1}
+        stream,
+        out,
+        _inputs({0: tracer}),
+        **_route_kwargs(telescope_ids=(0,)),
+        skipped_telescope_ids={1},
     )
 
     # The event of the skipped telescope is written without telescope blocks, so the reader
@@ -308,7 +316,7 @@ def test_route_stream_telescope_neither_traced_nor_skipped_raises():
         route_stream(
             _stream([(1, _bunches(1))]),
             io.BytesIO(),
-            {0: _FakeTracer()},
+            _inputs({0: _FakeTracer()}),
             **_route_kwargs(telescope_ids=(0,)),
             skipped_telescope_ids={2},
         )
@@ -328,7 +336,7 @@ def test_route_stream_missing_telescope_parameter_raises():
         route_stream(
             _stream([(0, _bunches(1))]),
             io.BytesIO(),
-            {0: _FakeTracer(), 1: _FakeTracer()},
+            _inputs({0: _FakeTracer(), 1: _FakeTracer()}),
             **_route_kwargs(telescope_ids=(0,)),
         )
 
@@ -342,7 +350,7 @@ def test_route_stream_real_corsika_file_through_pipe():
     # Identity tracer: one camera photon per input bunch; the output keeps every block.
     with subprocess.Popen(["cat", iact_file], stdout=subprocess.PIPE) as cat:
         out = io.BytesIO()
-        count = route_stream(cat.stdout, out, {0: _FakeTracer()}, **_route_kwargs())
+        count = route_stream(cat.stdout, out, _inputs({0: _FakeTracer()}), **_route_kwargs())
 
     assert count == len(expected)
     events = _read_back(out.getvalue())
@@ -367,6 +375,15 @@ def test_parse_telescope_map_valid():
     assert routes[0].input_plane_height_m == pytest.approx(30.0)
     assert routes[3].dual_mirror is True
     assert routes[5].site == "North"
+
+
+def test_create_route_inputs_requires_model_source(monkeypatch):
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+    routes = parse_telescope_map({"0": VALID_ENTRY})
+
+    with pytest.raises(ValueError, match="A simulation-model source is required"):
+        shower_route.create_route_inputs(routes)
 
 
 def test_load_telescope_map_reads_json(tmp_test_directory):
@@ -543,7 +560,7 @@ def test_route_stream_signals_each_processed_object():
     route_stream(
         stream,
         io.BytesIO(),
-        {0: _FakeTracer()},
+        _inputs({0: _FakeTracer()}),
         **_route_kwargs(telescope_ids=(0,)),
         on_object=on_object,
     )

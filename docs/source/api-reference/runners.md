@@ -20,12 +20,49 @@ Support modules for running simtools, CORSIKA, and sim_telarray.
    :members:
 ```
 
-## corsika_runner
+## stages
 
-(corsika-runner-1)=
+(simulation-stages)=
+
+Simulation stages (e.g. CORSIKA, sim_telarray), the data products connecting them, and
+simulation chains.
 
 ```{eval-rst}
-.. automodule:: runners.corsika_runner
+.. automodule:: runners.stages
+   :members:
+```
+
+## chain_runner
+
+(chain-runner)=
+
+```{eval-rst}
+.. automodule:: runners.chain_runner
+   :members:
+```
+
+## corsika_stage
+
+(corsika-stage)=
+
+```{eval-rst}
+.. automodule:: runners.corsika_stage
+   :members:
+```
+
+## sim_telarray_stage
+
+(sim-telarray-stage)=
+
+```{eval-rst}
+.. automodule:: runners.sim_telarray_stage
+   :members:
+```
+
+## shower_routing
+
+```{eval-rst}
+.. automodule:: runners.shower_routing
    :members:
 ```
 
@@ -34,16 +71,7 @@ Support modules for running simtools, CORSIKA, and sim_telarray.
 (simtel-runner-1)=
 
 ```{eval-rst}
-.. automodule:: runners.simtel_runner
-   :members:
-```
-
-## corsika_simtel_runner
-
-(corsika-simtel-runner-1)=
-
-```{eval-rst}
-.. automodule:: runners.corsika_simtel_runner
+.. automodule:: simtel.simtel_runner
    :members:
 ```
 
@@ -52,6 +80,13 @@ Support modules for running simtools, CORSIKA, and sim_telarray.
 (runner-services1)=
 
 ```{eval-rst}
-.. automodule:: runners.runner_services
+.. automodule:: job_execution.runner_services
+   :members:
+```
+
+## setting_workflow
+
+```{eval-rst}
+.. automodule:: runners.setting_workflow
    :members:
 ```

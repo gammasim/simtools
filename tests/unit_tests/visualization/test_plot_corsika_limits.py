@@ -130,3 +130,14 @@ def test_plot_limits_with_broad_range_overlay(mock_savefig, tmp_test_directory):
         for line in axis.get_lines()
     )
     plt.close(fig)
+
+
+def test_plot_limits_without_primary_particle_column(tmp_test_directory):
+    table = vstack([create_test_table(20, 0, "dark"), create_test_table(40, 0, "dark")])
+    table.remove_column("primary_particle")
+
+    output_files = plot_corsika_limits.plot_limits(table, Path(tmp_test_directory))
+
+    assert len(output_files) == 1
+    assert output_files[0].name == "limits_test_array_unknown.png"
+    plt.close("all")

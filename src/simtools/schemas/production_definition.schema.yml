@@ -1,0 +1,66 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+title: Production definition
+description: Production grid, allocation, sizing and simulation stages.
+type: object
+additionalProperties: false
+properties:
+  schema_name:
+    type: string
+    enum: [production_definition]
+  schema_version:
+    type: string
+    enum: [1.0.0]
+  axes:
+    type: array
+    items: {}
+  limits_lookup:
+    type: object
+    additionalProperties: false
+    properties:
+      file:
+        type: [string, 'null']
+      interpolation:
+        type: string
+        enum: [point]
+    required: [file, interpolation]
+  run_number_allocation:
+    type: object
+    additionalProperties: false
+    properties:
+      offset:
+        type: integer
+        minimum: 0
+      runs:
+        type: [integer, 'null']
+        minimum: 1
+    required: [offset, runs]
+  job_sizes:
+    type: object
+    additionalProperties: false
+    properties:
+      showers_per_run:
+        type: [integer, 'null']
+        minimum: 1
+      total_showers:
+        type: [integer, 'null']
+        minimum: 1
+      max_showers_per_run:
+        type: [integer, 'null']
+        minimum: 1
+    required: [showers_per_run, total_showers, max_showers_per_run]
+  simulation_stages:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: string
+      enum: [corsika, sim_telarray]
+required:
+  - schema_name
+  - schema_version
+  - axes
+  - limits_lookup
+  - run_number_allocation
+  - job_sizes
+  - simulation_stages

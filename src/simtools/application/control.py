@@ -3,18 +3,20 @@
 import logging
 import os
 import re
-from dataclasses import dataclass
 from pathlib import Path
 
 from astropy.utils import iers
 
-import simtools.utils.general as gen
-from simtools import dependencies, dependency_versions, version
+from simtools import version
 from simtools.application.model_reader import create_model_reader_from_configuration
-from simtools.io import io_handler
+from simtools.corsika.build_options import with_installed_build_variants
+from simtools.io.output_paths import OutputPaths
+from simtools.model_repository import dependency_versions
 from simtools.model_repository.compatibility import validate_release
 from simtools.runners.simtools_runner import prepare_runtime_environment
-from simtools.settings import config
+from simtools.runtime import dependencies
+from simtools.runtime.context import RunContext
+from simtools.visualization import visualize
 
 _DEFER_SIMULATION_VALIDATION = "_defer_simulation_dependency_validation"
 
@@ -44,7 +46,7 @@ def _configure_iers_from_env():
     iers.conf.iers_degraded_accuracy = "warn"
 
 
-def setup_logging(logger_name=None, log_level="INFO", log_file=None):
+def setup_logging(logger_name=None, log_level="INFO", log_file=None, activity_id=None):
     """
     Set up logging configuration.
 
@@ -62,7 +64,18 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None):
         logger = logging.getLogger(logger_name)
     else:
         logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(log_level))
+    possible_levels = {
+        "info": logging.INFO,
+        "debug": logging.DEBUG,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+    }
+    level = log_level.lower() if isinstance(log_level, str) else log_level
+    if level not in possible_levels:
+        raise ValueError(
+            f"'{log_level}' is not a logging level, only possible ones are {list(possible_levels)}"
+        )
+    logger.setLevel(possible_levels[level])
 
     if logger.hasHandlers():
         for handler in logger.handlers[:]:
@@ -82,9 +95,7 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None):
         log_file_path = Path(log_file)
         if log_file_path.parent:
             log_file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_format = logging.Formatter(
-            f"{config.activity_id} - %(name)s - %(levelname)s - %(message)s"
-        )
+        file_format = logging.Formatter(f"{activity_id} - %(name)s - %(levelname)s - %(message)s")
         file_handler = logging.FileHandler(log_file_path)
         file_handler.setFormatter(file_format)
         file_handler.addFilter(redact_filter)
@@ -94,7 +105,7 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None):
     return logger
 
 
-def get_log_file(args_dict):
+def get_log_file(args_dict, activity_id=None):
     """
     Get log file path.
 
@@ -113,7 +124,7 @@ def get_log_file(args_dict):
     if args_dict.get("application_label") is None or log_file_path is None:
         return None
 
-    log_file = f"{args_dict['application_label']}_{config.activity_id}.log"
+    log_file = f"{args_dict['application_label']}_{activity_id}.log"
     Path(log_file_path).mkdir(parents=True, exist_ok=True)
     return Path(log_file_path) / log_file
 
@@ -159,23 +170,9 @@ class RedactFilter(logging.Filter):
         return True
 
 
-@dataclass
-class ApplicationContext:
-    """Container for common application context elements."""
-
-    args: dict
-    logger: logging.Logger
-    io_handler: io_handler.IOHandler | None
-    model_reader: object | None
-    run_time: list | None = None
-
-
 def initialize_runtime(
     args_dict,
-    setup_io_handler=True,
-    resolve_sim_software_executables=True,
-    validate_simulation_dependencies=False,
-    initialize_model_reader=True,
+    needs=(),
 ):
     """Initialize common runtime services for parsed application configuration.
 
@@ -183,62 +180,51 @@ def initialize_runtime(
     ----------
     args_dict : dict
         Parsed application configuration.
-    setup_io_handler : bool, optional
-        Whether to initialize and return an IOHandler instance. Default is True.
-    resolve_sim_software_executables : bool, optional
-        Resolve simulation software executable paths during settings load.
-        Set to False for applications that only orchestrate other applications.
-    validate_simulation_dependencies : bool, optional
-        Validate simulation executables and CORSIKA interaction tables after settings load.
-        Set to True for applications that run simulations.
-    initialize_model_reader : bool, optional
-        Initialize the configured simulation-model reader. Set to False for applications
-        that only write a new model repository and do not read model data. Default is True.
+    needs : tuple of str, optional
+        Runtime services required by the application.
 
     Returns
     -------
-    ApplicationContext
-        Container holding parsed arguments, logger, and optional IO handler and
-        model-reader instances.
+    RunContext
+        Configuration and services for the application run.
 
     """
     _configure_iers_from_env()
 
-    config.load(
-        args_dict,
-        resolve_sim_software_executables=resolve_sim_software_executables,
+    context = RunContext.from_arguments(
+        args_dict, paths=OutputPaths(args_dict.get("output_path"), args_dict.get("model_path"))
     )
+    if "corsika" in needs:
+        context = context.replace(software=with_installed_build_variants(context.software))
+    validate_simulation_dependencies = "sim_telarray" in needs
     if validate_simulation_dependencies and not args_dict.get(_DEFER_SIMULATION_VALIDATION, False):
         simulation_software = args_dict.get("simulation_software", "sim_telarray")
-        dependencies.validate_simulation_dependencies(simulation_software)
+        dependencies.validate_simulation_dependencies(simulation_software, context=context)
 
-    logger = setup_logging(log_level=args_dict["log_level"], log_file=get_log_file(args_dict))
+    logger = setup_logging(
+        log_level=args_dict["log_level"],
+        log_file=get_log_file(args_dict, context.activity.activity_id),
+        activity_id=context.activity.activity_id,
+    )
     logger.info(
         f"simtools application {args_dict.get('application_label')}"
-        f" started with activity ID {config.activity_id}"
+        f" started with activity ID {context.activity.activity_id}"
     )
-
-    io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
 
     if validate_simulation_dependencies and not args_dict.get(_DEFER_SIMULATION_VALIDATION, False):
         _validate_model_compatibility(args_dict)
 
     model_reader = None
-    if initialize_model_reader:
+    if "model" in needs:
         model_reader = create_model_reader_from_configuration(args_dict)
-        config.set_model_reader(model_reader)
+        context = context.replace(model_reader=model_reader)
         _resolve_model_version_to_latest_patch(args_dict, logger, model_reader)
-    _version_info(args_dict, io_handler_instance, logger)
+    _version_info(args_dict, context.paths, logger, context)
 
     run_time = _prepare_runtime_environment_from_cli(args_dict)
 
-    return ApplicationContext(
-        args=args_dict,
-        logger=logger,
-        io_handler=io_handler_instance,
-        model_reader=model_reader,
-        run_time=run_time,
-    )
+    visualize.configure_figure_output(context.args)
+    return context.replace(logger=logger, run_time=run_time)
 
 
 def _prepare_runtime_environment_from_cli(args_dict):
@@ -296,10 +282,10 @@ def _resolve_model_version_to_latest_patch(args_dict, logger, model_reader):
     args_dict["model_version"] = resolved if isinstance(mv, list) else resolved[0]
 
 
-def _version_info(args_dict, io_handler_instance, logger):
+def _version_info(args_dict, paths, logger, context):
     """Print and optionally write version information."""
     try:
-        build_options = dependencies.get_build_options(args_dict.get("run_time"))
+        build_options = dependencies.get_build_options(args_dict.get("run_time"), context)
     except FileNotFoundError:
         logger.debug("No build options found.")
         build_options = {}
@@ -313,11 +299,11 @@ def _version_info(args_dict, io_handler_instance, logger):
 
     if args_dict.get("export_build_info"):
         output_path = (
-            io_handler_instance.get_output_file(args_dict["export_build_info"])
-            if io_handler_instance
+            paths.get_output_file(args_dict["export_build_info"])
+            if paths
             else args_dict["export_build_info"]
         )
-        dependencies.export_build_info(output_path, args_dict.get("run_time"))
+        dependencies.export_build_info(output_path, args_dict.get("run_time"), context)
 
 
 def _validate_model_compatibility(args):

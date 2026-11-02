@@ -37,12 +37,13 @@ import numpy as np
 from astropy.table import Table
 
 from simtools import constants
-from simtools.application.model_reader import create_model_reader
 from simtools.corsika.photon_bunches import read_photon_bunches
-from simtools.io import io_handler
+from simtools.model.model_utils import export_model_files
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model_repository.reader import SimulationModelReader, resolve_model_reader
 from simtools.ray_tracing.backends.interface import create_shower_tracer
+from simtools.runtime.context import RunContext
 from simtools.simtel.photon_bunch_file import PhotonBunchEvent, write_photon_bunches
 from simtools.simtel.shower_photons import (
     camera_bunches_of_event,
@@ -396,11 +397,23 @@ def create_route_inputs(routes, *, simulation_models_path=None, backend=None):
     RouteInputs
         Tracers, observation level and atmospheric profile.
     """
+    return _create_route_inputs(routes, simulation_models_path, backend, None)
+
+
+def _create_route_inputs(routes, simulation_models_path, backend, output_path):
     site = _single_value(routes, "site")
     model_version = _single_value(routes, "model_version")
-    reader = create_model_reader(simulation_models_path=simulation_models_path)
-    site_model = SiteModel(site=site, model_version=model_version, model_reader=reader)
-    site_model.export_model_files(update_if_necessary=True)
+    reader = (
+        SimulationModelReader.from_files(simulation_models_path)
+        if simulation_models_path
+        else resolve_model_reader()
+    )
+    if reader is None:
+        raise ValueError("A simulation-model source is required for shower photon routing")
+    output_path = output_path or Path(tempfile.gettempdir()) / "simtools-shower-route"
+    context = RunContext.from_arguments({"output_path": output_path}, model_reader=reader)
+    site_model = SiteModel(site=site, model_version=model_version, context=context)
+    export_model_files(site_model, update_if_necessary=True)
     profile_name = site_model.get_parameter_value("atmospheric_profile")
     tracers = {}
     for telescope_id, route in routes.items():
@@ -408,7 +421,7 @@ def create_route_inputs(routes, *, simulation_models_path=None, backend=None):
             site=route.site,
             telescope_name=route.name,
             model_version=route.model_version,
-            model_reader=reader,
+            context=context,
         )
         tracers[telescope_id] = create_shower_tracer(
             telescope_model, name=backend or constants.SHOWER_PHOTON_RAY_TRACING_BACKEND
@@ -425,15 +438,13 @@ def create_route_inputs(routes, *, simulation_models_path=None, backend=None):
 def route_stream(
     in_stream,
     out_stream,
-    tracers,
+    inputs,
     *,
     theta_deg_by_telescope,
     phi_deg,
     input_plane_height_m_by_telescope,
     seed,
-    observation_level_m,
     telescope_radius_m,
-    atmospheric_profile,
     dual_mirror_by_telescope=None,
     skipped_telescope_ids=(),
     corsika_card=None,
@@ -455,8 +466,9 @@ def route_stream(
         CORSIKA IACT photon bunches (uncompressed stream, e.g. ``sys.stdin.buffer``).
     out_stream: binary stream
         Output stream of photon bunches for sim_telarray.
-    tracers: dict
-        Shower-photon tracer (``optical_model(theta_deg, seed)``) of each telescope id.
+    inputs: RouteInputs
+        Shower-photon tracer (``optical_model(theta_deg, seed)``) of each telescope id, observation
+        level and atmospheric profile.
     theta_deg_by_telescope: dict
         Telescope zenith angle [deg] of each telescope id.
     phi_deg: float
@@ -465,12 +477,8 @@ def route_stream(
         Input plane height above the sphere centre [m] of each telescope id.
     seed: int
         Instrument seed; each telescope derives its own mirror realisation from it and its id.
-    observation_level_m: float
-        Observation level a.s.l. [m].
     telescope_radius_m: float
         Radius of the telescope's fiducial sphere [m].
-    atmospheric_profile: astropy.table.Table
-        Atmospheric profile written into the output.
     dual_mirror_by_telescope: dict or None
         Dual-mirror flag of each telescope id (default: single mirror).
     skipped_telescope_ids: iterable of int
@@ -496,7 +504,7 @@ def route_stream(
     Raises
     ------
     ValueError
-        If a telescope id of the stream is not in ``tracers``, a telescope has no parameters,
+        If a telescope id of the stream is not in ``inputs.tracers``, a telescope has no parameters,
         or an input plane height is below the minimum for its telescope.
     """
     dual_mirror_by_telescope = dual_mirror_by_telescope or {}
@@ -511,7 +519,7 @@ def route_stream(
             dual_mirror=dual_mirror_by_telescope.get(telescope_id, False),
             seed=seed,
         )
-        for telescope_id, tracer in tracers.items()
+        for telescope_id, tracer in inputs.tracers.items()
     }
     count = write_photon_bunches(
         out_stream,
@@ -523,9 +531,9 @@ def route_stream(
             threads=threads,
             on_object=on_object,
         ),
-        observation_level_m=observation_level_m,
+        observation_level_m=inputs.observation_level_m,
         telescope_radius_m=telescope_radius_m,
-        atmospheric_profile=atmospheric_profile,
+        atmospheric_profile=inputs.atmospheric_profile,
         corsika_card=corsika_card,
         reuses=reuses,
     )
@@ -735,19 +743,23 @@ def main(argv=None, *, inputs_factory=create_route_inputs):
     if wakeup is not None:
         wakeup.start()
     work_path = args.output_path or Path(tempfile.gettempdir()) / "simtools-shower-route"
-    io_handler.IOHandler().set_paths(output_path=str(work_path))
     routes = load_telescope_map(args.telescope_map)
     selected = select_routes(routes, args.telescope_ids)
     card_lines = None if args.corsika_card is None else args.corsika_card.read_text().splitlines()
-    inputs = inputs_factory(
-        selected,
-        simulation_models_path=args.simulation_models_path,
-        backend=args.ray_tracing_backend,
-    )
+    if inputs_factory is create_route_inputs:
+        inputs = _create_route_inputs(
+            selected, args.simulation_models_path, args.ray_tracing_backend, work_path
+        )
+    else:
+        inputs = inputs_factory(
+            selected,
+            simulation_models_path=args.simulation_models_path,
+            backend=args.ray_tracing_backend,
+        )
     route_stream(
         sys.stdin.buffer if args.input == "-" else args.input,
         sys.stdout.buffer if args.output == "-" else args.output,
-        inputs.tracers,
+        inputs,
         theta_deg_by_telescope={
             telescope_id: route.theta_deg for telescope_id, route in selected.items()
         },
@@ -760,9 +772,7 @@ def main(argv=None, *, inputs_factory=create_route_inputs):
         },
         seed=args.seed,
         tracing_seed=args.tracing_seed,
-        observation_level_m=inputs.observation_level_m,
         telescope_radius_m=_single_value(selected, "radius_m"),
-        atmospheric_profile=inputs.atmospheric_profile,
         skipped_telescope_ids=set(routes) - set(selected),
         corsika_card=card_lines,
         reuses=core_reuses(card_lines or []),

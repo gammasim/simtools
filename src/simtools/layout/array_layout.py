@@ -8,14 +8,13 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-import simtools.utils.general as gen
-from simtools.application.model_reader import require_model_reader
 from simtools.data_model import data_reader, schema
-from simtools.io import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model_repository.reader import resolve_model_reader
+from simtools.runtime.context import RunContext
 from simtools.utils import names, value_conversion
 
 
@@ -55,6 +54,7 @@ class ArrayLayout:
         telescope_list_metadata_file=None,
         validate=False,
         model_reader=None,
+        context=None,
     ):
         """Initialize ArrayLayout."""
         self._logger = logging.getLogger(__name__)
@@ -63,9 +63,12 @@ class ArrayLayout:
         self.label = label
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = resolve_model_reader(model_reader, self.context)
+        if self.model_reader is None:
+            raise RuntimeError("No simulation model reader is configured.")
         self.site_model = None
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
         self.geo_coordinates = GeoCoordinates()
 
         self._telescope_list = []
@@ -96,6 +99,7 @@ class ArrayLayout:
                 site=self.site,
                 model_version=self.model_version,
                 model_reader=self.model_reader,
+                context=self.context,
                 parameter_names=self.geo_coordinates.coordinate_parameter_names(),
                 load_simulation_software_parameters=False,
             )
@@ -353,6 +357,7 @@ class ArrayLayout:
                 file_name=telescope_list_file,
                 validate=validate,
                 metadata_file=telescope_list_metadata_file,
+                context=self.context,
             )
 
         for row in table:
@@ -389,7 +394,7 @@ class ArrayLayout:
 
         position = data["value"]
         if isinstance(position, str):
-            position = gen.convert_string_to_list(position)
+            position = value_conversion.convert_string_to_list(position)
         self.site = data.get("site", None)
 
         table = QTable()
@@ -423,6 +428,7 @@ class ArrayLayout:
             telescope_name=telescope_name,
             model_version=self.model_version,
             label=self.label,
+            context=self.context,
         )
 
     def _set_telescope_auxiliary_parameters(self, telescope, telescope_name=None):

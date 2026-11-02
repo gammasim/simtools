@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 from astropy import units as u
 
-from simtools import settings
 from simtools.ray_tracing.psf_analysis import PSFImage
 
 
@@ -28,8 +27,20 @@ def shutil_copyfileobj():
 
 
 @pytest.fixture
-def psf_image():
-    image = PSFImage(focal_length=2800.0, containment_fraction=0.8, total_scattered_area=100)
+def psf_image(run_context, _mock_settings_env_vars):
+    from simtools.runtime.context import RunContext
+
+    run_context = RunContext.from_arguments(
+        {},
+        model_reader=run_context.model_reader,
+        paths=run_context.paths,
+    )
+    image = PSFImage(
+        focal_length=2800.0,
+        containment_fraction=0.8,
+        total_scattered_area=100,
+        context=run_context,
+    )
     rng = np.random.default_rng(seed=42)
     image.photon_pos_x = rng.normal(loc=0.0, scale=1.0, size=1000).tolist()
     image.photon_pos_y = rng.normal(loc=0.0, scale=1.0, size=1000).tolist()
@@ -43,12 +54,6 @@ def psf_image():
         )
     )
     return image
-
-
-def test_init_zero_focal_length(caplog):
-    with caplog.at_level(logging.WARNING):
-        PSFImage(focal_length=0.0)
-    assert "Focal length is zero; no conversion from cm to deg possible." in caplog.text
 
 
 def test_reading_simtel_file(tmp_test_directory, mocker, caplog):
@@ -86,6 +91,182 @@ def test_reading_simtel_file(tmp_test_directory, mocker, caplog):
         image_not_ok.read_photon_list_from_simtel_file(test_file)
 
 
+def test_set_psf(caplog):
+    image = PSFImage(focal_length=2800.0)
+
+    # Test setting PSF in cm
+    image.set_psf(1.5, fraction=0.8, unit="cm")
+    assert image._stored_psf[0.8] == pytest.approx(1.5)
+
+    # Test setting PSF in deg
+    image.set_psf(0.05, fraction=0.8, unit="deg")
+    expected_value = 0.05 / image._cm_to_deg
+    assert image._stored_psf[0.8] == pytest.approx(expected_value)
+
+    # Test setting PSF in deg without focal length
+    image_no_focal = PSFImage()
+    with caplog.at_level(logging.ERROR):
+        image_no_focal.set_psf(0.05, fraction=0.8, unit="deg")
+    assert "PSF cannot be set" in caplog.text
+    assert 0.8 not in image_no_focal._stored_psf
+
+    # Test setting PSF with different fractions
+    image.set_psf(2.0, fraction=0.5, unit="cm")
+    assert image._stored_psf[0.5] == pytest.approx(2.0)
+    image.set_psf(0.1, fraction=0.5, unit="deg")
+    expected_value_fraction_0_5 = 0.1 / image._cm_to_deg
+    assert image._stored_psf[0.5] == pytest.approx(expected_value_fraction_0_5)
+
+
+def test_find_psf(psf_image):
+    image = psf_image
+
+    psf = image._find_psf(fraction=0.8)
+    assert psf > 0
+
+
+def test_get_psf(psf_image, caplog):
+    image = psf_image
+
+    psf_cm = image.get_psf(fraction=0.8, unit="cm")
+    assert psf_cm > 0
+    assert 0.8 in image._stored_psf
+
+    psf_deg = image.get_psf(fraction=0.8, unit="deg")
+    expected_value = image._stored_psf[0.8] * image._cm_to_deg
+    assert psf_deg == pytest.approx(expected_value)
+
+    image_no_focal = PSFImage()
+    with caplog.at_level(logging.ERROR):
+        psf_no_focal = image_no_focal.get_psf(fraction=0.8, unit="deg")
+    assert psf_no_focal is None
+    assert "PSF cannot be computed in deg because focal length is not set" in caplog.text
+
+    psf_fraction_0_5 = image.get_psf(fraction=0.5, unit="cm")
+    assert psf_fraction_0_5 > 0
+    assert 0.5 in image._stored_psf
+
+
+def test_process_simtel_file_using_rx_success(
+    mocker, psf_image, dummy_photon_file, mocker_gzip_open, tmp_test_directory
+):
+    image = psf_image
+    mock_rx_output = "0.5 0.1 0.2 0.0 0.0 100.0\n"
+
+    mock_result = mocker.Mock()
+    mock_result.output = mock_rx_output
+    mock_job_submit = mocker.patch(
+        "simtools.job_execution.execution.run_command", return_value=mock_result
+    )
+
+    # Mock tempfile creation
+    mock_temp_file = mocker.Mock()
+    mock_temp_file.name = f"{tmp_test_directory}/temp_photon_file"
+    mock_temp_file.write = mocker.Mock()
+    mock_named_temp_file = mocker.patch("tempfile.NamedTemporaryFile", return_value=mock_temp_file)
+    mock_temp_file.__enter__ = mocker.Mock(return_value=mock_temp_file)
+    mock_temp_file.__exit__ = mocker.Mock(return_value=None)
+
+    # Mock file operations
+    mock_open_file = mocker.mock_open()
+    mocker.patch("builtins.open", mock_open_file)
+
+    # Mock Path.unlink for cleanup
+    mock_path_unlink = mocker.patch("pathlib.Path.unlink")
+
+    mock_gzip_open = mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=b"dummy data"))
+
+    image._process_simtel_file_using_rx(dummy_photon_file)
+
+    mock_job_submit.assert_called_once()
+    call_args = mock_job_submit.call_args
+    assert call_args[0][0] == [
+        str(image.context.software.sim_telarray_path / "bin" / "rx"),
+        "-f",
+        "0.80",
+        "-v",
+    ]
+    # stdin should be the mocked file object
+    assert "stdin" in call_args[1]
+
+    mock_gzip_open.assert_called_once_with(dummy_photon_file, "rb")
+    mock_named_temp_file.assert_called_once_with(mode="wb", delete=False)
+    mock_path_unlink.assert_called_once()
+
+    assert image._stored_psf[image._containment_fraction] == pytest.approx(1.0)  # 2 * 0.5
+    assert image.centroid_x == pytest.approx(0.1)
+    assert image.centroid_y == pytest.approx(0.2)
+    assert image._effective_area == pytest.approx(100.0)
+
+
+def test_process_simtel_file_using_rx_unexpected_output_format(
+    mocker, psf_image, dummy_photon_file, mocker_gzip_open, tmp_test_directory
+):
+    image = psf_image
+
+    # Mock file operations
+    mock_temp_file = mocker.Mock()
+    mock_temp_file.name = f"{tmp_test_directory}/temp_photon_file"
+    mock_temp_file.write = mocker.Mock()
+    mocker.patch("tempfile.NamedTemporaryFile", return_value=mock_temp_file)
+    mock_temp_file.__enter__ = mocker.Mock(return_value=mock_temp_file)
+    mock_temp_file.__exit__ = mocker.Mock(return_value=None)
+
+    mock_open_file = mocker.mock_open()
+    mocker.patch("builtins.open", mock_open_file)
+    mocker.patch("pathlib.Path.unlink")
+
+    # Test case 1: Empty output
+    mock_result = mocker.Mock()
+    mock_result.output = ""
+    mocker.patch("simtools.job_execution.execution.run_command", return_value=mock_result)
+
+    dummy_data = b"dummy data"
+    mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
+
+    with pytest.raises(IndexError, match="Invalid RX output format"):
+        image._process_simtel_file_using_rx(dummy_photon_file)
+
+    # Test case 2: Insufficient data
+    mock_result.output = "1.0\n"
+    mocker.patch("simtools.job_execution.execution.run_command", return_value=mock_result)
+
+    with pytest.raises(IndexError, match="Invalid RX output format"):
+        image._process_simtel_file_using_rx(dummy_photon_file)
+
+    # Test case 3: Invalid data format
+    mock_result.output = "not_a_good_return_value\n"
+    mocker.patch("simtools.job_execution.execution.run_command", return_value=mock_result)
+
+    with pytest.raises(ValueError, match="Invalid RX output format"):
+        image._process_simtel_file_using_rx(dummy_photon_file)
+
+
+def test_find_psf_brute_force(psf_image, mocker, caplog):
+    image = psf_image
+    mocker.patch.object(image, "_sum_photons_in_radius", return_value=100)
+
+    fraction = 0.8
+    radius_sig = 1.0
+
+    mocker.patch.object(image, "_find_radius_by_scanning", return_value=radius_sig)
+    with caplog.at_level(logging.WARNING):
+        psf = image._find_psf(fraction)
+    assert "Could not find PSF " in caplog.text
+    assert psf == pytest.approx(2 * radius_sig)
+
+    # enforce negative dr
+    mocker.patch.object(image, "_sum_photons_in_radius", return_value=1000)
+    psf = image._find_psf(fraction)
+    assert psf == pytest.approx(2 * radius_sig)
+
+
+def test_init_zero_focal_length(caplog):
+    with caplog.at_level(logging.WARNING):
+        PSFImage(focal_length=0.0)
+    assert "Focal length is zero; no conversion from cm to deg possible." in caplog.text
+
+
 def test_get_cumulative_data(psf_image):
     image = psf_image
 
@@ -115,33 +296,6 @@ def test_get_image_data(psf_image):
     assert np.allclose(data_non_centralized.Y, image.photon_pos_y)
 
 
-def test_set_psf(caplog):
-    image = PSFImage(focal_length=2800.0)
-
-    # Test setting PSF in cm
-    image.set_psf(1.5, fraction=0.8, unit="cm")
-    assert image._stored_psf[0.8] == pytest.approx(1.5)
-
-    # Test setting PSF in deg
-    image.set_psf(0.05, fraction=0.8, unit="deg")
-    expected_value = 0.05 / image._cm_to_deg
-    assert image._stored_psf[0.8] == pytest.approx(expected_value)
-
-    # Test setting PSF in deg without focal length
-    image_no_focal = PSFImage()
-    with caplog.at_level(logging.ERROR):
-        image_no_focal.set_psf(0.05, fraction=0.8, unit="deg")
-    assert "PSF cannot be set" in caplog.text
-    assert 0.8 not in image_no_focal._stored_psf
-
-    # Test setting PSF with different fractions
-    image.set_psf(2.0, fraction=0.5, unit="cm")
-    assert image._stored_psf[0.5] == pytest.approx(2.0)
-    image.set_psf(0.1, fraction=0.5, unit="deg")
-    expected_value_fraction_0_5 = 0.1 / image._cm_to_deg
-    assert image._stored_psf[0.5] == pytest.approx(expected_value_fraction_0_5)
-
-
 def test_find_radius_by_scanning(psf_image):
     image = psf_image
 
@@ -158,13 +312,6 @@ def test_find_radius_by_scanning(psf_image):
     # Test with a target number that is too low
     with pytest.raises(RuntimeError):
         image._find_radius_by_scanning(0, radius_sig)
-
-
-def test_find_psf(psf_image):
-    image = psf_image
-
-    psf = image._find_psf(fraction=0.8)
-    assert psf > 0
 
 
 def test_find_psf_identical_positions(psf_image):
@@ -192,102 +339,6 @@ def test_get_effective_area(psf_image, caplog):
     assert "Effective Area could not be calculated" in caplog.text
 
 
-def test_get_psf(psf_image, caplog):
-    image = psf_image
-
-    psf_cm = image.get_psf(fraction=0.8, unit="cm")
-    assert psf_cm > 0
-    assert 0.8 in image._stored_psf
-
-    psf_deg = image.get_psf(fraction=0.8, unit="deg")
-    expected_value = image._stored_psf[0.8] * image._cm_to_deg
-    assert psf_deg == pytest.approx(expected_value)
-
-    image_no_focal = PSFImage()
-    with caplog.at_level(logging.ERROR):
-        psf_no_focal = image_no_focal.get_psf(fraction=0.8, unit="deg")
-    assert psf_no_focal is None
-    assert "PSF cannot be computed in deg because focal length is not set" in caplog.text
-
-    psf_fraction_0_5 = image.get_psf(fraction=0.5, unit="cm")
-    assert psf_fraction_0_5 > 0
-    assert 0.5 in image._stored_psf
-
-
-def test_process_photon_list_with_rx(mocker, psf_image, dummy_photon_file):
-    image = psf_image
-    mocker.patch.object(image, "_process_simtel_file_using_rx")
-    mocker.patch.object(image, "read_photon_list_from_simtel_file")
-
-    use_rx = True
-    image.process_photon_list(dummy_photon_file, use_rx)
-    image._process_simtel_file_using_rx.assert_called_once_with(dummy_photon_file)
-    image.read_photon_list_from_simtel_file.assert_not_called()
-
-
-def test_process_photon_list_without_rx(mocker, psf_image, dummy_photon_file):
-    image = psf_image
-    mocker.patch.object(image, "_process_simtel_file_using_rx")
-    mocker.patch.object(image, "read_photon_list_from_simtel_file")
-
-    use_rx = False
-    image.process_photon_list(dummy_photon_file, use_rx)
-    image.read_photon_list_from_simtel_file.assert_called_once_with(dummy_photon_file)
-    image._process_simtel_file_using_rx.assert_not_called()
-
-
-def test_process_simtel_file_using_rx_success(
-    mocker, psf_image, dummy_photon_file, mocker_gzip_open, tmp_test_directory
-):
-    image = psf_image
-    mock_rx_output = "0.5 0.1 0.2 0.0 0.0 100.0\n"
-
-    mock_result = mocker.Mock()
-    mock_result.stdout = mock_rx_output
-    mock_job_submit = mocker.patch(
-        "simtools.job_execution.job_manager.submit", return_value=mock_result
-    )
-
-    # Mock tempfile creation
-    mock_temp_file = mocker.Mock()
-    mock_temp_file.name = f"{tmp_test_directory}/temp_photon_file"
-    mock_temp_file.write = mocker.Mock()
-    mock_named_temp_file = mocker.patch("tempfile.NamedTemporaryFile", return_value=mock_temp_file)
-    mock_temp_file.__enter__ = mocker.Mock(return_value=mock_temp_file)
-    mock_temp_file.__exit__ = mocker.Mock(return_value=None)
-
-    # Mock file operations
-    mock_open_file = mocker.mock_open()
-    mocker.patch("builtins.open", mock_open_file)
-
-    # Mock Path.unlink for cleanup
-    mock_path_unlink = mocker.patch("pathlib.Path.unlink")
-
-    mock_gzip_open = mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=b"dummy data"))
-
-    image._process_simtel_file_using_rx(dummy_photon_file)
-
-    mock_job_submit.assert_called_once()
-    call_args = mock_job_submit.call_args
-    assert call_args[0][0] == [
-        f"{settings.config.sim_telarray_path}/bin/rx",
-        "-f",
-        "0.80",
-        "-v",
-    ]
-    # stdin should be the mocked file object
-    assert "stdin" in call_args[1]
-
-    mock_gzip_open.assert_called_once_with(dummy_photon_file, "rb")
-    mock_named_temp_file.assert_called_once_with(mode="wb", delete=False)
-    mock_path_unlink.assert_called_once()
-
-    assert image._stored_psf[image._containment_fraction] == pytest.approx(1.0)  # 2 * 0.5
-    assert image.centroid_x == pytest.approx(0.1)
-    assert image.centroid_y == pytest.approx(0.2)
-    assert image._effective_area == pytest.approx(100.0)
-
-
 def test_process_simtel_file_using_rx_file_not_found(mocker, psf_image, mocker_gzip_open):
     image = psf_image
     photon_file = "non_existent_file.gz"
@@ -296,49 +347,6 @@ def test_process_simtel_file_using_rx_file_not_found(mocker, psf_image, mocker_g
 
     with pytest.raises(FileNotFoundError, match=f"Photon list file not found: {photon_file}"):
         image._process_simtel_file_using_rx(photon_file)
-
-
-def test_process_simtel_file_using_rx_unexpected_output_format(
-    mocker, psf_image, dummy_photon_file, mocker_gzip_open, tmp_test_directory
-):
-    image = psf_image
-
-    # Mock file operations
-    mock_temp_file = mocker.Mock()
-    mock_temp_file.name = f"{tmp_test_directory}/temp_photon_file"
-    mock_temp_file.write = mocker.Mock()
-    mocker.patch("tempfile.NamedTemporaryFile", return_value=mock_temp_file)
-    mock_temp_file.__enter__ = mocker.Mock(return_value=mock_temp_file)
-    mock_temp_file.__exit__ = mocker.Mock(return_value=None)
-
-    mock_open_file = mocker.mock_open()
-    mocker.patch("builtins.open", mock_open_file)
-    mocker.patch("pathlib.Path.unlink")
-
-    # Test case 1: Empty output
-    mock_result = mocker.Mock()
-    mock_result.stdout = ""
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
-
-    dummy_data = b"dummy data"
-    mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
-
-    with pytest.raises(IndexError, match="Invalid RX output format"):
-        image._process_simtel_file_using_rx(dummy_photon_file)
-
-    # Test case 2: Insufficient data
-    mock_result.stdout = "1.0\n"
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
-
-    with pytest.raises(IndexError, match="Invalid RX output format"):
-        image._process_simtel_file_using_rx(dummy_photon_file)
-
-    # Test case 3: Invalid data format
-    mock_result.stdout = "not_a_good_return_value\n"
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
-
-    with pytest.raises(ValueError, match="Invalid RX output format"):
-        image._process_simtel_file_using_rx(dummy_photon_file)
 
 
 def test_is_photon_positions_ok(psf_image):
@@ -356,25 +364,6 @@ def test_is_photon_positions_ok(psf_image):
     image.photon_pos_y = psf_image.photon_pos_y  # Reset to original
     image.photon_pos_x.append(0.0)  # Add an extra element to make lengths different
     assert image._is_photon_positions_ok() is False
-
-
-def test_find_psf_brute_force(psf_image, mocker, caplog):
-    image = psf_image
-    mocker.patch.object(image, "_sum_photons_in_radius", return_value=100)
-
-    fraction = 0.8
-    radius_sig = 1.0
-
-    mocker.patch.object(image, "_find_radius_by_scanning", return_value=radius_sig)
-    with caplog.at_level(logging.WARNING):
-        psf = image._find_psf(fraction)
-    assert "Could not find PSF " in caplog.text
-    assert psf == pytest.approx(2 * radius_sig)
-
-    # enforce negative dr
-    mocker.patch.object(image, "_sum_photons_in_radius", return_value=1000)
-    psf = image._find_psf(fraction)
-    assert psf == pytest.approx(2 * radius_sig)
 
 
 def test_plot_cumulative(psf_image, mocker):

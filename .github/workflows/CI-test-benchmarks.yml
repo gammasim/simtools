@@ -50,6 +50,9 @@ jobs:
           simulation-model-branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
           simtools-tests-branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
 
+      - name: Install resource benchmark dependency
+        run: bash .github/scripts/install_python_dependencies.sh -e '.[benchmark]'
+
       - name: Run unit resource benchmark
         run: |
           pytest --no-cov --color=yes -n 0 \
@@ -59,7 +62,7 @@ jobs:
 
       - name: Upload unit resource benchmark
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: resource-benchmark-unit
           path: resource-benchmark-unit
@@ -95,18 +98,19 @@ jobs:
       cancel-in-progress: false
     permissions:
       contents: write
+      actions: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Download unit benchmark
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8
         with:
           name: resource-benchmark-unit
           path: benchmark-input/unit
 
       - name: Download integration benchmarks
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8
         with:
           pattern: resource-benchmark-[0-9]*
           path: benchmark-input/integration
@@ -149,6 +153,44 @@ jobs:
           )
           PY
 
+      - name: Load the latest benchmark snapshot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          script=.github/scripts/benchmark_snapshot.py
+          mkdir -p benchmark-state
+          gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+            > "$RUNNER_TEMP/benchmark-releases.json"
+          selection=$(python "$script" select "$RUNNER_TEMP/benchmark-releases.json")
+          release_exists=$(jq -r '.release_exists' <<< "$selection")
+          asset_name=$(jq -r '.asset_name' <<< "$selection")
+          if [[ "$release_exists" == "false" ]]; then
+            if git ls-remote --exit-code --tags origin refs/tags/benchmark-data \
+              >/dev/null 2>&1; then
+              echo "The benchmark-data tag exists without its draft release" >&2
+              exit 1
+            else
+              lookup_status=$?
+              if [[ "$lookup_status" -ne 2 ]]; then
+                echo "Could not verify whether the benchmark-data tag exists" >&2
+                exit "$lookup_status"
+              fi
+            fi
+            gh release create benchmark-data --draft \
+              --title "Benchmark history storage" \
+              --notes "Automated benchmark history assets."
+          fi
+          if [[ -n "$asset_name" ]]; then
+            gh release download benchmark-data --pattern "$asset_name" \
+              --dir benchmark-state
+            python .github/scripts/publish_docs.py extract \
+              "benchmark-state/$asset_name" benchmark-state
+            python "$script" validate-state benchmark-state/state.json
+          else
+            python "$script" init-state benchmark-state/state.json
+          fi
+
       - name: Store benchmark history
         uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc  # v1
         with:
@@ -156,7 +198,52 @@ jobs:
           tool: customSmallerIsBetter
           output-file-path: benchmark-results.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          gh-pages-branch: gh-pages
-          benchmark-data-dir-path: dev/test-resources
-          auto-push: true
+          external-data-json-path: benchmark-state/state.json
+          gh-pages-branch: main
+          benchmark-data-dir-path: benchmark-dashboard/dev/test-resources
+          auto-push: false
+          skip-fetch-gh-pages: true
           max-items-in-chart: 365
+
+      - name: Build benchmark dashboard snapshot
+        run: |
+          set -euo pipefail
+          snapshot="resource-benchmark-snapshot-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
+          python .github/scripts/benchmark_snapshot.py build \
+            --state benchmark-state/state.json \
+            --dashboard .github/benchmark-dashboard/index.html \
+            --snapshot "$snapshot" \
+            --work-directory benchmark-snapshot
+          python .github/scripts/benchmark_snapshot.py verify "$snapshot" benchmark-validated
+
+      - name: Upload and retain benchmark snapshots
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          script=.github/scripts/benchmark_snapshot.py
+          snapshot="resource-benchmark-snapshot-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
+          gh release upload benchmark-data "$snapshot"
+          mkdir -p benchmark-verify
+          gh release download benchmark-data --pattern "$snapshot" --dir benchmark-verify
+          expected_hash=$(sha256sum "$snapshot" | awk '{print $1}')
+          uploaded_hash=$(sha256sum "benchmark-verify/$snapshot" | awk '{print $1}')
+          if [[ "$uploaded_hash" != "$expected_hash" ]]; then
+            echo "Uploaded benchmark snapshot checksum does not match" >&2
+            exit 1
+          fi
+          python "$script" verify "benchmark-verify/$snapshot" benchmark-verify/extracted
+          gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+            > "$RUNNER_TEMP/benchmark-releases.json"
+          python "$script" old-assets "$RUNNER_TEMP/benchmark-releases.json" \
+            > "$RUNNER_TEMP/old-benchmark-assets.txt"
+          while IFS= read -r asset; do
+            [[ -n "$asset" ]] || continue
+            gh release delete-asset benchmark-data "$asset" --yes
+          done < "$RUNNER_TEMP/old-benchmark-assets.txt"
+
+      - name: Deploy updated dashboard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: gh workflow run CI-docs.yml --ref "$DEFAULT_BRANCH"

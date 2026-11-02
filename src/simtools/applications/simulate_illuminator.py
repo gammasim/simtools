@@ -101,8 +101,8 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.SIMULATION_SEED,
         cli.RAY_TRACING_BACKEND,
     ),
-    validate_simulation_dependencies=True,
     post_parse=_validate_pair_selection,
+    needs=("model", "sim_telarray", "corsika"),
 )
 
 
@@ -124,6 +124,7 @@ def main():
         backend=app_context.args.get("backend", "local"),
         backend_config=app_context.args.get("backend_config"),
         model_reader=app_context.model_reader,
+        context=app_context,
     )
 
     results = simulator.simulate(

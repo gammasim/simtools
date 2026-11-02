@@ -8,7 +8,7 @@ import numpy as np
 from astropy.table import Table
 
 from simtools.io import ascii_handler
-from simtools.utils import general
+from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 _ECSV_FORMAT = "ascii.ecsv"
@@ -51,8 +51,10 @@ def _compare_sequences(first, second, tolerance, value_field):
 def _compare_model_values(first, second, tolerance):
     """Compare possibly string-encoded numerical model-parameter values."""
     try:
-        left = general.convert_string_to_list(first) if isinstance(first, str) else first
-        right = general.convert_string_to_list(second) if isinstance(second, str) else second
+        left = value_conversion.convert_string_to_list(first) if isinstance(first, str) else first
+        right = (
+            value_conversion.convert_string_to_list(second) if isinstance(second, str) else second
+        )
         return np.allclose(np.atleast_1d(left), np.atleast_1d(right), rtol=tolerance)
     except TypeError, ValueError:
         return first == second

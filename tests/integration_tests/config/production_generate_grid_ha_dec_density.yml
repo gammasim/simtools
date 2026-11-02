@@ -112,6 +112,7 @@ applications:
         - left: job_grid_summary.total_showers
           equals: table.column_sum
           column: showers_per_run
+  differential_test: true
   test_name: production_generate_grid_ha_dec_density
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

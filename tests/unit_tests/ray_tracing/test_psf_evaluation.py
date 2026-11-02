@@ -12,19 +12,18 @@ from simtools.ray_tracing import psf_evaluation as evaluation
 BACKEND = "backend"
 BACKEND_ERROR = "Backend failed"
 FINAL_RESULT = "final result"
-CONFIG = "config"
 EXECUTE_JOBS = "execute_jobs"
 
 
 @pytest.mark.parametrize("cleanup", [False, True])
 @pytest.mark.parametrize("failure", [None, "simulation", BACKEND])
 def test_dispatch_cleanup_removes_all_evaluation_files(
-    tmp_test_directory, mocker, failure, cleanup
+    tmp_test_directory, mocker, failure, cleanup, run_context
 ):
     output = Path(tmp_test_directory)
     final = output / "final.ecsv"
     final.write_text(FINAL_RESULT)
-    mocker.patch.object(evaluation, CONFIG, SimpleNamespace(args={}, model_reader=None))
+    context = run_context.replace(args={})
     paths = []
     args = {"cleanup": cleanup}
 
@@ -44,9 +43,13 @@ def test_dispatch_cleanup_removes_all_evaluation_files(
     mocker.patch.object(evaluation, EXECUTE_JOBS, side_effect=execute)
     if failure == BACKEND:
         with pytest.raises(RuntimeError, match=BACKEND_ERROR):
-            evaluation.dispatch_evaluations([{}, {}], args, {}, None, output, 2, execute)
+            evaluation.dispatch_evaluations(
+                [{}, {}], args, {}, None, output, 2, execute, context=context
+            )
     else:
-        result = evaluation.dispatch_evaluations([{}, {}], args, {}, None, output, 2, execute)
+        result = evaluation.dispatch_evaluations(
+            [{}, {}], args, {}, None, output, 2, execute, context=context
+        )
         assert result == [1.0, None if failure else 1.0]
     assert paths[0].parents[1].name == "parallel_evaluations"
     assert paths[0].exists() == (not cleanup)
@@ -56,16 +59,18 @@ def test_dispatch_cleanup_removes_all_evaluation_files(
 
 
 @pytest.mark.parametrize("source_key", [None, "path", "repository"])
-def test_dispatch_mounts_external_model_and_output_roots(tmp_test_directory, mocker, source_key):
+def test_dispatch_mounts_external_model_and_output_roots(
+    tmp_test_directory, mocker, source_key, run_context
+):
     root = Path(tmp_test_directory).resolve()
     output = root / "external-output"
     model = root / "external-model"
     model.mkdir()
     source = {source_key: str(model)} if source_key else None
     reader = SimpleNamespace(source_config=source) if source else None
-    mocker.patch.object(evaluation, CONFIG, SimpleNamespace(args={}, model_reader=reader))
+    context = run_context.replace(args={}, model_reader=reader)
     execute = mocker.patch.object(evaluation, EXECUTE_JOBS, return_value=[])
-    evaluation.dispatch_evaluations([{}], {}, {}, None, output, 1, str)
+    evaluation.dispatch_evaluations([{}], {}, {}, None, output, 1, str, context=context)
     jobs = execute.call_args.args[0]
     assert output.is_dir()
     assert jobs[0].item.output_dir.is_relative_to(output)
@@ -75,3 +80,24 @@ def test_dispatch_mounts_external_model_and_output_roots(tmp_test_directory, moc
     binds = HTCondorBackend._build_container_bind_paths(True, None, working / "runs", jobs)
     assert output in binds
     assert (model in binds) == bool(source)
+
+
+def test_dispatch_carries_environment_configured_model_source(
+    tmp_test_directory, mocker, monkeypatch, run_context
+):
+    """A model source configured only in the environment reaches the job payload and mounts."""
+    root = Path(tmp_test_directory).resolve()
+    output = root / "output"
+    model = root / "models"
+    for required in ("simulation-models/productions", "simulation-models/model_parameters"):
+        (model / required).mkdir(parents=True)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(model))
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+    context = run_context.replace(args={}, model_reader=None)
+    execute = mocker.patch.object(evaluation, EXECUTE_JOBS, return_value=[])
+
+    evaluation.dispatch_evaluations([{}], {}, {}, None, output, 1, str, context=context)
+
+    job = execute.call_args.args[0][0]
+    assert job.context_spec["model_source"] == {"type": "filesystem", "path": str(model)}
+    assert job.mount_paths == (output, model)

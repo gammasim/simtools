@@ -14,7 +14,7 @@ def test_main_delegates_to_production_metadata_workflow(mocker):
 
     write_production_metadata.main()
 
-    mock_write.assert_called_once_with(app_context.args)
+    mock_write.assert_called_once_with(app_context.args, context=app_context)
 
 
 def test_post_parse_allows_check_without_job_grid(mocker):

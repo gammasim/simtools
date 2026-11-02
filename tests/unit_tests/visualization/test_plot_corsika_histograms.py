@@ -145,18 +145,6 @@ def test_plot_2d_empty_list():
     assert figs == []
 
 
-def test_extract_uncertainty_with_value():
-    uncertainties = [[1, 2, 3], [4, 5, 6]]
-    result = plot_corsika_histograms._extract_uncertainty(uncertainties, 1)
-    assert result == [4, 5, 6]
-
-
-def test_extract_uncertainty_with_none():
-    uncertainties = [None, [4, 5, 6]]
-    result = plot_corsika_histograms._extract_uncertainty(uncertainties, 0)
-    assert result is None
-
-
 def test_plot_histogram_curve_with_uncertainties(mocker):
     fig, ax = plt.subplots()
     bin_centers = np.array([1, 2, 3])

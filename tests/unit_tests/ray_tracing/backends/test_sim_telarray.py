@@ -6,6 +6,7 @@ import re
 import shlex
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
@@ -30,14 +31,25 @@ def models():
     tel.site = "North"
     tel.config_file_path = Path("cfg.cfg")
     tel.config_file_directory = Path()
+    tel.configuration_writers = {"sim_telarray": MagicMock()}
     site = MagicMock()
     site.get_parameter_value.return_value = 2150.0
     return SimpleNamespace(tel=tel, site=site)
 
 
 @pytest.fixture
-def backend(models):
-    return SimtelBackend(models.tel, models.site, "test", 20.0, False)
+def backend(models, run_context, _mock_settings_env_vars):
+    from simtools.runtime.context import RunContext
+
+    context = RunContext.from_arguments(
+        {},
+        model_reader=run_context.model_reader,
+        paths=run_context.paths,
+    )
+    debug_executable = context.software.sim_telarray_path / "bin" / "sim_telarray_debug_trace"
+    debug_executable.touch()
+    debug_executable.chmod(0o755)
+    return SimtelBackend(models.tel, models.site, "test", 20.0, False, context=context)
 
 
 def _request(off_axis_x=0.0, changes=None, **kwargs):
@@ -87,7 +99,7 @@ def test_incidence_script_points_the_telescope(backend, tmp_test_directory, offs
 
 
 @pytest.mark.parametrize("keep_files", [False, True])
-def test_incidence_angles_run(backend, tmp_test_directory, monkeypatch, keep_files):
+def test_incidence_angles_run(backend, tmp_test_directory, command_runner, keep_files):
     rows = [(10.0, 1.0, 2.0, 300.0, 400.0, 30.0, -40.0), (20.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0)]
 
     def run(script):
@@ -95,7 +107,7 @@ def test_incidence_angles_run(backend, tmp_test_directory, monkeypatch, keep_fil
         photons = Path(re.search(r"IMAGING_LIST=(\S+)", text).group(1))
         photons.write_text(photons.read_text() + _imaging_rows(rows), encoding="utf-8")
 
-    monkeypatch.setattr(backend_module.job_manager, "submit", run)
+    command_runner.side_effect = run
     data, files = backend.incidence_angles(
         _request(), Path(tmp_test_directory), "name", True, keep_files=keep_files
     )
@@ -108,11 +120,11 @@ def test_incidence_angles_run(backend, tmp_test_directory, monkeypatch, keep_fil
     assert ("incident_angles_photons_name.lis" in names) is not keep_files
 
 
-def test_incidence_angles_run_failure(backend, tmp_test_directory, monkeypatch):
+def test_incidence_angles_run_failure(backend, tmp_test_directory, command_runner):
     def fail(*_):
-        raise backend_module.job_manager.JobExecutionError("failed")
+        raise backend_module.JobExecutionError("failed")
 
-    monkeypatch.setattr(backend_module.job_manager, "submit", fail)
+    command_runner.side_effect = fail
     with pytest.raises(RuntimeError, match="Incident angles run failed, see log"):
         backend.incidence_angles(_request(), Path(tmp_test_directory), "name", False)
 
@@ -337,7 +349,9 @@ def test_simulate_creates_one_simulator_per_image(backend, models, mocker):
 
     backend.simulate(requests, test=True, force=True, compress_photons=False)
 
-    models.tel.write_sim_telarray_config_file.assert_called_once()
+    models.tel.configuration_writers[
+        "sim_telarray"
+    ].write_sim_telarray_config_file.assert_called_once()
     assert simulator.call_count == 2
     config = simulator.call_args.kwargs["config_data"]
     assert config["off_axis_x"] == pytest.approx(1.0)
@@ -388,7 +402,9 @@ def test_psf_image_reads_and_removes_photon_lists(backend, mocker, save_photons)
 
     image, traced_structure = backend.psf_image(request, 2800.0, 0.8, save_photons=save_photons)
 
-    psf_image.assert_called_once_with(focal_length=2800.0, containment_fraction=0.8)
+    psf_image.assert_called_once_with(
+        focal_length=2800.0, containment_fraction=0.8, context=mock.ANY
+    )
     psf_image.return_value.process_photon_list.assert_called_once_with(files[0], False)
     assert image is psf_image.return_value
     assert traced_structure is False
@@ -407,8 +423,8 @@ def test_psf_image_with_rx_prefers_the_compressed_list(backend, mocker):
     psf_image.return_value.process_photon_list.assert_called_once_with(files[1], True)
 
 
-def test_file_names_of_single_mirrors(models):
-    backend = SimtelBackend(models.tel, models.site, "test", 20.0, True)
+def test_file_names_of_single_mirrors(models, run_context):
+    backend = SimtelBackend(models.tel, models.site, "test", 20.0, True, context=run_context)
     photons, compressed, stars = backend._files(_request(mirror_number=3))
     assert "mirror3" in photons.name
     assert "d10" not in photons.name

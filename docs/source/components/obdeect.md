@@ -1,17 +1,11 @@
 # Telescope ray tracing with obdeect
 
 [obdeect](https://github.com/gammasim/obdeect) is an optical ray tracer for
-imaging atmospheric Cherenkov telescopes. It is an optional backend for the
+imaging atmospheric Cherenkov telescopes. It is a backend for the
 ray-tracing applications of simtools (PSF, effective mirror area, effective
 focal length, incident angles) and for the calibration light of flashers and
-illuminators. Install it with
-
-```sh
-python -m pip install 'gammasimtools[obdeect]'
-```
-
-and select it with `--ray_tracing_backend obdeect` (or the environment variable
-`SIMTOOLS_RAY_TRACING_BACKEND=obdeect`); `sim_telarray` remains the default.
+illuminators. Select it with `--ray_tracing_backend obdeect` or set
+`SIMTOOLS_RAY_TRACING_BACKEND=obdeect`; `sim_telarray` remains the default.
 
 The ray-tracing applications describe what to trace (star position, source
 distance, photons, seeds and parameter changes such as the single-mirror mode)

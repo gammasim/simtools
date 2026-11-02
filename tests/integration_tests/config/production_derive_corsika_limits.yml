@@ -64,6 +64,7 @@ applications:
         - cta.activity
         - cta.context
         - cta.product
+  differential_test: true
   test_name: hdf5
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

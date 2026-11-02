@@ -6,10 +6,10 @@ import shutil
 
 import astropy.units as u
 
-from simtools import settings
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.simtel import simtel_file_writer
 from simtools.utils.geometry import fiducial_radius_from_shape
+from simtools.utils.value_conversion import normalize_model_enum
 
 TELESCOPE_CONFIG_KEY = "telescope"
 LIGHT_SOURCE_CONFIG_KEY = "light_source"
@@ -94,7 +94,9 @@ class LightEmissionConfigWriter:
 
         app = self.get_light_emission_application_name()
         cmd = [
-            shlex.quote(str(settings.config.sim_telarray_path / "LightEmission" / app)),
+            shlex.quote(
+                str(self.simulation.context.software.sim_telarray_path / "LightEmission" / app)
+            ),
             *self.get_site_command(app, config_directory, obs_level),
             *self.get_light_source_command(),
         ]
@@ -130,7 +132,7 @@ class LightEmissionConfigWriter:
             atmo_id = self.prepare_flasher_atmosphere_files(config_directory)
             return [
                 "-I.",
-                f"-I{settings.config.sim_telarray_path / 'cfg'}",
+                f"-I{self.simulation.context.software.sim_telarray_path / 'cfg'}",
                 f"-I{config_directory}",
                 f"--altitude {corsika_observation_level.to(u.m).value}",
                 f"--atmosphere {atmo_id}",
@@ -290,7 +292,7 @@ class LightEmissionConfigWriter:
         width_ns = pulse_shape_value[1]
         exp_ns = pulse_shape_value[2]
 
-        if shape_name != "Gauss-Exponential":
+        if normalize_model_enum(shape_name) != "gauss-exponential":
             return self.get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
 
         if width_ns <= 0 or exp_ns <= 0:

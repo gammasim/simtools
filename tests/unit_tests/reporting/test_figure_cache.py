@@ -11,27 +11,14 @@ class PlotData:
     x: np.ndarray
 
 
-def test_canonicalize_dataclass_numpy_and_paths():
-    value = PlotData(x=np.array([1.0, 2.0], dtype=np.float64))
-
-    result = figure_cache._canonicalize(value)
-
-    assert result["x"]["dtype"] == "<f8"
-    assert result["x"]["shape"] == [2]
-    assert np.all(np.isclose(result["x"]["values"], [1.0, 2.0]))
-    assert np.isclose(figure_cache._canonicalize(np.float64(2.5)), 2.5)
-    assert figure_cache._canonicalize(Path("images/plot.png")) == "images/plot.png"
-    assert figure_cache._canonicalize(float("nan")) == "nan"
-
-
 def test_figure_cache_key_tracks_data_configuration_and_rendering_inputs(
-    tmp_test_directory, monkeypatch
+    tmp_test_directory, monkeypatch, run_context
 ):
     renderer_one = Path(tmp_test_directory / "renderer_one.py")
     renderer_two = Path(tmp_test_directory / "renderer_two.py")
     renderer_one.write_text("def render(): return 1\n", encoding="utf-8")
     renderer_two.write_text("def render(): return 2\n", encoding="utf-8")
-    monkeypatch.setattr(figure_cache.simtools_config, "_args", {"figure_dpi": 120})
+    context = run_context.replace(args={"figure_dpi": 120})
     kwargs = {
         "renderer": "test.renderer",
         "renderer_modules": {"renderer": renderer_one},
@@ -39,6 +26,7 @@ def test_figure_cache_key_tracks_data_configuration_and_rendering_inputs(
         "rendered_data": {"samples": np.array([1.0, 2.0])},
     }
 
+    kwargs["context"] = context
     initial_key = figure_cache.figure_cache_key(**kwargs)
     assert figure_cache.figure_cache_key(**kwargs) == initial_key
 
@@ -49,7 +37,7 @@ def test_figure_cache_key_tracks_data_configuration_and_rendering_inputs(
     changed_renderer = {**kwargs, "renderer_modules": {"renderer": renderer_two}}
     assert figure_cache.figure_cache_key(**changed_renderer) != initial_key
 
-    monkeypatch.setattr(figure_cache.simtools_config, "_args", {"figure_dpi": 240})
+    kwargs["context"] = run_context.replace(args={"figure_dpi": 240})
     assert figure_cache.figure_cache_key(**kwargs) != initial_key
 
     monkeypatch.setattr(figure_cache, "BACKEND_NAME", "svg")

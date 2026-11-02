@@ -738,3 +738,9 @@ def file_name_with_version(file_name, suffix):
     if re.search(r"\d{1,8}\.\d{1,8}\.\d{1,8}\Z", file_name):
         return Path(file_name + suffix)
     return Path(file_name).with_suffix(suffix)
+
+
+def is_two_mirror_telescope(telescope_model_name):
+    """Return True for two-mirror telescopes (SST and SCT)."""
+    tel_type = get_array_element_type_from_name(telescope_model_name)
+    return "SST" in tel_type or "SCT" in tel_type

@@ -76,6 +76,15 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
    :members:
 ```
 
+(psfparameterreportsmodule)=
+
+## psf_parameter_reports
+
+```{eval-rst}
+.. automodule:: ray_tracing.psf_parameter_reports
+   :members:
+```
+
 (mirror_panel_psfmodule)=
 
 ## mirror_panel_psf
@@ -96,5 +105,14 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
 
 ```{eval-rst}
 .. automodule:: simtools.ray_tracing.psf_evaluation
+   :members:
+```
+
+(telescopeshadowingmodule)=
+
+## telescope_shadowing
+
+```{eval-rst}
+.. automodule:: ray_tracing.telescope_shadowing
    :members:
 ```

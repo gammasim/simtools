@@ -6,7 +6,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration import defaults
 from simtools.configuration.argument_helpers import parse_quantity_pair
-from simtools.job_execution import bias_curve_submissions
+from simtools.production_configuration import parameter_scans
 
 _ARGUMENTS = (
     cli.SITE(required=True),
@@ -61,13 +61,14 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    bias_curve_submissions.generate_scan_grids(app_context.args, app_context.io_handler)
+    parameter_scans.generate_scan_grids(app_context.args, app_context.paths, context=app_context)
 
 
 if __name__ == "__main__":

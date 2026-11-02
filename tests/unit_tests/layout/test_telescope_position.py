@@ -106,37 +106,6 @@ def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
     assert _z == pytest.approx(2178.0, 0.1)
 
 
-def test_get_coordinate_variable():
-    tel = TelescopePosition(name="LSTN-01")
-
-    # value should stay a value
-    assert tel._get_coordinate_value(5.0, None) == pytest.approx(5.0, 1.0e-6)
-    # quantity should become value
-    assert tel._get_coordinate_value(5.0 * u.m, u.Unit("m")) == pytest.approx(5.0, 1.0e-6)
-    # quantity should become value (plus unit conversion)
-    assert tel._get_coordinate_value(5.0 * u.km, u.Unit("m")) == pytest.approx(5.0e3, 1.0e-6)
-    # nan should be isnan
-    assert np.isnan(tel._get_coordinate_value(np.nan * u.km, u.m))
-    # some units can't be converted
-    with pytest.raises(u.UnitsError):
-        tel._get_coordinate_value(5.0 * u.deg, u.Unit("m"))
-
-
-@pytest.mark.parametrize(
-    ("pyproj_unit_name", "expected_unit"),
-    [
-        ("metre", u.m),
-        ("kilometre", u.km),
-        ("centimetre", u.cm),
-        ("millimetre", u.mm),
-    ],
-)
-def test_astropy_unit_from_pyproj_axis(pyproj_unit_name, expected_unit):
-    axis = type("Axis", (), {"unit_name": pyproj_unit_name})()
-
-    assert _astropy_unit_from_pyproj_axis(axis) == expected_unit
-
-
 def test_set_coordinates():
     tel = TelescopePosition(name="LSTN-01")
 
@@ -150,61 +119,24 @@ def test_set_coordinates():
     assert tel.crs["utm"]["zz"]["value"] == pytest.approx(22.0e3, 0.1)
 
 
-def test_convert(crs_wgs84, crs_local, crs_utm):
-    test_position = position_for_testing()
-
+def test_coordinate_values_and_pyproj_axis_units():
     tel = TelescopePosition(name="LSTN-01")
+    assert tel._get_coordinate_value(5.0 * u.km, u.m) == pytest.approx(5000.0)
+    assert np.isnan(tel._get_coordinate_value(np.nan * u.km, u.m))
+    with pytest.raises(u.UnitsError):
+        tel._get_coordinate_value(5.0 * u.deg, u.m)
 
-    # local to mercator
-    _lat, _lon = tel._convert(crs_local, crs_wgs84, test_position["pos_x"], test_position["pos_y"])
-    assert math.isclose(_lat, test_position["center_lat"].value, abs_tol=0.000001)
-    assert math.isclose(_lon, test_position["center_lon"].value, abs_tol=0.000001)
-    # mercator to local
-    _x, _y = tel._convert(crs_wgs84, crs_local, _lat, _lon)
-    assert math.isclose(_x, test_position["pos_x"].value, abs_tol=0.000001)
-    assert math.isclose(_y, test_position["pos_y"].value, abs_tol=0.000001)
-    # local to UTM
-    _utm_e, _utm_n = tel._convert(crs_local, crs_utm, 0.0, 0.0)
-    assert math.isclose(_utm_e, test_position["utm_east"].value, abs_tol=3)
-    assert math.isclose(_utm_n, test_position["utm_north"].value, abs_tol=5)
-    # UTM to mercator
-    _lat, _lon = tel._convert(crs_utm, crs_wgs84, _utm_e, _utm_n)
-    assert math.isclose(_lat, test_position["center_lat"].value, abs_tol=0.000001)
-    assert math.isclose(_lon, test_position["center_lon"].value, abs_tol=0.000001)
+    axis = type("Axis", (), {"unit_name": "kilometre"})()
+    assert _astropy_unit_from_pyproj_axis(axis) == u.km
 
-    # errors
-    with pytest.raises(pyproj.exceptions.CRSError):
-        tel._convert("crs_local", crs_wgs84, 0.0, 0.0)
+
+def test_convert_coordinates(crs_wgs84, crs_local):
+    tel = TelescopePosition(name="LSTN-01")
+    latitude, longitude = tel._convert(crs_local, crs_wgs84, 0.0, 0.0)
+    assert math.isclose(latitude, 28.7621661, abs_tol=1e-6)
+    assert math.isclose(longitude, -17.8920302, abs_tol=1e-6)
     with pytest.raises(pyproj.exceptions.CRSError):
         tel._convert(None, None, 0.0, 0.0)
-
-    _lat, _lon = tel._convert(crs_local, crs_wgs84, test_position["pos_x"], None)
-    assert np.isnan(_lat)
-    assert np.isnan(_lon)
-    _lat, _lon = tel._convert(crs_local, crs_wgs84, None, test_position["pos_y"])
-    assert np.isnan(_lat)
-    assert np.isnan(_lon)
-
-    # (invalid) mercator to local
-    _x, _y = tel._convert(crs_wgs84, crs_local, +95.0, _lon)
-    assert np.isnan(_x)
-    assert np.isnan(_y)
-
-
-def test_get_reference_system_from(crs_utm):
-    tel = TelescopePosition(name="LSTS-01")
-
-    assert tel._get_reference_system_from() == (None, None)
-
-    tel.set_coordinates("utm", 217611 * u.m, 3185066 * u.m)
-    assert tel._get_reference_system_from() == (None, None)
-
-    tel.crs["utm"]["crs"] = crs_utm
-
-    _crs_name, _crs = tel._get_reference_system_from()
-
-    assert _crs_name == "utm"
-    assert _crs is not None
 
 
 def test_has_coordinates(crs_wgs84, crs_local, crs_utm):

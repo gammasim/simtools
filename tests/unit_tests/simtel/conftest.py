@@ -9,11 +9,13 @@ from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
 
 @pytest.fixture
-def simulator_instance():
+def simulator_instance(run_context):
     """Create a fresh mock SimulatorLightEmission instance for each test."""
     inst = SimulatorLightEmission.__new__(SimulatorLightEmission)
     # Create fresh mocks for each test to avoid cross-test contamination
     inst.calibration_model = Mock()
+    inst.context = run_context
+    inst.model_reader = inst.context.model_reader
     inst.telescope_model = Mock()
     inst.site_model = Mock()
     inst.light_emission_config = {}
@@ -21,7 +23,7 @@ def simulator_instance():
     inst.output_directory = "/test/output"
     inst._logger = Mock()
     inst.runner_service = Mock()
-    inst.io_handler = Mock()
+    inst.io_handler = inst.context.paths
     inst.label = "test"
     inst._seed_pair = (11, 13)
     writer = LightEmissionConfigWriter(inst)

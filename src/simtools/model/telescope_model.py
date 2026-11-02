@@ -10,7 +10,16 @@ from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.model_repository.asset_names import get_simtel_table_file_name
-from simtools.simulation.configuration import get_model_writer
+from simtools.utils.value_conversion import normalize_model_enum
+
+
+def trigger_threshold_parameter(trigger):
+    """Return the threshold parameter for a model trigger type, or None if unknown."""
+    return {
+        "analogsum": "asum_threshold",
+        "digitalsum": "dsum_threshold",
+        "majority": "discriminator_threshold",
+    }.get(normalize_model_enum(trigger))
 
 
 class TelescopeModel(ModelParameter):
@@ -47,6 +56,7 @@ class TelescopeModel(ModelParameter):
         ignore_software_version=False,
         model_reader=None,
         model_directory=None,
+        context=None,
     ):
         """Initialize TelescopeModel."""
         super().__init__(
@@ -58,6 +68,7 @@ class TelescopeModel(ModelParameter):
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
             model_directory=model_directory,
+            context=context,
         )
 
         self._logger = logging.getLogger(__name__)
@@ -78,43 +89,6 @@ class TelescopeModel(ModelParameter):
         if self._camera is None:
             self._load_camera()
         return self._camera
-
-    def export_single_mirror_list_file(self, mirror_number: int, set_focal_length_to_zero: bool):
-        """
-        Export a mirror list file with a single mirror in it.
-
-        Parameters
-        ----------
-        mirror_number: int
-            Number index of the mirror.
-        set_focal_length_to_zero: bool
-            Set the focal length to zero if True.
-        """
-        return get_model_writer(self).export_single_mirror_list_file(
-            mirror_number=mirror_number, set_focal_length_to_zero=set_focal_length_to_zero
-        )
-
-    def get_single_mirror_list_file(
-        self, mirror_number: int, set_focal_length_to_zero: bool = False
-    ):
-        """
-        Get the path to the single mirror list file.
-
-        Parameters
-        ----------
-        mirror_number: int
-            Mirror number.
-        set_focal_length_to_zero: bool
-            Flag to set the focal length to zero.
-
-        Returns
-        -------
-        Path
-            Path of the single mirror list file.
-        """
-        return get_model_writer(self).get_single_mirror_list_file(
-            mirror_number, set_focal_length_to_zero
-        )
 
     def _load_mirrors(self):
         """Load the attribute mirrors by creating a Mirrors object with the mirror list file."""
@@ -196,21 +170,16 @@ class TelescopeModel(ModelParameter):
         return {
             "rotate": self.get_parameter_value("camera_rotate"),
             "pixel_types": pixel_types,
-            "pixels": self._parameter_table_records("camera_pixel_layout"),
-            "triggers": self._parameter_table_records("camera_trigger_groups"),
-            "trigger_members": self._parameter_table_records("camera_trigger_members"),
+            "pixels": self.model_reader.get_parameter_table_records(
+                self._get_parameter_dict("camera_pixel_layout")
+            ),
+            "triggers": self.model_reader.get_parameter_table_records(
+                self._get_parameter_dict("camera_trigger_groups")
+            ),
+            "trigger_members": self.model_reader.get_parameter_table_records(
+                self._get_parameter_dict("camera_trigger_members")
+            ),
         }
-
-    def _parameter_table_records(self, parameter_name):
-        """Return scalar records from a validated model-parameter table."""
-        parameter_data = self._get_parameter_dict(parameter_name)
-        if hasattr(self.model_reader, "get_parameter_table_records"):
-            return self.model_reader.get_parameter_table_records(parameter_data)
-        table = self.get_parameter_table(parameter_name)
-        return [
-            {column: getattr(row[column], "value", row[column]) for column in table.colnames}
-            for row in table
-        ]
 
     def get_on_axis_eff_optical_area(self) -> float:
         """Return the on-axis effective optical area (derived previously for this telescope)."""

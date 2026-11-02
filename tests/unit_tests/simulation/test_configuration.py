@@ -20,7 +20,7 @@ def test_default_shower_writer(mocker):
     expected = object()
     factory = mocker.patch("simtools.corsika.corsika_config.CorsikaConfig", return_value=expected)
     assert configuration.get_shower_configuration("array", 1) is expected
-    factory.assert_called_once_with(array_model="array", run_number=1, label=None)
+    factory.assert_called_once_with(array_model="array", run_number=1, label=None, context=None)
 
 
 def test_default_light_source_writer_and_cache():

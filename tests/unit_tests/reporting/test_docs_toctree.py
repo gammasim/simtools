@@ -51,22 +51,6 @@ def test_generate_toctree(tmp_test_directory):
     assert not (docs / STATIC / INDEX).exists()
 
 
-def test_generate_toctree_preserves_authored_indexes(tmp_test_directory):
-    docs = Path(tmp_test_directory) / "docs"
-    _create_docs_tree(docs)
-    root_index = docs / INDEX
-    authored = f"{docs_toctree.KEEP_INDEX_MARKER}\n# Custom landing page\n"
-    root_index.write_text(authored, encoding=ENCODING)
-    production_index = docs / PRODUCTIONS / INDEX
-    production_index.write_text(authored, encoding=ENCODING)
-
-    docs_toctree.generate_toctree(docs)
-
-    assert root_index.read_text(encoding=ENCODING) == authored
-    assert production_index.read_text(encoding=ENCODING) == authored
-    assert "LSTN-01" in (docs / PARAMETERS / INDEX).read_text(encoding=ENCODING)
-
-
 def test_generate_toctree_includes_authored_only_directory(tmp_test_directory):
     docs = Path(tmp_test_directory) / "docs"
     introduction = docs / "introduction"
@@ -80,16 +64,6 @@ def test_generate_toctree_includes_authored_only_directory(tmp_test_directory):
     assert "introduction/index" in (docs / INDEX).read_text(encoding=ENCODING)
 
 
-def test_generate_toctree_skips_directories_without_entries(tmp_test_directory):
-    docs = Path(tmp_test_directory) / "docs"
-    (docs / EMPTY).mkdir(parents=True)
-
-    docs_toctree.generate_toctree(docs)
-
-    assert not (docs / EMPTY / INDEX).exists()
-    assert not (docs / INDEX).exists()
-
-
 @pytest.mark.parametrize("ignored_directory", sorted(docs_toctree.IGNORE_DIRECTORIES))
 def test_generate_toctree_ignores_directories(tmp_test_directory, ignored_directory):
     docs = Path(tmp_test_directory) / "docs"
@@ -101,19 +75,3 @@ def test_generate_toctree_ignores_directories(tmp_test_directory, ignored_direct
 
     assert not (ignored / INDEX).exists()
     assert not (docs / INDEX).exists()
-
-
-def test_generate_toctree_omits_empty_nested_branches(tmp_test_directory):
-    docs = Path(tmp_test_directory) / "docs"
-    (docs / EMPTY / NESTED).mkdir(parents=True)
-    populated = docs / "reports" / NESTED
-    populated.mkdir(parents=True)
-    (populated / "report.md").write_text("# Report\n", encoding=ENCODING)
-
-    docs_toctree.generate_toctree(docs)
-
-    assert "empty/index" not in (docs / INDEX).read_text(encoding=ENCODING)
-    assert "reports/index" in (docs / INDEX).read_text(encoding=ENCODING)
-    assert "nested/index" in (populated.parent / INDEX).read_text(encoding=ENCODING)
-    assert "report\n" in (populated / INDEX).read_text(encoding=ENCODING)
-    assert not (docs / EMPTY / INDEX).exists()

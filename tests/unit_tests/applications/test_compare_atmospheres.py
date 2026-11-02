@@ -34,9 +34,9 @@ def _start_context(mocker, tmp_test_directory, atmosphere, reader=None):
             _FALLBACK_TO_CANDIDATE: False,
         },
         model_reader=reader,
-        io_handler=Mock(),
+        paths=Mock(),
     )
-    context.io_handler.get_output_directory.return_value = tmp_test_directory
+    context.paths.get_output_directory.return_value = tmp_test_directory
     mocker.patch.object(compare_atmospheres.APPLICATION.__class__, "start", return_value=context)
     return context
 

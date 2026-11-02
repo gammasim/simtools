@@ -61,13 +61,6 @@ segmentation; sim_telarray text is generated only by the simulator adapters.
    :members:
 ```
 
-## setting_workflow
-
-```{eval-rst}
-.. automodule:: data_model.setting_workflow
-   :members:
-```
-
 (datamodelschema)=
 
 ## schema

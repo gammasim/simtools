@@ -2,7 +2,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.telescope_trigger_rates import telescope_trigger_rates
+from simtools.simtel.telescope_trigger_rates import telescope_trigger_rates
 
 _ARGUMENTS = (
     cli.TELESCOPE_CONFIG_FILE,
@@ -38,15 +38,14 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
 def main():
     """See CLI description."""
-    app_context = APPLICATION.start()
-
-    telescope_trigger_rates(app_context.args)
+    context = APPLICATION.start()
+    telescope_trigger_rates(context.args, context=context)
 
 
 if __name__ == "__main__":
