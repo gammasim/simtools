@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from simtools.data_model import setting_workflow
 from simtools.io import ascii_handler
+from simtools.runners import setting_workflow
 
 
 @pytest.fixture

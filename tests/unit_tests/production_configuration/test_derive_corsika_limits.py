@@ -44,6 +44,15 @@ def _write_particle_metadata(file_path, particle, viewcone_min=0.0, viewcone_max
     )
 
 
+def _positive_energy_histograms(mocker):
+    """Return a histogram mock whose energy histogram has positive entries."""
+    histograms = mocker.Mock()
+    histograms.histograms = {
+        "energy": Histogram.from_edges([np.arange(3)], values=np.array([0.0, 1.0]))
+    }
+    return histograms
+
+
 def _pool_result(
     production_index=0,
     array_name="LST",
@@ -113,7 +122,7 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
             }
         ]
     )
-    histograms = mocker.Mock()
+    histograms = _positive_energy_histograms(mocker)
     mock_load = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
         return_value=[(metadata[0], histograms)],
@@ -158,8 +167,8 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
             },
         ]
     )
-    histograms_alpha = mocker.Mock()
-    histograms_beta = mocker.Mock()
+    histograms_alpha = _positive_energy_histograms(mocker)
+    histograms_beta = _positive_energy_histograms(mocker)
     mock_load = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
         return_value=[(metadata[0], histograms_alpha), (metadata[1], histograms_beta)],
@@ -203,11 +212,11 @@ def test_generate_corsika_limits_grid_skips_empty_energy_histograms(
             },
         ]
     )
-    empty_histograms = mocker.Mock()
+    empty_histograms = _positive_energy_histograms(mocker)
     empty_histograms.histograms = {
         "energy": Histogram.from_edges([np.arange(3)], values=np.zeros(2))
     }
-    valid_histograms = mocker.Mock()
+    valid_histograms = _positive_energy_histograms(mocker)
     valid_histograms.histograms = {
         "energy": Histogram.from_edges([np.arange(3)], values=np.array([0.0, 1.0]))
     }
@@ -257,7 +266,10 @@ def test_generate_corsika_limits_grid_plots_only_selected_array_layouts(
     )
     mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
-        return_value=[(metadata[0], mocker.Mock()), (metadata[1], mocker.Mock())],
+        return_value=[
+            (metadata[0], _positive_energy_histograms(mocker)),
+            (metadata[1], _positive_energy_histograms(mocker)),
+        ],
     )
     mock_derive = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits._derive_limits_from_histograms",
@@ -292,7 +304,7 @@ def test_generate_corsika_limits_grid_expands_trigger_histogram_glob(
     )
     mock_load = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
-        return_value=[(metadata[0], mocker.Mock())],
+        return_value=[(metadata[0], _positive_energy_histograms(mocker))],
     )
     mocker.patch(
         "simtools.production_configuration.derive_corsika_limits._derive_limits_from_histograms",

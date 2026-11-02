@@ -38,6 +38,12 @@ repos:
     entry: lint-imports
     language: system
     pass_filenames: false
+  - id: no-import-linter-exceptions
+    name: no import-linter exceptions
+    entry: bash -c '! grep -n "ignore_imports" pyproject.toml'
+    language: system
+    files: ^pyproject\.toml$
+    pass_filenames: false
 # https://github.com/pre-commit/pre-commit-hooks
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v6.0.0

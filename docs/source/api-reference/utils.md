@@ -75,3 +75,10 @@ radius = telescope_fiducial_sphere_radius(
 .. automodule:: utils.value_conversion
    :members:
 ```
+
+## primary_particle
+
+```{eval-rst}
+.. automodule:: utils.primary_particle
+   :members:
+```

@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from simtools.runners.simtel_runner import SimtelRunner
+from simtools.simtel.simtel_runner import SimtelRunner
 
 logger = logging.getLogger()
 

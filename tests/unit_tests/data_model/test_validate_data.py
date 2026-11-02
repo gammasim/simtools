@@ -575,3 +575,28 @@ def test_validate_model_parameter_keeps_empty_json_array():
 
     assert validated["value"] == []
     assert validated["unit"] is None
+
+
+def test_validate_model_parameter_allowed_value():
+    record = {
+        "parameter": "flasher_angular_distribution",
+        "type": "string",
+        "unit": None,
+        "value": "Gauss",
+    }
+
+    validated = validate_data.DataValidator.validate_model_parameter(record)
+
+    assert validated["value"] == "Gauss"
+
+
+def test_validate_model_parameter_rejects_disallowed_value():
+    record = {
+        "parameter": "flasher_angular_distribution",
+        "type": "string",
+        "unit": None,
+        "value": "gauss",
+    }
+
+    with pytest.raises(ValueError, match=r"not in allowed values"):
+        validate_data.DataValidator.validate_model_parameter(record)

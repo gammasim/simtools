@@ -4,6 +4,8 @@ import os
 from importlib.resources import files
 from pathlib import Path
 
+CORSIKA_PATH = "/workdir/simulation_software/corsika7"
+
 # Schema path
 SCHEMA_PATH = files("simtools") / "schemas"
 # Schema URL
@@ -94,3 +96,9 @@ DEFAULT_COMPUTING_REPO = "https://gitlab.cta-observatory.org/cta-computing"
 DEFAULT_SIMULATION_WORKFLOWS = (
     f"{DEFAULT_SIMULATIONS_REPO}/simulation-model/simulation-model-parameter-setting.git"
 )
+
+CORSIKA_HE_INTERACTION = "epos"
+CORSIKA_LE_INTERACTION = "urqmd"
+# Default exponential factor for zenith-dependent total shower scaling.
+# Derived by the LST team for a 4-LST array, likely different for other array layouts.
+ZENITH_ANGLE_SCALING_FACTOR_DEFAULT = 3.9781

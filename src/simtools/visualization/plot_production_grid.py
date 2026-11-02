@@ -7,7 +7,6 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.production_configuration.jobs_io import JOB_GRID_SCHEMA
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.visualize import save_figure
 
@@ -15,20 +14,6 @@ logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
 AZIMUTH_ANGLE_COLUMN = "azimuth_angle"
 ZENITH_ANGLE_COLUMN = "zenith_angle"
-PLOT_VALUE_KEYS = tuple(
-    key
-    for key in JOB_GRID_SCHEMA.column_units
-    if key
-    not in (
-        AZIMUTH_ANGLE_COLUMN,
-        ZENITH_ANGLE_COLUMN,
-        "ha",
-        "dec",
-        "view_cone_min",
-        "nsb_rate",
-        "corsika_hadronic_transition_energy",
-    )
-)
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
 SHOWERS_PER_RUN_COLUMN = "showers_per_run"
@@ -61,10 +46,25 @@ class ProductionGridPlotter:
         self,
         grid_points_file,
         output_path,
+        column_units,
     ):
         """Initialize the ProductionGridPlotter."""
         self.grid_points_file = Path(grid_points_file)
         self.output_path = Path(output_path)
+        self.plot_value_keys = tuple(
+            key
+            for key in column_units
+            if key
+            not in (
+                AZIMUTH_ANGLE_COLUMN,
+                ZENITH_ANGLE_COLUMN,
+                "ha",
+                "dec",
+                "view_cone_min",
+                "nsb_rate",
+                "corsika_hadronic_transition_energy",
+            )
+        )
         self.output_path.mkdir(parents=True, exist_ok=True)
 
         self.grid_metadata = {}
@@ -194,7 +194,7 @@ class ProductionGridPlotter:
         )
         hour_angle = self._extract_quantity_value(point, "ha")
         declination = self._extract_quantity_value(point, "dec")
-        value_data = {value_key: point.get(value_key) for value_key in PLOT_VALUE_KEYS}
+        value_data = {value_key: point.get(value_key) for value_key in self.plot_value_keys}
         point_ha = float(hour_angle) if hour_angle is not None else None
         point_dec = float(declination) if declination is not None else None
 
@@ -587,12 +587,11 @@ class ProductionGridPlotter:
         logger.info(f"Saved azimuth/zenith color-scale plot to {output_file}")
         plt.close(figure)
 
-    @staticmethod
-    def _available_plot_value_keys(plot_points):
+    def _available_plot_value_keys(self, plot_points):
         """Return value keys present in at least one normalized Alt/Az point."""
         return [
             value_key
-            for value_key in PLOT_VALUE_KEYS
+            for value_key in self.plot_value_keys
             if any(
                 point["native_frame"] == "altaz" and point.get(value_key) is not None
                 for point in plot_points

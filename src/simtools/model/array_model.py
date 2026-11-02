@@ -16,7 +16,6 @@ from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 
 
@@ -320,34 +319,6 @@ class ArrayModel:
         for tel_name, data in self.telescope_models.items():
             print(f"Name: {tel_name}\t Model: {data.name}")
 
-    def export_config_files(self, simulation_software="sim_telarray"):
-        """Export array and telescope configurations for selected software.
-
-        Parameters
-        ----------
-        simulation_software : str
-            Registered configuration format.
-        """
-        return get_model_writer(
-            self, simulation_software, context=self.context
-        ).export_config_files()
-
-    def export_simtel_telescope_config_files(self):
-        """Export sim_telarray configuration files for all telescopes into the model directory."""
-        return get_model_writer(self, context=self.context).export_simtel_telescope_config_files()
-
-    def export_sim_telarray_config_file(self):
-        """Export sim_telarray configuration file for the array into the model directory."""
-        return get_model_writer(self, context=self.context).export_sim_telarray_config_file()
-
-    def export_all_simtel_config_files(self):
-        """
-        Export sim_telarray config file for the array and for each individual telescope.
-
-        Config files are exported into the output model directory.
-        """
-        return get_model_writer(self, context=self.context).export_all_simtel_config_files()
-
     def get_config_directory(self):
         """
         Get the path of the array config directory for sim_telarray.
@@ -593,9 +564,3 @@ class ArrayModel:
 
         table.sort("telescope_name")
         return table
-
-    def initialize_seeds(self, zenith_angle=None, azimuth_angle=None):
-        """Initialize sim_telarray seeds for instrument and shower simulations."""
-        return get_model_writer(self, context=self.context).initialize_seeds(
-            zenith_angle=zenith_angle, azimuth_angle=azimuth_angle
-        )
