@@ -148,9 +148,9 @@ def _inputs(tracers):
     )
 
 
-def _fake_inputs_factory(routes, *, simulation_models_path=None, backend=None):
+def _fake_inputs_factory(routes, *, simulation_models_path=None, backend=None, output_path=None):
     """Route inputs with fake tracers (replaces the telescope models in the CLI test)."""
-    del simulation_models_path, backend
+    del simulation_models_path, backend, output_path
     return _inputs({telescope_id: _FakeTracer() for telescope_id in routes})
 
 

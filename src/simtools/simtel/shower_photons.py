@@ -7,17 +7,13 @@ from the input frame to the telescope frame, and the scale and plane height
 of the input coordinates.
 """
 
-import logging
 import math
 from dataclasses import dataclass
 
 import numpy as np
 
-from simtools.corsika.photon_bunches import read_photon_bunches
-from simtools.simtel.photon_bunch_file import BUNCH_DTYPE, camera_bunches, write_photon_bunches
+from simtools.simtel.photon_bunch_file import BUNCH_DTYPE, camera_bunches
 from simtools.utils import geometry
-
-_logger = logging.getLogger(__name__)
 
 CORSIKA_LENGTH_UNIT_M = 0.01
 # Height of the CORSIKA bunch plane (horizontal plane through the telescope sphere centre)
@@ -150,115 +146,6 @@ def project_to_input_plane(bunches, plane_z):
         "time_ns": np.asarray(bunches["time_ns"], dtype=np.float64)
         - (height / np.abs(cz)) / SPEED_OF_LIGHT_CM_PER_NS,
     }
-
-
-def write_camera_bunch_file(
-    tracer,
-    iact_file,
-    telescope_model,
-    output_path,
-    *,
-    theta_deg,
-    phi_deg,
-    dual_mirror,
-    camera_rotation_deg,
-    observation_level_m,
-    telescope_radius_m,
-    atmospheric_profile,
-    seed,
-    telescope_id,
-    input_plane_height_m,
-    threads=0,
-):
-    """
-    Trace CORSIKA photon bunches to the camera entrance and write them for sim_telarray.
-
-    The bunches, given on the CORSIKA plane through the telescope sphere centre, are projected
-    along their direction up to the input plane at ``input_plane_height_m`` before tracing.
-
-    Each event (telescope) of the IACT file is traced with the optical model of
-    the tracer at the telescope zenith angle. The photons are written as photon
-    bunches with the optics of the telescope bypassed, so that sim_telarray
-    applies the atmosphere and the spectral quantum efficiency itself. Only the
-    telescope transmission is applied here in absolute form: sim_telarray does not
-    apply the on-axis value when the optics are bypassed.
-
-    Parameters
-    ----------
-    tracer: ObdeectRayTracer
-        Ray tracer providing ``optical_model(telescope_zenith, instrument_seed)``.
-    iact_file: str or Path
-        CORSIKA IACT EventIO file with photon bunches in long format.
-    telescope_model: TelescopeModel
-        Telescope model (used for logging).
-    output_path: str or Path
-        Output photon-bunch file; gzip compressed if its name ends with ``.gz``.
-    theta_deg: float
-        Telescope zenith angle [deg].
-    phi_deg: float
-        Telescope azimuth in the array frame [deg].
-    dual_mirror: bool
-        Dual-mirror telescope.
-    camera_rotation_deg: float
-        Camera rotation (dual-mirror telescopes) [deg].
-    observation_level_m: float
-        Altitude of the observation level a.s.l. [m].
-    telescope_radius_m: float
-        Radius of the telescope's fiducial sphere [m].
-    atmospheric_profile: astropy.table.Table
-        Atmospheric profile, written into the file.
-    seed: int
-        Seed of the instrument instance and of the random roulette and wavelength sampling.
-    telescope_id: int
-        Telescope of the IACT file whose photon bunches are written (one telescope per file).
-    input_plane_height_m: float
-        Height of the input plane above the telescope sphere centre [m]. It must be above the
-        incoming obscurers (see minimum_input_plane_height_m).
-    threads: int
-        Number of threads used for tracing (0: default of the optical model).
-
-    Returns
-    -------
-    int
-        Number of events written.
-    """
-    model = tracer.optical_model(theta_deg, seed)
-    minimum_m = minimum_input_plane_height_m(model, theta_deg)
-    if input_plane_height_m < minimum_m:
-        raise ValueError(
-            f"input_plane_height_m = {input_plane_height_m:.2f} m is below the minimum "
-            f"{minimum_m:.2f} m for {telescope_model.name}: the input plane must lie above the "
-            "incoming obscurers (see minimum_input_plane_height_m)"
-        )
-    frame = shower_bunch_frame(theta_deg, phi_deg, input_plane_height_m=input_plane_height_m)
-    events = (
-        camera_bunches_of_event(
-            model,
-            bunches,
-            frame,
-            seed=seed,
-            threads=threads,
-            dual_mirror=dual_mirror,
-            camera_rotation_deg=camera_rotation_deg,
-        )
-        for bunches in read_photon_bunches(iact_file)
-        if bunches["telescope_id"] == telescope_id
-    )
-    count = write_photon_bunches(
-        output_path,
-        events,
-        observation_level_m=observation_level_m,
-        telescope_radius_m=telescope_radius_m,
-        atmospheric_profile=atmospheric_profile,
-    )
-    _logger.debug(
-        "Wrote %d events of camera photon bunches for %s (theta=%.2f deg) to %s",
-        count,
-        telescope_model.name,
-        theta_deg,
-        output_path,
-    )
-    return count
 
 
 def camera_bunches_of_event(

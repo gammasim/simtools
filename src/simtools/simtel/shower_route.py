@@ -375,7 +375,7 @@ def _single_value(routes, attribute):
     return values.pop()
 
 
-def create_route_inputs(routes, *, simulation_models_path=None, backend=None):
+def create_route_inputs(routes, *, simulation_models_path=None, backend=None, output_path=None):
     """
     Create the shower-photon tracers and the site inputs of the telescopes of a map.
 
@@ -390,16 +390,14 @@ def create_route_inputs(routes, *, simulation_models_path=None, backend=None):
         Root of the simulation models; default: ``SIMTOOLS_SIMULATION_MODELS_PATH``.
     backend: str or None
         Ray-tracing backend; default: obdeect.
+    output_path: str or Path or None
+        Work directory; default: ``simtools-shower-route`` in the system temp directory.
 
     Returns
     -------
     RouteInputs
         Tracers, observation level and atmospheric profile.
     """
-    return _create_route_inputs(routes, simulation_models_path, backend, None)
-
-
-def _create_route_inputs(routes, simulation_models_path, backend, output_path):
     site = _single_value(routes, "site")
     model_version = _single_value(routes, "model_version")
     reader = (
@@ -728,7 +726,7 @@ def main(argv=None, *, inputs_factory=create_route_inputs):
         Command-line arguments (default: ``sys.argv``).
     inputs_factory: callable
         Creates the ``RouteInputs`` of the selected telescopes (keyword arguments as
-        ``create_route_inputs``).
+        ``create_route_inputs``, including ``output_path``).
 
     Returns
     -------
@@ -739,20 +737,15 @@ def main(argv=None, *, inputs_factory=create_route_inputs):
     wakeup = MultipipeWakeup.from_environment()
     if wakeup is not None:
         wakeup.start()
-    work_path = args.output_path or Path(tempfile.gettempdir()) / "simtools-shower-route"
     routes = load_telescope_map(args.telescope_map)
     selected = select_routes(routes, args.telescope_ids)
     card_lines = None if args.corsika_card is None else args.corsika_card.read_text().splitlines()
-    if inputs_factory is create_route_inputs:
-        inputs = _create_route_inputs(
-            selected, args.simulation_models_path, args.ray_tracing_backend, work_path
-        )
-    else:
-        inputs = inputs_factory(
-            selected,
-            simulation_models_path=args.simulation_models_path,
-            backend=args.ray_tracing_backend,
-        )
+    inputs = inputs_factory(
+        selected,
+        simulation_models_path=args.simulation_models_path,
+        backend=args.ray_tracing_backend,
+        output_path=args.output_path,
+    )
     route_stream(
         sys.stdin.buffer if args.input == "-" else args.input,
         sys.stdout.buffer if args.output == "-" else args.output,
