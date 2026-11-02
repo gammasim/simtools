@@ -12,7 +12,6 @@ import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 
-from simtools.context import RunContext
 from simtools.histogram.hdf5 import read_histograms, write_histograms
 from simtools.histogram.histogram import Histogram
 from simtools.io import table_handler
@@ -36,6 +35,7 @@ from simtools.production_configuration.production_file_selection import (
     stable_configuration_hash,
     values_match,
 )
+from simtools.runtime.context import RunContext
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.sim_events.metadata import build_standard_metadata
 from simtools.sim_events.trigger_histogram_format import (

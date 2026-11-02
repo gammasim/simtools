@@ -756,7 +756,7 @@ class BuildInfoAction(argparse.Action):
         option_string : str, optional
             Option string that triggered this action.
         """
-        from simtools import dependencies  # pylint: disable=import-outside-toplevel
+        from simtools.runtime import dependencies  # pylint: disable=import-outside-toplevel
 
         logger.info(self.build_info)
         logger.info(dependencies.get_dependency_summary())

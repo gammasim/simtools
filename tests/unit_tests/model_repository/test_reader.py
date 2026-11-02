@@ -9,7 +9,7 @@ from astropy.table import Table
 
 from simtools.application.model_reader import create_model_reader
 from simtools.model_repository import reader as reader_module
-from simtools.model_repository.reader import SimulationModelReader
+from simtools.model_repository.reader import SimulationModelReader, resolve_model_reader
 
 
 def _write_json(path, data):
@@ -258,6 +258,24 @@ def test_reader_factory_selects_filesystem(model_repository):
     assert reader.source_name == str(model_repository.resolve())
 
 
+def test_resolve_model_reader_uses_explicit_reader_and_context(mocker):
+    """Explicit and contextual readers take precedence over environment settings."""
+    explicit_reader = mocker.Mock()
+    context_reader = mocker.Mock()
+    context = mocker.Mock(model_reader=context_reader)
+
+    assert resolve_model_reader(explicit_reader, context) is explicit_reader
+    assert resolve_model_reader(context=context) is context_reader
+
+
+def test_resolve_model_reader_returns_none_without_configuration(monkeypatch):
+    """No configured model source leaves model loading optional."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+
+    assert resolve_model_reader() is None
+
+
 def test_reader_factory_selects_memory_storage():
     """The in-memory constructor provides a source for generated model files."""
     production_path = "simulation-models/productions/1.0.0/LSTN-01.json"
@@ -310,30 +328,34 @@ def test_reader_facade_selects_all_array_element_scope_branches(mocker):
     ]
 
 
-def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker, run_context):
+def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
     """Concrete sim_telarray scopes use design data or configured fallbacks."""
     source = Mock()
     source.read_production_table.return_value = {"design_model": {"LSTN-01": "LSTN-design"}}
     reader = SimulationModelReader(source)
-    context = run_context.replace(args={"ignore_missing_design_model": False})
+    ignore_missing_design_model = False
 
     assert reader._get_sim_telarray_array_element_list(
-        "LSTN-01", {"model_version": "1.0.0"}, context
+        "LSTN-01", {"model_version": "1.0.0"}, ignore_missing_design_model
     ) == [
         "global",
         "LSTN-design",
         "LSTN-01",
     ]
-    assert reader._get_sim_telarray_array_element_list("global", {}, context) == ["global"]
-    assert reader._get_sim_telarray_array_element_list("LSTN-design", {}, context) == [
+    assert reader._get_sim_telarray_array_element_list(
+        "global", {}, ignore_missing_design_model
+    ) == ["global"]
+    assert reader._get_sim_telarray_array_element_list(
+        "LSTN-design", {}, ignore_missing_design_model
+    ) == [
         "global",
         "LSTN-design",
     ]
 
     source.read_production_table.return_value = {"design_model": {}}
-    context = run_context.replace(args={"ignore_missing_design_model": True})
+    ignore_missing_design_model = True
     assert reader._get_sim_telarray_array_element_list(
-        "LSTN-01", {"model_version": "1.0.0"}, context
+        "LSTN-01", {"model_version": "1.0.0"}, ignore_missing_design_model
     ) == [
         "global",
         "LSTN-01",

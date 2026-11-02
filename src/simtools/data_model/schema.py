@@ -10,7 +10,6 @@ import jsonschema
 from astropy.table import Table
 from referencing import Registry, Resource
 
-from simtools import dependencies
 from simtools.constants import (
     METADATA_JSON_SCHEMA,
     MODEL_PARAMETER_METASCHEMA,
@@ -19,6 +18,7 @@ from simtools.constants import (
 )
 from simtools.data_model import format_checkers, schema_loader
 from simtools.io import ascii_handler
+from simtools.runtime import dependencies
 from simtools.utils import names, value_conversion
 from simtools.version import check_version_constraint
 

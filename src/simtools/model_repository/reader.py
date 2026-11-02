@@ -1,15 +1,63 @@
 """Read simulation models through a source-neutral interface."""
 
+import os
 from copy import deepcopy
 from pathlib import Path
 
-from simtools import context as run_context
 from simtools.data_model import parameter_catalog as catalog
+from simtools.model_repository import dependency_versions
 from simtools.model_repository import source as model_repository_source
 from simtools.model_repository.asset_names import ECSV_SUFFIX, SOURCE_VALUE_KEY
 from simtools.model_repository.storage import DirectoryStorage, GitStorage, MemoryStorage
 from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
+
+
+def resolve_model_reader(model_reader=None, context=None):
+    """Return the explicit, contextual, or environment-configured model reader."""
+    if model_reader is not None:
+        return model_reader
+    if context is not None and getattr(context, "model_reader", None) is not None:
+        return context.model_reader
+    simulation_models_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_PATH")
+    simulation_models_git_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH")
+    simulation_models_git_revision = os.getenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION")
+    if not simulation_models_path and not simulation_models_git_path:
+        return None
+    if simulation_models_path and simulation_models_git_path:
+        raise ValueError(
+            "Filesystem and Git simulation-model sources cannot be configured together."
+        )
+    if simulation_models_path:
+        return SimulationModelReader.from_files(simulation_models_path)
+    if simulation_models_git_revision is None:
+        simulation_models_git_revision = dependency_versions.model_repository_revision(
+            dependency_versions.load_dependency_catalog()
+        )
+    if not simulation_models_git_revision:
+        raise ValueError("A Git simulation-model revision is required.")
+    return SimulationModelReader.from_git(
+        simulation_models_git_path, simulation_models_git_revision
+    )
+
+
+def create_model_reader_from_source_config(source_config):
+    """Recreate a reader from its serialized source configuration."""
+    if not isinstance(source_config, dict):
+        raise ValueError("Model source configuration must be a dictionary.")
+    source_type = source_config.get("type")
+    if source_type == "filesystem":
+        path = source_config.get("path")
+        if not path:
+            raise ValueError("Filesystem model source configuration requires a path.")
+        return SimulationModelReader.from_files(path)
+    if source_type == "git":
+        repository = source_config.get("repository")
+        commit = source_config.get("commit")
+        if not repository or not commit:
+            raise ValueError("Git model source configuration requires repository and commit.")
+        return SimulationModelReader.from_git(repository, commit)
+    raise ValueError(f"Unsupported model source type: {source_type!r}.")
 
 
 class SimulationModelReader:
@@ -97,7 +145,7 @@ class SimulationModelReader:
                     site,
                     production,
                     collection,
-                    run_context.RunContext.from_environment(),
+                    None,
                 )
             ):
                 parameter_version = production["parameters"].get(element, {}).get(parameter)
@@ -115,7 +163,7 @@ class SimulationModelReader:
         collection,
         model_version,
         parameter_names=None,
-        context=None,
+        ignore_missing_design_model=False,
     ):
         """Read resolved parameters for an array element and model version.
 
@@ -127,14 +175,13 @@ class SimulationModelReader:
         """
         if parameter_names is not None:
             parameter_names = frozenset(parameter_names)
-        context = context or run_context.RunContext.from_environment()
         model_version = resolve_version_to_latest_patch(
             model_version, self.get_model_versions(collection)
         )
         production = self.read_production_table(collection, model_version)
         parameters = {}
         for element in self._get_array_element_list(
-            array_element_name, site, production, collection, context
+            array_element_name, site, production, collection, ignore_missing_design_model
         ):
             versions = production["parameters"].get(element, {})
             if parameter_names is not None:
@@ -326,26 +373,26 @@ class SimulationModelReader:
         return {key: parameters[key] for key in sorted(parameters)}
 
     def _get_array_element_list(
-        self, array_element_name, site, production, collection, context=None
+        self, array_element_name, site, production, collection, ignore_missing_design_model=False
     ):
         """Return the design and concrete elements represented by a request."""
-        context = context or run_context.RunContext.from_environment()
         if collection == "configuration_corsika":
             return ["global"]
         if collection == "sites":
             return [f"OBS-{site}"]
         if collection == "configuration_sim_telarray":
             return self._get_sim_telarray_array_element_list(
-                array_element_name, production, context
+                array_element_name, production, ignore_missing_design_model
             )
         if names.is_design_type(array_element_name):
             return [array_element_name]
         design = production["design_model"].get(array_element_name)
         return [element for element in (design, array_element_name) if element]
 
-    def _get_sim_telarray_array_element_list(self, array_element_name, production, context=None):
+    def _get_sim_telarray_array_element_list(
+        self, array_element_name, production, ignore_missing_design_model=False
+    ):
         """Return global, design, and concrete sim_telarray scopes."""
-        context = context or run_context.RunContext.from_environment()
         design_model = None
         if array_element_name not in (None, "global") and not names.is_design_type(
             array_element_name
@@ -361,7 +408,7 @@ class SimulationModelReader:
             return catalog.get_sim_telarray_parameter_scopes(
                 array_element_name,
                 design_model,
-                context.args.get("ignore_missing_design_model", False),
+                ignore_missing_design_model,
             )
         except KeyError as exc:
             raise KeyError(

@@ -8,7 +8,7 @@ from importlib import import_module
 from typing import Protocol
 
 from simtools.constants import RAY_TRACING_BACKEND_CLASSES
-from simtools.context import RunContext
+from simtools.runtime.context import RunContext
 from simtools.utils import names
 
 

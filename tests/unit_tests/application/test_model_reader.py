@@ -157,14 +157,15 @@ def test_create_model_reader_from_source_config_rejects_invalid_config(source_co
 
 
 def test_create_model_reader_from_source_config_uses_filesystem_path(mocker):
-    """A filesystem source configuration delegates to the normal factory."""
+    """A filesystem source configuration rebuilds its reader."""
     reader = Mock()
     create_reader = mocker.patch(
-        "simtools.application.model_reader.create_model_reader", return_value=reader
+        "simtools.model_repository.reader.SimulationModelReader.from_files",
+        return_value=reader,
     )
 
     assert (
         create_model_reader_from_source_config({"type": "filesystem", "path": "models"}) is reader
     )
 
-    create_reader.assert_called_once_with(simulation_models_path="models")
+    create_reader.assert_called_once_with("models")

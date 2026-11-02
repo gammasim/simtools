@@ -11,9 +11,9 @@ from unittest.mock import call
 import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.runners.simulator import Simulator
 from simtools.sim_events import file_info
 from simtools.sim_events.simulation_parameters import SimulationParameters
-from simtools.simulator import Simulator
 from simtools.utils.primary_particle import PrimaryParticle
 
 logger = logging.getLogger()
@@ -74,15 +74,15 @@ def make_simulator(io_handler, run_context, simulations_args_dict, mock_array_mo
         args_dict = copy.deepcopy(simulations_args_dict)
         args_dict.update(simulation_software=simulation_software, label=label, **extra_args)
 
-        mocker.patch("simtools.simulator.ArrayModel", return_value=mock_array_model)
-        mocker.patch("simtools.simulator.get_shower_configuration")
-        runner_service = mocker.patch("simtools.simulator.runner_services.RunnerServices")
+        mocker.patch("simtools.runners.simulator.ArrayModel", return_value=mock_array_model)
+        mocker.patch("simtools.runners.simulator.get_shower_configuration")
+        runner_service = mocker.patch("simtools.runners.simulator.runner_services.RunnerServices")
         runner_service.return_value.load_files.return_value = {}
         runner_service.return_value.get_file_name.side_effect = (
             lambda file_type, run_number=1, **kwargs: f"{file_type}_{run_number}.txt"
         )
 
-        runner = mocker.patch("simtools.simulator.ChainRunner")
+        runner = mocker.patch("simtools.runners.simulator.ChainRunner")
         runner.return_value.prepare_run.return_value = str(
             io_handler.get_output_directory() / "test_run_script.sh"
         )
@@ -285,7 +285,7 @@ def test_pack_for_register_with_multiple_versions(
         mock_model.pack_model_files.return_value = []
         mock_array_models.append(mock_model)
 
-    mocker.patch("simtools.simulator.ArrayModel", side_effect=mock_array_models)
+    mocker.patch("simtools.runners.simulator.ArrayModel", side_effect=mock_array_models)
 
     mock_corsika_config = mocker.MagicMock(CorsikaConfig, instance=True)
     mock_corsika_config.array_model = mocker.MagicMock()
@@ -304,8 +304,10 @@ def test_pack_for_register_with_multiple_versions(
     )
     mock_corsika_config.primary_particle.name = "proton"  # from args
 
-    mocker.patch("simtools.simulator.get_shower_configuration", return_value=mock_corsika_config)
-    mocker.patch("simtools.simulator.ChainRunner")
+    mocker.patch(
+        "simtools.runners.simulator.get_shower_configuration", return_value=mock_corsika_config
+    )
+    mocker.patch("simtools.runners.simulator.ChainRunner")
 
     local_shower_array_simulator = Simulator(
         label=args_dict["label"], context=run_context.replace(args=args_dict, paths=io_handler)
@@ -391,7 +393,7 @@ def test_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
 
 def _mock_reduced_event_table_writer(mocker):
     """Mock table writing while preserving the output-file contract."""
-    table_handler = mocker.patch("simtools.simulator.table_handler")
+    table_handler = mocker.patch("simtools.runners.simulator.table_handler")
 
     def _touch_output(*_args, **kwargs):
         output_file = Path(kwargs["output_file"])
@@ -499,7 +501,7 @@ def test_write_reduced_event_lists_warns_for_long_output_filename(
     mocker, tmp_test_directory, caplog
 ):
     input_file = Path(tmp_test_directory) / ("x" * 120 + ".simtel.zst")
-    mocker.patch("simtools.simulator.execute_jobs")
+    mocker.patch("simtools.runners.simulator.execute_jobs")
 
     with caplog.at_level(logging.WARNING):
         Simulator.write_reduced_event_lists(input_files=[input_file])
@@ -602,7 +604,7 @@ def test_write_reduced_event_lists_rejects_missing_file_list_pattern(tmp_test_di
 
 def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
     """Execute independent output batches through the shared execution facade."""
-    mock_execute = mocker.patch("simtools.simulator.execute_jobs")
+    mock_execute = mocker.patch("simtools.runners.simulator.execute_jobs")
 
     Simulator.write_reduced_event_lists(
         input_files=["input1.simtel.zst", "input2.simtel.zst"],
@@ -618,7 +620,7 @@ def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
 
 def test_write_reduced_event_lists_submits_htcondor_without_waiting(mocker, tmp_test_directory):
     """HTCondor reduced-event batches can be submitted without waiting."""
-    mock_submit = mocker.patch("simtools.simulator.submit_jobs")
+    mock_submit = mocker.patch("simtools.runners.simulator.submit_jobs")
     output_files = [
         Path(tmp_test_directory) / "part0001.hdf5",
         Path(tmp_test_directory) / "part0002.hdf5",
@@ -1089,10 +1091,10 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
     array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
-        "simtools.simulator.simtel_output_validation.validate_sim_telarray"
+        "simtools.runners.simulator.simtel_output_validation.validate_sim_telarray"
     )
     mock_corsika_validator = mocker.patch(
-        "simtools.simulator.corsika_output_validation.validate_corsika_output"
+        "simtools.runners.simulator.corsika_output_validation.validate_corsika_output"
     )
 
     mock_output_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
@@ -1130,10 +1132,10 @@ def test_validate_simulations_corsika(shower_simulator, mocker):
     shower_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
-        "simtools.simulator.simtel_output_validation.validate_sim_telarray"
+        "simtools.runners.simulator.simtel_output_validation.validate_sim_telarray"
     )
     mock_corsika_validator = mocker.patch(
-        "simtools.simulator.corsika_output_validation.validate_corsika_output"
+        "simtools.runners.simulator.corsika_output_validation.validate_corsika_output"
     )
 
     mock_corsika_log_files = ["corsika_run_001.log"]
@@ -1176,10 +1178,10 @@ def test_validate_simulations_corsika_sim_telarray(
     shower_array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
-        "simtools.simulator.simtel_output_validation.validate_sim_telarray"
+        "simtools.runners.simulator.simtel_output_validation.validate_sim_telarray"
     )
     mock_corsika_validator = mocker.patch(
-        "simtools.simulator.corsika_output_validation.validate_corsika_output"
+        "simtools.runners.simulator.corsika_output_validation.validate_corsika_output"
     )
 
     mock_simtel_output_files = ["output_file.simtel.zst"]
@@ -1224,9 +1226,9 @@ def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, 
 
     array_simulator.simulation_parameters = [mock_corsika_config]
 
-    mocker.patch("simtools.simulator.simtel_output_validation.validate_sim_telarray")
-    mocker.patch("simtools.simulator.corsika_output_validation.validate_corsika_output")
-    mock_output_validator = mocker.patch("simtools.simulator.validate_sim_events")
+    mocker.patch("simtools.runners.simulator.simtel_output_validation.validate_sim_telarray")
+    mocker.patch("simtools.runners.simulator.corsika_output_validation.validate_corsika_output")
+    mock_output_validator = mocker.patch("simtools.runners.simulator.validate_sim_events")
 
     mock_output_files = ["output_file.simtel.zst"]
     mock_log_files = ["log_file.log.gz"]
@@ -1256,7 +1258,7 @@ def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, 
 def test_telescope_only_does_not_create_shower_configuration(array_simulator, mocker):
     assert array_simulator.corsika_configurations is None
     assert array_simulator.simulation_parameters[0].shower_events == 10
-    mocker.patch("simtools.simulator.get_shower_configuration", side_effect=AssertionError)
+    mocker.patch("simtools.runners.simulator.get_shower_configuration", side_effect=AssertionError)
     array_simulator._initialize_array_models()
 
 

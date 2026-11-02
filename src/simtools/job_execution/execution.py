@@ -8,7 +8,6 @@ from pathlib import Path
 
 import yaml
 
-from simtools.context import RunContext
 from simtools.io.file_type import product_filename
 from simtools.io.log_inspector import get_log_excerpt
 from simtools.job_execution.backends.registry import get_backend
@@ -20,6 +19,7 @@ from simtools.job_execution.job import (
     SubmissionHandle,
 )
 from simtools.job_execution.worker import execute_command
+from simtools.runtime.context import RunContext
 
 logger = logging.getLogger(__name__)
 

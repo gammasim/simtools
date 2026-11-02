@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from simtools.constants import SIMTEL_MAX_SEED
-from simtools.context import RunContext
+from simtools.runtime.context import RunContext
 from simtools.utils import names, random
 from simtools.version import semver_to_int
 

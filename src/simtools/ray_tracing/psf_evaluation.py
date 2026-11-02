@@ -7,9 +7,9 @@ from uuid import uuid4
 
 import numpy as np
 
-from simtools.context import RunContext
 from simtools.job_execution.execution import execute_jobs, options_from_args
 from simtools.job_execution.job import JobSpec
+from simtools.runtime.context import RunContext
 from simtools.utils.general import cleanup_intermediate_files
 
 logger = logging.getLogger(__name__)

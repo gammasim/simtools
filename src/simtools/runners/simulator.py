@@ -8,8 +8,7 @@ from types import MappingProxyType
 
 import numpy as np
 
-from simtools.configuration import defaults
-from simtools.context import RunContext
+from simtools import constants
 from simtools.corsika import output_validation as corsika_output_validation
 from simtools.io import table_handler
 from simtools.io.file_type import product_value
@@ -17,8 +16,10 @@ from simtools.job_execution import execution, runner_services
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
+from simtools.model_repository.reader import resolve_model_reader
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.stages import SimulationChain, StageInputs
+from simtools.runtime.context import RunContext
 from simtools.sim_events import file_info, writer
 from simtools.sim_events.hdf5_output_validation import validate_sim_events
 from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
@@ -101,14 +102,14 @@ class Simulator:
         self.logger = logging.getLogger(__name__)
         self.label = label
         self.context = context or RunContext.from_environment()
-        self.model_reader = model_reader or self.context.model_reader
+        self.model_reader = resolve_model_reader(model_reader, self.context)
         if model_reader is not None and model_reader is not self.context.model_reader:
             self.context = self.context.replace(model_reader=model_reader)
 
         self.site = self.context.args.get("site", None)
         self.model_version = self.context.args.get("model_version", None)
         self.simulation_software = self.context.args.get(
-            "simulation_software", defaults.SIMULATION_SOFTWARE_DEFAULT
+            "simulation_software", constants.SIMULATION_SOFTWARE_DEFAULT
         )
         self.run_mode = self.context.args.get("run_mode", None)
         self.io_handler = self.context.paths
@@ -142,7 +143,7 @@ class Simulator:
         Must be one of ``"sim_telarray"``, ``"corsika"`` or ``"corsika_sim_telarray"``
         (CORSIKA piped directly to sim_telarray). Raises ValueError otherwise.
         """
-        if simulation_software not in defaults.SIMULATION_SOFTWARE_CHOICES:
+        if simulation_software not in constants.SIMULATION_SOFTWARE_CHOICES:
             raise ValueError(f"Invalid simulation software: {simulation_software}")
         self._simulation_software = simulation_software.lower()
         self.chain = SimulationChain.from_software(self._simulation_software)

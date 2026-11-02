@@ -16,7 +16,7 @@ from simtools.model_repository.compatibility import (
     LEGACY_MODEL_KEY,
     MODEL_KEY,
     RANGE_KEY,
-    _contract,
+    get_contract,
 )
 
 DEPENDENCY_VERSIONS_FILENAME = "dependency_versions.yml"
@@ -37,7 +37,7 @@ SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
 @cache
 def _dependency_schemas():
     """Load supported catalog formats and their features from the schema documents."""
-    path = Path(__file__).parent / "schemas" / "dependency_versions.schema.yml"
+    path = Path(__file__).parents[1] / "schemas" / "dependency_versions.schema.yml"
     documents = yaml.safe_load_all(path.read_text(encoding="utf-8"))
     return {document["schema_version"]: document for document in documents}
 
@@ -470,7 +470,7 @@ def _validate_model_constraint(catalog, schema_version):
     if _requires_model_range(schema_version) and RANGE_KEY not in model:
         raise ValueError("Missing simulation-model compatible-versions.")
     if RANGE_KEY in model:
-        _contract(catalog)
+        get_contract(catalog)
 
 
 def _validate_simtools_tests(test_resources, require_revision=False, readable_refs=False):

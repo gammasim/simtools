@@ -14,8 +14,9 @@ import traceback
 from contextlib import ExitStack
 from pathlib import Path
 
-from simtools.context import RunContext
 from simtools.job_execution.job import JobSpec
+from simtools.model_repository.reader import create_model_reader_from_source_config
+from simtools.runtime.context import RunContext
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +147,9 @@ def _initialize_runtime(job_spec):
     """Restore the submitting application's runtime for function jobs."""
     if job_spec.context_spec is None:
         return None
-    return RunContext.from_spec(job_spec.context_spec)
+    return RunContext.from_spec(
+        job_spec.context_spec, model_reader=create_model_reader_from_source_config
+    )
 
 
 def write_job_payload(job_spec, path):

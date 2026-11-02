@@ -15,7 +15,6 @@ import numpy as np
 from astropy.table import Table
 from scipy import stats
 
-from simtools.context import RunContext
 from simtools.data_model import model_data_writer as writer
 from simtools.data_model import parameter_catalog as catalog
 from simtools.io.output_paths import OutputPaths
@@ -31,6 +30,7 @@ from simtools.ray_tracing.psf_parameter_reports import (
     write_monte_carlo_analysis,
 )
 from simtools.ray_tracing.ray_tracing import RayTracing
+from simtools.runtime.context import RunContext
 from simtools.utils import general as gen
 from simtools.visualization import plot_psf
 from simtools.visualization.plot_psf import DEFAULT_FRACTION

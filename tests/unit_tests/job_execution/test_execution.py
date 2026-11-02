@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 import yaml
 
-from simtools.context import RunContext
 from simtools.job_execution import execution
 from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
 from simtools.job_execution.backends.htcondor import HTCondorBackend
@@ -26,6 +25,7 @@ from simtools.job_execution.execution import (
 from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 from simtools.job_execution.worker import run as run_worker
 from simtools.job_execution.worker import write_job_payload
+from simtools.runtime.context import RunContext
 
 
 def _square(value):
@@ -105,7 +105,7 @@ def test_map_ordered_returns_input_order():
 def test_map_ordered_serializes_runtime_for_remote_jobs(mocker, run_context):
     execute = mocker.patch("simtools.job_execution.execution.execute_jobs", return_value=[])
     args = {"output_path": "output", "sim_telarray_path": "simtel"}
-    context = RunContext.from_arguments(args, resolve_sim_software_executables=False)
+    context = RunContext.from_arguments(args)
     assert map_ordered(_square, [2], backend="htcondor", context=context) == []
 
     job = execute.call_args.args[0][0]

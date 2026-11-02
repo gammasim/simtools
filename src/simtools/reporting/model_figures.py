@@ -9,12 +9,12 @@ from pathlib import Path
 import numpy as np
 from astropy.table import Table
 
-from simtools.context import RunContext
 from simtools.model import camera as camera_model
 from simtools.model import mirrors as mirror_model
 from simtools.model import telescope_geometry
 from simtools.model_repository.asset_names import get_export_file_name
 from simtools.reporting.figure_cache import figure_cache_key
+from simtools.runtime.context import RunContext
 from simtools.simtel import simtel_file_writer
 from simtools.utils import names
 from simtools.visualization import (

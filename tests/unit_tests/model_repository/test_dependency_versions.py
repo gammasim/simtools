@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from simtools import dependency_versions
+from simtools.model_repository import dependency_versions
 
 
 def _load_catalog(simtools_root_path):
@@ -456,7 +456,7 @@ def test_find_dependency_versions_from_environment(monkeypatch, tmp_test_directo
 
 def test_find_dependency_versions_raises_when_missing(mocker, tmp_test_directory):
     """Test catalog discovery reports a clear error when no file is available."""
-    mocker.patch("simtools.dependency_versions.Path.is_file", return_value=False)
+    mocker.patch("simtools.model_repository.dependency_versions.Path.is_file", return_value=False)
 
     with pytest.raises(FileNotFoundError, match="Could not find"):
         dependency_versions.find_dependency_versions(tmp_test_directory)
