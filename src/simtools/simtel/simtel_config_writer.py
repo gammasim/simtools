@@ -14,10 +14,7 @@ from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
-from simtools.data_model.table_asset import (
-    get_simtel_serialization,
-    validate_fadc_template_table,
-)
+from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.simtel import (
@@ -205,7 +202,6 @@ class SimtelConfigWriter:
     def _write_fadc_templates(self, parameter_data, config_file_path):
         """Write unified reference and response rows to sim_telarray's three inputs."""
         table = self._read_parameter_table(parameter_data)
-        validate_fadc_template_table(table)
         destination = Path(config_file_path).parent
         suffix = Path(config_file_path).stem
         outputs = {

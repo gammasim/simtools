@@ -1110,7 +1110,7 @@ def test_unified_fadc_config_export(simtel_config_writer, tmp_test_directory, mo
     simtel_config_writer._model_reader.get_parameter_table.return_value = table[
         ~((table["template_kind"] == "reference") & (table["gain"] == "LG"))
     ]
-    with pytest.raises(ValueError, match="reference rows must have intensity 1"):
+    with pytest.raises(ValueError, match="no LG reference pulse"):
         simtel_config_writer._get_parameters_for_sim_telarray(
             {
                 "fadc_pulse_shape": {

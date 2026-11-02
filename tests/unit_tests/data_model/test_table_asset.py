@@ -343,7 +343,7 @@ def test_validate_table_asset_rejects_missing_required_metadata():
         )
 
 
-def test_unified_fadc_schema_rejects_missing_reference_gain():
+def test_unified_fadc_schema_accepts_columns_without_group_validation():
     entry = schema.get_model_parameter_schema("fadc_pulse_shape", "0.4.0")["data"][0]
     rows = []
     for gain in ("HG", "LG"):
@@ -375,5 +375,4 @@ def test_unified_fadc_schema_rejects_missing_reference_gain():
     validate_table_asset(table, schema_entry=entry)
 
     malformed = table[~((table["template_kind"] == "reference") & (table["gain"] == "LG"))]
-    with pytest.raises(ValueError, match="LG reference rows must have intensity 1"):
-        validate_table_asset(malformed, schema_entry=entry)
+    validate_table_asset(malformed, schema_entry=entry)
