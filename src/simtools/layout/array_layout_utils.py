@@ -9,7 +9,6 @@ from astropy.table import QTable, Table
 
 import simtools.utils.general as gen
 import simtools.version as simtools_version
-from simtools.context import RunContext
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler
 from simtools.layout.array_layout_sources import (
@@ -18,6 +17,7 @@ from simtools.layout.array_layout_sources import (
     get_array_layouts_from_parameter_file,
     get_array_layouts_using_telescope_lists_from_model_repository,
 )
+from simtools.runtime.context import RunContext
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)

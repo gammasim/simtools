@@ -9,6 +9,6 @@ Base modules for calling external simulation software.
 (simulatormodule)=
 
 ```{eval-rst}
-.. automodule:: simulator
+.. automodule:: simtools.runners.simulator
    :members:
 ```

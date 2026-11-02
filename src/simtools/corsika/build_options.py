@@ -1,12 +1,35 @@
 """Read and validate CORSIKA build variants."""
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import yaml
 
 from simtools import constants
+
+
+def with_installed_build_variants(software):
+    """Return software configuration enriched with installed CORSIKA variants."""
+    if software.corsika_root is None or not Path(software.corsika_root).is_dir():
+        return software
+    variants = get_installed_corsika_build_variants(software.corsika_root)
+    software = replace(software, corsika_build_variants=variants)
+    flat_executable = corsika_executable(software, "flat")
+    return replace(software, corsika_flat_executable=flat_executable)
+
+
+def corsika_executable(software, geometry):
+    """Return the configured CORSIKA executable for an atmosphere geometry."""
+    if software.corsika_build_variants is None:
+        raise FileNotFoundError("CORSIKA build manifest has not been loaded")
+    variant = select_corsika_build_variant(
+        software.corsika_build_variants,
+        software.he_interaction,
+        software.le_interaction,
+        geometry,
+    )
+    return software.corsika_path / variant.executable
 
 
 @dataclass(frozen=True)

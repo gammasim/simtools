@@ -10,10 +10,10 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 
-from simtools.context import RunContext
 from simtools.histogram.histogram import compute_bin_edges, normalized_counts, rebin_counts
 from simtools.io import ascii_handler
 from simtools.io.file_type import product_filename
+from simtools.runtime.context import RunContext
 from simtools.sim_events.production_comparison_statistics import (
     ANGULAR_DISTANCE,
     BIN_EDGES_KEY,

@@ -8,7 +8,6 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 
-from simtools.context import RunContext
 from simtools.data_model import data_reader, schema
 from simtools.io.ascii_handler import to_builtin
 from simtools.model.calibration_model import CalibrationModel
@@ -16,6 +15,8 @@ from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model_repository.reader import resolve_model_reader
+from simtools.runtime.context import RunContext
 from simtools.utils import names
 
 
@@ -61,7 +62,7 @@ class ArrayModel:
         self.model_version = model_version
         self.ignore_software_version = ignore_software_version
         self.context = context or RunContext.from_environment()
-        self.model_reader = model_reader or self.context.model_reader
+        self.model_reader = resolve_model_reader(model_reader, self.context)
         if self.model_reader is None:
             raise RuntimeError("No simulation model reader is configured.")
         self.label = label

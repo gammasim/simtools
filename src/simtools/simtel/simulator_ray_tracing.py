@@ -4,8 +4,8 @@ import logging
 import math
 from collections import namedtuple
 
-from simtools.context import RunContext
 from simtools.ray_tracing import parameter_changes
+from simtools.runtime.context import RunContext
 from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names

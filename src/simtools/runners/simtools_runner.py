@@ -16,7 +16,6 @@ from pathlib import Path
 import yaml
 
 import simtools.utils.general as gen
-from simtools import dependencies
 from simtools import version as simtools_version
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
 from simtools.data_model import schema, workflow_metadata
@@ -24,6 +23,7 @@ from simtools.io import ascii_handler
 from simtools.io.file_type import product_filename
 from simtools.job_execution import execution
 from simtools.job_execution.execution import JobExecutionError
+from simtools.runtime import dependencies
 from simtools.utils import value_conversion
 
 logger = logging.getLogger(__name__)

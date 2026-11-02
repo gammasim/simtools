@@ -257,7 +257,7 @@ def test_quantity():
 def test_build_info_action(mocker, caplog):
     caplog.set_level(logging.INFO)
     mock_get_dependency_summary = mocker.patch(
-        "simtools.dependencies.get_dependency_summary",
+        "simtools.runtime.dependencies.get_dependency_summary",
         return_value="Python: 3.14",
     )
     mock_exit = mocker.patch.object(argparse.ArgumentParser, "exit")

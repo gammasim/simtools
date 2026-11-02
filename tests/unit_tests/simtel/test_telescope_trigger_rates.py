@@ -7,7 +7,7 @@ import yaml
 from ctao_cr_spectra.definitions import IRFDOC_ELECTRON_SPECTRUM, IRFDOC_PROTON_SPECTRUM
 from ctao_cr_spectra.spectral import LogParabola, PowerLaw
 
-from simtools.telescope_trigger_rates import (
+from simtools.simtel.telescope_trigger_rates import (
     _integrate_energy_spectrum,
     _load_spectrum_from_file,
     get_cosmic_ray_spectrum,
@@ -26,11 +26,13 @@ def test_telescope_trigger_rates(run_context):
 
     with (
         patch(
-            "simtools.telescope_trigger_rates.ascii_handler.collect_data_from_file"
+            "simtools.simtel.telescope_trigger_rates.ascii_handler.collect_data_from_file"
         ) as mock_collect_data,
-        patch("simtools.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
-        patch("simtools.telescope_trigger_rates._calculate_trigger_rates") as mock_calculate,
-        patch("simtools.telescope_trigger_rates.plot_simtel_event_histograms.plot") as mock_plot,
+        patch("simtools.simtel.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
+        patch("simtools.simtel.telescope_trigger_rates._calculate_trigger_rates") as mock_calculate,
+        patch(
+            "simtools.simtel.telescope_trigger_rates.plot_simtel_event_histograms.plot"
+        ) as mock_plot,
     ):
         mock_collect_data.return_value = {"telescope_configs": {"array1": [1, 2, 3]}}
         mock_histograms_instance = MagicMock()
@@ -62,10 +64,10 @@ def test_telescope_trigger_rates_forwards_cr_spectrum():
 
     with (
         patch(
-            "simtools.telescope_trigger_rates.get_array_elements_from_model_repository"
+            "simtools.simtel.telescope_trigger_rates.get_array_elements_from_model_repository"
         ) as mock_get_array_elements,
-        patch("simtools.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
-        patch("simtools.telescope_trigger_rates._calculate_trigger_rates") as mock_calculate,
+        patch("simtools.simtel.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
+        patch("simtools.simtel.telescope_trigger_rates._calculate_trigger_rates") as mock_calculate,
     ):
         mock_get_array_elements.return_value = {"array1": [1, 2, 3]}
         mock_histograms_instance = MagicMock()

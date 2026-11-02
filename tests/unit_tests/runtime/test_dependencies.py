@@ -7,7 +7,7 @@ import pytest
 import yaml
 from astropy import units as u
 
-from simtools.dependencies import (
+from simtools.runtime.dependencies import (
     _collect_dependency_error,
     _get_build_options_from_file,
     _get_package_path,
@@ -259,7 +259,7 @@ def test_validate_table_file_reports_unreadable_file(tmp_test_directory, mocker)
     """Unreadable table files are reported before content validation."""
     table_file = Path(tmp_test_directory) / "table.dat"
     table_file.write_bytes(b"x")
-    mocker.patch("simtools.dependencies.os.access", return_value=False)
+    mocker.patch("simtools.runtime.dependencies.os.access", return_value=False)
 
     assert "file is not readable" in _validate_table_file(table_file, 1)
 
@@ -304,10 +304,12 @@ def test_validate_corsika_interaction_tables_reports_manifest_read_error(tmp_tes
 
 
 def test_get_version_string(mocker, run_context):
-    mocker.patch("simtools.dependencies.get_sim_telarray_version", return_value="2024.271.0")
-    mocker.patch("simtools.dependencies.get_corsika_version", return_value="7.7550")
     mocker.patch(
-        "simtools.dependencies.get_build_options",
+        "simtools.runtime.dependencies.get_sim_telarray_version", return_value="2024.271.0"
+    )
+    mocker.patch("simtools.runtime.dependencies.get_corsika_version", return_value="7.7550")
+    mocker.patch(
+        "simtools.runtime.dependencies.get_build_options",
         return_value={"simtel_tag": "master", "corsika_build_id": "78010"},
     )
     context = _dependency_context(run_context)
@@ -320,7 +322,7 @@ def test_get_version_string(mocker, run_context):
 
 def test_direct_dependency_manifest_includes_installed_distributions(mocker):
     """Installed direct dependencies are included in the manifest."""
-    import simtools.dependencies as dependencies
+    import simtools.runtime.dependencies as dependencies
 
     mocker.patch.object(
         dependencies.metadata,
@@ -340,7 +342,7 @@ def test_direct_dependency_manifest_includes_installed_distributions(mocker):
 
 def test_direct_dependency_manifest_includes_installed_extras(mocker, tmp_test_directory):
     """Installed optional dependencies are recorded; extras not installed are not."""
-    import simtools.dependencies as dependencies
+    import simtools.runtime.dependencies as dependencies
 
     mocker.patch.object(
         dependencies.metadata,
@@ -361,10 +363,10 @@ def test_direct_dependency_manifest_includes_installed_extras(mocker, tmp_test_d
 
 
 def test_get_version_string_without_software_versions(mocker, run_context):
-    mock_simtel = mocker.patch("simtools.dependencies.get_sim_telarray_version")
-    mock_corsika = mocker.patch("simtools.dependencies.get_corsika_version")
+    mock_simtel = mocker.patch("simtools.runtime.dependencies.get_sim_telarray_version")
+    mock_corsika = mocker.patch("simtools.runtime.dependencies.get_corsika_version")
     mock_build_options = mocker.patch(
-        "simtools.dependencies.get_build_options",
+        "simtools.runtime.dependencies.get_build_options",
         return_value={"simtel_tag": "master", "corsika_build_id": "78010"},
     )
     context = _dependency_context(run_context)
@@ -392,7 +394,7 @@ def test_get_software_version_unknown():
 
 def test_get_sim_telarray_version_simple(mocker, run_context):
     context = _dependency_context(run_context, sim_telarray_exe="sim_telarray")
-    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run = mocker.patch("simtools.runtime.dependencies.subprocess.run")
     mock_run.return_value.stdout = "Release: 2024.271.0 from 2024-09-27\n"
     version = get_sim_telarray_version(context=context)
     assert version == "2024.271.0"
@@ -408,7 +410,7 @@ def test_get_corsika_version_simple(mocker, run_context):
             return "/mocked/path"
 
     context = _dependency_context(run_context, corsika_path=PathMock(), corsika_exe="corsika")
-    mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
+    mock_popen = mocker.patch("simtools.runtime.dependencies.subprocess.Popen")
     process_mock = mocker.Mock()
     process_mock.stdout = ["NUMBER OF VERSION :  7.7550\n"]
     mock_popen.return_value = process_mock
@@ -419,7 +421,7 @@ def test_get_corsika_version_simple(mocker, run_context):
 
 def test_get_sim_telarray_version_no_release(mocker, run_context):
     context = _dependency_context(run_context, sim_telarray_exe="sim_telarray")
-    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run = mocker.patch("simtools.runtime.dependencies.subprocess.run")
     mock_run.return_value.stdout = "No version info here"
     with pytest.raises(ValueError, match="sim_telarray release not found"):
         get_sim_telarray_version(context=context)
@@ -441,13 +443,14 @@ def test_get_corsika_version_no_version_but_build_opts(mocker, run_context):
             return "/mocked/path"
 
     context = _dependency_context(run_context, corsika_path=PathMock(), corsika_exe="corsika")
-    mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
+    mock_popen = mocker.patch("simtools.runtime.dependencies.subprocess.Popen")
     process_mock = mocker.Mock()
     process_mock.stdout = ["DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n"]
     mock_popen.return_value = process_mock
     process_mock.terminate = mocker.Mock()
     mocker.patch(
-        "simtools.dependencies.get_build_options", return_value={"corsika_build_id": "99999"}
+        "simtools.runtime.dependencies.get_build_options",
+        return_value={"corsika_build_id": "99999"},
     )
     version = get_corsika_version(context=context)
     assert version == "99999"
@@ -463,19 +466,21 @@ def test_get_corsika_version_no_build_opts(mocker, run_context):
             return "/mocked/path"
 
     context = _dependency_context(run_context, corsika_path=PathMock(), corsika_exe="corsika")
-    mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
+    mock_popen = mocker.patch("simtools.runtime.dependencies.subprocess.Popen")
     process_mock = mocker.Mock()
     process_mock.stdout = ["DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n"]
     mock_popen.return_value = process_mock
     process_mock.terminate = mocker.Mock()
-    mocker.patch("simtools.dependencies.get_build_options", side_effect=FileNotFoundError)
+    mocker.patch("simtools.runtime.dependencies.get_build_options", side_effect=FileNotFoundError)
     version = get_corsika_version(context=context)
     assert version is None
 
 
 def test__get_build_options_from_file_yaml_error(mocker):
-    mocker.patch("simtools.dependencies.yaml.safe_load", side_effect=yaml.YAMLError("bad yaml"))
-    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mocker.patch(
+        "simtools.runtime.dependencies.yaml.safe_load", side_effect=yaml.YAMLError("bad yaml")
+    )
+    mock_run = mocker.patch("simtools.runtime.dependencies.subprocess.run")
     mock_run.return_value.returncode = 0
     mock_run.return_value.stdout = "bad: yaml"
     with pytest.raises(ValueError, match=r"Error parsing build_opts.yml from container"):
@@ -483,7 +488,7 @@ def test__get_build_options_from_file_yaml_error(mocker):
 
 
 def test__get_build_options_from_file_subprocess_error(mocker):
-    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run = mocker.patch("simtools.runtime.dependencies.subprocess.run")
     mock_run.return_value.returncode = 1
     mock_run.return_value.stderr = "file not found"
     with pytest.raises(FileNotFoundError, match="No build option file found in container"):
@@ -492,7 +497,7 @@ def test__get_build_options_from_file_subprocess_error(mocker):
 
 def test_get_sim_telarray_version_with_run_time(mocker, run_context):
     context = _dependency_context(run_context, sim_telarray_exe="sim_telarray")
-    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run = mocker.patch("simtools.runtime.dependencies.subprocess.run")
     mock_run.return_value.stdout = "Release: 2024.271.0 from 2024-09-27\n"
     mock_run.return_value.stderr = ""
     run_time = ["docker"]
@@ -510,7 +515,7 @@ def test_get_corsika_version_with_run_time(mocker, run_context):
             return f"/mocked/path/{other}"
 
     context = _dependency_context(run_context, corsika_exe=PathMock() / "corsika")
-    mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
+    mock_popen = mocker.patch("simtools.runtime.dependencies.subprocess.Popen")
     process_mock = mocker.Mock()
     process_mock.stdout = ["NUMBER OF VERSION :  7.7550\n"]
     process_mock.terminate = mocker.Mock()
@@ -529,12 +534,13 @@ def test_get_corsika_version_with_run_time(mocker, run_context):
 
 def test_export_build_info(mocker, tmp_test_directory, run_context):
     context = _dependency_context(run_context)
-    mock_write = mocker.patch("simtools.dependencies.ascii_handler.write_data_to_file")
+    mock_write = mocker.patch("simtools.runtime.dependencies.ascii_handler.write_data_to_file")
     mocker.patch(
-        "simtools.dependencies.get_build_options", return_value={"corsika_build_id": "78010"}
+        "simtools.runtime.dependencies.get_build_options",
+        return_value={"corsika_build_id": "78010"},
     )
     mocker.patch(
-        "simtools.dependencies.get_dependency_manifest",
+        "simtools.runtime.dependencies.get_dependency_manifest",
         return_value={"schema_version": "0.1.0"},
     )
 
@@ -549,7 +555,7 @@ def test_export_build_info(mocker, tmp_test_directory, run_context):
 
 def test_get_package_path_from_environment(mocker, run_context):
     context = _dependency_context(run_context)
-    mock_load_env = mocker.patch("simtools.dependencies.gen.load_environment_variables")
+    mock_load_env = mocker.patch("simtools.runtime.dependencies.gen.load_environment_variables")
     mock_load_env.return_value = {"corsika_path": "/env/corsika"}
     result = _get_package_path("corsika", context=context)
     assert result == Path("/env/corsika")
@@ -557,7 +563,7 @@ def test_get_package_path_from_environment(mocker, run_context):
 
 def test_get_package_path_not_found(mocker, run_context):
     context = _dependency_context(run_context)
-    mock_load_env = mocker.patch("simtools.dependencies.gen.load_environment_variables")
+    mock_load_env = mocker.patch("simtools.runtime.dependencies.gen.load_environment_variables")
     mock_load_env.return_value = {}
     result = _get_package_path("corsika", context=context)
     assert result is None
@@ -581,7 +587,7 @@ def test_get_dependency_manifest_invalid_json(monkeypatch, tmp_test_directory):
 
 
 def test_get_dependency_manifest_from_container(mocker):
-    run = mocker.patch("simtools.dependencies.subprocess.run")
+    run = mocker.patch("simtools.runtime.dependencies.subprocess.run")
     run.return_value.returncode = 0
     run.return_value.stdout = '{"schema_version": "0.1.0"}'
 
@@ -595,7 +601,7 @@ def test_get_dependency_manifest_from_container(mocker):
 
 
 def test_get_dependency_manifest_container_missing(mocker):
-    run = mocker.patch("simtools.dependencies.subprocess.run")
+    run = mocker.patch("simtools.runtime.dependencies.subprocess.run")
     run.return_value.returncode = 1
     run.return_value.stderr = "missing"
 
@@ -605,13 +611,14 @@ def test_get_dependency_manifest_container_missing(mocker):
 
 def test_build_dependency_manifest(mocker, monkeypatch, simtools_root_path):
     mocker.patch(
-        "simtools.dependencies.get_build_options", return_value={"corsika_build_id": "78010"}
+        "simtools.runtime.dependencies.get_build_options",
+        return_value={"corsika_build_id": "78010"},
     )
     mocker.patch(
-        "simtools.dependencies.get_direct_python_dependency_versions",
+        "simtools.runtime.dependencies.get_direct_python_dependency_versions",
         return_value={"astropy": "8.0.0"},
     )
-    mocker.patch("simtools.dependencies._distribution_version", return_value="26.1.2")
+    mocker.patch("simtools.runtime.dependencies._distribution_version", return_value="26.1.2")
     monkeypatch.setenv("SIMTOOLS_CONTAINER_BUILD", "1")
     monkeypatch.setenv("SIMTOOLS_GIT_REVISION", "b" * 40)
 
@@ -632,9 +639,9 @@ def test_build_dependency_manifest(mocker, monkeypatch, simtools_root_path):
 def test_manifest_digest_is_independent_of_dictionary_order(mocker):
     first = {"b": 2, "a": 1}
     second = {"a": 1, "b": 2}
-    mocker.patch("simtools.dependencies.get_dependency_manifest", return_value=first)
+    mocker.patch("simtools.runtime.dependencies.get_dependency_manifest", return_value=first)
     first_digest = get_dependency_manifest_digest()
-    mocker.patch("simtools.dependencies.get_dependency_manifest", return_value=second)
+    mocker.patch("simtools.runtime.dependencies.get_dependency_manifest", return_value=second)
 
     assert canonical_manifest_bytes(first) == canonical_manifest_bytes(second)
     assert get_dependency_manifest_digest() == first_digest
@@ -642,7 +649,7 @@ def test_manifest_digest_is_independent_of_dictionary_order(mocker):
 
 def test_write_dependency_manifest(mocker, tmp_test_directory):
     manifest = {"schema_version": "0.1.0", "value": "test"}
-    mocker.patch("simtools.dependencies.build_dependency_manifest", return_value=manifest)
+    mocker.patch("simtools.runtime.dependencies.build_dependency_manifest", return_value=manifest)
     output = Path(str(tmp_test_directory)) / "dependency-manifest.json"
 
     write_dependency_manifest(output)
@@ -659,7 +666,7 @@ def test_write_development_dependency_manifest(mocker, monkeypatch, tmp_test_dir
     simtel_options = tmp_test_directory / "simtel_build_opts.yml"
     simtel_options.write_text("simtel_version: v2025-11-30-rc\n", encoding="utf-8")
     mocker.patch(
-        "simtools.dependencies._distribution_version",
+        "simtools.runtime.dependencies._distribution_version",
         side_effect=lambda package: {"pip": "26.1.2", "astropy": "8.0.0", "numpy": "2.5.0"}.get(
             package
         ),

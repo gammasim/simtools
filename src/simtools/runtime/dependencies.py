@@ -23,9 +23,9 @@ from pathlib import Path
 import yaml
 from packaging.requirements import InvalidRequirement, Requirement
 
-from simtools import context as run_context
-from simtools.configuration import defaults
+from simtools import constants
 from simtools.io import ascii_handler
+from simtools.runtime import context as run_context
 from simtools.utils import general as gen
 from simtools.version import __version__
 
@@ -75,7 +75,7 @@ def validate_simulation_dependencies(simulation_software, context=None):
     """
     context = context or run_context.RunContext.from_environment()
     try:
-        required = defaults.SIMULATION_SOFTWARE_DEPENDENCIES[simulation_software]
+        required = constants.SIMULATION_SOFTWARE_DEPENDENCIES[simulation_software]
     except KeyError as exc:
         raise ValueError(f"Unknown simulation software: {simulation_software}") from exc
 
@@ -121,8 +121,34 @@ def _uses_curved_atmosphere(context=None):
 def _corsika_executable(geometry, context=None):
     """Return the configured CORSIKA executable for an atmosphere geometry."""
     context = context or run_context.RunContext.from_environment()
+    variants = getattr(context.software, "corsika_build_variants", None)
+    if variants is not None:
+        requested = (
+            context.software.he_interaction.lower(),
+            context.software.le_interaction.lower(),
+            geometry.lower(),
+        )
+        for variant in variants:
+            available = (
+                variant.he_hadronic_model,
+                variant.le_hadronic_model,
+                variant.atmosphere_geometry,
+            )
+            if available == requested:
+                return context.software.corsika_path / variant.executable
+        available_text = ", ".join(
+            sorted(
+                f"{variant.he_hadronic_model}/{variant.le_hadronic_model}/"
+                f"{variant.atmosphere_geometry}"
+                for variant in variants
+            )
+        )
+        raise ValueError(
+            "Unsupported CORSIKA build variant "
+            f"{requested[0]}/{requested[1]}/{requested[2]}. Available variants: {available_text}"
+        )
     if geometry == "curved":
-        return context.software.corsika_exe_curved
+        return getattr(context.software, "corsika_exe_curved", None)
     return context.software.corsika_exe
 
 

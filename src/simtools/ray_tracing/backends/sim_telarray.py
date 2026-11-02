@@ -13,12 +13,12 @@ import re
 import shutil
 from concurrent.futures import ThreadPoolExecutor
 
-from simtools.context import RunContext
 from simtools.job_execution import execution
 from simtools.job_execution.execution import JobExecutionError
 from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.backends.interface import image_file_name
 from simtools.ray_tracing.psf_analysis import PSFImage
+from simtools.runtime.context import RunContext
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing, telescope_pointing
 from simtools.simulation.configuration import get_model_writer
 

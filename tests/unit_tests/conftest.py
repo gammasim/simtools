@@ -30,13 +30,13 @@ from simtools.configuration.arguments import (
     TELESCOPE,
 )
 from simtools.configuration.commandline_parser import CommandLineParser
-from simtools.context import RunContext, SimulationSoftware
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io.output_paths import OutputPaths
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_stage import CorsikaStage
+from simtools.runtime.context import RunContext, SimulationSoftware
 
 logger = logging.getLogger()
 _REPO_ROOT = Path(__file__).parent.parent.parent
@@ -258,7 +258,6 @@ def run_context(tmp_test_directory, mock_model_reader):
     context = RunContext.from_arguments(
         {},
         model_reader=mock_model_reader,
-        resolve_sim_software_executables=False,
         paths=OutputPaths(
             output_path=Path(tmp_test_directory) / "output",
             model_path=Path(tmp_test_directory) / "model",
@@ -717,9 +716,16 @@ def corsika_stage_mock_array_model(corsika_config_mock_array_model, run_context)
     for executable in (corsika_executable, curved_executable):
         executable.touch()
         executable.chmod(0o755)
+    from simtools.corsika.build_options import CorsikaBuildVariant
+
     software = SimpleNamespace(
-        corsika_exe=corsika_executable,
-        corsika_exe_curved=curved_executable,
+        corsika_root=corsika_root,
+        corsika_path=corsika_root,
+        corsika_build_variants=(
+            CorsikaBuildVariant("corsika", "config", "flat", "qgs3", "urqmd"),
+            CorsikaBuildVariant("corsika_curved", "config", "curved", "qgs3", "urqmd"),
+        ),
+        corsika_flat_executable=corsika_executable,
         corsika_interaction_models=("qgs3", "urqmd"),
         sim_telarray_path=Path(run_context.software.sim_telarray_root),
         he_interaction="qgs3",

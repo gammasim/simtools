@@ -6,7 +6,6 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-from simtools.context import RunContext
 from simtools.io.file_type import validate_file_type
 from simtools.production_configuration.derive_corsika_limits import FILE_INFO_COLUMNS
 from simtools.production_configuration.histogram_output_metadata import (
@@ -15,6 +14,7 @@ from simtools.production_configuration.histogram_output_metadata import (
 from simtools.production_configuration.trigger_histograms import (
     load_trigger_histograms,
 )
+from simtools.runtime.context import RunContext
 from simtools.visualization.plot_simtel_event_histograms import (
     plot_monte_carlo_statistics_diagnostics,
 )

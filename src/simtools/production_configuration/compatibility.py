@@ -8,7 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from simtools import __version__, dependency_versions, version
+from simtools import __version__, version
+from simtools.model_repository import dependency_versions
 from simtools.model_repository.compatibility import validate_release
 
 IMAGE_KEY = "container_image"
@@ -23,8 +24,10 @@ logger = logging.getLogger(__name__)
 def _bundled_catalog_path():
     """Locate a runtime's own catalog without consulting its working directory."""
     filename = dependency_versions.DEPENDENCY_VERSIONS_FILENAME
+    # The module sits at a different depth in older releases (simtools/ or model_repository/).
+    module_parents = Path(dependency_versions.__file__).resolve().parents[:4]
     for path in (
-        Path(dependency_versions.__file__).resolve().parents[2] / filename,
+        *(parent / filename for parent in module_parents),
         Path(sys.prefix) / "simtools" / filename,
     ):
         if path.is_file():
@@ -34,7 +37,9 @@ def _bundled_catalog_path():
 
 # Runs inside the target image: read its own catalog and report simtools version and catalog.
 INFO_CODE = (
-    "import os, sys\nfrom pathlib import Path\nfrom simtools import dependency_versions\n"
+    "import os, sys\nfrom pathlib import Path\n"
+    "try:\n    from simtools.model_repository import dependency_versions\n"
+    "except ImportError:\n    from simtools import dependency_versions\n"
     + inspect.getsource(_bundled_catalog_path)
     + "\ncatalog_path = _bundled_catalog_path()\n"
     + "os.environ['SIMTOOLS_DEPENDENCY_VERSIONS'] = str(catalog_path)\n"

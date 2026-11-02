@@ -14,7 +14,7 @@ from simtools.application.control import (
     initialize_runtime,
     setup_logging,
 )
-from simtools.context import RunContext
+from simtools.runtime.context import RunContext
 
 _DEVELOPMENT = "development"
 

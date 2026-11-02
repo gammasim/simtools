@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from simtools import dependency_versions
+from simtools.model_repository import dependency_versions
 
 
 def _load_catalog(simtools_root_path):
@@ -456,7 +456,7 @@ def test_find_dependency_versions_from_environment(monkeypatch, tmp_test_directo
 
 def test_find_dependency_versions_raises_when_missing(mocker, tmp_test_directory):
     """Test catalog discovery reports a clear error when no file is available."""
-    mocker.patch("simtools.dependency_versions.Path.is_file", return_value=False)
+    mocker.patch("simtools.model_repository.dependency_versions.Path.is_file", return_value=False)
 
     with pytest.raises(FileNotFoundError, match="Could not find"):
         dependency_versions.find_dependency_versions(tmp_test_directory)
@@ -811,7 +811,9 @@ def test_default_catalog_prefers_running_installation(
     host = root / "host"
     host.mkdir()
     (host / "dependency_versions.yml").write_text("schema_version: host\n")
-    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    package = (
+        root / "installation" / "src" / "simtools" / "model_repository" / "dependency_versions.py"
+    )
     package.parent.mkdir(parents=True)
     monkeypatch.setattr(dependency_versions, "__file__", str(package))
     monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
@@ -839,7 +841,9 @@ def test_missing_catalog_override_does_not_fall_back(monkeypatch, tmp_test_direc
 
 def test_default_catalog_falls_back_to_working_directory(monkeypatch, tmp_test_directory):
     root = Path(tmp_test_directory)
-    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    package = (
+        root / "installation" / "src" / "simtools" / "model_repository" / "dependency_versions.py"
+    )
     monkeypatch.setattr(dependency_versions, "__file__", str(package))
     monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
     monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)

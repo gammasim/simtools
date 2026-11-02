@@ -2,7 +2,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.telescope_trigger_rates import telescope_trigger_rates
+from simtools.simtel.telescope_trigger_rates import telescope_trigger_rates
 
 _ARGUMENTS = (
     cli.TELESCOPE_CONFIG_FILE,

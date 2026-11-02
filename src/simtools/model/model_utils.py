@@ -4,11 +4,12 @@
 import json
 import math
 
-from simtools.context import RunContext
 from simtools.io import ascii_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model_repository.reader import resolve_model_reader
+from simtools.runtime.context import RunContext
 
 
 def export_model_files(model, destination=None, update_if_necessary=False):
@@ -75,7 +76,7 @@ def initialize_simulation_models(
         "model_version": model_version,
         "label": label,
         "overwrite_model_parameter_dict": overwrite_model_parameter_dict,
-        "model_reader": model_reader or context.model_reader,
+        "model_reader": resolve_model_reader(model_reader, context),
         "context": context,
     }
     if model_directory is not None:
@@ -204,7 +205,7 @@ def get_array_elements_for_layout(
         model_version=model_version or context.args.get("model_version"),
         label="label",
         overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(context=context),
-        model_reader=model_reader or context.model_reader,
+        model_reader=resolve_model_reader(model_reader, context),
         context=context,
     )
     return site_model.get_array_elements_for_layout(layout_name)

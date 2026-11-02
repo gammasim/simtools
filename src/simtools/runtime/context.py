@@ -9,21 +9,11 @@ from dataclasses import dataclass, field
 from dataclasses import replace as dataclass_replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from simtools import constants
-from simtools.application import model_reader as application_model_reader
-from simtools.configuration import defaults
 from simtools.constants import RAY_TRACING_BACKENDS
-from simtools.corsika.build_options import (
-    get_installed_corsika_build_variants,
-    select_corsika_build_variant,
-)
 from simtools.io.output_paths import OutputPaths
 from simtools.utils.general import find_executable_in_dir, get_uuid
-
-if TYPE_CHECKING:
-    from simtools.model_repository.reader import SimulationModelReader
 
 
 def _config_value(args, arg_key, env_key, default=None):
@@ -67,12 +57,12 @@ class SimulationSoftware:
     corsika_interaction_table_root: str | Path | None = None
     corsika_build_variants: object = None
     corsika_flat_executable: str | Path | None = None
-    he_interaction: str = defaults.CORSIKA_HE_INTERACTION
-    le_interaction: str = defaults.CORSIKA_LE_INTERACTION
+    he_interaction: str = constants.CORSIKA_HE_INTERACTION
+    le_interaction: str = constants.CORSIKA_LE_INTERACTION
     ray_tracing_backend: str = RAY_TRACING_BACKENDS[0]
 
     @classmethod
-    def from_arguments(cls, args=None, resolve_sim_software_executables=True):
+    def from_arguments(cls, args=None):
         """Return the software configuration from arguments, environment and defaults.
 
         Priority order: argument > environment variable > built-in default.
@@ -81,8 +71,6 @@ class SimulationSoftware:
         ----------
         args : Mapping, optional
             Parsed arguments.
-        resolve_sim_software_executables : bool, optional
-            Resolve the CORSIKA executable from the build manifest.
         """
         ray_tracing_backend = _config_value(
             args,
@@ -95,7 +83,7 @@ class SimulationSoftware:
                 f"ray_tracing_backend must be one of {RAY_TRACING_BACKENDS}, "
                 f"got '{ray_tracing_backend}'"
             )
-        software = cls(
+        return cls(
             sim_telarray_root=_config_value(
                 args, "sim_telarray_path", "SIMTOOLS_SIM_TELARRAY_PATH"
             ),
@@ -112,14 +100,14 @@ class SimulationSoftware:
                 args,
                 "corsika_interaction_table_path",
                 "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH",
-                default=defaults.CORSIKA_INTERACTION_TABLE_PATH,
+                default=constants.CORSIKA_INTERACTION_TABLE_PATH,
             ),
             he_interaction=str(
                 _config_value(
                     args,
                     "corsika_he_interaction",
                     "SIMTOOLS_CORSIKA_HE_INTERACTION",
-                    default=defaults.CORSIKA_HE_INTERACTION,
+                    default=constants.CORSIKA_HE_INTERACTION,
                 )
             ).lower(),
             le_interaction=str(
@@ -127,33 +115,11 @@ class SimulationSoftware:
                     args,
                     "corsika_le_interaction",
                     "SIMTOOLS_CORSIKA_LE_INTERACTION",
-                    default=defaults.CORSIKA_LE_INTERACTION,
+                    default=constants.CORSIKA_LE_INTERACTION,
                 )
             ).lower(),
             ray_tracing_backend=ray_tracing_backend,
         )
-        if (
-            resolve_sim_software_executables
-            and software.corsika_root is not None
-            and Path(software.corsika_root).is_dir()
-        ):
-            software = dataclass_replace(
-                software,
-                corsika_build_variants=get_installed_corsika_build_variants(software.corsika_root),
-            )
-            software = dataclass_replace(
-                software, corsika_flat_executable=software.corsika_executable("flat")
-            )
-        return software
-
-    def corsika_executable(self, geometry):
-        """Return the CORSIKA executable declared by the build manifest for a geometry."""
-        if self.corsika_build_variants is None:
-            raise FileNotFoundError("CORSIKA build manifest has not been loaded")
-        variant = select_corsika_build_variant(
-            self.corsika_build_variants, self.he_interaction, self.le_interaction, geometry
-        )
-        return self.corsika_path / variant.executable
 
     @property
     def sim_telarray_path(self):
@@ -203,11 +169,6 @@ class SimulationSoftware:
         return find_executable_in_dir(self.corsika_flat_executable, self.corsika_path)
 
     @property
-    def corsika_exe_curved(self):
-        """Path to the curved version of the CORSIKA executable."""
-        return find_executable_in_dir(self.corsika_executable("curved"), self.corsika_path)
-
-    @property
     def corsika_interaction_models(self):
         """Configured high- and low-energy CORSIKA interaction models."""
         return self.he_interaction, self.le_interaction
@@ -241,7 +202,7 @@ class RunContext:
         Read-only view of the parsed application arguments.
     """
 
-    model_reader: SimulationModelReader | None = None
+    model_reader: object | None = None
     paths: OutputPaths = field(default_factory=OutputPaths)
     software: SimulationSoftware = field(default_factory=SimulationSoftware)
     activity: Activity = field(default_factory=Activity)
@@ -250,9 +211,7 @@ class RunContext:
     run_time: list | None = None
 
     @classmethod
-    def from_arguments(
-        cls, args=None, model_reader=None, paths=None, resolve_sim_software_executables=True
-    ):
+    def from_arguments(cls, args=None, model_reader=None, paths=None):
         """Return the context of parsed arguments.
 
         Parameters
@@ -263,14 +222,12 @@ class RunContext:
             Reader of the simulation models.
         paths : OutputPaths, optional
             Output paths; by default built from ``output_path`` in the arguments.
-        resolve_sim_software_executables : bool, optional
-            Resolve the CORSIKA executable from the build manifest.
         """
         args = args if args is not None else {}
         return cls(
             model_reader=model_reader,
             paths=paths if paths is not None else OutputPaths(args.get("output_path")),
-            software=SimulationSoftware.from_arguments(args, resolve_sim_software_executables),
+            software=SimulationSoftware.from_arguments(args),
             activity=Activity.from_arguments(args),
             args=args if isinstance(args, MappingProxyType) else MappingProxyType(args),
         )
@@ -278,19 +235,7 @@ class RunContext:
     @classmethod
     def from_environment(cls):
         """Return a fresh context built from environment."""
-        model_source_configured = any(
-            os.getenv(name)
-            for name in (
-                "SIMTOOLS_SIMULATION_MODELS_PATH",
-                "SIMTOOLS_SIMULATION_MODELS_GIT_PATH",
-            )
-        )
-        model_reader = None
-        if model_source_configured:
-            model_reader = application_model_reader.create_model_reader()
-        return cls.from_arguments(
-            {}, model_reader=model_reader, resolve_sim_software_executables=False
-        )
+        return cls.from_arguments({})
 
     @property
     def ray_tracing_backend(self):
@@ -314,24 +259,20 @@ class RunContext:
         }
 
     @classmethod
-    def from_spec(cls, spec):
+    def from_spec(cls, spec, model_reader=None):
         """Rebuild a worker context from :meth:`to_spec` output."""
         if not isinstance(spec, dict) or not isinstance(spec.get("args"), dict):
             raise ValueError("Run context specification must contain an args dictionary.")
         source = spec.get("model_source")
-        reader = (
-            application_model_reader.create_model_reader_from_source_config(source)
-            if source
-            else None
-        )
+        if source and model_reader is None:
+            raise ValueError("A model-reader factory or reader is required for a model source.")
+        if callable(model_reader):
+            reader = model_reader(source) if source else None
+        else:
+            reader = model_reader
         output_path = spec.get("output_path") or spec["args"].get("output_path")
         paths = OutputPaths(output_path, spec.get("model_path"))
-        return cls.from_arguments(
-            spec["args"],
-            model_reader=reader,
-            paths=paths,
-            resolve_sim_software_executables=False,
-        )
+        return cls.from_arguments(spec["args"], model_reader=reader, paths=paths)
 
     def __deepcopy__(self, _memo):
         """Return this context: it is immutable and shared by deep-copied models."""
