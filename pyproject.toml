@@ -47,6 +47,7 @@ dependencies = [
   "pyyaml",
   "scipy",
 ]
+optional-dependencies.benchmark = [ "psutil" ]
 optional-dependencies.dev = [
   "flake8",
   "flake8-cognitive-complexity",
@@ -68,14 +69,11 @@ optional-dependencies.htcondor = [
   "htcondor>=25.0.7; platform_system=='Linux'",
 ]
 optional-dependencies.tests = [
-  "psutil",
   "pytest",
   "pytest-cov",
   "pytest-mock",
-  "pytest-profiling",
   "pytest-random-order",
   "pytest-repeat",
-  "pytest-requirements",
   "pytest-retry",
   "pytest-xdist",
 ]
@@ -418,8 +416,6 @@ ini_options.addopts = [
   "--cov-report=json",
   "--cov-report=term",
   "--import-mode=importlib",
-  "-p",
-  "pytest_requirements",
   "-rsxXf",
 ]
 ini_options.markers = [
