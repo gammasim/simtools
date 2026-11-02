@@ -167,3 +167,8 @@ def test_unit_as_string():
 def test_get_value_in_unit_raises_for_non_numeric_with_unit():
     with pytest.raises(TypeError, match="Expected Quantity or numeric scalar"):
         value_conversion.get_value_in_unit("5", "deg")
+
+
+def test_normalize_model_enum():
+    assert value_conversion.normalize_model_enum("Gauss-Exponential") == "gauss-exponential"
+    assert value_conversion.normalize_model_enum(None) is None

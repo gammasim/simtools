@@ -88,12 +88,13 @@ def test__get_pulse_shape_argument_for_sim_telarray_simple_shapes(simulator_inst
     assert result == "simple:3.0"
 
 
+@pytest.mark.parametrize("shape", ["Gauss-Exponential", "gauss-exponential"])
 def test__get_pulse_shape_argument_for_sim_telarray_gauss_exp_dat_file(
-    simulator_instance, tmp_test_directory
+    simulator_instance, tmp_test_directory, shape
 ):
     # Mock Gauss-Exponential pulse shape
     simulator_instance.calibration_model.get_parameter_value.return_value = [
-        "Gauss-Exponential",
+        shape,
         2.0,
         6.0,
     ]

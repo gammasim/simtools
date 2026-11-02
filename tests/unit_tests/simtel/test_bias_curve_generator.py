@@ -438,7 +438,7 @@ def test_export_trigger_threshold_as_model_parameter(run_context):
 
 @pytest.mark.parametrize(
     ("default_trigger", PARAMETER_NAME),
-    [("AnalogSum", "asum_threshold"), ("Majority", "discriminator_threshold")],
+    [("AnalogSum", "asum_threshold"), ("majority", "discriminator_threshold")],
 )
 def test_export_trigger_threshold_in_millivolts(default_trigger, parameter_name, run_context):
     """Export rounded floating-point thresholds for AnalogSum and Majority."""

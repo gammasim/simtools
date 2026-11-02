@@ -10,7 +10,7 @@ from astropy.table import Table
 from simtools.context import RunContext
 from simtools.data_model import model_data_writer
 from simtools.io.file_type import product_value
-from simtools.model.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel, trigger_threshold_parameter
 from simtools.simtel.nsb_trigger_calculator import (
     derive_nsb_triggers,
     extract_run_number,
@@ -450,27 +450,18 @@ def _export_trigger_threshold_as_model_parameter(args, trigger_threshold, contex
         )
         default_trigger = telescope_model.get_parameter_value("default_trigger")
 
-        if default_trigger == "AnalogSum":
-            parameter_name = "asum_threshold"
-            # asum_threshold expects float64 in mV
-            value = round(trigger_threshold, 2)
-            unit = "mV"
-        elif default_trigger == "DigitalSum":
-            parameter_name = "dsum_threshold"
-            # dsum_threshold expects int64 in counts
-            value = round(trigger_threshold)
-            unit = "count"
-        elif default_trigger == "Majority":
-            parameter_name = "discriminator_threshold"
-            # discriminator_threshold expects float64 in mV
-            value = round(trigger_threshold, 2)
-            unit = "mV"
-        else:
+        parameter_name = trigger_threshold_parameter(default_trigger)
+        if parameter_name is None:
             _logger.warning(
                 f"Unknown default_trigger '{default_trigger}' for telescope {telescope_name}. "
                 "Cannot export trigger threshold."
             )
             return
+
+        if parameter_name == "dsum_threshold":
+            value, unit = round(trigger_threshold), "count"
+        else:
+            value, unit = round(trigger_threshold, 2), "mV"
 
         context = context or RunContext.from_environment()
         output_path = context.paths.get_output_directory()

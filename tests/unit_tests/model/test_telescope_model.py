@@ -216,3 +216,13 @@ def test_get_telescope_effective_focal_length(telescope_model_lst):
         unit="m", return_focal_length_if_zero=True
     )
     assert result == pytest.approx(16.0)
+
+
+def test_trigger_threshold_parameter():
+    from simtools.model.telescope_model import trigger_threshold_parameter
+
+    assert trigger_threshold_parameter("ANALOGSUM") == "asum_threshold"
+    assert trigger_threshold_parameter("digitalsum") == "dsum_threshold"
+    assert trigger_threshold_parameter("Majority") == "discriminator_threshold"
+    assert trigger_threshold_parameter(None) is None
+    assert trigger_threshold_parameter("unknown") is None
