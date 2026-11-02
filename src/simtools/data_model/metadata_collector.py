@@ -20,10 +20,10 @@ from astropy.table import Table
 import simtools.utils.general as gen
 import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA
-from simtools.context import RunContext
 from simtools.data_model import metadata_model, schema, schema_loader
 from simtools.io import ascii_handler
 from simtools.io.file_type import product_suffixes
+from simtools.runtime.context import RunContext
 from simtools.utils import names, value_conversion
 
 _SENSITIVE_ASSIGNMENT = re.compile(

@@ -4,12 +4,33 @@
 import json
 import math
 
-from simtools.context import RunContext
 from simtools.io import ascii_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simulation.configuration import export_model_files
+from simtools.model_repository.reader import resolve_model_reader
+from simtools.runtime.context import RunContext
+
+
+def export_model_files(model, destination=None, update_if_necessary=False):
+    """Export the parameter files of a model into its model directory.
+
+    Parameters
+    ----------
+    model : ModelParameter
+        Model whose parameter files are exported.
+    destination : pathlib.Path, optional
+        Target directory. Defaults to the model configuration directory.
+    update_if_necessary : bool
+        Skip the export if the model files were already exported and not changed since.
+    """
+    if update_if_necessary and model.model_files_exported:
+        return
+    model.model_reader.export_model_files(
+        parameters=model.parameters,
+        dest=destination or model.config_file_directory,
+    )
+    model.model_files_exported = True
 
 
 def initialize_simulation_models(
@@ -55,7 +76,7 @@ def initialize_simulation_models(
         "model_version": model_version,
         "label": label,
         "overwrite_model_parameter_dict": overwrite_model_parameter_dict,
-        "model_reader": model_reader or context.model_reader,
+        "model_reader": resolve_model_reader(model_reader, context),
         "context": context,
     }
     if model_directory is not None:
@@ -184,7 +205,7 @@ def get_array_elements_for_layout(
         model_version=model_version or context.args.get("model_version"),
         label="label",
         overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(context=context),
-        model_reader=model_reader or context.model_reader,
+        model_reader=resolve_model_reader(model_reader, context),
         context=context,
     )
     return site_model.get_array_elements_for_layout(layout_name)

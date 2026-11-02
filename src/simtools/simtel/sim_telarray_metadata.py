@@ -34,11 +34,11 @@ from simtools.constants import (
     SIM_TELARRAY_META_PARAMETER_METASCHEMA,
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.model.model_parameter import InvalidModelParameterError
-from simtools.simtel.simtel_io_metadata import normalize_sim_telarray_metadata
+from simtools.sim_events.simtel_io_metadata import normalize_sim_telarray_metadata
+from simtools.utils.primary_particle import PrimaryParticle
 
 META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter", "ctao_datamodel")
 # sources whose scope and values are fully described by the registry

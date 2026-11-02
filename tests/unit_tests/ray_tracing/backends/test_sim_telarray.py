@@ -39,13 +39,12 @@ def models():
 
 @pytest.fixture
 def backend(models, run_context, _mock_settings_env_vars):
-    from simtools.context import RunContext
+    from simtools.runtime.context import RunContext
 
     context = RunContext.from_arguments(
         {},
         model_reader=run_context.model_reader,
         paths=run_context.paths,
-        resolve_sim_software_executables=False,
     )
     debug_executable = context.software.sim_telarray_path / "bin" / "sim_telarray_debug_trace"
     debug_executable.touch()

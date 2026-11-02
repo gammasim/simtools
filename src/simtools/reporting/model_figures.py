@@ -11,14 +11,14 @@ from pathlib import Path
 import numpy as np
 from astropy.table import Table
 
-from simtools.context import RunContext
 from simtools.model import camera as camera_model
 from simtools.model import mirrors as mirror_model
 from simtools.model import telescope_geometry
 from simtools.model_repository.asset_names import get_export_file_name
+from simtools.runtime.context import RunContext
 from simtools.simtel import simtel_file_writer
 from simtools.simulation.light_source_profiles import pulse_profile
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 from simtools.visualization import (
     camera_plot_utils,
     plot_mirrors,
@@ -164,7 +164,7 @@ def _supported_flasher_shape(value):
         "tophat": "TopHat",
         "exponential": "Exponential",
         "gauss-exponential": "Gauss-Exponential",
-    }.get(str(shape).lower())
+    }.get(value_conversion.normalize_model_enum(shape))
     if shape is None:
         return None
     if shape == "Exponential":

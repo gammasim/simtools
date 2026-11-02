@@ -28,13 +28,12 @@ def shutil_copyfileobj():
 
 @pytest.fixture
 def psf_image(run_context, _mock_settings_env_vars):
-    from simtools.context import RunContext
+    from simtools.runtime.context import RunContext
 
     run_context = RunContext.from_arguments(
         {},
         model_reader=run_context.model_reader,
         paths=run_context.paths,
-        resolve_sim_software_executables=False,
     )
     image = PSFImage(
         focal_length=2800.0,

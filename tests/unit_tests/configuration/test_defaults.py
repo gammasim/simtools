@@ -1,9 +1,10 @@
 import simtools.configuration.defaults as defaults
+from simtools.constants import CORSIKA_PATH
 
 
 def test_corsika_defaults():
     """Test default CORSIKA configuration constants."""
-    assert defaults.CORSIKA_PATH == "/workdir/simulation_software/corsika7"
+    assert CORSIKA_PATH == "/workdir/simulation_software/corsika7"
     assert (
         defaults.CORSIKA_INTERACTION_TABLE_PATH
         == "/workdir/external/simpipe/simulation_software/corsika7-interaction-tables/interaction-tables/"

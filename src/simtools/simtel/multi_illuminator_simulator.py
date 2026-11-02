@@ -3,9 +3,13 @@
 import logging
 from pathlib import Path
 
-from simtools.context import RunContext
 from simtools.job_execution.execution import map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
+from simtools.model_repository.reader import (
+    create_model_reader_from_source_config,
+    resolve_model_reader,
+)
+from simtools.runtime.context import RunContext
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import value_conversion
 
@@ -54,7 +58,9 @@ def _simulate_illuminator_telescope_pair(job_spec):
     telescope = job_spec["telescope"]
     config = job_spec["config"].copy()
     try:
-        context = RunContext.from_spec(job_spec["context"])
+        context = RunContext.from_spec(
+            job_spec["context"], model_reader=create_model_reader_from_source_config
+        )
         model_reader = context.model_reader
 
         # Update configuration for this specific pair
@@ -138,7 +144,7 @@ class MultiIlluminatorSimulator:
         """Initialize the multi-illuminator simulator."""
         self._logger = logging.getLogger(__name__)
         self.context = context or RunContext.from_environment()
-        self.model_reader = model_reader or self.context.model_reader
+        self.model_reader = resolve_model_reader(model_reader, self.context)
         if self.model_reader is None:
             raise ValueError("A simulation model reader is required for illuminator simulations.")
         self.context = self.context.replace(model_reader=self.model_reader)

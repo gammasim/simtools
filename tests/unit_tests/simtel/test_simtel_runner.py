@@ -1,0 +1,82 @@
+#!/usr/bin/python3
+
+import logging
+
+import pytest
+
+from simtools.simtel.simtel_runner import SimtelRunner
+
+logger = logging.getLogger()
+
+
+@pytest.fixture
+def simtel_runner(corsika_config_mock_array_model):
+    return SimtelRunner(
+        label="test",
+        config=corsika_config_mock_array_model,
+        context=corsika_config_mock_array_model.context,
+    )
+
+
+def test_run(simtel_runner, caplog, mocker):
+    with pytest.raises(NotImplementedError, match=r"Must be implemented in concrete subclass"):
+        simtel_runner.run(test=True, input_file="test", run_number=5)
+
+
+def test_get_resources(simtel_runner, mocker):
+    get_resources = mocker.patch.object(
+        simtel_runner.runner_service,
+        "get_resources",
+        return_value={"runtime": 2.5, "n_events": None},
+    )
+
+    result = simtel_runner.get_resources(runtime=2.5)
+
+    assert result == {"runtime": 2.5, "n_events": None}
+    get_resources.assert_called_once_with(runtime=2.5)
+
+
+def test_run_with_runs_per_set(simtel_runner, mocker):
+    mock_make_run_command = mocker.patch.object(
+        simtel_runner, "make_run_command", return_value=("echo test", None, None)
+    )
+    mock_command_runner_submit = mocker.patch(
+        "simtools.job_execution.execution.run_command", return_value=None
+    )
+
+    simtel_runner.runs_per_set = 3
+    simtel_runner.run(test=False, input_file="test_input", run_number=10)
+
+    mock_make_run_command.assert_called_once_with(run_number=10, input_file="test_input")
+    assert mock_command_runner_submit.call_count == 3
+
+
+def test_run_with_seeds_per_run(simtel_runner, mocker):
+    command = ["sim_telarray", "-c", "telescope.cfg", "input.corsika.gz"]
+    mocker.patch.object(simtel_runner, "make_run_command", return_value=(command, None, None))
+    submit = mocker.patch("simtools.job_execution.execution.run_command", return_value=None)
+    simtel_runner.runs_per_set = 2
+    simtel_runner.run_seeds = [(1, 2), (3, 4)]
+
+    simtel_runner.run()
+
+    commands = [call.args[0] for call in submit.call_args_list]
+    assert commands == [
+        [*command[:-1], "-C", f"random_seed={i},{s}", command[-1]] for i, s in ((1, 2), (3, 4))
+    ]
+
+
+def test_run_with_test_mode(simtel_runner, mocker):
+    mock_make_run_command = mocker.patch.object(
+        simtel_runner, "make_run_command", return_value=("echo test", None, None)
+    )
+    mock_command_runner_submit = mocker.patch(
+        "simtools.job_execution.execution.run_command", return_value=None
+    )
+
+    simtel_runner.run(test=True, input_file="test_input", run_number=7)
+
+    mock_make_run_command.assert_called_once_with(run_number=7, input_file="test_input")
+    mock_command_runner_submit.assert_called_once_with(
+        "echo test", stdout=None, stderr=None, env={"SIM_TELARRAY_CONFIG_PATH": ""}
+    )

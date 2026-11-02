@@ -7,12 +7,12 @@ import packaging.version
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
-from simtools.context import RunContext
 from simtools.data_model import schema, validate_data
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler
 from simtools.io.output_paths import OutputPaths
+from simtools.runtime.context import RunContext
 from simtools.utils import names, value_conversion
 
 

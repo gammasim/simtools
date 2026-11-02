@@ -6,8 +6,9 @@ import logging
 from collections.abc import Generator
 from pathlib import Path
 
-from simtools.context import RunContext
+from simtools.model_repository.reader import resolve_model_reader
 from simtools.reporting.docs_read_parameters import ReadParameters
+from simtools.runtime.context import RunContext
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -27,7 +28,7 @@ class ReportGenerator:
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
         self.context = context or RunContext.from_environment()
-        self.model_reader = model_reader or self.context.model_reader
+        self.model_reader = resolve_model_reader(model_reader, self.context)
         self.args = dict(args)
         self.output_path = output_path
 

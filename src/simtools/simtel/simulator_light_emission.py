@@ -8,26 +8,30 @@ import astropy.units as u
 import numpy as np
 
 from simtools.atmosphere.transmission import AtmosphericTransmission
-from simtools.context import RunContext
-from simtools.job_execution import execution
+from simtools.job_execution import execution, runner_services
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.model_utils import (
+    export_model_files,
     initialize_simulation_models,
     read_overwrite_model_parameter_dict,
 )
 from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.model_repository.reader import resolve_model_reader
 from simtools.ray_tracing.backends.interface import LightSourceRequest, get_backend
-from simtools.runners import runner_services
-from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
-from simtools.sim_events import validate_run_outputs
+from simtools.runtime.context import RunContext
+from simtools.simtel import output_validation as simtel_output_validation
 from simtools.simtel.photon_bunch_file import (
     bypass_optics_level,
     camera_bunches,
     write_photon_bunches,
 )
+from simtools.simtel.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_seeds import instance_seed_pairs
-from simtools.simulation.configuration import get_light_source_writer, get_model_writer
+from simtools.simulation.configuration import (
+    get_light_source_writer,
+    get_model_writer,
+)
 from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
 from simtools.utils import value_conversion
 from simtools.utils.geometry import (
@@ -121,7 +125,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.configuration_writers = {}
         self._seed_pair = None
         self.context = context or RunContext.from_environment()
-        self.model_reader = model_reader or self.context.model_reader
+        self.model_reader = resolve_model_reader(model_reader, self.context)
         self.io_handler = self.context.paths
         telescope = telescope or light_emission_config.get("telescope")
         label = f"{label}_{telescope}" if label else telescope
@@ -150,6 +154,8 @@ class SimulatorLightEmission(SimtelRunner):
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(**model_kwargs)
         )
+        export_model_files(self.telescope_model)
+        export_model_files(self.site_model)
         get_model_writer(self.telescope_model).write_sim_telarray_config_file(
             additional_models=self.site_model
         )
@@ -693,7 +699,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def validate_simulations(self):
         """Validate that the simulations were successful."""
-        validate_run_outputs.validate_sim_telarray(
+        simtel_output_validation.validate_sim_telarray(
             data_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_output")),
             log_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_log")),
             array_models=None,

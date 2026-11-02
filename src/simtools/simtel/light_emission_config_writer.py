@@ -9,6 +9,7 @@ import astropy.units as u
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.simtel import simtel_file_writer
 from simtools.utils.geometry import fiducial_radius_from_shape
+from simtools.utils.value_conversion import normalize_model_enum
 
 TELESCOPE_CONFIG_KEY = "telescope"
 LIGHT_SOURCE_CONFIG_KEY = "light_source"
@@ -291,7 +292,7 @@ class LightEmissionConfigWriter:
         width_ns = pulse_shape_value[1]
         exp_ns = pulse_shape_value[2]
 
-        if shape_name != "Gauss-Exponential":
+        if normalize_model_enum(shape_name) != "gauss-exponential":
             return self.get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
 
         if width_ns <= 0 or exp_ns <= 0:

@@ -7,12 +7,15 @@ from pathlib import Path
 
 from astropy.utils import iers
 
-from simtools import dependencies, dependency_versions, version
+from simtools import version
 from simtools.application.model_reader import create_model_reader_from_configuration
-from simtools.context import RunContext
+from simtools.corsika.build_options import with_installed_build_variants
 from simtools.io.output_paths import OutputPaths
+from simtools.model_repository import dependency_versions
 from simtools.model_repository.compatibility import validate_release
 from simtools.runners.simtools_runner import prepare_runtime_environment
+from simtools.runtime import dependencies
+from simtools.runtime.context import RunContext
 from simtools.visualization import visualize
 
 _DEFER_SIMULATION_VALIDATION = "_defer_simulation_dependency_validation"
@@ -189,10 +192,10 @@ def initialize_runtime(
     _configure_iers_from_env()
 
     context = RunContext.from_arguments(
-        args_dict,
-        paths=OutputPaths(args_dict.get("output_path"), args_dict.get("model_path")),
-        resolve_sim_software_executables="corsika" in needs,
+        args_dict, paths=OutputPaths(args_dict.get("output_path"), args_dict.get("model_path"))
     )
+    if "corsika" in needs:
+        context = context.replace(software=with_installed_build_variants(context.software))
     validate_simulation_dependencies = "sim_telarray" in needs
     if validate_simulation_dependencies and not args_dict.get(_DEFER_SIMULATION_VALIDATION, False):
         simulation_software = args_dict.get("simulation_software", "sim_telarray")

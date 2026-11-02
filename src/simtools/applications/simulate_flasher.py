@@ -6,8 +6,8 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import scientific_int
 from simtools.model.model_utils import get_array_elements_for_layout
+from simtools.runners.simulator import Simulator
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
-from simtools.simulator import Simulator
 from simtools.utils import value_conversion
 
 _LIGHT_SOURCE_GROUP = "light source"

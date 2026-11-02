@@ -9,8 +9,9 @@ import packaging.version
 from astropy.table import Table
 
 from simtools.constants import SCHEMA_PATH
-from simtools.context import RunContext
 from simtools.io import ascii_handler, legacy_data_handler
+from simtools.model_repository.reader import resolve_model_reader
+from simtools.runtime.context import RunContext
 from simtools.utils import value_conversion
 from simtools.visualization import visualize
 from simtools.visualization.matplotlib_backend import pyplot as plt
@@ -64,7 +65,7 @@ def read_table_data(config, data_path=None, model_reader=None, *, context=None):
         Dict with table data (numpy structured arrays).
     """
     context = context or RunContext.from_environment()
-    model_reader = model_reader or context.model_reader
+    model_reader = resolve_model_reader(model_reader, context)
     data = {}
     for table_config in config["tables"]:
         if "file_name" in table_config:
@@ -128,7 +129,7 @@ def _process_table_data(table, _config):
 def _read_table_from_model_repository(table_config, model_reader=None, *, context=None):
     """Export a table from the simulation-model repository (returns an astropy Table)."""
     context = context or RunContext.from_environment()
-    model_reader = model_reader or context.model_reader
+    model_reader = resolve_model_reader(model_reader, context)
     if model_reader is None:
         raise RuntimeError("No simulation model reader is configured.")
     destination = table_config.get("model_export_path") or context.paths.get_output_directory()
@@ -146,7 +147,7 @@ def _read_table_from_model_repository(table_config, model_reader=None, *, contex
 def _read_parameter_dict_from_model_repository(table_config, model_reader=None, *, context=None):
     """Read a model parameter dictionary from the simulation-model repository."""
     context = context or RunContext.from_environment()
-    model_reader = model_reader or context.model_reader
+    model_reader = resolve_model_reader(model_reader, context)
     if model_reader is None:
         raise RuntimeError("No simulation model reader is configured.")
     parameter_dict = model_reader.get_model_parameter(

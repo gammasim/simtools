@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -22,6 +24,10 @@ SIMULATION_MODELS_GIT_PATH = "simulation_models_git_path"
 SIMULATION_MODELS_GIT_REVISION = "simulation_models_git_revision"
 BASELINE_MODELS_PATH = "/baseline/simulation-models"
 TELESCOPE_THROUGHPUT_APPLICATION = "simtools-validate-telescope-throughput"
+
+
+def test_runner_imports_in_fresh_process():
+    subprocess.run([sys.executable, "-c", "import simtools.runners.simtools_runner"], check=True)
 
 
 def _runner_args(config_file="dummy_config.yml", steps=None, ignore_runtime_environment=False):
@@ -53,7 +59,7 @@ def _patch_run_dependencies(
             mock.Mock(return_value={"collection": collection_config}),
         )
     monkeypatch.setattr(
-        "simtools.dependencies.get_version_string",
+        "simtools.runtime.dependencies.get_version_string",
         mock.Mock(return_value="simtools version: 1.2.3\n"),
     )
     monkeypatch.setattr(
@@ -344,7 +350,9 @@ def test_run_applications_propagates_options_to_submitted_configuration(
         tmp_test_directory / "simtools.log",
         submit_mock=submit_mock,
     )
-    monkeypatch.setattr("simtools.dependencies.get_version_string", mock.Mock(return_value=""))
+    monkeypatch.setattr(
+        "simtools.runtime.dependencies.get_version_string", mock.Mock(return_value="")
+    )
     simtools_runner.run_applications(
         {
             "config_file": "workflow.config.yml",

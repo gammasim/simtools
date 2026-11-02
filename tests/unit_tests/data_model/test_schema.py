@@ -147,7 +147,7 @@ def test_integration_configs_match_application_workflow_schema(config_file):
 
 
 def _mock_software_version(monkeypatch):
-    monkeypatch.setattr("simtools.data_model.schema.get_software_version", lambda _: "1.0.0")
+    monkeypatch.setattr("simtools.runtime.dependencies.get_software_version", lambda _: "1.0.0")
 
 
 @pytest.mark.parametrize(

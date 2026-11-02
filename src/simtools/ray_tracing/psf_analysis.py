@@ -15,8 +15,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools.context import RunContext
 from simtools.job_execution import execution
+from simtools.runtime.context import RunContext
 from simtools.visualization import plot_ray_tracing_psf
 
 

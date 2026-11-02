@@ -3,8 +3,8 @@
 import logging
 
 from simtools.constants import SIM_TELARRAY_META_PARAMETER_REGISTRY
+from simtools.sim_events.simtel_io_metadata import read_sim_telarray_metadata
 from simtools.simtel import sim_telarray_metadata
-from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)

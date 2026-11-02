@@ -101,7 +101,7 @@ incomplete contracts and invalid matrix grids before creating a configuration.
 (simtel-io-metadata-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_io_metadata
+.. automodule:: simtools.sim_events.simtel_io_metadata
    :members:
 ```
 

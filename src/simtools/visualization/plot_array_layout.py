@@ -9,7 +9,8 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Column
 
-from simtools.context import RunContext
+from simtools.model_repository.reader import resolve_model_reader
+from simtools.runtime.context import RunContext
 from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
@@ -56,7 +57,7 @@ def generate_plot_combinations(args_dict, model_reader=None, *, context=None):
     model_versions = [args_dict.get("model_version")]
     if args_dict.get("all_model_versions"):
         context = context or RunContext.from_environment()
-        model_reader = model_reader or context.model_reader
+        model_reader = resolve_model_reader(model_reader, context)
         if model_reader is None:
             raise RuntimeError("No simulation model reader is configured.")
         model_versions = model_reader.get_model_versions()

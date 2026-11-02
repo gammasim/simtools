@@ -289,3 +289,8 @@ def test_generate_gauss_exponential_samples_match_requested_edge_widths():
     assert np.isclose(rates[peak], 1.0)
     assert np.isclose(rising_high - rising_low, 1.2879, atol=0.15)
     assert np.isclose(falling_low - falling_high, 2.0961, atol=0.15)
+
+
+def test_supported_gauss_exponential_is_case_insensitive():
+    assert _supported_flasher_shape(["gauss-exponential", 2, 3]) == ("Gauss-Exponential", 2, 3)
+    assert _supported_flasher_shape([None, 2, 3]) is None

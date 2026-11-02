@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from simtools.io.file_type import validate_file_type
-from simtools.simtel import simtel_io_metadata
+from simtools.sim_events import simtel_io_metadata
 
 
 def inspect_sim_telarray_file(file_path, max_entries=50, format_report=True):

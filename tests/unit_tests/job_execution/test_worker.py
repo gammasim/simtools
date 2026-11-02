@@ -99,7 +99,7 @@ def test_execute_job_spec_restores_serialized_model_source(mocker):
     source_config = {"type": "git", "repository": "/models.git", "commit": "a" * 40}
     reader = mocker.Mock()
     restore_reader = mocker.patch(
-        "simtools.application.model_reader.create_model_reader_from_source_config",
+        "simtools.job_execution.worker.create_model_reader_from_source_config",
         return_value=reader,
     )
     job = JobSpec(
