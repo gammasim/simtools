@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>simtools test resource benchmarks</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+      body { margin: 2rem auto; max-width: 72rem; padding: 0 1rem; }
+      h1 { margin-bottom: .25rem; }
+      .muted { color: #777; }
+      .chart { border: 1px solid #8886; border-radius: .5rem; margin: 1.5rem 0; padding: 1rem; }
+      svg { display: block; height: auto; max-width: 100%; overflow: visible; }
+      .axis { stroke: #888; stroke-width: 1; }
+      .line { fill: none; stroke: #367bf5; stroke-width: 3; }
+      .point { fill: #367bf5; }
+      .label { fill: currentColor; font-size: 12px; }
+      #empty { padding: 1rem; border: 1px dashed #888; }
+    </style>
+  </head>
+  <body>
+    <h1>simtools test resource benchmarks</h1>
+    <p class="muted">Unit and integration suite resource use across benchmark runs.</p>
+    <p id="updated" class="muted"></p>
+    <main id="charts"></main>
+    <p id="empty" hidden>No benchmark results are available yet.</p>
+    <script src="data.js"></script>
+    <script>
+      "use strict";
+      const data = window.BENCHMARK_DATA;
+      const main = document.getElementById("charts");
+      const empty = document.getElementById("empty");
+      if (!data || !data.entries) {
+        empty.hidden = false;
+      } else {
+        const rows = Object.values(data.entries).flatMap((runs) =>
+          runs.flatMap((run) => (run.benches || []).map((bench) => ({
+            name: bench.name,
+            unit: bench.unit || "",
+            value: Number(bench.value),
+            date: Number(run.date),
+          }))),
+        ).filter((row) => Number.isFinite(row.value) && Number.isFinite(row.date));
+        const names = [...new Set(rows.map((row) => row.name))].sort();
+        empty.hidden = names.length > 0;
+        const updated = new Date(Number(data.lastUpdate));
+        if (Number.isFinite(updated.getTime()) && data.lastUpdate) {
+          document.getElementById("updated").textContent =
+            `Last updated ${updated.toLocaleString()}`;
+        }
+        const svgNs = "http://www.w3.org/2000/svg";
+        for (const name of names) {
+          const points = rows.filter((row) => row.name === name).sort((a, b) => a.date - b.date);
+          const card = document.createElement("section");
+          card.className = "chart";
+          const heading = document.createElement("h2");
+          heading.textContent = `${name} (${points[0].unit})`;
+          card.append(heading);
+          const svg = document.createElementNS(svgNs, "svg");
+          svg.setAttribute("viewBox", "0 0 900 250");
+          svg.setAttribute("role", "img");
+          svg.setAttribute("aria-label", `${name} over time`);
+          const left = 70;
+          const right = 880;
+          const top = 20;
+          const bottom = 205;
+          const values = points.map((point) => point.value);
+          const min = Math.min(...values);
+          const max = Math.max(...values);
+          const span = max - min || Math.abs(max) || 1;
+          const x = (index) => points.length === 1
+            ? (left + right) / 2
+            : left + index * (right - left) / (points.length - 1);
+          const y = (value) => bottom - ((value - min) / span) * (bottom - top);
+          const axis = document.createElementNS(svgNs, "path");
+          axis.setAttribute("d", `M ${left} ${top} V ${bottom} H ${right}`);
+          axis.setAttribute("class", "axis");
+          svg.append(axis);
+          const polyline = document.createElementNS(svgNs, "polyline");
+          polyline.setAttribute("class", "line");
+          polyline.setAttribute("points", points.map((point, index) => `${x(index)},${y(point.value)}`).join(" "));
+          svg.append(polyline);
+          for (const [index, point] of points.entries()) {
+            const circle = document.createElementNS(svgNs, "circle");
+            circle.setAttribute("class", "point");
+            circle.setAttribute("cx", String(x(index)));
+            circle.setAttribute("cy", String(y(point.value)));
+            circle.setAttribute("r", "4");
+            const tooltip = document.createElementNS(svgNs, "title");
+            tooltip.textContent = `${new Date(point.date).toLocaleString()}: ${point.value.toFixed(3)} ${point.unit}`;
+            circle.append(tooltip);
+            svg.append(circle);
+          }
+          const minLabel = document.createElementNS(svgNs, "text");
+          minLabel.setAttribute("x", "0");
+          minLabel.setAttribute("y", String(bottom));
+          minLabel.setAttribute("class", "label");
+          minLabel.textContent = min.toPrecision(4);
+          svg.append(minLabel);
+          const maxLabel = document.createElementNS(svgNs, "text");
+          maxLabel.setAttribute("x", "0");
+          maxLabel.setAttribute("y", String(top + 4));
+          maxLabel.setAttribute("class", "label");
+          maxLabel.textContent = max.toPrecision(4);
+          svg.append(maxLabel);
+          const firstLabel = document.createElementNS(svgNs, "text");
+          firstLabel.setAttribute("x", String(left));
+          firstLabel.setAttribute("y", "235");
+          firstLabel.setAttribute("class", "label");
+          firstLabel.textContent = new Date(points[0].date).toLocaleDateString();
+          svg.append(firstLabel);
+          const lastLabel = document.createElementNS(svgNs, "text");
+          lastLabel.setAttribute("x", String(right));
+          lastLabel.setAttribute("y", "235");
+          lastLabel.setAttribute("text-anchor", "end");
+          lastLabel.setAttribute("class", "label");
+          lastLabel.textContent = new Date(points.at(-1).date).toLocaleDateString();
+          svg.append(lastLabel);
+          card.append(svg);
+          main.append(card);
+        }
+      }
+    </script>
+  </body>
+</html>
