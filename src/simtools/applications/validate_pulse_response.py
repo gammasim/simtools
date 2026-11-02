@@ -52,6 +52,7 @@ def main():
         site=args["site"],
         telescope_name=args["telescope"],
         model_reader=context.model_reader,
+        context=context,
     )
     table, waves = template_responses(
         model, args[ILLUMINATION], args[WIDTH_FRACTION], args.get(THRESHOLD_ADC)

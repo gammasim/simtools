@@ -76,6 +76,15 @@ def test_template_scaling_interpolation_and_holding(pulse_model):
     assert len(waves) == 20
 
 
+def test_first_response_level_uses_table(pulse_model):
+    table = pulse_model.get_parameter_table.return_value
+    selected = (table["template_kind"] == RESPONSE) & (table[INTENSITY] == 10)
+    table[AMPLITUDE][selected] *= 0.8
+    result, _ = pulse_response.template_responses(pulse_model, [9, 10, 10.001])
+    hg = result[(result["gain"] == "HG") & (result[RESPONSE] == "nonlinear")]
+    assert hg[PEAK].tolist() == pytest.approx([18, 16, 16.0014])
+
+
 def test_template_response_scan_requires_unified_parameter(pulse_model):
     pulse_model.get_parameter_table.return_value = Table({"time": [0, 1], AMPLITUDE: [0, 1]})
     with pytest.raises(ValueError, match="requires unified"):

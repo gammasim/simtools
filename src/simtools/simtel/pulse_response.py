@@ -165,9 +165,9 @@ def _interpolate_response(table, time, single, level):
     levels = np.unique(np.asarray(table[TABLE_INTENSITY], dtype=float))
     if levels.size < 2 or not np.all(np.isfinite(levels)) or levels[0] <= 0:
         raise ValueError("Non-linear pulse table requires two positive finite intensity levels")
-    if level <= levels[0]:
+    if level < levels[0]:
         return single * level
-    upper = min(np.searchsorted(levels, level), len(levels) - 1)
+    upper = min(np.searchsorted(levels, level, side="right"), len(levels) - 1)
     lower = max(0, upper - 1)
     fraction = np.clip((level - levels[lower]) / (levels[upper] - levels[lower]), 0, 1)
     pulses = []
