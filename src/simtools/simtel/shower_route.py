@@ -36,7 +36,6 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-from simtools import constants
 from simtools.corsika.photon_bunches import read_photon_bunches
 from simtools.model.model_utils import export_model_files
 from simtools.model.site_model import SiteModel
@@ -390,7 +389,7 @@ def create_route_inputs(routes, *, simulation_models_path=None, backend=None):
     simulation_models_path: str or Path or None
         Root of the simulation models; default: ``SIMTOOLS_SIMULATION_MODELS_PATH``.
     backend: str or None
-        Ray-tracing backend; default: the shower-photon backend.
+        Ray-tracing backend; default: obdeect.
 
     Returns
     -------
@@ -423,9 +422,7 @@ def _create_route_inputs(routes, simulation_models_path, backend, output_path):
             model_version=route.model_version,
             context=context,
         )
-        tracers[telescope_id] = create_shower_tracer(
-            telescope_model, name=backend or constants.SHOWER_PHOTON_RAY_TRACING_BACKEND
-        )
+        tracers[telescope_id] = create_shower_tracer(telescope_model, name=backend or "obdeect")
     return RouteInputs(
         tracers=tracers,
         observation_level_m=site_model.get_parameter_value_with_unit(
@@ -709,7 +706,7 @@ def parse_args(argv=None):
     )
     parser.add_argument(
         "--ray-tracing-backend",
-        default=constants.SHOWER_PHOTON_RAY_TRACING_BACKEND,
+        default="obdeect",
         help="Ray-tracing backend of the route.",
     )
     parser.add_argument(

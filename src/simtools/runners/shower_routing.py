@@ -238,7 +238,7 @@ class ShowerRouting:
 
     def _minimum_input_plane_height_m(self, telescope, theta_deg):
         """Return the minimum safe input plane height [m] of a telescope at a zenith angle."""
-        tracer = create_shower_tracer(telescope, name=self.context.software.ray_tracing_backend)
+        tracer = create_shower_tracer(telescope, name="obdeect")
         model = tracer.optical_model(theta_deg, DEFAULT_SEED)
         return minimum_input_plane_height_m(model, theta_deg)
 
@@ -291,7 +291,7 @@ class ShowerRouting:
             "--corsika-card",
             _absolute_path_argument(str(card_file)),
             "--ray-tracing-backend",
-            self.context.software.ray_tracing_backend,
+            "obdeect",
             "--seed",
             str(instrument_seed),
             "--tracing-seed",
