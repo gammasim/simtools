@@ -97,6 +97,21 @@ products:
     default_suffix: .multipipe.resources.json
     role: metadata
     retention: persistent
+  shower_route_resources:
+    suffixes: [.shower_route.resources.json]
+    default_suffix: .shower_route.resources.json
+    role: metadata
+    retention: persistent
+  telescope_route_map:
+    suffixes: [.telescope_map.json]
+    default_suffix: .telescope_map.json
+    role: intermediate
+    retention: persistent
+  camera_bunch_file:
+    suffixes: [.camera.iact.gz, .camera.iact.zst]
+    default_suffix: .camera.iact.gz
+    role: intermediate
+    retention: temporary
   sub_out:
     suffixes: [.out]
     default_suffix: .out

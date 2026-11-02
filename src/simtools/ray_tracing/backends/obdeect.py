@@ -216,6 +216,7 @@ class ObdeectBackend:
     """
 
     traces_light_sources = True
+    traces_shower_photons = True
 
     def __init__(self, telescope_model, site_model, label, zenith_angle, single_mirror_mode):
         del site_model
@@ -326,3 +327,55 @@ class ObdeectBackend:
     def camera_photons(self, request):
         """Photons of a calibration light source at the camera entrance, per pulse in blocks."""
         return self._tracer.trace_light_source(request)
+
+
+class ShowerTracer:
+    """
+    Optical models of one telescope for the photon bunches of air showers.
+
+    Parameters
+    ----------
+    tracer: ObdeectRayTracer
+        Ray tracer of the telescope model.
+    """
+
+    def __init__(self, tracer):
+        self._tracer = tracer
+
+    def optical_model(self, theta_deg, seed):
+        """
+        Optical model at a telescope zenith angle [deg] for an instrument seed.
+
+        The model takes the parameters of the telescope model unchanged: its telescope
+        structure is traced when the model has one.
+
+        Parameters
+        ----------
+        theta_deg: float
+            Telescope zenith angle [deg].
+        seed: int
+            Instrument seed (random mirror errors).
+
+        Returns
+        -------
+        obdeect.OpticalModel
+            Optical model (see ``ObdeectRayTracer.optical_model``).
+        """
+        return self._tracer.optical_model(theta_deg, seed)
+
+
+def make_shower_tracer(telescope_model):
+    """
+    Return the shower-photon tracer of a telescope model (see ``ShowerTracer``).
+
+    Parameters
+    ----------
+    telescope_model: TelescopeModel
+        Telescope model.
+
+    Returns
+    -------
+    ShowerTracer
+        Tracer providing ``optical_model(theta_deg, seed)``.
+    """
+    return ShowerTracer(ObdeectRayTracer(telescope_model))

@@ -1,4 +1,6 @@
+import io
 import struct
+import subprocess
 from pathlib import Path
 
 import astropy.units as u
@@ -91,6 +93,8 @@ def test_skipped_wavelengths_are_counted(tmp_test_directory, atmospheric_profile
     np.testing.assert_array_equal(telescope["x"], event["x"][[0, 4]])
     expected_ids = (np.uint64(1) << np.uint64(32)) | np.array([0, 4], dtype=np.uint64)
     np.testing.assert_array_equal(telescope["bunch_id"], expected_ids)
+    # Single-array files: the array id of the telescope block is 0.
+    assert telescope["array_id"] == 0
 
 
 def test_negative_wavelength_raises(tmp_test_directory, atmospheric_profile):
@@ -120,7 +124,7 @@ def test_bunch_ids_are_unique_and_encode_event_and_index(tmp_test_directory, atm
 def test_compact_format_raises(tmp_test_directory, atmospheric_profile):
     path = Path(tmp_test_directory) / "photons.iact"
     _write(path, [_bunches(2)], atmospheric_profile)
-    data = bytearray(path.read_bytes())
+    data = bytearray(Path(path).read_bytes())
     header = struct.pack("<Ii", PHOTON_OBJECT_TYPE, 0)
     position = data.index(header)
     struct.pack_into(
@@ -133,3 +137,93 @@ def test_compact_format_raises(tmp_test_directory, atmospheric_profile):
 
     with pytest.raises(NotImplementedError, match=path.name):
         list(read_photon_bunches(path))
+
+
+def _assert_same_telescopes(actual, expected):
+    assert len(actual) == len(expected)
+    for telescope, reference in zip(actual, expected, strict=True):
+        assert telescope.keys() == reference.keys()
+        for key, value in reference.items():
+            if isinstance(value, np.ndarray):
+                np.testing.assert_array_equal(telescope[key], value)
+            else:
+                assert telescope[key] == value
+
+
+def test_stream_reading_matches_file_reading(tmp_test_directory, atmospheric_profile):
+    path = tmp_test_directory / "photons.iact"
+    _write(path, [_bunches(3), _bunches(0), _bunches(2, offset=10.0)], atmospheric_profile)
+
+    expected = list(read_photon_bunches(path))
+    with subprocess.Popen(["cat", str(path)], stdout=subprocess.PIPE) as cat:
+        piped = list(read_photon_bunches(cat.stdout))
+
+    assert len(piped) == 3
+    assert piped[1]["size"].size == 0
+    _assert_same_telescopes(piped, expected)
+
+
+def test_stream_reading_handles_unbuffered_pipe(tmp_test_directory, atmospheric_profile):
+    path = tmp_test_directory / "photons.iact"
+    events = [_bunches(n) for n in (500, 700, 900)]
+    _write(path, events, atmospheric_profile)
+
+    expected = list(read_photon_bunches(path))
+    with subprocess.Popen(["cat", str(path)], stdout=subprocess.PIPE) as cat:
+        raw = io.FileIO(cat.stdout.fileno(), "rb", closefd=False)
+        piped = list(read_photon_bunches(raw))
+
+    _assert_same_telescopes(piped, expected)
+
+
+def test_stream_reading_from_bytes(tmp_test_directory, atmospheric_profile):
+    path = tmp_test_directory / "photons.iact"
+    _write(path, [_bunches(4), _bunches(1, offset=3.0)], atmospheric_profile)
+
+    _assert_same_telescopes(
+        list(read_photon_bunches(io.BytesIO(Path(path).read_bytes()))),
+        list(read_photon_bunches(path)),
+    )
+
+
+@pytest.mark.parametrize(
+    "stream",
+    [io.StringIO("not binary"), io.TextIOWrapper(io.BytesIO()), object()],
+)
+def test_non_binary_stream_raises(stream):
+    with pytest.raises(TypeError, match="binary stream"):
+        read_photon_bunches(stream)
+
+
+def test_stream_reading_is_forward_only(tmp_test_directory, atmospheric_profile):
+    path = tmp_test_directory / "photons.iact"
+    _write(path, [_bunches(2)], atmospheric_profile)
+
+    telescopes = read_photon_bunches(io.BytesIO(Path(path).read_bytes()))
+    next(telescopes)
+    with pytest.raises(StopIteration):
+        next(telescopes)
+
+
+def test_on_object_called_after_each_processed_object(tmp_test_directory, atmospheric_profile):
+    path = tmp_test_directory / "two_events.iact"
+    _write(
+        path,
+        [
+            [(0, _bunches(2))],
+            [(0, _bunches(1)), (1, _bunches(3))],
+        ],
+        atmospheric_profile,
+    )
+    with open(path, "rb") as stream:
+        objects = []
+        bunches = read_photon_bunches(stream, on_object=lambda obj: objects.append(obj.header.type))
+        first = next(bunches)
+        # The telescope object of the first bunch is still being processed when it is yielded.
+        assert first["telescope_id"] == 0
+        assert objects == [1200, 1201, 1216, 1202, 1203]
+        rest = list(bunches)
+
+    assert len(rest) == 2
+    assert objects.count(1204) == 3
+    assert objects[-1] == 1210

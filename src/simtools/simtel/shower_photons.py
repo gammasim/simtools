@@ -8,6 +8,7 @@ of the input coordinates.
 """
 
 import logging
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -23,6 +24,8 @@ CORSIKA_LENGTH_UNIT_M = 0.01
 # in input units. Bunches are projected from this plane up to the input plane.
 CORSIKA_PLANE_Z = 0.0
 CM_PER_M = 100.0
+# Margin above the highest incoming obscurer for the minimum input plane height [m].
+INPUT_PLANE_MARGIN_M = 1.0
 SPEED_OF_LIGHT_CM_PER_NS = 29.9792458
 _TRACE_INPUT_KEYS = ("x", "y", "cx", "cy", "time_ns", "zem", "size", "wavelength_nm", "bunch_id")
 
@@ -51,6 +54,35 @@ class ShowerBunchFrame:
     plane_z: float
 
 
+def minimum_input_plane_height_m(optical_model, theta_deg, *, margin_m=INPUT_PLANE_MARGIN_M):
+    """Return the minimum safe input plane height above the telescope sphere centre [m].
+
+    The input plane must lie above every incoming obscurer of the optical model, or photons
+    starting below an obscurer never meet it and its shadow is lost. The height is the top of the
+    highest incoming obscurer (``optical_model.max_incoming_obscurer_z_m()``, telescope frame) plus
+    ``margin_m``. The plane height along the telescope axis is the input height times
+    cos(theta), so the minimum input height is that value divided by cos(theta). Without incoming
+    obscurers the top is taken as the sphere centre.
+
+    Parameters
+    ----------
+    optical_model: obdeect.OpticalModel
+        Optical model of the telescope at the zenith angle of the bunches.
+    theta_deg: float
+        Telescope zenith angle [deg].
+    margin_m: float
+        Margin above the highest incoming obscurer [m].
+
+    Returns
+    -------
+    float
+        Minimum input plane height above the telescope sphere centre [m].
+    """
+    top_m = optical_model.max_incoming_obscurer_z_m()
+    top_m = 0.0 if top_m is None else float(top_m)
+    return (top_m + margin_m) / math.cos(math.radians(theta_deg))
+
+
 def shower_bunch_frame(theta, phi, *, input_plane_height_m):
     """Return the frame of the photon-bunch input plane for CORSIKA bunches.
 
@@ -58,8 +90,8 @@ def shower_bunch_frame(theta, phi, *, input_plane_height_m):
     columns of the rotation are the telescope-frame images of the three input
     unit vectors, so rotation[:, j] is the image of the j-th input axis.
 
-    The offset is zero because CORSIKA bunches are written per telescope, with
-    x and y relative to the telescope sphere centre.
+    The axes offset of a telescope (``axes_offsets``) is applied by the optical model, which
+    displaces the input origin in the telescope frame; the frame offset here is therefore zero.
 
     Parameters
     ----------
@@ -69,7 +101,7 @@ def shower_bunch_frame(theta, phi, *, input_plane_height_m):
         Telescope azimuth in the array frame [deg].
     input_plane_height_m: float
         Height of the input plane above the telescope sphere centre [m]. It must be
-        above the highest telescope element (20 m for the MST).
+        above the incoming obscurers (see minimum_input_plane_height_m).
 
     Returns
     -------
@@ -181,7 +213,7 @@ def write_camera_bunch_file(
         Telescope of the IACT file whose photon bunches are written (one telescope per file).
     input_plane_height_m: float
         Height of the input plane above the telescope sphere centre [m]. It must be above the
-        highest telescope element (20 m for the MST).
+        incoming obscurers (see minimum_input_plane_height_m).
     threads: int
         Number of threads used for tracing (0: default of the optical model).
 
@@ -191,9 +223,16 @@ def write_camera_bunch_file(
         Number of events written.
     """
     model = tracer.optical_model(theta_deg, seed)
+    minimum_m = minimum_input_plane_height_m(model, theta_deg)
+    if input_plane_height_m < minimum_m:
+        raise ValueError(
+            f"input_plane_height_m = {input_plane_height_m:.2f} m is below the minimum "
+            f"{minimum_m:.2f} m for {telescope_model.name}: the input plane must lie above the "
+            "incoming obscurers (see minimum_input_plane_height_m)"
+        )
     frame = shower_bunch_frame(theta_deg, phi_deg, input_plane_height_m=input_plane_height_m)
     events = (
-        _camera_bunches_of_event(
+        camera_bunches_of_event(
             model,
             bunches,
             frame,
@@ -222,7 +261,7 @@ def write_camera_bunch_file(
     return count
 
 
-def _camera_bunches_of_event(
+def camera_bunches_of_event(
     model, bunches, frame, *, seed, threads, dual_mirror, camera_rotation_deg
 ):
     """Trace the photon bunches of one event and return them as camera photon bunches."""

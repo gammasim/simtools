@@ -80,6 +80,8 @@ RAY_TRACING_BACKEND_CLASSES = {
     "obdeect": "simtools.ray_tracing.backends.obdeect:ObdeectBackend",
 }
 RAY_TRACING_BACKENDS = tuple(RAY_TRACING_BACKEND_CLASSES)
+# Backend of the shower-photon route (photon bunches traced for sim_telarray).
+SHOWER_PHOTON_RAY_TRACING_BACKEND = "obdeect"
 # Random instrument instances (mirror-error realisations) of a ray-tracing image.
 RAY_TRACING_INSTRUMENT_INSTANCES = 20
 # Maximum include filename length accepted by sim_telarray parser (80-char getword buffer).

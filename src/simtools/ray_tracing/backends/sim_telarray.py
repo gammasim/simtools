@@ -42,6 +42,8 @@ class SimtelBackend:
 
     # Calibration light: sim_telarray's LightEmission programs and optics.
     traces_light_sources = False
+    # Air-shower photon bunches: sim_telarray traces the photons itself.
+    traces_shower_photons = False
 
     def __init__(self, telescope_model, site_model, label, zenith_angle, single_mirror_mode):
         self._logger = logging.getLogger(__name__)

@@ -195,3 +195,30 @@ def get_backend(name=None):
             f"Unknown ray-tracing backend {name!r}; choose from: {valid_names}"
         ) from exc
     return getattr(import_module(module_name), class_name)
+
+
+def create_shower_tracer(telescope_model, name=None):
+    """
+    Return the shower-photon tracer of a telescope model from a ray-tracing backend.
+
+    The tracer provides ``optical_model(theta_deg, seed)``. The backend module
+    provides it as ``make_shower_tracer(telescope_model)``; backends without it
+    do not trace air-shower photons.
+
+    Parameters
+    ----------
+    telescope_model: TelescopeModel
+        Telescope model.
+    name: str or None
+        Backend name; default: the configured ``ray_tracing_backend``.
+
+    Returns
+    -------
+    object
+        Shower-photon tracer of the backend.
+    """
+    backend = get_backend(name)
+    factory = getattr(import_module(backend.__module__), "make_shower_tracer", None)
+    if factory is None:
+        raise ValueError(f"Ray-tracing backend {backend.__name__} does not trace shower photons")
+    return factory(telescope_model)

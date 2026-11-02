@@ -223,6 +223,9 @@ class Simulator:
             runner_args["save_corsika_output"] = settings.config.args.get(
                 "save_corsika_output", False
             )
+            runner_args["shower_route_mode"] = settings.config.args.get(
+                "shower_route_mode", "stream"
+            )
 
         return runner_class(**runner_args)
 

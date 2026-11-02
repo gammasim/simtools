@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import dataclasses
+import math
 from types import SimpleNamespace
 
 import astropy.units as u
@@ -15,6 +16,7 @@ from simtools.simtel.shower_photons import (
     CORSIKA_PLANE_Z,
     SPEED_OF_LIGHT_CM_PER_NS,
     ShowerBunchFrame,
+    minimum_input_plane_height_m,
     project_to_input_plane,
     shower_bunch_frame,
     write_camera_bunch_file,
@@ -31,7 +33,8 @@ SEED = 4242
 FAKE_POSITION_M = np.array([0.1, 0.2, 16.0])
 FAKE_DIRECTION = np.array([0.0, 0.0, -1.0])
 INPUT_ZEM_CM = (216350.0, 200000.0)
-INPUT_PLANE_HEIGHT_M = 20.0
+INPUT_PLANE_HEIGHT_M = 30.0
+INCOMING_OBSCURER_TOP_M = 27.1
 
 
 def _assert_proper_rotation(rotation):
@@ -102,8 +105,12 @@ def test_shower_bunch_frame_fields():
 class _FakeOpticalModel:
     """Optical model returning one fixed camera photon per input bunch, recording its calls."""
 
-    def __init__(self):
+    def __init__(self, top_m=INCOMING_OBSCURER_TOP_M):
         self.calls = []
+        self.top_m = top_m
+
+    def max_incoming_obscurer_z_m(self):
+        return self.top_m
 
     def trace_bunches(self, bunches, **kwargs):
         self.calls.append((dict(bunches), kwargs))
@@ -191,7 +198,7 @@ def _write_camera_file(tracer, iact_file, telescope_model, output_path, atmosphe
         atmospheric_profile=atmospheric_profile,
         seed=SEED,
         telescope_id=0,
-        input_plane_height_m=INPUT_PLANE_HEIGHT_M,
+        input_plane_height_m=kw.get("input_plane_height_m", INPUT_PLANE_HEIGHT_M),
         threads=kw.get("threads", 2),
     )
 
@@ -329,3 +336,73 @@ def test_project_to_input_plane_inclined_time_correction():
     assert projected["time_ns"][0] == pytest.approx(-path_length / SPEED_OF_LIGHT_CM_PER_NS)
     assert projected["x"][0] == pytest.approx(height / cz * cx)
     assert projected["y"][0] == pytest.approx(height / cz * cy)
+
+
+def test_minimum_input_plane_height_m_is_obscurer_top_plus_margin_along_the_axis():
+    model = _FakeOpticalModel(top_m=27.1)
+    expected = (27.1 + 1.0) / math.cos(math.radians(THETA_DEG))
+    assert minimum_input_plane_height_m(model, THETA_DEG) == pytest.approx(expected)
+    # The minimum height along the telescope axis is the obscurer top plus the margin.
+    assert minimum_input_plane_height_m(model, THETA_DEG) * math.cos(math.radians(THETA_DEG)) == (
+        pytest.approx(28.1)
+    )
+    assert minimum_input_plane_height_m(model, 0.0, margin_m=2.0) == pytest.approx(29.1)
+
+
+def test_minimum_input_plane_height_m_without_incoming_obscurers():
+    model = _FakeOpticalModel(top_m=None)
+    assert minimum_input_plane_height_m(model, 0.0) == pytest.approx(1.0)
+
+
+def test_write_camera_bunch_file_rejects_plane_below_incoming_obscurer(
+    tmp_test_directory, atmospheric_profile, telescope_model
+):
+    iact_file = _write_iact_file(tmp_test_directory / "input.iact", atmospheric_profile)
+    tracer = _FakeTracer()
+    output_path = tmp_test_directory / "camera.iact"
+
+    with pytest.raises(ValueError, match="below the minimum"):
+        _write_camera_file(
+            tracer,
+            iact_file,
+            telescope_model,
+            output_path,
+            atmospheric_profile,
+            input_plane_height_m=20.0,
+        )
+    assert tracer.model.calls == []
+    assert not output_path.exists()
+
+
+@pytest.mark.parametrize(("theta", "phi"), [(0.0, 0.0), (20.0, 0.0), (35.0, 120.0)])
+def test_shower_bunch_frame_offset_is_zero_for_any_pointing(theta, phi):
+    # The telescope's axes offset is applied by the optical model, not in the input frame.
+    frame = shower_bunch_frame(theta=theta, phi=phi, input_plane_height_m=30.0)
+    np.testing.assert_array_equal(frame.offset_m, np.zeros(3))
+
+
+def test_write_camera_bunch_file_leaves_the_axes_offset_to_the_optical_model(
+    tmp_test_directory, atmospheric_profile, telescope_model
+):
+    iact_file = _write_iact_file(tmp_test_directory / "input.iact", atmospheric_profile)
+    tracer = _FakeTracer()
+    write_camera_bunch_file(
+        tracer,
+        iact_file,
+        telescope_model,
+        tmp_test_directory / "camera.iact",
+        theta_deg=THETA_DEG,
+        phi_deg=0.0,
+        dual_mirror=False,
+        camera_rotation_deg=0.0,
+        observation_level_m=2147.0,
+        telescope_radius_m=2.0,
+        atmospheric_profile=atmospheric_profile,
+        seed=SEED,
+        telescope_id=0,
+        input_plane_height_m=INPUT_PLANE_HEIGHT_M,
+        threads=1,
+    )
+    assert tracer.model.calls
+    for _, kwargs in tracer.model.calls:
+        np.testing.assert_array_equal(kwargs["frame_offset_m"], np.zeros(3))
