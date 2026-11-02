@@ -16,7 +16,7 @@ from simtools.model import telescope_geometry
 from simtools.model_repository.asset_names import get_export_file_name
 from simtools.reporting.figure_cache import figure_cache_key
 from simtools.simtel import simtel_file_writer
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 from simtools.visualization import (
     camera_plot_utils,
     plot_mirrors,
@@ -144,7 +144,9 @@ def _supported_gauss_exponential(value):
     if not isinstance(value, (list, tuple)) or len(value) != 3:
         return None
     shape, width, exp_decay = value
-    if shape != "Gauss-Exponential" or width <= 0 or exp_decay <= 0:
+    if value_conversion.normalize_model_enum(shape) != "gauss-exponential":
+        return None
+    if width <= 0 or exp_decay <= 0:
         return None
     return shape, width, exp_decay
 

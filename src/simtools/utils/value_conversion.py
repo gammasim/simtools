@@ -731,6 +731,11 @@ def replace_placeholders_recursively(data, replacements):
     return data
 
 
+def normalize_model_enum(value):
+    """Return a case-insensitive key for a string model value, or None otherwise."""
+    return value.casefold() if isinstance(value, str) else None
+
+
 def _quantity_repr_value(text):
     """Return the value part of a ``<Quantity ...>`` item (without the closing ``>``), or None."""
     prefix = "<Quantity"

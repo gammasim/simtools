@@ -10,6 +10,16 @@ from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.utils.value_conversion import normalize_model_enum
+
+
+def trigger_threshold_parameter(trigger):
+    """Return the threshold parameter for a model trigger type, or None if unknown."""
+    return {
+        "analogsum": "asum_threshold",
+        "digitalsum": "dsum_threshold",
+        "majority": "discriminator_threshold",
+    }.get(normalize_model_enum(trigger))
 
 
 class TelescopeModel(ModelParameter):
