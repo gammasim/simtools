@@ -351,6 +351,35 @@ def test_observatory_report_uses_declared_patch_history(tmp_test_directory, mock
     assert model_parameters.call_args_list[0].kwargs["model_version"] == "5.0.0"
 
 
+@pytest.mark.parametrize("changed", [True, False])
+def test_observatory_delta_renders_changed_column_table(
+    tmp_test_directory, mocker, run_context, changed
+):
+    rp = ReadParameters(
+        args={"site": "South", "model_version": "6.0.1"},
+        output_path=tmp_test_directory,
+        context=run_context,
+    )
+    value = {"columns": ["illuminator_id", "visible"], "rows": [["ILLS-01", True]]}
+    previous = {"illuminator_telescope_visibility": _delta_entry(value)}
+    current_value = {**value, "rows": [["ILLS-01", False]]} if changed else value
+    current = {"illuminator_telescope_visibility": _delta_entry(current_value)}
+    previous["unchanged"] = _delta_entry(value)
+    current["unchanged"] = _delta_entry(value)
+    mocker.patch.object(rp.model_reader, "get_model_parameters", side_effect=[previous, current])
+
+    assert rp._produce_observatory_delta_report("6.0.0")
+    content = (tmp_test_directory / "OBS-South.md").read_text(encoding="utf-8")
+    if changed:
+        assert "| 1 rows | 1 rows |" in content
+        assert "## Illuminator Telescope Visibility" in content
+        assert "| ILLS-01 | False |" in content
+        assert "## Unchanged" not in content
+    else:
+        assert "No parameter changes detected" in content
+        assert "## Illuminator Telescope Visibility" not in content
+
+
 def test_patch_report_falls_back_when_metadata_is_missing(tmp_test_directory, run_context):
     rp = ReadParameters(
         args={"model_version": "6.0.1"},

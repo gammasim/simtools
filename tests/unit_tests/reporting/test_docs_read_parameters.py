@@ -151,30 +151,34 @@ def test__format_parameter_value(data, expected, tmp_path, run_context):
     assert read_parameters._format_parameter_value("test", *data) == expected
 
 
-def test_produce_observatory_report(mocker, tmp_path, run_context):
+def test_produce_observatory_report(mocker, tmp_test_directory, run_context):
     from astropy.table import QTable
 
     from simtools.reporting import docs_parameter_plots
 
-    rp = ReadParameters({"site": "North", "model_version": "6.0.0"}, tmp_path, context=run_context)
+    rp = ReadParameters(
+        {"site": "North", "model_version": "6.0.0"},
+        tmp_test_directory,
+        context=run_context,
+    )
 
     # Empty data -> warning, no file
     mock_logger = mocker.patch("logging.Logger.warning")
     with patch.object(rp.model_reader, "get_model_parameters", return_value={}):
         rp.produce_observatory_report()
     mock_logger.assert_called_once()
-    assert not (tmp_path / "OBS-North.md").exists()
+    assert not (tmp_test_directory / "OBS-North.md").exists()
 
     # Full data -> file with layouts, triggers, skips None-valued param
     mock_params = {
-        "site_elevation": {"value": 2200, "unit": "m", "parameter_version": "1.0"},
+        "site_elevation": {"value": 2200, "unit": "m", "parameter_version": "1.0.0"},
         "array_layouts": {
             "value": [
                 {"name": "L1", "elements": ["LST1"]},
                 {"name": "L2", "elements": ["SSTS-01"]},
             ],
             "unit": None,
-            "parameter_version": "1.0",
+            "parameter_version": "1.0.0",
         },
         "array_triggers": {
             "value": [
@@ -187,9 +191,23 @@ def test_produce_observatory_report(mocker, tmp_path, run_context):
                 }
             ],
             "unit": None,
-            "parameter_version": "1.0",
+            "parameter_version": "1.0.0",
         },
-        "none_valued_param": {"value": None, "unit": None, "parameter_version": "1.0"},
+        "illuminator_telescope_visibility": {
+            "value": {
+                "column_units": ["dimensionless", "dimensionless", "dimensionless"],
+                "columns": ["illuminator_id", "telescope_id", "visible"],
+                "rows": [
+                    ["ILLS-01", "LSTS-01", True],
+                    ["ILLS-01", "LSTS-02", False],
+                    ["ILLS-01", "LSTS-03", True],
+                    ["ILLS-01", "LSTS-04", False],
+                ],
+            },
+            "unit": None,
+            "parameter_version": "1.0.0",
+        },
+        "none_valued_param": {"value": None, "unit": None, "parameter_version": "1.0.0"},
     }
     mock_read_layouts = mocker.patch.object(
         docs_parameter_plots,
@@ -224,7 +242,7 @@ def test_produce_observatory_report(mocker, tmp_path, run_context):
     )
     with patch.object(rp.model_reader, "get_model_parameters", return_value=mock_params):
         rp.produce_observatory_report()
-    content = (tmp_path / "OBS-North.md").read_text()
+    content = (tmp_test_directory / "OBS-North.md").read_text(encoding="utf-8")
     assert "# Observatory Parameters" in content
     assert "| site_elevation | 2200 m |" in content
     assert "none_valued_param" not in content
@@ -232,6 +250,41 @@ def test_produce_observatory_report(mocker, tmp_path, run_context):
     assert "/_images/array_layout_" in content
     assert "## Array Trigger Configurations" in content
     mock_read_layouts.assert_called_once()
+    assert (
+        "| illuminator_telescope_visibility | [View Illuminator Telescope Visibility]"
+        "(#illuminator-telescope-visibility) | 1.0.0 |" in content
+    )
+    assert "| illuminator_id | telescope_id | visible |" in content
+    assert "| ILLS-01 | LSTS-01 | True |" in content
+    assert "| ILLS-01 | LSTS-04 | False |" in content
+    assert content.index("## Array Trigger Configurations") < content.index(
+        "## Illuminator Telescope Visibility"
+    )
+
+
+def test_observatory_report_empty_column_table_has_no_section_link(tmp_test_directory, run_context):
+    rp = ReadParameters(
+        {"site": "North", "model_version": "6.0.0"},
+        tmp_test_directory,
+        context=run_context,
+    )
+    mock_params = {
+        "illuminator_telescope_visibility": {
+            "value": {
+                "column_units": ["dimensionless", "dimensionless", "dimensionless"],
+                "columns": ["illuminator_id", "telescope_id", "visible"],
+                "rows": [],
+            },
+            "unit": None,
+            "parameter_version": "1.0.0",
+        }
+    }
+    with patch.object(rp.model_reader, "get_model_parameters", return_value=mock_params):
+        rp.produce_observatory_report()
+
+    content = (tmp_test_directory / "OBS-North.md").read_text(encoding="utf-8")
+    assert "[View Illuminator Telescope Visibility]" not in content
+    assert "## Illuminator Telescope Visibility" not in content
 
 
 def test_produce_simulation_configuration_report(tmp_path, run_context):

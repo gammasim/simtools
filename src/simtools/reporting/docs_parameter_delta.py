@@ -59,6 +59,9 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
             return "-"
         value_data = param_data.get("value")
         file_flag = param_data.get("file", False)
+        column_rows = self._column_table_rows(value_data)
+        if column_rows is not None:
+            return f"{len(column_rows)} rows"
         if self._is_list_of_dicts(value_data):
             return f"{len(value_data)} rows"
         # For delta reports, never convert referenced files to local markdown.
@@ -147,7 +150,18 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
                 file.write("No parameter changes detected.\n")
             else:
                 self._write_delta_report_table(file, changes)
+                if collection == "sites":
+                    self._write_changed_column_tables(file, base, current)
         return True
+
+    def _write_changed_column_tables(self, file, base, current):
+        """Write current column tables whose values or metadata changed."""
+        for parameter, data in sorted(current.items()):
+            if not self._parameter_changed(base.get(parameter), data):
+                continue
+            rows = self._column_table_rows(data.get("value"))
+            if rows:
+                self._write_dict_table(parameter, file, rows, data.get("unit") or " ")
 
     def _produce_array_element_delta_report(self, base_model_version):
         """Produce a compact delta report for patch model versions."""
