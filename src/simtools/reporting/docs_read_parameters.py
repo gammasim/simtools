@@ -147,6 +147,17 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
             and all(isinstance(entry, dict) for entry in value_data)
         )
 
+    @staticmethod
+    def _column_table_rows(value_data):
+        """Convert a column-oriented table value to rows of dictionaries."""
+        if not isinstance(value_data, dict):
+            return None
+        columns = value_data.get("columns")
+        rows = value_data.get("rows")
+        if columns is None or rows is None:
+            return None
+        return [dict(zip(columns, row)) for row in rows]
+
     def _export_model_files(self, parameters):
         """Export the model files of the given parameters to the output model directory."""
         Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
@@ -578,49 +589,63 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
             )
         file.write("\n")
 
+    def _collect_parameter_tables(self, all_parameter_data):
+        """Collect dictionary and column-oriented tables from parameter data."""
+        dict_tables = []
+        column_tables = []
+        column_table_parameters = set()
+        for name, data in sorted(all_parameter_data.items()):
+            value = data.get("value")
+            unit = data.get("unit") or " "
+            table_rows = self._column_table_rows(value)
+            if table_rows is not None:
+                column_tables.append((name, table_rows, unit))
+                column_table_parameters.add(name)
+            elif name not in ("array_layouts", "array_triggers") and self._is_list_of_dicts(value):
+                dict_tables.append((name, value, unit))
+        return dict_tables, column_tables, column_table_parameters
+
+    def _write_parameter_table_row(self, file, param_name, param_data, column_table_parameters):
+        """Write one parameter row, linking values that have separate table sections."""
+        value = param_data.get("value")
+        if value is None:
+            return
+        parameter_version = param_data.get("parameter_version")
+        if param_name == "array_layouts":
+            formatted_value = "[View Array Layouts](#array-layouts)"
+        elif param_name == "array_triggers":
+            formatted_value = "[View Trigger Configurations](#array-trigger-configurations)"
+        elif param_name in column_table_parameters:
+            title = param_name.replace("_", " ").title()
+            anchor = param_name.replace("_", "-")
+            formatted_value = f"[View {title}](#{anchor})"
+        else:
+            formatted_value = self._format_parameter_value(
+                param_name,
+                value,
+                param_data.get("unit") or " ",
+                param_data.get("file", False),
+                parameter_version,
+                model_version=self.model_version,
+            )
+        file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
+
     def _write_parameters_table(self, file, all_parameter_data):
         """Write the main parameters table of the report."""
         file.write(
             "| Parameter | Value | Parameter Version |\n"
             "|-----------|--------|-------------------|\n"
         )
-        dict_tables = [
-            (name, data.get("value"), data.get("unit") or " ")
-            for name, data in sorted(all_parameter_data.items())
-            if name not in ("array_layouts", "array_triggers")
-            and self._is_list_of_dicts(data.get("value"))
-        ]
-
+        dict_tables, column_tables, column_table_parameters = self._collect_parameter_tables(
+            all_parameter_data
+        )
         for param_name, param_data in sorted(all_parameter_data.items()):
-            value = param_data.get("value")
-            if value is None:
-                continue
-            unit = param_data.get("unit") or " "
-            parameter_version = param_data.get("parameter_version")
-            if param_name == "array_layouts":
-                file.write(
-                    f"| array_layouts | [View Array Layouts](#array-layouts) | "
-                    f"{parameter_version} |\n"
-                )
-            elif param_name == "array_triggers":
-                file.write(
-                    "| array_triggers | [View Trigger Configurations]"
-                    f"(#array-trigger-configurations) | {parameter_version} |\n"
-                )
-            else:
-                formatted_value = self._format_parameter_value(
-                    param_name,
-                    value,
-                    unit,
-                    param_data.get("file", False),
-                    parameter_version,
-                    model_version=self.model_version,
-                )
-                file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
+            self._write_parameter_table_row(file, param_name, param_data, column_table_parameters)
 
         file.write("\n")
         for param_name, value, unit in dict_tables:
             self._write_dict_table(param_name, file, value, unit)
+        return column_tables
 
     def produce_observatory_report(self):
         """Produce a markdown report of all observatory parameters for a given site."""
@@ -643,7 +668,7 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
         self._export_model_files(all_parameter_data)
         with output_filename.open("w", encoding="utf-8") as file:
             file.write(f"# Observatory Parameters - {self.site} Site\n\n")
-            self._write_parameters_table(file, all_parameter_data)
+            column_tables = self._write_parameters_table(file, all_parameter_data)
             if "array_layouts" in all_parameter_data:
                 self._write_array_layouts_section(
                     file, all_parameter_data["array_layouts"]["value"]
@@ -652,6 +677,8 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
                 self._write_array_triggers_section(
                     file, all_parameter_data["array_triggers"]["value"]
                 )
+            for parameter, value, unit in column_tables:
+                self._write_dict_table(parameter, file, value, unit)
 
     def get_calibration_data(self, all_parameter_data, array_element):
         """Get calibration data and descriptions for a given array element."""
