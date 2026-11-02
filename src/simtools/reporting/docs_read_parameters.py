@@ -598,7 +598,7 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
             value = data.get("value")
             unit = data.get("unit") or " "
             table_rows = self._column_table_rows(value)
-            if table_rows is not None:
+            if table_rows:
                 column_tables.append((name, table_rows, unit))
                 column_table_parameters.add(name)
             elif name not in ("array_layouts", "array_triggers") and self._is_list_of_dicts(value):

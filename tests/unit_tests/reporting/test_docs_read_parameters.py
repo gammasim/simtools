@@ -221,6 +221,31 @@ def test_produce_observatory_report(mocker, tmp_test_directory, run_context):
     )
 
 
+def test_observatory_report_empty_column_table_has_no_section_link(tmp_test_directory, run_context):
+    rp = ReadParameters(
+        {"site": "North", "model_version": "6.0.0"},
+        tmp_test_directory,
+        context=run_context,
+    )
+    mock_params = {
+        "illuminator_telescope_visibility": {
+            "value": {
+                "column_units": ["dimensionless", "dimensionless", "dimensionless"],
+                "columns": ["illuminator_id", "telescope_id", "visible"],
+                "rows": [],
+            },
+            "unit": None,
+            "parameter_version": "1.0.0",
+        }
+    }
+    with patch.object(rp.model_reader, "get_model_parameters", return_value=mock_params):
+        rp.produce_observatory_report()
+
+    content = (tmp_test_directory / "OBS-North.md").read_text(encoding="utf-8")
+    assert "[View Illuminator Telescope Visibility]" not in content
+    assert "## Illuminator Telescope Visibility" not in content
+
+
 def test_produce_simulation_configuration_report(tmp_path, run_context):
     args = {
         "telescope": "LSTN-01",
