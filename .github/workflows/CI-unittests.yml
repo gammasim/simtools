@@ -132,7 +132,7 @@ jobs:
 
       - name: Upload coverage report
         if: matrix.python-version == '3.14'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: coverage-python-3.14
           path: coverage.xml
@@ -279,7 +279,7 @@ jobs:
 
       - name: Upload soft-failed Sonar logs
         if: steps.sonar_scan.outputs.soft_failed == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: sonar-scanner-logs
           path: sonar-scanner-attempt-*.log
