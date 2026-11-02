@@ -7,13 +7,13 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from simtools import constants
 from simtools.application.model_reader import create_model_reader_from_configuration
-from simtools.configuration import defaults
 from simtools.corsika.build_options import get_installed_corsika_build_variants
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.dependencies import get_corsika_version
 from simtools.model.site_model import SiteModel
 from simtools.utils import names
+from simtools.utils.primary_particle import PrimaryParticle
 
 
 @dataclass(frozen=True)
@@ -263,7 +263,9 @@ def _get_corsika_environment(corsika_path, variants, context):
 
 def _resolve_corsika_path(args_dict):
     return Path(
-        args_dict.get("corsika_path") or os.getenv("SIMTOOLS_CORSIKA_PATH") or defaults.CORSIKA_PATH
+        args_dict.get("corsika_path")
+        or os.getenv("SIMTOOLS_CORSIKA_PATH")
+        or constants.CORSIKA_PATH
     )
 
 

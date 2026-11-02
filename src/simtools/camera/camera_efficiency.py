@@ -16,7 +16,7 @@ from simtools.camera.camera_efficiency_calculator import (
 )
 from simtools.context import RunContext
 from simtools.io import ascii_handler
-from simtools.model.model_utils import initialize_simulation_models
+from simtools.model.model_utils import export_model_files, initialize_simulation_models
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
@@ -86,6 +86,8 @@ class CameraEfficiency:
                 model_reader=self.context.model_reader,
                 context=self.context,
             )
+            export_model_files(initialized_telescope_model)
+            export_model_files(initialized_site_model)
             self.telescope_model = (
                 initialized_telescope_model if telescope_model is None else telescope_model
             )

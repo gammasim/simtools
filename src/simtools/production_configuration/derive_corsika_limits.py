@@ -267,7 +267,6 @@ def _generate_corsika_limits_from_histogram_file(
 ):
     """Derive CORSIKA limits from one or more precomputed trigger-histogram files."""
     context = context or RunContext.from_environment()
-    selected_array_names = _selected_array_names(args_dict)
     plot_layouts = _normalize_plot_histogram_selection(args_dict.get("plot_histograms", False))
     loaded_histograms = []
     input_files = histogram_files or _resolve_trigger_histogram_files(
@@ -277,7 +276,7 @@ def _generate_corsika_limits_from_histogram_file(
         loaded_histograms.extend(
             load_event_data_histograms(
                 histogram_file,
-                array_names=selected_array_names,
+                array_names=args_dict.get("array_layout_name"),
             )
         )
     output_dir = output_dir or context.paths.get_output_directory()
@@ -295,7 +294,10 @@ def _generate_corsika_limits_from_histogram_file(
     production_indices = sorted({int(row["production_index"]) for row, _ in usable_histograms})
     production_subdirs = {}
     if plot_layouts != _NO_PLOT_LAYOUTS and len(production_indices) > 1:
-        production_subdirs = _build_production_subdirectories(production_indices, output_dir)
+        for production_index in production_indices:
+            production_subdir = output_dir / f"production_{production_index}"
+            production_subdir.mkdir(parents=True, exist_ok=True)
+            production_subdirs[production_index] = production_subdir
 
     results = []
     for row, histograms in usable_histograms:
@@ -312,7 +314,6 @@ def _generate_corsika_limits_from_histogram_file(
             output_subdir,
             differential_loss_bins_per_decade,
             args_dict.get("plot_reduced_histograms", False),
-            context=context,
         )
         result.update(
             {
@@ -384,14 +385,8 @@ def _plot_selected_for_array(plot_layouts, array_name):
 
 def _has_positive_energy_histogram(histograms):
     """Return whether finalized histograms contain a usable energy distribution."""
-    histogram_definitions = getattr(histograms, "histograms", None)
-    if not isinstance(histogram_definitions, dict):
-        return True
-
-    energy = histogram_definitions.get("energy")
-    if not isinstance(energy, Histogram):
-        return False
-    return bool(np.any(np.asarray(energy.values, dtype=float) > 0))
+    energy = histograms.histograms.get("energy")
+    return isinstance(energy, Histogram) and bool(np.any(energy.values > 0))
 
 
 def _generate_corsika_limits_from_histogram_directory(
@@ -531,8 +526,7 @@ def _canonical_particle_name(metadata_row):
 def _metadata_angle_in_degrees(value, column_name):
     """Return one finite viewcone metadata value in degrees."""
     try:
-        value = value.to_value(u.deg) if hasattr(value, "to_value") else float(value)
-        value = float(value)
+        value = float(value.to_value(u.deg) if hasattr(value, "to_value") else value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"{column_name} metadata is not a scalar angle") from exc
     if not np.isfinite(value):
@@ -556,19 +550,18 @@ def _resolve_trigger_histogram_files(trigger_histogram_file):
     return [trigger_histogram_file]
 
 
-def _build_production_subdirectories(production_indices, output_dir):
-    """Create stable plot directories keyed by production index."""
-    production_subdirs = {}
-    for production_index in production_indices:
-        output_subdir = output_dir / f"production_{production_index}"
-        output_subdir.mkdir(parents=True, exist_ok=True)
-        production_subdirs[int(production_index)] = output_subdir
-    return production_subdirs
-
-
-def _selected_array_names(args_dict):
-    """Return the selected array-layout names."""
-    return args_dict.get("array_layout_name")
+def _histograms_to_plot(histograms, limits, plot_reduced_histograms):
+    """Return the histograms to plot, excluding the energy-only and constant-viewcone ones."""
+    return {
+        name: histogram
+        for name, histogram in histograms.histograms.items()
+        if name != "energy"
+        and (not plot_reduced_histograms or name in _REDUCED_PLOT_HISTOGRAM_NAMES)
+        and not (
+            limits.get("angular_distance_is_constant", False)
+            and name.startswith("angular_distance_vs_")
+        )
+    }
 
 
 def _derive_limits_from_histograms(
@@ -580,7 +573,6 @@ def _derive_limits_from_histograms(
     output_subdir,
     differential_loss_bins_per_decade,
     plot_reduced_histograms=False,
-    context=None,
 ):
     """Compute, optionally plot, and return limits from finalized histograms."""
     limits = {
@@ -605,26 +597,9 @@ def _derive_limits_from_histograms(
     )
 
     if plot_histograms:
-        context = context or RunContext.from_environment()
-        plot_output_path = output_subdir or context.paths.get_output_directory()
-        histograms_to_plot = {
-            name: histogram for name, histogram in histograms.histograms.items() if name != "energy"
-        }
-        if plot_reduced_histograms:
-            histograms_to_plot = {
-                name: histogram
-                for name, histogram in histograms_to_plot.items()
-                if name in _REDUCED_PLOT_HISTOGRAM_NAMES
-            }
-        if limits.get("angular_distance_is_constant", False):
-            histograms_to_plot = {
-                name: histogram
-                for name, histogram in histograms_to_plot.items()
-                if not name.startswith("angular_distance_vs_")
-            }
         plot_simtel_event_histograms.plot(
-            histograms_to_plot,
-            output_path=plot_output_path,
+            _histograms_to_plot(histograms, limits, plot_reduced_histograms),
+            output_path=output_subdir,
             limits=limits,
             array_name=array_name,
             add_distance_projections=True,
@@ -641,65 +616,41 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
     Apply the allowed loss criteria per energy bin and return the maximum limit
     """
     energy_range = [float(histograms.energy_bins[0]), float(histograms.energy_bins[-1])]
-    axis_configs = {
-        "core_distance": {
-            "x_bins": histograms.core_distance_bins,
-            "name": "core_scatter",
-            "unit": "m",
-        },
-        "angular_distance": {
-            "x_bins": histograms.view_cone_bins,
-            "name": "viewcone",
-            "unit": "deg",
-        },
-    }
-
-    per_axis_limits = {}
-    constant_angular_distance = _get_constant_data_value(histograms, "angular_distance")
     differential_energy_bins = None
     if bins_per_decade > 0:
         low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
         high = int(np.ceil(np.log10(np.max(histograms.energy_bins))))
         differential_energy_bins = np.logspace(low, high, (high - low) * bins_per_decade + 1)
 
-    for axis_name, config in axis_configs.items():
-        if axis_name == "angular_distance" and constant_angular_distance is not None:
-            axis_max = constant_angular_distance
-            curve_x = [axis_max, axis_max]
-            curve_y = energy_range
-            _logger.info(
-                f"All simulated events have angular distance {axis_max} deg; "
-                "using this exact value as the viewcone limit."
-            )
-        elif bins_per_decade > 0:
-            axis_max, curve_x, curve_y = _differential_upper_limits(
-                histograms.histograms[f"{axis_name}_vs_energy"].values,
-                config["x_bins"],
-                histograms.energy_bins,
-                differential_energy_bins,
-                allowed_losses[axis_name],
-                config["name"],
-                config["unit"],
-            )
-        else:
-            axis_max = _integral_limits(
-                histograms.histograms[axis_name].values,
-                config["x_bins"],
-                allowed_losses[axis_name]["loss_fraction"],
-                allowed_losses[axis_name]["loss_min_events"],
-                limit_type="upper",
-            )
-            curve_x = [axis_max, axis_max]
-            curve_y = energy_range
-
-        per_axis_limits[axis_name] = {
-            "max": axis_max,
-            "curve": {"x": curve_x, "y": curve_y},
-            "curve_key": f"{axis_name}_vs_energy_curve",
-        }
-
-    core_max = per_axis_limits["core_distance"]["max"]
-    vc_max = per_axis_limits["angular_distance"]["max"]
+    core_max, core_curve = _axis_upper_limit(
+        histograms,
+        "core_distance",
+        histograms.core_distance_bins,
+        "core_scatter",
+        "m",
+        allowed_losses["core_distance"],
+        differential_energy_bins,
+        energy_range,
+    )
+    constant_angular_distance = _get_constant_data_value(histograms, "angular_distance")
+    if constant_angular_distance is not None:
+        vc_max = constant_angular_distance
+        vc_curve = {"x": [vc_max, vc_max], "y": energy_range}
+        _logger.info(
+            f"All simulated events have angular distance {vc_max} deg; "
+            "using this exact value as the viewcone limit."
+        )
+    else:
+        vc_max, vc_curve = _axis_upper_limit(
+            histograms,
+            "angular_distance",
+            histograms.view_cone_bins,
+            "viewcone",
+            "deg",
+            allowed_losses["angular_distance"],
+            differential_energy_bins,
+            energy_range,
+        )
 
     upper_radius_limit = core_max * u.m
     upper_radius_limit = _is_close(
@@ -722,11 +673,45 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
         "upper_radius_limit": upper_radius_limit,
         "viewcone_radius": viewcone_radius,
         "angular_distance_is_constant": constant_angular_distance is not None,
-        per_axis_limits["core_distance"]["curve_key"]: per_axis_limits["core_distance"]["curve"],
-        per_axis_limits["angular_distance"]["curve_key"]: per_axis_limits["angular_distance"][
-            "curve"
-        ],
+        "core_distance_vs_energy_curve": core_curve,
+        "angular_distance_vs_energy_curve": vc_curve,
     }
+
+
+def _axis_upper_limit(
+    histograms,
+    axis_name,
+    x_bins,
+    name,
+    unit,
+    allowed_loss,
+    differential_energy_bins,
+    energy_range,
+):
+    """Return the upper limit of one distance axis and its limit curve.
+
+    Limits are derived per energy slice when ``differential_energy_bins`` is given,
+    otherwise from the integrated distribution.
+    """
+    if differential_energy_bins is None:
+        axis_max = _integral_limits(
+            histograms.histograms[axis_name].values,
+            x_bins,
+            allowed_loss["loss_fraction"],
+            allowed_loss["loss_min_events"],
+        )
+        return axis_max, {"x": [axis_max, axis_max], "y": energy_range}
+
+    axis_max, curve_x, curve_y = _differential_upper_limits(
+        histograms.histograms[f"{axis_name}_vs_energy"].values,
+        x_bins,
+        histograms.energy_bins,
+        differential_energy_bins,
+        allowed_loss,
+        name,
+        unit,
+    )
+    return axis_max, {"x": curve_x, "y": curve_y}
 
 
 def _get_constant_data_value(histograms, name, abs_tol=0.01):
@@ -767,7 +752,6 @@ def _differential_upper_limits(
             x_bins,
             allowed_loss["loss_fraction"],
             allowed_loss["loss_min_events"],
-            limit_type="upper",
         )
         keep = np.searchsorted(x_bins, limit, side="left")
         loss = (total - float(np.sum(projected[:keep]))) / total
@@ -877,8 +861,7 @@ def _process_result_row(res, cols, columns, units):
             units[k] = val.unit
         else:
             columns[k].append(val)
-            if k not in units:
-                units[k] = None
+            units.setdefault(k, None)
 
 
 def _enforce_minimum_value(candidate, minimum):
@@ -896,40 +879,31 @@ def _enforce_minimum_value(candidate, minimum):
     return candidate if candidate >= minimum else minimum
 
 
-def _round_value(key, val, row=None):
-    """Round value based on key type."""
+def _round_value(key, val, row):
+    """Round value based on key type, using the row for the constant-viewcone and energy floor."""
     if key == "lower_energy_limit":
-        rounded = np.floor(val * 1e3) / 1e3
-        if row is not None:
-            rounded = _enforce_minimum_value(rounded, row.get("br_energy_min"))
-        return rounded
+        return _enforce_minimum_value(np.floor(val * 1e3) / 1e3, row.get("br_energy_min"))
     if key == "upper_radius_limit":
         return np.ceil(val / 25) * 25
     if key == "viewcone_radius":
-        if row is not None and row.get("angular_distance_is_constant", False):
+        if row.get("angular_distance_is_constant", False):
             return val
         return np.ceil(val / 0.25) * 0.25
     return val
 
 
 def _create_table_columns(cols, columns, units):
-    """Create table columns with appropriate data types."""
-    table_cols = []
-    for k in cols:
-        col_data = columns[k]
-        col_description = COLUMN_DESCRIPTIONS.get(k)
-        if any(isinstance(v, list | tuple) for v in col_data):
-            col = Column(
-                data=col_data,
-                name=k,
-                unit=units.get(k),
-                dtype=object,
-                description=col_description,
-            )
-        else:
-            col = Column(data=col_data, name=k, unit=units.get(k), description=col_description)
-        table_cols.append(col)
-    return table_cols
+    """Create table columns; list-valued columns use object dtype."""
+    return [
+        Column(
+            data=columns[k],
+            name=k,
+            unit=units.get(k),
+            dtype=object if any(isinstance(v, list | tuple) for v in columns[k]) else None,
+            description=COLUMN_DESCRIPTIONS.get(k),
+        )
+        for k in cols
+    ]
 
 
 def _find_bin_index_for_value(bin_edges, value):
@@ -955,11 +929,11 @@ def _apply_broad_range_lower_energy_floor(derived_limit, broad_range_min, energy
     return _enforce_minimum_value(derived_limit, broad_range_min)
 
 
-def _integral_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_type="lower"):
+def _integral_limits(hist, bin_edges, loss_fraction, loss_min_events=10):
     """
-    Compute integral limits based on the loss fraction and minimal required lost events.
+    Compute the upper integral limit from the loss fraction and minimal required lost events.
 
-    Add or subtract one bin to be on the safe side of the limit.
+    The limit is one bin above the threshold bin, to be on the safe side of the limit.
 
     Parameters
     ----------
@@ -971,8 +945,6 @@ def _integral_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_t
         Fraction of events to be lost.
     loss_min_events : int, optional
         Minimum number of events to be lost after applying a limit.
-    limit_type : str, optional
-        Type of limit ('lower' or 'upper'). Default is 'lower'.
 
     Returns
     -------
@@ -987,15 +959,9 @@ def _integral_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_t
         max_kept_for_min_loss,
     )
     threshold = np.clip(threshold, 0.0, total_events)
-    if limit_type == "upper":
-        cum = np.cumsum(hist)
-        idx = np.searchsorted(cum, threshold) + 1
-        return bin_edges[min(idx, len(bin_edges) - 1)]
-    if limit_type == "lower":
-        cum = np.cumsum(hist[::-1])
-        idx = np.searchsorted(cum, threshold)
-        return bin_edges[max(len(bin_edges) - 1 - idx, 0)]
-    raise ValueError("limit_type must be 'lower' or 'upper'")
+    cum = np.cumsum(hist)
+    idx = np.searchsorted(cum, threshold) + 1
+    return bin_edges[min(idx, len(bin_edges) - 1)]
 
 
 def _find_low_energy_threshold_from_histogram(counts, bin_edges, threshold_fraction=0.1):

@@ -6,10 +6,10 @@ from unittest.mock import Mock
 import astropy.units as u
 import pytest
 
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.model_writer import SimtelModelWriter
 from simtools.simulation.configuration import get_model_writer
+from simtools.utils.primary_particle import PrimaryParticle
 
 _NORTH = "North"
 _NSB_FLUX = "get_nsb_integrated_flux"
@@ -266,7 +266,7 @@ def test_export_simtel_telescope_config_files(array_model_north):
     for tel_model in am.telescope_models.values():
         tel_model.configuration_writers = {"sim_telarray": Mock()}
 
-    am.export_simtel_telescope_config_files()
+    get_model_writer(am).export_simtel_telescope_config_files()
 
     for tel_model in am.telescope_models.values():
         tel_model.configuration_writers[
@@ -294,7 +294,7 @@ def test_export_simtel_telescope_config_files_skips_duplicates(mocker, run_conte
 
     am.telescope_models = {"LSTN-01": tel_model_1, "LSTN-02": tel_model_2}
 
-    ArrayModel.export_simtel_telescope_config_files(am)
+    get_model_writer(am).export_simtel_telescope_config_files()
 
     # Verify write was called only once (for the first telescope with this name)
     tel_model_1.configuration_writers[
@@ -325,7 +325,7 @@ def test_export_sim_telarray_config_file(array_model_north, mocker):
         get_model_writer(am), "_get_additional_simtel_metadata", return_value=mock_metadata
     )
 
-    am.export_sim_telarray_config_file()
+    get_model_writer(am).export_sim_telarray_config_file()
 
     # Verify site model export was called
     am.site_model.model_reader.export_model_files.assert_called_once()

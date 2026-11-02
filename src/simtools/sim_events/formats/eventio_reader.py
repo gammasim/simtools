@@ -15,13 +15,13 @@ from eventio.simtel import (
     TriggerInformation,
 )
 
-from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.simtel.simtel_io_metadata import (
+from simtools.sim_events.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
     read_sim_telarray_metadata,
 )
 from simtools.utils.geometry import calculate_circular_mean, geographic_to_corsika_azimuth
 from simtools.utils.names import get_common_identifier_from_array_element_name
+from simtools.utils.primary_particle import PrimaryParticle
 
 # Suppress all UserWarnings from corsikaio - no CORSIKA versions <7.7 are supported anyway
 warnings.filterwarnings("ignore", category=UserWarning, module=r"corsikaio\.subblocks\..*")

@@ -3,7 +3,7 @@
 Shared run settings and selection of software-specific configuration writers.
 
 ```{eval-rst}
-.. automodule:: simtools.simulation.parameters
+.. automodule:: simtools.sim_events.simulation_parameters
    :members:
 
 .. automodule:: simtools.simulation.configuration

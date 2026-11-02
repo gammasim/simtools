@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-from simtools.configuration import defaults
+from simtools import constants
 
 
 @dataclass(frozen=True)
@@ -261,6 +261,6 @@ def get_corsika_build_report(corsika_path=None):
         If the manifest is invalid or declares a missing executable.
     """
     resolved_path = Path(
-        corsika_path or os.getenv("SIMTOOLS_CORSIKA_PATH") or defaults.CORSIKA_PATH
+        corsika_path or os.getenv("SIMTOOLS_CORSIKA_PATH") or constants.CORSIKA_PATH
     )
     return format_corsika_build_variants(get_installed_corsika_build_variants(resolved_path))

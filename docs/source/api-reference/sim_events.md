@@ -55,12 +55,19 @@ Provide tools for reading, writing, and processing simulated shower and telescop
    :members:
 ```
 
+## Trigger-histogram file format
+
+```{eval-rst}
+.. automodule:: simtools.sim_events.trigger_histogram_format
+   :members:
+```
+
 ## Validators
 
 (sim_events_validators-1)=
 
 ```{eval-rst}
-.. automodule:: simtools.sim_events.validate_run_outputs
+.. automodule:: simtools.sim_events.hdf5_output_validation
    :members:
 ```
 
@@ -78,5 +85,15 @@ Provide tools for reading, writing, and processing simulated shower and telescop
 
 ```{eval-rst}
 .. automodule:: simtools.sim_events.production_comparison_statistics
+   :members:
+```
+
+## Engine output validation
+
+```{eval-rst}
+.. automodule:: simtools.simtel.output_validation
+   :members:
+
+.. automodule:: simtools.corsika.output_validation
    :members:
 ```

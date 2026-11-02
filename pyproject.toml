@@ -414,39 +414,6 @@ layers = [
   "simtools.histogram",
   "simtools.utils",
 ]
-ignore_imports = [
-  "simtools.corsika.build_options -> simtools.configuration.defaults",
-  "simtools.data_model.format_checkers -> simtools.corsika.primary_particle",
-  "simtools.data_model.setting_workflow -> simtools.runners.simtools_runner",
-  "simtools.model.array_model -> simtools.simulation.configuration",
-  "simtools.model.model_utils -> simtools.simulation.configuration",
-  "simtools.model.site_model -> simtools.corsika.corsika_config",
-  "simtools.model.site_model -> simtools.simulation.configuration",
-  "simtools.model.telescope_model -> simtools.simulation.configuration",
-  "simtools.production_configuration.grid -> simtools.configuration.argument_helpers",
-  "simtools.production_configuration.grid -> simtools.configuration.defaults",
-  "simtools.sim_events.formats.eventio_reader -> simtools.corsika.primary_particle",
-  "simtools.sim_events.formats.eventio_reader -> simtools.simtel.simtel_io_metadata",
-  "simtools.sim_events.validate_run_outputs -> simtools.job_execution.log_inspector",
-  "simtools.sim_events.validate_run_outputs -> simtools.model.mirrors",
-  "simtools.sim_events.validate_run_outputs -> simtools.model_repository.asset_names",
-  "simtools.sim_events.validate_run_outputs -> simtools.production_configuration.trigger_histograms",
-  "simtools.sim_events.validate_run_outputs -> simtools.simtel.sim_telarray_metadata",
-  "simtools.sim_events.validate_run_outputs -> simtools.simtel.simtel_io_metadata",
-  "simtools.production_configuration.comparison -> simtools.camera.trace_analysis",
-  "simtools.production_configuration.comparison -> simtools.production_configuration.trigger_histograms",
-  "simtools.production_configuration.comparison -> simtools.simtel.simtel_event_reader",
-  "simtools.production_configuration.comparison -> simtools.simtel.simtel_io_metadata",
-  "simtools.sim_events.reader -> simtools.corsika.primary_particle",
-  "simtools.simtel.simulator_array -> simtools.runners.simtel_runner",
-  "simtools.simtel.simulator_light_emission -> simtools.runners.runner_services",
-  "simtools.simtel.simulator_light_emission -> simtools.runners.simtel_runner",
-  "simtools.simtel.simulator_ray_tracing -> simtools.runners.simtel_runner",
-  "simtools.visualization.plot_production_grid -> simtools.production_configuration.jobs_io",
-  "simtools.visualization.plot_simtel_events -> simtools.camera.trace_analysis",
-  "simtools.visualization.plot_simtel_events -> simtools.simtel.simtel_event_reader",
-  "simtools.visualization.plot_simtel_events -> simtools.simtel.simtel_io_metadata",
-]
 
 [[tool.importlinter.contracts]]
 name = "visualization receives model and engine data"
@@ -454,7 +421,3 @@ type = "forbidden"
 source_modules = [ "simtools.visualization" ]
 forbidden_modules = [ "simtools.ray_tracing", "simtools.camera", "simtools.model" ]
 allow_indirect_imports = true
-ignore_imports = [
-  "simtools.visualization.plot_simtel_events -> simtools.camera.trace_analysis",
-  "simtools.visualization.plot_simtel_events -> simtools.model.camera",
-]

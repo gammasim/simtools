@@ -9,9 +9,7 @@ lower layer. Library code never imports `simtools.applications`, and
 production code never imports test helpers.
 
 Import-linter enforces the package layers, and Ruff checks private cross-module
-imports. The `ignore_imports` list of `[tool.importlinter]` in `pyproject.toml`
-is a ratchet: reduce it as the architecture cleanup proceeds and do not add
-entries.
+imports.
 
 ```text
 5  applications/            thin CLI wrappers

@@ -6,7 +6,7 @@ import stat
 from pathlib import Path
 
 from simtools.job_execution.process_accounting import build_accounting_command
-from simtools.runners.runner_services import RunnerServices
+from simtools.job_execution.runner_services import RunnerServices
 from simtools.runners.stages import CHERENKOV_PHOTONS, StreamTo
 
 

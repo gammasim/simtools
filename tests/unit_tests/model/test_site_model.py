@@ -6,6 +6,7 @@ import astropy.units as u
 import pytest
 from astropy.table import QTable
 
+from simtools.corsika.corsika_config import get_site_config_parameters
 from simtools.model.site_model import SiteModel
 
 logger = logging.getLogger()
@@ -21,13 +22,13 @@ def test_get_corsika_site_parameters(model_version, run_context):
 
     assert "corsika_observation_level" in _north.get_corsika_site_parameters()
 
-    assert "ARRANG" in _north.get_corsika_site_parameters(config_file_style=True)
+    assert "ARRANG" in get_site_config_parameters(_north)
 
 
 def test_get_corsika_site_parameters_with_model_directory(array_model_north, run_context):
     model_directory = array_model_north.get_config_directory()
-    corsika_site_parameters = array_model_north.site_model.get_corsika_site_parameters(
-        config_file_style=True, model_directory=model_directory
+    corsika_site_parameters = get_site_config_parameters(
+        array_model_north.site_model, model_directory=model_directory
     )
     assert "model/" in str(corsika_site_parameters["IACT ATMOFILE"][0])
 
