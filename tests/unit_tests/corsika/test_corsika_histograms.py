@@ -2,12 +2,11 @@
 
 from pathlib import Path
 
-import boost_histogram as bh
 import numpy as np
 import pytest
 from astropy import units as u
 
-from simtools.corsika.corsika_histograms import CorsikaHistograms
+from simtools.corsika.corsika_histograms import CorsikaHistograms, _WeightedHistogram
 
 
 # Common test fixtures and helpers
@@ -154,10 +153,10 @@ def test__get_hist_1d_from_numpy_with_none(monkeypatch):
 def test_get_hist_2d_projection_returns_expected_shapes():
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     # Create a simple 2D histogram
-    hist = bh.Histogram(bh.axis.Regular(3, -1, 2), bh.axis.Regular(4, 0, 4))
+    hist = _WeightedHistogram([np.linspace(-1, 2, 4), np.linspace(0, 4, 5)])
     # Fill with some values
-    hist.fill(0, 1)
-    hist.fill(1, 2)
+    hist.fill([0], [1], weight=[1])
+    hist.fill([1], [2], weight=[1])
     # Call the method
     values, x_edges, y_edges, _uncertainties = ch.get_hist_2d_projection(hist)
     assert values.shape == (1, 4, 3)  # Transposed: (1, y_bins, x_bins)
@@ -167,6 +166,66 @@ def test_get_hist_2d_projection_returns_expected_shapes():
     assert isinstance(values, np.ndarray)
     assert isinstance(x_edges, np.ndarray)
     assert isinstance(y_edges, np.ndarray)
+
+
+def test_weighted_photon_counts_projections_and_density(photon_dtype):
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    ch.hist = ch._set_2d_distributions(xy_maximum=1 * u.m, xy_bin=2)
+    ch.hist.update(ch._set_1d_distributions(r_max=2 * u.m, bins=2))
+    ch.events = np.zeros(1, dtype=[("zenith_deg", "f8"), ("num_photons", "f8")])
+    ch._density_samples = []
+    photons = np.array(
+        [
+            (-50, -50, 0, 0, 0, 100, 2, 400),
+            (50, 50, 0, 0, 0, 100, 3, 400),
+            (50, 200, 0, 0, 0, 100, 5, 400),
+            (100, 0, 0, 0, 0, 100, 7, 400),
+        ],
+        dtype=photon_dtype,
+    )
+    telescope = np.array([(0, 0, 100)], dtype=[("x", "f8"), ("y", "f8"), ("r", "f8")])
+    ch._fill_histograms([photons], 0, telescope, rotate_photons=False)
+    ch._fill_histograms([photons], 0, telescope, rotate_photons=False)
+
+    values, x_edges, y_edges, errors = ch.get_hist_2d_projection(ch.hist["counts_xy"]["histogram"])
+    np.testing.assert_allclose(values, [[[4, 0], [0, 6]]])
+    np.testing.assert_allclose(errors, [[[np.sqrt(8), 0], [0, np.sqrt(18)]]])
+    np.testing.assert_allclose(x_edges, [[-1, 0, 1]])
+    np.testing.assert_allclose(y_edges, [[-1, 0, 1]])
+    for axis, expected, variance in (("x", [4, 16], [8, 68]), ("y", [4, 20], [8, 116])):
+        counts, edges, uncertainty = ch.get_hist_1d_projection(
+            "unused", {"projection": ["counts_xy", axis]}
+        )
+        np.testing.assert_allclose(counts, [expected])
+        np.testing.assert_allclose(uncertainty, [np.sqrt(variance)])
+        np.testing.assert_allclose(edges, [[-1, 0, 1]])
+
+    ch._populate_density_from_counts()
+    density = ch.hist["density_xy_from_counts"]
+    np.testing.assert_allclose(density["hist_values"], values)
+    np.testing.assert_allclose(density["uncertainties"], errors)
+    radial = ch.hist["density_r_from_counts"]
+    np.testing.assert_allclose(radial["hist_values"], [[10 / np.pi, 14 / (3 * np.pi)]])
+    np.testing.assert_allclose(
+        radial["uncertainties"], [[np.sqrt(26) / np.pi, np.sqrt(98) / (3 * np.pi)]]
+    )
+    assert np.isclose(ch.events["num_photons"][0], 34)
+
+
+def test_descending_axis_boundaries_and_flow():
+    hist = _WeightedHistogram([np.linspace(120, 0, 5)])
+    hist.fill([121, 120, 90, 60, 30, 0, -1], weight=np.arange(1, 8))
+    view = hist.view(flow=True)
+    np.testing.assert_allclose(view["value"], [1, 2, 3, 4, 5, 13])
+    np.testing.assert_allclose(view["variance"], [1, 4, 9, 16, 25, 85])
+
+
+def test_logarithmic_axis_weighted_bins():
+    hist = _WeightedHistogram([np.array([1, 10, 100])], ["log"])
+    hist.fill([0, 1, 10, 100], weight=[1, 2, 3, 4])
+    view = hist.view(flow=True)
+    np.testing.assert_allclose(view["value"], [1, 2, 3, 4])
+    np.testing.assert_allclose(view["variance"], [1, 4, 9, 16])
 
 
 @pytest.mark.parametrize("rotate", [True, False])
@@ -215,27 +274,21 @@ def test_create_regular_axes_parametrized(scale):
     if scale == "linear":
         hist = {"x_bins": [5, 0, 10, "linear"], "y_bins": [4, -2, 2, "linear"]}
         axes = ch._create_regular_axes(hist, ["x_bins", "y_bins"])
-        assert axes[0].size == 5
-        assert axes[1].size == 4
-        assert "transform" not in str(axes[0])
-        assert "transform" not in str(axes[1])
+        np.testing.assert_allclose(axes[0], np.linspace(0, 10, 6))
+        np.testing.assert_allclose(axes[1], np.linspace(-2, 2, 5))
     elif scale == "log":
         hist = {"x_bins": [3, 1, 100, "log"], "y_bins": [2, 10, 100, "log"]}
         axes = ch._create_regular_axes(hist, ["x_bins", "y_bins"])
-        assert "transform=log" in str(axes[0])
-        assert "transform=log" in str(axes[1])
+        np.testing.assert_allclose(axes[0], np.geomspace(1, 100, 4))
+        np.testing.assert_allclose(axes[1], np.geomspace(10, 100, 3))
     else:  # with units
         hist = {
             "x_bins": [2, 0 * u.m, 2 * u.m, "linear"],
             "y_bins": [2, -1 * u.s, 1 * u.s, "linear"],
         }
         axes = ch._create_regular_axes(hist, ["x_bins", "y_bins"])
-        assert "transform" not in str(axes[0])
-        assert "transform" not in str(axes[1])
-        assert axes[0].edges[0] == 0
-        assert axes[0].edges[-1] == 2
-        assert axes[1].edges[0] == -1
-        assert axes[1].edges[-1] == 1
+        np.testing.assert_allclose(axes[0], [0, 1, 2])
+        np.testing.assert_allclose(axes[1], [-1, 0, 1])
 
 
 def test_read_event_headers_creates_events(monkeypatch, tmp_path):
@@ -289,34 +342,34 @@ def test_corsika_histograms_init_file_not_exists(tmp_path):
         CorsikaHistograms(non_existing_file)
 
 
-def test_get_hist_1d_projection_boost_hist():
+def test_get_hist_1d_projection_weighted_hist():
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     hist = {
         "x_bins": [5, 0, 5, "linear"],
-        "histogram": bh.Histogram(bh.axis.Regular(5, 0, 5)),
+        "histogram": _WeightedHistogram([np.linspace(0, 5, 6)]),
     }
     # Fill histogram with values
-    hist["histogram"].fill([0, 1, 2, 3, 4])
+    hist["histogram"].fill([0, 1, 2, 3, 4], weight=np.ones(5))
     result = ch.get_hist_1d_projection("dummy", hist)
     counts, edges, uncertainties = result
     assert counts.shape == (1, 5)
     assert edges.shape == (1, 6)
-    assert uncertainties is None
+    np.testing.assert_allclose(uncertainties, [[1, 1, 1, 1, 1]])
     assert np.sum(counts) == 5
 
 
-def test_get_hist_1d_projection_boost_2d_projection():
+def test_get_hist_1d_projection_2d_projection():
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
-    hist_2d = bh.Histogram(bh.axis.Regular(3, 0, 3), bh.axis.Regular(2, 0, 2))
-    hist_2d.fill(0, 0)
-    hist_2d.fill(1, 1)
+    hist_2d = _WeightedHistogram([np.arange(4), np.arange(3)])
+    hist_2d.fill([0], [0], weight=[1])
+    hist_2d.fill([1], [1], weight=[1])
     ch.hist = {"test_2d": {"histogram": hist_2d}}
     hist = {"projection": ["test_2d", "x"]}
     result = ch.get_hist_1d_projection("dummy", hist)
     counts, edges, uncertainties = result
     assert counts.shape[1] == 3
     assert edges.shape[1] == 4
-    assert uncertainties is None
+    np.testing.assert_allclose(uncertainties, [[1, 1, 0]])
     assert np.sum(counts) == 2
 
 
@@ -386,10 +439,7 @@ def test_filter_density_histograms_missing_keys():
 def test_density_and_unc_with_double_storage():
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
 
-    hist = bh.Histogram(bh.axis.Regular(3, 0, 3), storage=bh.storage.Double())
-    hist.fill([0.5, 1.5, 2.5], weight=[5, 10, 15])
-
-    view = hist.view()
+    view = np.array([5, 10, 15])
     areas = np.array([2.0, 2.0, 2.0])
 
     density, unc = ch._density_and_unc(view, areas)
