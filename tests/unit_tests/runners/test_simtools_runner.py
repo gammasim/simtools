@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -22,6 +24,10 @@ SIMULATION_MODELS_GIT_PATH = "simulation_models_git_path"
 SIMULATION_MODELS_GIT_REVISION = "simulation_models_git_revision"
 BASELINE_MODELS_PATH = "/baseline/simulation-models"
 TELESCOPE_THROUGHPUT_APPLICATION = "simtools-validate-telescope-throughput"
+
+
+def test_runner_imports_in_fresh_process():
+    subprocess.run([sys.executable, "-c", "import simtools.runners.simtools_runner"], check=True)
 
 
 def _runner_args(config_file="dummy_config.yml", steps=None, ignore_runtime_environment=False):
