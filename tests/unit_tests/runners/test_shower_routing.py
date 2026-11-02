@@ -2,7 +2,10 @@
 
 import json
 import math
+import re
+import shlex
 from dataclasses import replace
+from pathlib import Path
 from types import SimpleNamespace
 
 import astropy.units as u
@@ -10,6 +13,9 @@ import pytest
 
 from simtools.job_execution.runner_services import RunnerServices
 from simtools.runners.shower_routing import ShowerRouting, _shower_route_seeds
+
+SHOWER_ROUTE_MODULE = "simtools.simtel.shower_route"
+PIPE_SEPARATOR = " | "
 
 
 class _Telescope:
@@ -63,27 +69,63 @@ def route_inputs(corsika_config_mock_array_model):
     return _Routing(config, context), _SimulatorArray(config, context)
 
 
+def _option(args, name):
+    """Return the value following a command-line option."""
+    return args[args.index(name) + 1]
+
+
+def _split_stream_line(line):
+    """Return the route and sim_telarray shell texts of a piped (stream) line."""
+    route_text, simtel_text = line.split(PIPE_SEPARATOR, 1)
+    return route_text, simtel_text
+
+
 @pytest.mark.parametrize("input_file", ["-", "events.corsika.zst"])
 def test_routing_commands_by_telescope_type(route_inputs, input_file):
     routing, simulator = route_inputs
     lines = routing.commands(simulator, 1, input_file)
-    route_lines = [line for line in lines if "simtools.simtel.shower_route" in line]
-    assert len(route_lines) == 2
-    assert all("--seed 11 --tracing-seed 22" in line for line in route_lines)
-    assert all("--ray-tracing-backend obdeect" in line for line in route_lines)
-    assert all("shower_route.log" in line for line in route_lines)
-    assert any("--telescope-ids 0,1" in line for line in route_lines)
-    assert any("--telescope-ids 2" in line for line in route_lines)
-    if input_file == "-":
-        assert len(lines) == 2
-        assert all(" | env -u MULTIPIPE_SEQUENTIAL " in line for line in lines)
-        assert all("--input - --output -" in line for line in lines)
+    streamed = input_file == "-"
+
+    # One route and one sim_telarray command per telescope type.
+    if streamed:
+        pairs = [_split_stream_line(line) for line in lines]
+        route_texts = [route for route, _ in pairs]
+        simtel_texts = [simtel for _, simtel in pairs]
+        assert all(PIPE_SEPARATOR in line for line in lines)
     else:
-        assert len(lines) == 4
-        assert all("events.corsika.zst" in line for line in route_lines)
-        assert all(".camera.iact.gz" in line for line in lines)
-    assert any("Bypass_Optics=1" in line for line in lines)
-    assert any("Bypass_Optics=2" in line for line in lines)
+        assert not any(PIPE_SEPARATOR in line for line in lines)
+        route_texts = [line for line in lines if SHOWER_ROUTE_MODULE in line]
+        simtel_texts = [line for line in lines if SHOWER_ROUTE_MODULE not in line]
+    assert len(route_texts) == 2
+    assert len(simtel_texts) == 2
+
+    # Options of the route itself, after the process accounting wrapper's own options.
+    route_args = [shlex.split(text) for text in route_texts]
+    route_args = [args[args.index(SHOWER_ROUTE_MODULE) :] for args in route_args]
+    assert {_option(args, "--telescope-ids") for args in route_args} == {"0,1", "2"}
+    for args in route_args:
+        assert _option(args, "--seed") == "11"
+        assert _option(args, "--tracing-seed") == "22"
+        assert _option(args, "--ray-tracing-backend") == "obdeect"
+    if streamed:
+        for args in route_args:
+            assert _option(args, "--input") == "-"
+            assert _option(args, "--output") == "-"
+    else:
+        for args in route_args:
+            assert Path(_option(args, "--input")).name == "events.corsika.zst"
+
+    # sim_telarray reads from stdin for streams, and from the camera bunch file otherwise.
+    for text in simtel_texts:
+        last_argument = shlex.split(text)[-1]
+        if streamed:
+            assert "env -u MULTIPIPE_SEQUENTIAL" in text
+            assert last_argument == "-"
+        else:
+            assert last_argument.endswith(".camera.iact.gz")
+
+    bypass_levels = {re.search(r"Bypass_Optics=(\d+)", text).group(1) for text in simtel_texts}
+    assert bypass_levels == {"1", "2"}
     assert len(simulator.file_list["sim_telarray_output"]) == 2
     assert all(
         path.name.startswith(("LST_", "MST_"))
@@ -117,8 +159,6 @@ def test_chain_writes_routing_at_the_correct_stage(
     tmp_test_directory,
     mode,
 ):
-    from pathlib import Path
-
     from simtools.runners.chain_runner import ChainRunner
     from simtools.runners.corsika_stage import CorsikaStage
     from simtools.runners.stages import StageInputs

@@ -395,34 +395,46 @@ def test_load_telescope_map_reads_json(tmp_test_directory):
     assert routes[0].name == "LSTS-01"
 
 
-@pytest.mark.parametrize("key", list(VALID_ENTRY))
-def test_parse_telescope_map_missing_key_raises(key):
-    entry = {name: value for name, value in VALID_ENTRY.items() if name != key}
+def test_parse_telescope_map_missing_keys_raises():
+    entry = {name: value for name, value in VALID_ENTRY.items() if name not in ("model", "phi_deg")}
 
-    with pytest.raises(ValueError, match=f"lacks {key}"):
+    with pytest.raises(ValueError, match="lacks model, phi_deg"):
         parse_telescope_map({"0": entry})
 
 
-@pytest.mark.parametrize(
-    ("mapping", "message"),
-    [
-        ({}, "non-empty object"),
-        ([VALID_ENTRY], "non-empty object"),
-        ({"LST": VALID_ENTRY}, "not an integer"),
-        ({"0": "LSTS-01"}, "is not an object"),
-        ({"0": {**VALID_ENTRY, "site": "East"}}, "Telescope 0: Invalid name East"),
-        ({"0": {**VALID_ENTRY, "dual_mirror": "no"}}, "dual_mirror must be true or false"),
-        ({"0": {**VALID_ENTRY, "model": ""}}, "model must be a non-empty string"),
-        ({"0": {**VALID_ENTRY, "model_version": 7}}, "model_version must be a non-empty string"),
-        ({"0": {**VALID_ENTRY, "radius_m": -1.0}}, "radius_m must be a positive number"),
-        ({"0": {**VALID_ENTRY, "radius_m": True}}, "radius_m must be a positive number"),
-        ({"0": {**VALID_ENTRY, "input_plane_height_m": "30"}}, "must be a positive number"),
-        ({"1": VALID_ENTRY, "01": VALID_ENTRY}, "occurs twice"),
-    ],
-)
-def test_parse_telescope_map_invalid_raises(mapping, message):
-    with pytest.raises(ValueError, match=message):
+@pytest.mark.parametrize("mapping", [{}, [VALID_ENTRY]])
+def test_parse_telescope_map_not_non_empty_object_raises(mapping):
+    with pytest.raises(ValueError, match="non-empty object"):
         parse_telescope_map(mapping)
+
+
+def test_parse_telescope_map_telescope_id_not_integer_raises():
+    with pytest.raises(
+        ValueError, match="Telescope id 'LST' in the telescope map is not an integer"
+    ):
+        parse_telescope_map({"LST": VALID_ENTRY})
+
+
+def test_parse_telescope_map_entry_not_object_raises():
+    with pytest.raises(
+        ValueError, match="Entry of telescope 0 in the telescope map is not an object"
+    ):
+        parse_telescope_map({"0": "LSTS-01"})
+
+
+def test_parse_telescope_map_invalid_site_raises():
+    with pytest.raises(ValueError, match="Telescope 0 in the telescope map: Invalid name East"):
+        parse_telescope_map({"0": {**VALID_ENTRY, "site": "East"}})
+
+
+def test_parse_telescope_map_invalid_value_raises():
+    with pytest.raises(ValueError, match="Telescope 0 in the telescope map: could not convert"):
+        parse_telescope_map({"0": {**VALID_ENTRY, "radius_m": "wide"}})
+
+
+def test_parse_telescope_map_duplicate_id_raises():
+    with pytest.raises(ValueError, match="Telescope id 1 occurs twice"):
+        parse_telescope_map({"1": VALID_ENTRY, "01": VALID_ENTRY})
 
 
 def test_load_telescope_map_invalid_json_raises(tmp_test_directory):

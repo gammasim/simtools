@@ -25,7 +25,6 @@ input event therefore give several output events with the same event number.
 import argparse
 import json
 import logging
-import math
 import os
 import sys
 import tempfile
@@ -326,43 +325,19 @@ def _telescope_route(telescope_id, entry):
             f"Telescope {telescope_id} in the telescope map lacks {', '.join(missing)}"
         )
     try:
-        site = names.validate_site_name(entry["site"])
-    except ValueError as exc:
-        raise ValueError(f"Telescope {telescope_id}: {exc}") from exc
-    if not isinstance(entry["dual_mirror"], bool):
-        raise ValueError(f"Telescope {telescope_id}: dual_mirror must be true or false")
-    for key in ("model", "model_version"):
-        if not isinstance(entry[key], str) or not entry[key]:
-            raise ValueError(f"Telescope {telescope_id}: {key} must be a non-empty string")
-    return TelescopeRoute(
-        telescope_id=telescope_id,
-        name=entry["model"],
-        model_version=entry["model_version"],
-        site=site,
-        dual_mirror=entry["dual_mirror"],
-        radius_m=_positive_number(telescope_id, entry, "radius_m"),
-        input_plane_height_m=_positive_number(telescope_id, entry, "input_plane_height_m"),
-        theta_deg=_number(telescope_id, entry, "theta_deg"),
-        phi_deg=_number(telescope_id, entry, "phi_deg"),
-    )
-
-
-def _is_finite_number(value):
-    return isinstance(value, int | float) and not isinstance(value, bool) and math.isfinite(value)
-
-
-def _number(telescope_id, entry, key):
-    value = entry[key]
-    if not _is_finite_number(value):
-        raise ValueError(f"Telescope {telescope_id}: {key} must be a number")
-    return float(value)
-
-
-def _positive_number(telescope_id, entry, key):
-    value = entry[key]
-    if not _is_finite_number(value) or value <= 0:
-        raise ValueError(f"Telescope {telescope_id}: {key} must be a positive number")
-    return float(value)
+        return TelescopeRoute(
+            telescope_id=telescope_id,
+            name=entry["model"],
+            model_version=entry["model_version"],
+            site=names.validate_site_name(entry["site"]),
+            dual_mirror=bool(entry["dual_mirror"]),
+            radius_m=float(entry["radius_m"]),
+            input_plane_height_m=float(entry["input_plane_height_m"]),
+            theta_deg=float(entry["theta_deg"]),
+            phi_deg=float(entry["phi_deg"]),
+        )
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Telescope {telescope_id} in the telescope map: {exc}") from exc
 
 
 def _single_value(routes, attribute):

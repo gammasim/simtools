@@ -14,6 +14,7 @@ from simtools.ray_tracing.backends.obdeect import (
     ObdeectBackend,
     ObdeectRayTracer,
     _at_plane,
+    make_shower_tracer,
     star_direction,
 )
 from simtools.simulation.configuration import get_model_writer
@@ -85,6 +86,12 @@ def toy_telescope(tmp_test_directory, mocker):
     writer.get_single_mirror_list_file.return_value = tmp_test_directory / "single_mirror.dat"
     telescope.configuration_writers = {"sim_telarray": writer}
     return telescope
+
+
+def test_make_shower_tracer(toy_telescope):
+    tracer = make_shower_tracer(toy_telescope)
+    assert isinstance(tracer, ObdeectRayTracer)
+    assert tracer.optical_model(20.0, 3) is tracer.optical_model(20.0, 3)
 
 
 def test_trace_star(toy_telescope):

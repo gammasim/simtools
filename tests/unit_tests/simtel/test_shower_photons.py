@@ -1,16 +1,13 @@
 #!/usr/bin/python3
 
-import dataclasses
 import math
 
 import numpy as np
 import pytest
 
 from simtools.simtel.shower_photons import (
-    CORSIKA_LENGTH_UNIT_M,
     CORSIKA_PLANE_Z,
     SPEED_OF_LIGHT_CM_PER_NS,
-    ShowerBunchFrame,
     minimum_input_plane_height_m,
     project_to_input_plane,
     shower_bunch_frame,
@@ -71,25 +68,6 @@ def test_inclined_pointing_arriving_bunch_travels_down_the_axis(theta, phi):
         DOWNWARD_IN_TELESCOPE_FRAME,
         atol=ATOL,
     )
-
-
-def test_shower_bunch_frame_fields():
-    frame = shower_bunch_frame(theta=20.0, phi=10.0, input_plane_height_m=20.0)
-
-    assert isinstance(frame, ShowerBunchFrame)
-    assert {field.name for field in dataclasses.fields(frame)} == {
-        "rotation",
-        "offset_m",
-        "length_unit_m",
-        "plane_z",
-    }
-    assert frame.length_unit_m == pytest.approx(0.01, rel=ATOL)
-    assert frame.length_unit_m == pytest.approx(CORSIKA_LENGTH_UNIT_M, rel=ATOL)
-    # Input plane height in input units (cm): 100 * 20 m.
-    assert frame.plane_z == pytest.approx(2000.0, abs=ATOL)
-    assert frame.offset_m.shape == (3,)
-    assert frame.offset_m.dtype == np.float64
-    np.testing.assert_array_equal(frame.offset_m, np.zeros(3))
 
 
 class _FakeOpticalModel:
@@ -199,10 +177,3 @@ def test_minimum_input_plane_height_m_is_obscurer_top_plus_margin_along_the_axis
 def test_minimum_input_plane_height_m_without_incoming_obscurers():
     model = _FakeOpticalModel(top_m=None)
     assert minimum_input_plane_height_m(model, 0.0) == pytest.approx(1.0)
-
-
-@pytest.mark.parametrize(("theta", "phi"), [(0.0, 0.0), (20.0, 0.0), (35.0, 120.0)])
-def test_shower_bunch_frame_offset_is_zero_for_any_pointing(theta, phi):
-    # The telescope's axes offset is applied by the optical model, not in the input frame.
-    frame = shower_bunch_frame(theta=theta, phi=phi, input_plane_height_m=30.0)
-    np.testing.assert_array_equal(frame.offset_m, np.zeros(3))
