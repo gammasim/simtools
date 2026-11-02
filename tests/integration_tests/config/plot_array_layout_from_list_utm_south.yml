@@ -26,4 +26,4 @@ applications:
   model_version_use_current: true
   test_name: from_list_south_utm
 schema_name: application_workflow.metaschema
-schema_version: 0.8.0
+schema_version: 0.5.0
