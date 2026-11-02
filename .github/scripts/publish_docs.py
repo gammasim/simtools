@@ -1,6 +1,7 @@
 """Assemble a complete Pages site from the selected immutable release archives."""
 
 import argparse
+import importlib
 import json
 import re
 import shutil
@@ -8,8 +9,6 @@ import stat
 import tarfile
 import tempfile
 from pathlib import Path, PurePosixPath
-
-from simtools.reporting.docs_pages import read_version_switcher
 
 VERSION = re.compile(r"v\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?\Z")
 SWITCHER_NAME = re.compile(r"[A-Za-z0-9._-]+\Z")
@@ -46,7 +45,7 @@ def read_manifest(path):
     if "latest" not in versions:
         raise ValueError("Switcher must include latest")
     try:
-        read_version_switcher(path)
+        importlib.import_module("simtools.reporting.docs_pages").read_version_switcher(path)
     except ValueError as exc:
         raise ValueError(f"Invalid version switcher: {exc}") from exc
     return normalized
