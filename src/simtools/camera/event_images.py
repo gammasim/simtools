@@ -83,7 +83,7 @@ def prepare_event_images(file_name, telescope, event_ids=None, max_events=None):
 
 
 def apply_monitoring_pedestals(event_images, file_name, telescope):
-    """Replace waveform pedestals with selected events' monitoring values."""
+    """Replace waveform pedestals with selected events' monitoring values (in place)."""
     tel_map = get_sim_telarray_telescope_id_to_telescope_name_mapping(file_name)
     tel_id = next((key for key, name in tel_map.items() if name == telescope), None)
     if tel_id is None:
@@ -104,10 +104,9 @@ def apply_monitoring_pedestals(event_images, file_name, telescope):
             )
             remaining.remove(event_id)
             if not remaining:
-                return event_images
+                return
     if remaining:
         raise ValueError(f"No monitoring pedestal found for event IDs {sorted(remaining)}")
-    return event_images
 
 
 def trace_maxima(samples, sum_threshold):

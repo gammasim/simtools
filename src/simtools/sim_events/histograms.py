@@ -535,8 +535,9 @@ class EventDataHistograms:
             name: self.get_histogram_definition(**cfg) | {"suffix": "", "title": "Triggered Events"}
             for name, cfg in definitions.items()
         }
-        for key, hist in list(hists.items()):
-            hists[f"{key}_mc"] = copy.copy(hist) | {
+        hists |= {
+            f"{key}_mc": copy.copy(hist)
+            | {
                 "suffix": "_mc",
                 "title": "Simulated Events",
                 "event_data": (
@@ -545,6 +546,8 @@ class EventDataHistograms:
                     else tuple(shower_data for _ in hist["event_data_column"])
                 ),
             }
+            for key, hist in hists.items()
+        }
         hists.update(self._define_reuse_histograms())
         for definition in hists.values():
             labels = definition.get("axis_titles") or []

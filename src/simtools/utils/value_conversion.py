@@ -738,7 +738,7 @@ def _parse_serialized_quantity_pair(string):
     -------
     ``"(<Quantity 200. GeV>, <Quantity 500. GeV>)"``
     """
-    match = re.fullmatch(r"\(\s*<Quantity\s+([^>]+)>\s*,\s*<Quantity\s+([^>]+)>\s*\)", string)
+    match = re.fullmatch(r"\(\s*<Quantity\s+([^>]++)>\s*,\s*<Quantity\s+([^>]++)>\s*\)", string)
     if match is None:
         return None
     try:

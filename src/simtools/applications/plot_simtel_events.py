@@ -122,7 +122,7 @@ def main():
         app_context.args.get("pedestal_source", PEDESTAL_SOURCE_WAVEFORM)
         == PEDESTAL_SOURCE_MONITORING
     ):
-        prepared_events = event_images.apply_monitoring_pedestals(
+        event_images.apply_monitoring_pedestals(
             prepared_events,
             app_context.args.get("simtel_file"),
             app_context.args.get("telescope"),
