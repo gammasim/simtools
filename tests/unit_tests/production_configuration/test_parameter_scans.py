@@ -276,8 +276,10 @@ def test_generate_scan_grid_writes_scan_config_and_expands_grid(tmp_test_directo
     ("default_trigger", "expected_param"),
     [
         ("AnalogSum", "asum_threshold"),
+        ("analogsum", "asum_threshold"),
         ("DigitalSum", "dsum_threshold"),
         ("Majority", "discriminator_threshold"),
+        ("MAJORITY", "discriminator_threshold"),
     ],
 )
 def test_threshold_parameter_is_chosen_from_telescope_model(

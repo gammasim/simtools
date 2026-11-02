@@ -216,9 +216,11 @@ def _threshold_param_name(args, telescope, context):
         context=context,
     )
     default_trigger = telescope_model.get_parameter_value("default_trigger")
-    if default_trigger == "AnalogSum":
+    if isinstance(default_trigger, str):
+        default_trigger = default_trigger.casefold()
+    if default_trigger == "analogsum":
         return "asum_threshold"
-    if default_trigger == "Majority":
+    if default_trigger == "majority":
         return "discriminator_threshold"
     return "dsum_threshold"
 

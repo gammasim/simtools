@@ -450,17 +450,18 @@ def _export_trigger_threshold_as_model_parameter(args, trigger_threshold, contex
         )
         default_trigger = telescope_model.get_parameter_value("default_trigger")
 
-        if default_trigger == "AnalogSum":
+        trigger_type = default_trigger.casefold() if isinstance(default_trigger, str) else None
+        if trigger_type == "analogsum":
             parameter_name = "asum_threshold"
             # asum_threshold expects float64 in mV
             value = round(trigger_threshold, 2)
             unit = "mV"
-        elif default_trigger == "DigitalSum":
+        elif trigger_type == "digitalsum":
             parameter_name = "dsum_threshold"
             # dsum_threshold expects int64 in counts
             value = round(trigger_threshold)
             unit = "count"
-        elif default_trigger == "Majority":
+        elif trigger_type == "majority":
             parameter_name = "discriminator_threshold"
             # discriminator_threshold expects float64 in mV
             value = round(trigger_threshold, 2)

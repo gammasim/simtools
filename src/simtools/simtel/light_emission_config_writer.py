@@ -291,7 +291,7 @@ class LightEmissionConfigWriter:
         width_ns = pulse_shape_value[1]
         exp_ns = pulse_shape_value[2]
 
-        if shape_name != "Gauss-Exponential":
+        if shape_name.casefold() != "gauss-exponential":
             return self.get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
 
         if width_ns <= 0 or exp_ns <= 0:

@@ -144,7 +144,9 @@ def _supported_gauss_exponential(value):
     if not isinstance(value, (list, tuple)) or len(value) != 3:
         return None
     shape, width, exp_decay = value
-    if shape != "Gauss-Exponential" or width <= 0 or exp_decay <= 0:
+    if not isinstance(shape, str) or shape.casefold() != "gauss-exponential":
+        return None
+    if width <= 0 or exp_decay <= 0:
         return None
     return shape, width, exp_decay
 
