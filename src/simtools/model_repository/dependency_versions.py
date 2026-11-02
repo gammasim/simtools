@@ -217,7 +217,7 @@ def find_dependency_versions(start_path=None):
             raise FileNotFoundError(f"Configured dependency catalog does not exist: {catalog}")
         return catalog
     bundled = [
-        Path(__file__).resolve().parents[2] / DEPENDENCY_VERSIONS_FILENAME,
+        Path(__file__).resolve().parents[3] / DEPENDENCY_VERSIONS_FILENAME,
         Path(sys.prefix) / "simtools" / DEPENDENCY_VERSIONS_FILENAME,
     ]
     start = Path(start_path or Path.cwd()).resolve()
@@ -235,7 +235,7 @@ def find_pyproject(start_path=None):
     candidates = [Path(configured_path)] if configured_path else []
     start = Path(start_path or Path.cwd()).resolve()
     candidates.extend(parent / PYPROJECT_FILENAME for parent in (start, *start.parents))
-    candidates.append(Path(__file__).resolve().parents[2] / PYPROJECT_FILENAME)
+    candidates.append(Path(__file__).resolve().parents[3] / PYPROJECT_FILENAME)
     for candidate in candidates:
         if candidate.is_file():
             return candidate

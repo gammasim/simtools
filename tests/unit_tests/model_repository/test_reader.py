@@ -390,3 +390,96 @@ def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):
 
     source_without_config = Mock(spec=["source_name", "is_configured"])
     assert SimulationModelReader(source_without_config).source_config is None
+
+
+def test_resolve_model_reader_selects_filesystem_from_environment(monkeypatch, model_repository):
+    """A configured filesystem path selects a filesystem reader."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(model_repository))
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+
+    reader = resolve_model_reader()
+
+    assert reader.source_name == str(model_repository.resolve())
+
+
+def test_resolve_model_reader_rejects_filesystem_and_git_together(monkeypatch, tmp_test_directory):
+    """Only one simulation-model source may be configured."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(tmp_test_directory))
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(tmp_test_directory))
+
+    with pytest.raises(ValueError, match="cannot be configured together"):
+        resolve_model_reader()
+
+
+def test_resolve_model_reader_rejects_empty_git_revision(monkeypatch, tmp_test_directory):
+    """An explicitly empty Git revision is an error, not a catalog lookup."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(tmp_test_directory))
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "")
+
+    with pytest.raises(ValueError, match="A Git simulation-model revision is required"):
+        resolve_model_reader()
+
+
+def test_resolve_model_reader_git_revision_defaults_to_catalog(monkeypatch, tmp_test_directory):
+    """Without a revision, the Git source uses the revision from the dependency catalog."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", raising=False)
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(tmp_test_directory / "absent"))
+
+    with pytest.raises(FileNotFoundError, match="Git model repository does not exist"):
+        resolve_model_reader()
+
+
+def test_get_model_parameters_honours_context_flag(mocker):
+    """The context keyword carries the design-model flag to the element lookup."""
+    source = Mock()
+    source.read_production_table.return_value = {"design_model": {}, "parameters": {}}
+    source.get_model_versions.return_value = ["1.0.0"]
+    reader = SimulationModelReader(source)
+    element_list = mocker.patch.object(reader, "_get_array_element_list", return_value=[])
+    context = Mock(args={"ignore_missing_design_model": True})
+
+    reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0", context=context)
+
+    assert element_list.call_args.args[-1] is True
+    reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0")
+    assert element_list.call_args.args[-1] is False
+
+
+class _ContextStub:
+    """Minimal context with the replace() interface used by RunContext."""
+
+    def __init__(self, model_reader=None):
+        self.model_reader = model_reader
+
+    def replace(self, **changes):
+        """Return a copy with the given fields replaced."""
+        return _ContextStub(**{"model_reader": self.model_reader, **changes})
+
+
+def test_with_resolved_model_reader_attaches_environment_source(monkeypatch, model_repository):
+    """An environment-configured source is carried by the context for worker payloads."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(model_repository))
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+    context = _ContextStub()
+
+    resolved = reader_module.with_resolved_model_reader(context)
+
+    assert resolved is not context
+    assert resolved.model_reader.source_config == {
+        "type": "filesystem",
+        "path": str(model_repository.resolve()),
+    }
+
+
+def test_with_resolved_model_reader_keeps_existing_or_absent_reader(monkeypatch):
+    """Contexts with a reader, or without any configured source, are returned unchanged."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+    unconfigured = _ContextStub()
+    existing = _ContextStub(model_reader=Mock())
+
+    assert reader_module.with_resolved_model_reader(unconfigured) is unconfigured
+    assert reader_module.with_resolved_model_reader(existing) is existing

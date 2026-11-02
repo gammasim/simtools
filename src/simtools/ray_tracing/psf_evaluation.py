@@ -9,6 +9,7 @@ import numpy as np
 
 from simtools.job_execution.execution import execute_jobs, options_from_args
 from simtools.job_execution.job import JobSpec
+from simtools.model_repository.reader import with_resolved_model_reader
 from simtools.runtime.context import RunContext
 from simtools.utils.general import cleanup_intermediate_files
 
@@ -34,7 +35,7 @@ def dispatch_evaluations(
     output_root = Path(output_dir).expanduser().resolve()
     output_root.mkdir(parents=True, exist_ok=True)
     directory = output_root / "parallel_evaluations" / uuid4().hex
-    context = context or RunContext.from_environment()
+    context = with_resolved_model_reader(context or RunContext.from_environment())
     source_config = context.model_reader.source_config if context.model_reader is not None else None
     mount_paths = [output_root]
     for key in ("path", "repository"):

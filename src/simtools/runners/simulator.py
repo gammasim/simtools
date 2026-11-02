@@ -16,7 +16,7 @@ from simtools.job_execution import execution, runner_services
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
-from simtools.model_repository.reader import resolve_model_reader
+from simtools.model_repository.reader import with_resolved_model_reader
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.stages import SimulationChain, StageInputs
 from simtools.runtime.context import RunContext
@@ -102,9 +102,10 @@ class Simulator:
         self.logger = logging.getLogger(__name__)
         self.label = label
         self.context = context or RunContext.from_environment()
-        self.model_reader = resolve_model_reader(model_reader, self.context)
         if model_reader is not None and model_reader is not self.context.model_reader:
             self.context = self.context.replace(model_reader=model_reader)
+        self.context = with_resolved_model_reader(self.context)
+        self.model_reader = self.context.model_reader
 
         self.site = self.context.args.get("site", None)
         self.model_version = self.context.args.get("model_version", None)

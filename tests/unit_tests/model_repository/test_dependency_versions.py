@@ -811,7 +811,9 @@ def test_default_catalog_prefers_running_installation(
     host = root / "host"
     host.mkdir()
     (host / "dependency_versions.yml").write_text("schema_version: host\n")
-    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    package = (
+        root / "installation" / "src" / "simtools" / "model_repository" / "dependency_versions.py"
+    )
     package.parent.mkdir(parents=True)
     monkeypatch.setattr(dependency_versions, "__file__", str(package))
     monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
@@ -839,7 +841,9 @@ def test_missing_catalog_override_does_not_fall_back(monkeypatch, tmp_test_direc
 
 def test_default_catalog_falls_back_to_working_directory(monkeypatch, tmp_test_directory):
     root = Path(tmp_test_directory)
-    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    package = (
+        root / "installation" / "src" / "simtools" / "model_repository" / "dependency_versions.py"
+    )
     monkeypatch.setattr(dependency_versions, "__file__", str(package))
     monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
     monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)

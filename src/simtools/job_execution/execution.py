@@ -19,6 +19,7 @@ from simtools.job_execution.job import (
     SubmissionHandle,
 )
 from simtools.job_execution.worker import execute_command
+from simtools.model_repository.reader import with_resolved_model_reader
 from simtools.runtime.context import RunContext
 
 logger = logging.getLogger(__name__)
@@ -301,7 +302,7 @@ def map_ordered(
     context=None,
 ):
     """Apply ``function`` to items and return values in input order."""
-    context = context or RunContext.from_environment()
+    context = with_resolved_model_reader(context or RunContext.from_environment())
     job_specs = [
         JobSpec(
             job_id=f"job-{index:06d}",

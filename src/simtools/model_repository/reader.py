@@ -41,6 +41,25 @@ def resolve_model_reader(model_reader=None, context=None):
     )
 
 
+def with_resolved_model_reader(context):
+    """Return a context that carries the resolved model reader.
+
+    An environment-configured source is attached to the context, so that serialized
+    job specifications can rebuild the same reader in worker processes.
+    """
+    reader = resolve_model_reader(context=context)
+    if reader is None or reader is context.model_reader:
+        return context
+    return context.replace(model_reader=reader)
+
+
+def _ignore_missing_design_model(context):
+    """Return whether the application context allows missing design models."""
+    if context is None:
+        return False
+    return bool(context.args.get("ignore_missing_design_model", False))
+
+
 def create_model_reader_from_source_config(source_config):
     """Recreate a reader from its serialized source configuration."""
     if not isinstance(source_config, dict):
@@ -163,7 +182,7 @@ class SimulationModelReader:
         collection,
         model_version,
         parameter_names=None,
-        ignore_missing_design_model=False,
+        context=None,
     ):
         """Read resolved parameters for an array element and model version.
 
@@ -172,9 +191,13 @@ class SimulationModelReader:
         parameter_names : iterable of str, optional
             If supplied, read only these parameters. This is useful for callers
             that need a small subset of a model, such as coordinate transforms.
+        context : RunContext, optional
+            Application context. Its ``ignore_missing_design_model`` argument is
+            honoured when present; the reader itself does not create a context.
         """
         if parameter_names is not None:
             parameter_names = frozenset(parameter_names)
+        ignore_missing_design_model = _ignore_missing_design_model(context)
         model_version = resolve_version_to_latest_patch(
             model_version, self.get_model_versions(collection)
         )

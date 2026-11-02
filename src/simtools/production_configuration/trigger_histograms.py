@@ -19,6 +19,7 @@ from simtools.io.ascii_handler import write_data_to_file
 from simtools.io.file_type import product_value, validate_file_type
 from simtools.job_execution.execution import map_ordered, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
+from simtools.model_repository.reader import with_resolved_model_reader
 from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
     normalize_telescope_configs,
@@ -739,7 +740,7 @@ def write_trigger_histograms(args_dict, context=None):
         If the output file does not use an HDF5 suffix or no supported telescope
         selection is provided.
     """
-    context = context or RunContext.from_environment()
+    context = with_resolved_model_reader(context or RunContext.from_environment())
     if args_dict.get("event_data_directory"):
         return _write_directory_products(args_dict, context)
     if args_dict.get(_PRODUCTION_PATH_KEY):
