@@ -247,7 +247,7 @@ def test_resolve_corsika_path_uses_environment_and_default(monkeypatch):
     assert show_options._resolve_corsika_path({}) == Path("/from-environment")
 
     monkeypatch.delenv("SIMTOOLS_CORSIKA_PATH")
-    monkeypatch.setattr(show_options.defaults, "CORSIKA_PATH", "/from-default")
+    monkeypatch.setattr(show_options.constants, "CORSIKA_PATH", "/from-default")
     assert show_options._resolve_corsika_path({}) == Path("/from-default")
 
 

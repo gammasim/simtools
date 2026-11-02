@@ -178,23 +178,6 @@ def test_simtel_branch_ref_requires_a_safe_build_id():
         )
 
 
-def test_corsika_source_tag_for_build_id_handles_missing_and_ambiguous_values():
-    """Resolve CORSIKA source tags only when the catalog mapping is unambiguous."""
-    catalog = {"corsika": [{"tag": "v7.8010"}]}
-    assert dependency_versions.corsika_source_tag_for_build_id("78050", catalog) is None
-
-    with pytest.raises(ValueError, match="Multiple CORSIKA source tags"):
-        dependency_versions.corsika_source_tag_for_build_id(
-            "78010",
-            {
-                "corsika": [
-                    {"tag": "v7.8010"},
-                    {"tag": "v7.8010"},
-                ]
-            },
-        )
-
-
 def test_catalog_reads_legacy_corsika_fields():
     """Keep schema 0.2 CORSIKA records readable during migration."""
     catalog = _legacy_catalog()

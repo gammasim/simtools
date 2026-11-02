@@ -7,8 +7,8 @@ from types import SimpleNamespace
 import pytest
 
 from simtools.applications import create_setting_workflow
-from simtools.data_model import setting_workflow
 from simtools.data_model.model_data_writer import ModelDataWriter
+from simtools.runners import setting_workflow
 
 PULSE_SHAPE_VALUE = '["Gauss-Exponential", "0.4 ns", "1.59 ns"]'
 VALUE_OPTION = "--value"

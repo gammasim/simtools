@@ -9,7 +9,6 @@ from eventio import EventIOFile
 from eventio.iact import InputCard
 from eventio.simtel import HistoryMeta
 
-from simtools import dependency_versions
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
@@ -22,6 +21,27 @@ LEGACY_METADATA_ALIASES = {
     "simtools_simtel_version": "simtools_simtel_tag",
     "simtools_stdtools_version": "simtools_stdtools_tag",
 }
+
+
+def corsika_source_tag_for_build_id(build_id, catalog):
+    """Return the CORSIKA source tag matching a legacy build identifier."""
+
+    def get_build_id(component):
+        if "build-id" in component:
+            return component["build-id"]
+        if "version" in component:
+            return component["version"]
+        tag = component.get("tag", component.get("source-ref", ""))
+        return tag.removeprefix("v").replace(".", "")
+
+    matches = [
+        component.get("tag", component.get("source-ref"))
+        for component in catalog.get("corsika", [])
+        if str(get_build_id(component)) == str(build_id)
+    ]
+    if len(matches) > 1:
+        raise ValueError(f"Multiple CORSIKA source tags match build ID {build_id!r}: {matches}")
+    return matches[0] if matches else None
 
 
 def normalize_sim_telarray_metadata(metadata, dependency_catalog=None):
@@ -65,9 +85,7 @@ def normalize_sim_telarray_metadata(metadata, dependency_catalog=None):
     if dependency_catalog and "simtools_corsika_source_tag" not in normalized:
         build_id = normalized.get("simtools_corsika_build_id")
         if build_id is not None:
-            source_tag = dependency_versions.corsika_source_tag_for_build_id(
-                build_id, dependency_catalog
-            )
+            source_tag = corsika_source_tag_for_build_id(build_id, dependency_catalog)
             if source_tag is not None:
                 normalized["simtools_corsika_source_tag"] = source_tag
 

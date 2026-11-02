@@ -5,7 +5,7 @@ import logging
 
 from eventio import SimTelFile
 
-from simtools.simtel.simtel_io_metadata import (
+from simtools.sim_events.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
 )
 from simtools.utils import value_conversion

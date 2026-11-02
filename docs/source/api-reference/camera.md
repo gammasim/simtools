@@ -44,3 +44,10 @@ etc.) are required inputs.
 .. automodule:: camera.trace_analysis
    :members:
 ```
+
+### event_images
+
+```{eval-rst}
+.. automodule:: simtools.camera.event_images
+   :members:
+```

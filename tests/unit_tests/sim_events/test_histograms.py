@@ -364,7 +364,7 @@ def test_accumulate_reuse_bin_values_vectorized_1d_and_2d():
     }
     EventDataHistograms._accumulate_reuse_bin_values(
         accumulator_1d,
-        np.array([0, 0, 1, 2, 2]),
+        (np.array([0, 0, 1, 2, 2]),),
         np.array([2.0, 0.0, -1.0, 1.0, 3.0]),
     )
     np.testing.assert_array_equal(accumulator_1d["count"], np.array([1, 0, 2]))
@@ -380,7 +380,7 @@ def test_accumulate_reuse_bin_values_vectorized_1d_and_2d():
     }
     EventDataHistograms._accumulate_reuse_bin_values(
         accumulator_2d,
-        np.array([[0, 0], [0, 0], [0, 1], [1, 2], [1, 2], [1, 0]]),
+        (np.array([0, 0, 0, 1, 1, 1]), np.array([0, 0, 1, 2, 2, 0])),
         np.array([1.0, 4.0, 0.0, -2.0, 5.0, 3.0]),
     )
     np.testing.assert_array_equal(accumulator_2d["count"], np.array([[2, 0, 0], [1, 0, 1]]))

@@ -5,8 +5,8 @@
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import bounded_int
+from simtools.model.model_utils import export_model_files
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simulation.configuration import export_model_files
 from simtools.visualization.plot_camera import (
     PIXEL_IDS,
     parse_pixel_ids_to_print,

@@ -21,11 +21,9 @@ from simtools.production_configuration.trigger_histograms import (
     _create_trigger_topology_count_table,
     _execute_production_job,
     _format_trigger_histogram_inspection,
-    _get_plot_directory_name,
     _group_output_stem,
     _relative_to_directory,
     _resolve_group_telescope_configs,
-    _use_readable_inline_array_names,
     _write_dense_histogram_payload,
     _write_directory_group_job,
     _write_directory_products,
@@ -293,25 +291,12 @@ def test_event_data_histograms_hdf5_filter_by_array_name(tmp_test_directory):
     assert loaded_histograms.array_name == "MSTS-01"
 
 
-def test_plot_directory_name_uses_telescope_ids_for_inline_lists():
-    assert _get_plot_directory_name("array_element_list", ["MSTS-01"]) == "MSTS-01"
-    assert _get_plot_directory_name("alpha", ["MSTS-01"]) == "alpha"
-
-
-def test_readable_inline_array_names_use_telescope_ids():
-    configs = _use_readable_inline_array_names(
-        [{"array_name": "array_element_list", "telescope_ids": ["MSTS-01"]}]
-    )
-
-    assert configs[0]["array_name"] == "MSTS-01"
-
-
 def test_execute_production_job_returns_one_result_per_telescope_config(mocker):
     histograms = mocker.Mock()
     topology = {"trigger_multiplicity": {1: 2}}
     mocker.patch(
-        "simtools.production_configuration.trigger_histograms._process_production",
-        return_value=[(histograms, topology)],
+        "simtools.production_configuration.trigger_histograms.accumulate_histograms_by_telescope_config",
+        return_value=[("LSTN-01", histograms, topology)],
     )
 
     result = _execute_production_job(

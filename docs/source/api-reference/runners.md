@@ -64,7 +64,7 @@ simulation chains.
 (simtel-runner-1)=
 
 ```{eval-rst}
-.. automodule:: runners.simtel_runner
+.. automodule:: simtel.simtel_runner
    :members:
 ```
 
@@ -73,6 +73,13 @@ simulation chains.
 (runner-services1)=
 
 ```{eval-rst}
-.. automodule:: runners.runner_services
+.. automodule:: job_execution.runner_services
+   :members:
+```
+
+## setting_workflow
+
+```{eval-rst}
+.. automodule:: runners.setting_workflow
    :members:
 ```

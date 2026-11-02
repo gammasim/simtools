@@ -7,6 +7,7 @@ import re
 
 import numpy as np
 from astropy import units as u
+from astropy.units import UnitsError
 
 _logger = logging.getLogger(__name__)
 
@@ -728,3 +729,93 @@ def replace_placeholders_recursively(data, replacements):
         for placeholder, replacement in replacements.items():
             data = data.replace(placeholder, replacement)
     return data
+
+
+def _quantity_repr_value(text):
+    """Return the value part of a ``<Quantity ...>`` item (without the closing ``>``), or None."""
+    prefix = "<Quantity"
+    if not text.startswith(prefix) or not text[len(prefix) :][:1].isspace():
+        return None
+    return text[len(prefix) :].strip() or None
+
+
+def _parse_serialized_quantity_pair(string):
+    """Parse ``(<Quantity ...>, <Quantity ...>)`` representations.
+
+    Example
+    -------
+    ``"(<Quantity 200. GeV>, <Quantity 500. GeV>)"``
+    """
+    text = string.strip()
+    if not (text.startswith("(") and text.endswith(")")):
+        return None
+    items = text[1:-1].split(">")
+    if len(items) != 3 or items[2].strip():
+        return None
+    separator_and_second = items[1].strip()
+    if not separator_and_second.startswith(","):
+        return None
+    values = (
+        _quantity_repr_value(items[0].strip()),
+        _quantity_repr_value(separator_and_second[1:].strip()),
+    )
+    if None in values:
+        return None
+    try:
+        return tuple(u.Quantity(quantity_repr) for quantity_repr in values)
+    except (TypeError, ValueError, UnitsError) as exc:
+        raise ValueError(f"Could not parse quantities: {exc}") from exc
+
+
+def _parse_tokenized_quantity_pair(tokens):
+    """Parse quantity pairs from 2-4 whitespace-separated tokens.
+
+    Example
+    -------
+    ``["100", "GeV", "5", "TeV"]`` or ``["100GeV", "5TeV"]``
+    """
+    split_indices = {2: (1,), 3: (1, 2), 4: (2, 1, 3)}[len(tokens)]
+    last_error = None
+    for split_index in split_indices:
+        left = " ".join(tokens[:split_index])
+        right = " ".join(tokens[split_index:])
+        try:
+            return (u.Quantity(left), u.Quantity(right)), None
+        except (TypeError, ValueError, UnitsError) as exc:
+            last_error = exc
+    return None, last_error
+
+
+def parse_quantity_pair(string):
+    """Parse a string representing a pair of astropy quantities.
+
+    Parameters
+    ----------
+    string : str
+        String containing two quantities (e.g., "10 m 20 cm").
+
+    Returns
+    -------
+    tuple
+        Tuple of two astropy.Quantity objects.
+
+    Raises
+    ------
+    ValueError
+        If string does not contain exactly two quantities.
+    """
+    stripped = string.strip()
+
+    serialized_pair = _parse_serialized_quantity_pair(stripped)
+    if serialized_pair is not None:
+        return serialized_pair
+
+    tokens = stripped.split()
+    if len(tokens) < 2 or len(tokens) > 4:
+        raise ValueError("Input string does not contain exactly two quantities.")
+
+    parsed_pair, last_error = _parse_tokenized_quantity_pair(tokens)
+    if parsed_pair is not None:
+        return parsed_pair
+
+    raise ValueError(f"Could not parse quantities: {last_error}") from last_error

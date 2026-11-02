@@ -7,9 +7,9 @@ import astropy.units as u
 import numpy as np
 from astropy.coordinates import angular_separation
 
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import table_handler
 from simtools.utils.geometry import project_ground_to_corsika_shower_coordinates, solid_angle
+from simtools.utils.primary_particle import PrimaryParticle
 
 
 @dataclass
