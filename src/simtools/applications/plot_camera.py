@@ -90,14 +90,14 @@ def main():
         context=app_context,
     )
     export_model_files(tel_model)
-    app_context.logger.info(f"\nPlot camera for {tel_model.name}\n")
+    app_context.logger.info(f"Plot camera for {tel_model.name}")
 
     focal_length = tel_model.get_telescope_effective_focal_length("cm")
     camera = tel_model.camera
     fov, r_edge_avg = camera.calc_fov()
-    app_context.logger.info(f"\nEffective focal length = {focal_length:.3f} cm")
+    app_context.logger.info(f"Effective focal length = {focal_length:.3f} cm")
     app_context.logger.info(f"{tel_model.name} FoV = {fov:.3f} deg")
-    app_context.logger.info(f"Avg. edge radius = {r_edge_avg:.3f} cm\n")
+    app_context.logger.info(f"Avg. edge radius = {r_edge_avg:.3f} cm")
 
     camera_pixels = set(camera.pixels[PIXEL_IDS])
     patch_ids = args.get("trigger_patches")

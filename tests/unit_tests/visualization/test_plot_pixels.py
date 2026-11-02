@@ -106,8 +106,9 @@ def test_plot_pixel_layout_smoke():
         "expected_orientation",
     ),
     [
-        ("LSTN-01", 3, None, -100.0, True, 30),
-        ("SSTS-01", 1, 10.0, 80.0, False, 0),
+        ("LSTN-01", 3, None, -100.0, True, -70),
+        ("LSTN-01", 3, 10.893, -100.893, True, -70.893),
+        ("SSTS-01", 1, 10.0, 80.0, False, 80),
     ],
 )
 def test_apply_telescope_specific_pixel_transform(
@@ -135,4 +136,4 @@ def test_apply_telescope_specific_pixel_transform(
     assert np.allclose(camera.pixels["x"], expected_x)
     assert np.allclose(camera.pixels["y"], expected_y)
     assert np.isclose(camera.pixels["plot_rotate_angle"], rot)
-    assert camera.pixels["orientation"] == expected_orientation
+    assert camera.pixels["orientation"] == pytest.approx(expected_orientation)
