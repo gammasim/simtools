@@ -55,11 +55,7 @@ def measure_waveform(samples, dt_ns, width_fraction=0.95, threshold_adc=None):
 
 def _validate_width_fraction(fraction):
     """Require a fraction strictly between zero and one."""
-    if fraction <= 0:
-        raise ValueError("Width fraction must be between zero and one")
-    if fraction >= 1:
-        raise ValueError("Width fraction must be between zero and one")
-    if np.isnan(fraction):
+    if not np.logical_and(np.greater(fraction, 0), np.less(fraction, 1)):
         raise ValueError("Width fraction must be between zero and one")
 
 
