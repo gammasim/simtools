@@ -13,13 +13,13 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable, vstack
 
-from simtools.context import RunContext
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.backends import interface
 from simtools.ray_tracing.backends.interface import StarImageRequest
+from simtools.runtime.context import RunContext
 from simtools.simtel import simtel_seeds
 
 

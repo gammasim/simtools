@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from astropy import units as u
 
-from simtools.context import RunContext
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.runtime.context import RunContext
 
 logger = logging.getLogger()
 
@@ -42,7 +42,7 @@ def create_mock_array_model(mocker, geomag_rotation=0):
         "corsika_observation_level": 2200.0,
     }.get(x, geomag_rotation)
     mock_array_model.site_model = mock_site_model
-    mock_array_model.context = RunContext.from_arguments({}, resolve_sim_software_executables=False)
+    mock_array_model.context = RunContext.from_arguments({})
     return mock_array_model
 
 

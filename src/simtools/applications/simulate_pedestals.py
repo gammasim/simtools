@@ -4,7 +4,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.simulator import Simulator
+from simtools.runners.simulator import Simulator
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(

@@ -7,11 +7,12 @@ from pathlib import Path
 
 import astropy.units as u
 
-from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.validate_data import DataValidator
+from simtools.model_repository.reader import resolve_model_reader
+from simtools.runtime.context import RunContext
 from simtools.utils import names, value_conversion
 
 SIMULATION_SOFTWARE_COLLECTIONS = {
@@ -116,7 +117,7 @@ class ModelParameter:
         self._logger = logging.getLogger(__name__)
         self.context = context or RunContext.from_environment()
         self.io_handler = self.context.paths
-        self.model_reader = model_reader or self.context.model_reader
+        self.model_reader = resolve_model_reader(model_reader, self.context)
         if self.model_reader is None:
             raise RuntimeError("No simulation model reader is configured.")
 

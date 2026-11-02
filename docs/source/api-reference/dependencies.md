@@ -2,15 +2,6 @@
 
 # Application, dependency and version management
 
-(context)=
-
-## context
-
-```{eval-rst}
-.. automodule:: simtools.context
-   :members:
-```
-
 (application-control)=
 
 ## application.control
@@ -29,21 +20,12 @@
    :members:
 ```
 
-(dependencies)=
-
-## dependencies
-
-```{eval-rst}
-.. automodule:: simtools.dependencies
-   :members:
-```
-
 (dependency-versions)=
 
 ## dependency_versions
 
 ```{eval-rst}
-.. automodule:: simtools.dependency_versions
+.. automodule:: simtools.model_repository.dependency_versions
    :members:
 ```
 

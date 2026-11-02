@@ -17,11 +17,11 @@ import numpy as np
 from astropy.table import QTable
 
 from simtools import constants
-from simtools.context import RunContext
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.backends import interface
 from simtools.ray_tracing.backends.interface import StarImageRequest
+from simtools.runtime.context import RunContext
 from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names, random
 from simtools.visualization import visualize

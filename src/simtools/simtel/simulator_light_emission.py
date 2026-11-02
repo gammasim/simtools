@@ -8,7 +8,6 @@ import astropy.units as u
 import numpy as np
 
 from simtools.atmosphere.transmission import AtmosphericTransmission
-from simtools.context import RunContext
 from simtools.job_execution import execution, runner_services
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.calibration_model import CalibrationModel
@@ -18,7 +17,9 @@ from simtools.model.model_utils import (
     read_overwrite_model_parameter_dict,
 )
 from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.model_repository.reader import resolve_model_reader
 from simtools.ray_tracing.backends.interface import LightSourceRequest, get_backend
+from simtools.runtime.context import RunContext
 from simtools.simtel import output_validation as simtel_output_validation
 from simtools.simtel.photon_bunch_file import (
     bypass_optics_level,
@@ -124,7 +125,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.configuration_writers = {}
         self._seed_pair = None
         self.context = context or RunContext.from_environment()
-        self.model_reader = model_reader or self.context.model_reader
+        self.model_reader = resolve_model_reader(model_reader, self.context)
         self.io_handler = self.context.paths
         telescope = telescope or light_emission_config.get("telescope")
         label = f"{label}_{telescope}" if label else telescope

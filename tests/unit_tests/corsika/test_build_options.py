@@ -1,17 +1,21 @@
 """Unit tests for CORSIKA build-option handling."""
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 from simtools.corsika.build_options import (
     CorsikaBuildVariant,
+    corsika_executable,
     format_corsika_build_variants,
     get_corsika_build_report,
     get_installed_corsika_build_variants,
     read_corsika_build_variants,
     select_corsika_build_variant,
+    with_installed_build_variants,
 )
+from simtools.runtime.context import SimulationSoftware
 
 
 def _write_build_options(directory, variants):
@@ -76,6 +80,45 @@ def test_get_installed_corsika_build_variants_checks_executables(
     Path(tmp_test_directory, build_variants[0]["executable"]).unlink()
     with pytest.raises(ValueError, match="declares a missing executable"):
         get_installed_corsika_build_variants(tmp_test_directory)
+
+
+def test_with_installed_build_variants_enriches_software(tmp_test_directory, build_variants):
+    _write_build_options(tmp_test_directory, build_variants)
+    for entry in build_variants:
+        executable = Path(tmp_test_directory, entry["executable"])
+        executable.touch()
+        executable.chmod(0o755)
+    software = SimulationSoftware(
+        corsika_root=tmp_test_directory,
+        he_interaction="epos",
+        le_interaction="urqmd",
+    )
+
+    configured = with_installed_build_variants(software)
+
+    assert len(configured.corsika_build_variants) == 2
+    assert (
+        configured.corsika_flat_executable
+        == Path(tmp_test_directory) / build_variants[0]["executable"]
+    )
+    assert software.corsika_build_variants is None
+    configured = replace(configured, he_interaction="qgs3")
+    assert corsika_executable(configured, "curved") == (
+        Path(tmp_test_directory) / build_variants[1]["executable"]
+    )
+
+
+def test_with_installed_build_variants_skips_missing_directory():
+    software = SimulationSoftware(corsika_root=None)
+
+    assert with_installed_build_variants(software) is software
+
+
+def test_corsika_executable_requires_loaded_variants():
+    software = SimulationSoftware()
+
+    with pytest.raises(FileNotFoundError, match="CORSIKA build manifest has not been loaded"):
+        corsika_executable(software, "flat")
 
 
 def test_get_corsika_build_report_uses_environment_path(

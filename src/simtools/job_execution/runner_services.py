@@ -3,8 +3,8 @@
 import logging
 from collections.abc import Mapping
 
-from simtools.context import RunContext
 from simtools.io.file_type import product_value
+from simtools.runtime.context import RunContext
 from simtools.sim_events.simulation_parameters import SimulationParameters
 
 _logger = logging.getLogger(__name__)

@@ -10,8 +10,8 @@ from pathlib import Path
 from simtools import constants
 from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.corsika.build_options import get_installed_corsika_build_variants
-from simtools.dependencies import get_corsika_version
 from simtools.model.site_model import SiteModel
+from simtools.runtime.dependencies import get_corsika_version
 from simtools.utils import names
 from simtools.utils.primary_particle import PrimaryParticle
 

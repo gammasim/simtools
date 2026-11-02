@@ -10,10 +10,10 @@ from ctao_cr_spectra.definitions import IRFDOC_ELECTRON_SPECTRUM, IRFDOC_PROTON_
 from ctao_cr_spectra.spectral import LogParabola, PowerLaw, PowerLawWithExponentialGaussian
 from scipy import integrate
 
-from simtools.context import RunContext
 from simtools.histogram.histogram import Histogram
 from simtools.io import ascii_handler
 from simtools.layout.array_layout_sources import get_array_elements_from_model_repository
+from simtools.runtime.context import RunContext
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 

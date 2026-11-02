@@ -31,7 +31,7 @@ def test_historical_release_constraint(monkeypatch, tmp_test_directory, tag, acc
 @pytest.mark.parametrize("default", ["main", "v0.18.0rc1", "v0.18.0.dev1"])
 def test_unreleased_default(default):
     with pytest.raises(ValueError, match=INVALID_CONTRACT):
-        models._contract({models.MODEL_KEY: {DEFAULT_REF: default}})
+        models.get_contract({models.MODEL_KEY: {DEFAULT_REF: default}})
 
 
 @pytest.mark.parametrize("tags", ["main", "v0.17.1\nv0.17.2", ""])

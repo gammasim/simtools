@@ -5,6 +5,7 @@ import shlex
 import stat
 from pathlib import Path
 
+from simtools.corsika import build_options
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.job_execution.runner_services import RunnerServices
 from simtools.runners.stages import CHERENKOV_PHOTONS, StreamTo
@@ -157,10 +158,9 @@ class CorsikaStage:
         """Return the CORSIKA executable for the configured atmosphere geometry."""
         if self.corsika_config.use_curved_atmosphere:
             geometry = "curved"
-            executable = Path(self.context.software.corsika_exe_curved)
         else:
             geometry = "flat"
-            executable = Path(self.context.software.corsika_exe)
+        executable = Path(build_options.corsika_executable(self.context.software, geometry))
 
         he_model, le_model = self.context.software.corsika_interaction_models
         transition_energy = self.context.args.get("corsika_hadronic_transition_energy")

@@ -7,16 +7,16 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.context import RunContext
 from simtools.data_model import model_data_writer
 from simtools.io.file_type import product_value
 from simtools.model.telescope_model import TelescopeModel, trigger_threshold_parameter
+from simtools.runtime.context import RunContext
 from simtools.simtel.nsb_trigger_calculator import (
     derive_nsb_triggers,
     extract_run_number,
     extract_threshold,
 )
-from simtools.telescope_trigger_rates import telescope_trigger_rates
+from simtools.simtel.telescope_trigger_rates import telescope_trigger_rates
 from simtools.visualization import plot_tables
 
 _logger = logging.getLogger(__name__)

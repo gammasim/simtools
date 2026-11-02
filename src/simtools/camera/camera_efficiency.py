@@ -14,10 +14,10 @@ from simtools.camera.camera_efficiency_calculator import (
     RESULT_COLUMN_DESCRIPTIONS,
     CameraEfficiencyCalculator,
 )
-from simtools.context import RunContext
 from simtools.io import ascii_handler
 from simtools.model.model_utils import export_model_files, initialize_simulation_models
 from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.runtime.context import RunContext
 from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 from simtools.visualization import visualize

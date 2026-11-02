@@ -8,12 +8,13 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-from simtools.context import RunContext
 from simtools.data_model import data_reader, schema
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model_repository.reader import resolve_model_reader
+from simtools.runtime.context import RunContext
 from simtools.utils import names, value_conversion
 
 
@@ -63,7 +64,7 @@ class ArrayLayout:
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
         self.context = context or RunContext.from_environment()
-        self.model_reader = model_reader or self.context.model_reader
+        self.model_reader = resolve_model_reader(model_reader, self.context)
         if self.model_reader is None:
             raise RuntimeError("No simulation model reader is configured.")
         self.site_model = None
