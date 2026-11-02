@@ -9,7 +9,7 @@ from eventio import SimTelFile
 from scipy.ndimage import gaussian_filter1d
 
 from simtools.camera.waveform_metrics import measure_waveform
-from simtools.simtel.simtel_io_metadata import (
+from simtools.sim_events.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
 )
 from simtools.visualization.plot_pulse_response import plot_response
