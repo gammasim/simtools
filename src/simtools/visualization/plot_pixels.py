@@ -233,5 +233,6 @@ def _apply_telescope_specific_pixel_transform(camera, raw_pixels, rotate_angle=N
     camera.pixels["x"] = x_pos * np.cos(rot_angle) - y_pos * np.sin(rot_angle)
     camera.pixels["y"] = y_pos * np.cos(rot_angle) + x_pos * np.sin(rot_angle)
     if camera.pixels.get("pixel_shape") in (1, 3):
-        camera.pixels["orientation"] = 30 if camera.pixels.get("pixel_shape") == 3 else 0
+        base_orientation = 30 if camera.pixels["pixel_shape"] == 3 else 0
+        camera.pixels["orientation"] = base_orientation + total_rotation.to_value(u.deg)
     camera.pixels["plot_rotate_angle"] = float(rot_angle)

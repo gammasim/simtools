@@ -218,6 +218,18 @@ def test_plot_axes_large_rotation():
     assert plt_mock.gca.return_value.annotate.call_count >= 2
 
 
+def test_plot_pixel_layout_leaves_space_around_outer_pixels(simple_camera):
+    simple_camera.telescope_name = "LSTN-01"
+    fig = plot_pixel_layout(simple_camera)
+    try:
+        left, right = fig.axes[0].get_xlim()
+        half_diameter = simple_camera.pixels["pixel_diameter"] / 2
+        assert left < min(simple_camera.pixels["x"]) - half_diameter
+        assert right > max(simple_camera.pixels["x"]) + half_diameter
+    finally:
+        plt.close(fig)
+
+
 def test_plot_pixel_layout_does_not_mutate_camera_coordinates(simple_camera):
     simple_camera.telescope_name = "LSTN-01"
     original_y = list(simple_camera.pixels["y"])

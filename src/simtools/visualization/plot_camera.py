@@ -74,6 +74,9 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
             plt.text(x, y, pix_id, ha=_CENTER, va=_CENTER, fontsize=font_size)
     add_pixel_patch_collections(ax, on_pixels, edge_pixels, off_pixels)
     setup_camera_axis_properties(ax, plot_camera, grid=True, axis_below=True, y_scale_factor=1.42)
+    x_min, x_max = ax.get_xlim()
+    margin = plot_camera.pixels["pixel_diameter"]
+    ax.set_xlim(x_min - margin, x_max + margin)
     plt.xlabel("Horizontal scale [cm]", fontsize=18, labelpad=0)
     plt.ylabel("Vertical scale [cm]", fontsize=18, labelpad=0)
     ax.set_title(f"Pixels layout in {plot_camera.telescope_name} camera", fontsize=15, y=1.02)
