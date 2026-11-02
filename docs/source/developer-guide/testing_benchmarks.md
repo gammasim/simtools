@@ -11,6 +11,9 @@ records wall time, CPU time, peak RSS of pytest and its application descendants,
 on hosted runners. These measurements are noisy; use repeated runs to identify
 trends.
 
+For local resource measurements, install the test and benchmark extras with
+`pip install -e '.[tests,benchmark]'`.
+
 Individual integration-test charts are published only when the test wall time
 meets the configurable threshold, which defaults to five seconds. Fast tests
 still run, contribute to the suite totals, and remain available in the raw
