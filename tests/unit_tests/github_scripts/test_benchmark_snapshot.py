@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import subprocess
 import sys
 import tarfile
 from pathlib import Path
@@ -92,6 +93,34 @@ def test_build_and_verify_snapshot(tmp_test_directory):
     data = (base / "verified/dev/test-resources/data.js").read_text(encoding="utf-8")
     assert data.startswith("window.BENCHMARK_DATA = ")
     assert json.loads(data.removeprefix("window.BENCHMARK_DATA = ").rstrip(";\n"))["entries"] == {}
+
+
+def test_scripts_run_without_installed_simtools(tmp_test_directory):
+    base = Path(tmp_test_directory)
+    state = base / "state.json"
+    subprocess.run(
+        [sys.executable, "-S", SCRIPT_DIRECTORY / "benchmark_snapshot.py", "init-state", state],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    archive_path = base / "snapshot.tar.gz"
+    with tarfile.open(archive_path, "w:gz") as archive:
+        archive.add(state, arcname="state.json")
+    subprocess.run(
+        [
+            sys.executable,
+            "-S",
+            SCRIPT_DIRECTORY / "publish_docs.py",
+            "extract",
+            archive_path,
+            base / "out",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert json.loads((base / "out/state.json").read_text(encoding="utf-8"))["entries"] == {}
 
 
 def test_verify_snapshot_incomplete(tmp_test_directory):
