@@ -6,7 +6,10 @@ from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.dependencies import write_dependency_manifest, write_development_dependency_manifest
+from simtools.runtime.dependencies import (
+    write_dependency_manifest,
+    write_development_dependency_manifest,
+)
 
 _DEFAULT_OUTPUT = Path("/opt/simtools/provenance/dependency-manifest.json")
 

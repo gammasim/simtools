@@ -9,7 +9,7 @@ from astropy.table import Table
 
 from simtools.application.model_reader import create_model_reader
 from simtools.model_repository import reader as reader_module
-from simtools.model_repository.reader import SimulationModelReader
+from simtools.model_repository.reader import SimulationModelReader, resolve_model_reader
 
 
 def _write_json(path, data):
@@ -258,6 +258,24 @@ def test_reader_factory_selects_filesystem(model_repository):
     assert reader.source_name == str(model_repository.resolve())
 
 
+def test_resolve_model_reader_uses_explicit_reader_and_context(mocker):
+    """Explicit and contextual readers take precedence over environment settings."""
+    explicit_reader = mocker.Mock()
+    context_reader = mocker.Mock()
+    context = mocker.Mock(model_reader=context_reader)
+
+    assert resolve_model_reader(explicit_reader, context) is explicit_reader
+    assert resolve_model_reader(context=context) is context_reader
+
+
+def test_resolve_model_reader_returns_none_without_configuration(monkeypatch):
+    """No configured model source leaves model loading optional."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+
+    assert resolve_model_reader() is None
+
+
 def test_reader_factory_selects_memory_storage():
     """The in-memory constructor provides a source for generated model files."""
     production_path = "simulation-models/productions/1.0.0/LSTN-01.json"
@@ -310,30 +328,34 @@ def test_reader_facade_selects_all_array_element_scope_branches(mocker):
     ]
 
 
-def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker, run_context):
+def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
     """Concrete sim_telarray scopes use design data or configured fallbacks."""
     source = Mock()
     source.read_production_table.return_value = {"design_model": {"LSTN-01": "LSTN-design"}}
     reader = SimulationModelReader(source)
-    context = run_context.replace(args={"ignore_missing_design_model": False})
+    ignore_missing_design_model = False
 
     assert reader._get_sim_telarray_array_element_list(
-        "LSTN-01", {"model_version": "1.0.0"}, context
+        "LSTN-01", {"model_version": "1.0.0"}, ignore_missing_design_model
     ) == [
         "global",
         "LSTN-design",
         "LSTN-01",
     ]
-    assert reader._get_sim_telarray_array_element_list("global", {}, context) == ["global"]
-    assert reader._get_sim_telarray_array_element_list("LSTN-design", {}, context) == [
+    assert reader._get_sim_telarray_array_element_list(
+        "global", {}, ignore_missing_design_model
+    ) == ["global"]
+    assert reader._get_sim_telarray_array_element_list(
+        "LSTN-design", {}, ignore_missing_design_model
+    ) == [
         "global",
         "LSTN-design",
     ]
 
     source.read_production_table.return_value = {"design_model": {}}
-    context = run_context.replace(args={"ignore_missing_design_model": True})
+    ignore_missing_design_model = True
     assert reader._get_sim_telarray_array_element_list(
-        "LSTN-01", {"model_version": "1.0.0"}, context
+        "LSTN-01", {"model_version": "1.0.0"}, ignore_missing_design_model
     ) == [
         "global",
         "LSTN-01",
@@ -368,3 +390,96 @@ def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):
 
     source_without_config = Mock(spec=["source_name", "is_configured"])
     assert SimulationModelReader(source_without_config).source_config is None
+
+
+def test_resolve_model_reader_selects_filesystem_from_environment(monkeypatch, model_repository):
+    """A configured filesystem path selects a filesystem reader."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(model_repository))
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+
+    reader = resolve_model_reader()
+
+    assert reader.source_name == str(model_repository.resolve())
+
+
+def test_resolve_model_reader_rejects_filesystem_and_git_together(monkeypatch, tmp_test_directory):
+    """Only one simulation-model source may be configured."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(tmp_test_directory))
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(tmp_test_directory))
+
+    with pytest.raises(ValueError, match="cannot be configured together"):
+        resolve_model_reader()
+
+
+def test_resolve_model_reader_rejects_empty_git_revision(monkeypatch, tmp_test_directory):
+    """An explicitly empty Git revision is an error, not a catalog lookup."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(tmp_test_directory))
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "")
+
+    with pytest.raises(ValueError, match="A Git simulation-model revision is required"):
+        resolve_model_reader()
+
+
+def test_resolve_model_reader_git_revision_defaults_to_catalog(monkeypatch, tmp_test_directory):
+    """Without a revision, the Git source uses the revision from the dependency catalog."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", raising=False)
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(tmp_test_directory / "absent"))
+
+    with pytest.raises(FileNotFoundError, match="Git model repository does not exist"):
+        resolve_model_reader()
+
+
+def test_get_model_parameters_honours_context_flag(mocker):
+    """The context keyword carries the design-model flag to the element lookup."""
+    source = Mock()
+    source.read_production_table.return_value = {"design_model": {}, "parameters": {}}
+    source.get_model_versions.return_value = ["1.0.0"]
+    reader = SimulationModelReader(source)
+    element_list = mocker.patch.object(reader, "_get_array_element_list", return_value=[])
+    context = Mock(args={"ignore_missing_design_model": True})
+
+    reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0", context=context)
+
+    assert element_list.call_args.args[-1] is True
+    reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0")
+    assert element_list.call_args.args[-1] is False
+
+
+class _ContextStub:
+    """Minimal context with the replace() interface used by RunContext."""
+
+    def __init__(self, model_reader=None):
+        self.model_reader = model_reader
+
+    def replace(self, **changes):
+        """Return a copy with the given fields replaced."""
+        return _ContextStub(**{"model_reader": self.model_reader, **changes})
+
+
+def test_with_resolved_model_reader_attaches_environment_source(monkeypatch, model_repository):
+    """An environment-configured source is carried by the context for worker payloads."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(model_repository))
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+    context = _ContextStub()
+
+    resolved = reader_module.with_resolved_model_reader(context)
+
+    assert resolved is not context
+    assert resolved.model_reader.source_config == {
+        "type": "filesystem",
+        "path": str(model_repository.resolve()),
+    }
+
+
+def test_with_resolved_model_reader_keeps_existing_or_absent_reader(monkeypatch):
+    """Contexts with a reader, or without any configured source, are returned unchanged."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+    unconfigured = _ContextStub()
+    existing = _ContextStub(model_reader=Mock())
+
+    assert reader_module.with_resolved_model_reader(unconfigured) is unconfigured
+    assert reader_module.with_resolved_model_reader(existing) is existing

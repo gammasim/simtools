@@ -10,10 +10,10 @@ from scipy.optimize import curve_fit
 
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import MODEL_PARAMETER_SCHEMA_URL, SCHEMA_PATH
-from simtools.context import RunContext
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.table_asset import get_simtel_serialization
+from simtools.runtime.context import RunContext
 
 ECSV_SUFFIX = ".ecsv"
 

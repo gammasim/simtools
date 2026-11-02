@@ -7,6 +7,6 @@
 (telescope_trigger_module)=
 
 ```{eval-rst}
-.. automodule:: telescope_trigger_rates
+.. automodule:: simtools.simtel.telescope_trigger_rates
    :members:
 ```

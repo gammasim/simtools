@@ -9,16 +9,18 @@ lower layer. Library code never imports `simtools.applications`, and
 production code never imports test helpers.
 
 Import-linter enforces the package layers, and Ruff checks private cross-module
-imports. The `ignore_imports` list of `[tool.importlinter]` in `pyproject.toml`
-is a ratchet: reduce it as the architecture cleanup proceeds and do not add
-entries.
+imports.
+
+Foundation modules `constants`, `version` and `statistics` import nothing from
+`simtools`; `tests/unit_tests/test_foundation_modules.py` checks this rule. The
+`runtime` package holds `context` and `dependencies`.
 
 ```text
 5  applications/            thin CLI wrappers
 4  workflows                simulate, production, science_tests, reporting, derive_*
 3  simulation engines       corsika, simtel, ray_tracing, camera, job_execution
 2  model                    model (site/telescope/array), model_repository, layout
-1  data                     io, data_model (schemas, metadata), sim_events readers
+1  data                     io, data_model (schemas, metadata), sim_events readers, runtime
 0  foundation               utils, constants, names, units
    visualization            may import 0-2 only; receives data, never computes it
 ```

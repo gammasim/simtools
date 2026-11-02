@@ -5,7 +5,6 @@ import logging
 import sys
 
 import simtools.configuration.commandline_parser as argparser
-from simtools import dependency_versions
 from simtools.configuration.argument_helpers import (
     coerce,
     configuration_from_environment,
@@ -13,6 +12,7 @@ from simtools.configuration.argument_helpers import (
     normalize_argument_aliases,
     validate_site_telescope_consistency,
 )
+from simtools.model_repository import dependency_versions
 from simtools.utils import general as gen
 
 

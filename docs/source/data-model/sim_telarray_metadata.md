@@ -8,7 +8,7 @@ To read the metadata from a sim_telarray output file, do e.g.,
 
 ```python
 import pprint
-import simtools.simtel.simtel_io_metadata as simtel_io_metadata
+import simtools.sim_events.simtel_io_metadata as simtel_io_metadata
 
 data = simtel_io_metadata.read_sim_telarray_metadata(
     "tests/resources/generated/proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.simtel.zst"

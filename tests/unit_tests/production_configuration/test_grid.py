@@ -998,20 +998,17 @@ def test_generate_target_values_supports_log_and_inverse_cos_scaling():
 def test_add_lookup_limits_to_point_uses_engine_lookup_nsb_rate():
     engine = _make_engine(lookup_table=None, lookup_nsb_rate=1.7)
     engine.lookup_table = "limits.ecsv"
-    engine._interpolate_limits_for_point = Mock(
-        return_value={
-            "lower_energy_threshold": 0.02,
-            "upper_scatter_radius": 120.0,
-            "viewcone_radius": 3.5,
-        }
-    )
+    engine._limits_lookup = Mock(lookup_field_units=None)
+    engine._limits_lookup.interpolate_point.return_value = {
+        "lower_energy_threshold": 0.02,
+        "upper_scatter_radius": 120.0,
+        "viewcone_radius": 3.5,
+    }
     point = {}
 
     engine._add_lookup_limits_to_point(point, zenith=20.0, azimuth=180.0)
 
-    engine._interpolate_limits_for_point.assert_called_once_with(
-        zenith=20.0, azimuth=180.0, nsb=1.7
-    )
+    engine._limits_lookup.interpolate_point.assert_called_once_with(20.0, 180.0, 1.7)
     assert point["nsb_rate"] == pytest.approx(1.7)
     assert_quantity_allclose(point["lower_energy_limit"], 0.02 * u.TeV)
     assert_quantity_allclose(point["upper_radius_limit"], 120 * u.m)
@@ -1021,13 +1018,13 @@ def test_add_lookup_limits_to_point_uses_engine_lookup_nsb_rate():
 def test_add_lookup_limits_to_point_raises_without_nsb_rate():
     engine = _make_engine(lookup_table=None, lookup_nsb_rate=None)
     engine.lookup_table = "limits.ecsv"
-    engine._interpolate_limits_for_point = Mock(return_value={"lower_energy_limit": 0.02})
+    engine._limits_lookup = Mock()
 
     with pytest.raises(ValueError, match="nsb_rate is required"):
         engine._add_lookup_limits_to_point({}, zenith=20.0, azimuth=180.0)
 
 
-def test_generate_extra_axis_combinations_returns_mesh_for_remaining_axes():
+def test_extra_axis_points_returns_mesh_for_remaining_axes():
     engine = ProductionGridEngine(
         axes={
             "axes": {
@@ -1038,11 +1035,12 @@ def test_generate_extra_axis_combinations_returns_mesh_for_remaining_axes():
         }
     )
 
-    keys, units, combinations = engine._generate_extra_axis_combinations(("zenith_angle",))
+    points = engine._extra_axis_points(("zenith_angle",))
 
-    assert keys == ["nsb_level", "offset"]
-    assert units == [u.dimensionless_unscaled, u.deg]
-    assert combinations.shape == (4, 2)
+    assert len(points) == 4
+    assert all(set(point) == {"nsb_level", "offset"} for point in points)
+    assert points[0]["nsb_level"].unit == u.dimensionless_unscaled
+    assert points[0]["offset"].unit == u.deg
 
 
 def test_create_circular_binning_uses_directed_span_from_start_to_end():
@@ -1197,12 +1195,8 @@ def test_convert_coordinates_keeps_points_without_horizontal_values():
     assert converted == points
 
 
-@patch.object(ProductionGridEngine, "_prepare_lookup_table_limits_for_point_interpolation")
 @patch("simtools.production_configuration.grid.CorsikaLimitsLookup")
-def test_init_with_lookup_prepares_point_interpolation(
-    mock_corsika_limits_lookup,
-    mock_prepare_lookup_table_limits,
-):
+def test_init_with_lookup_prepares_point_interpolation(mock_corsika_limits_lookup):
     ProductionGridEngine(
         axes={"axes": {"ha": {"range": [0, 0], "binning": 1, "units": "deg"}}},
         coordinate_system="ha_dec",
@@ -1214,7 +1208,7 @@ def test_init_with_lookup_prepares_point_interpolation(
         lookup_table="limits.ecsv",
         array_layout_name="alpha",
     )
-    mock_prepare_lookup_table_limits.assert_called_once_with()
+    mock_corsika_limits_lookup.return_value.prepare_point_interpolators.assert_called_once_with()
 
 
 def test_directed_circular_span_degrees_returns_directed_span_for_non_wrapping_range():

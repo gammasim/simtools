@@ -22,7 +22,7 @@ from astropy.table import Table
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.layout.array_layout_utils import resolve_array_layout_name
-from simtools.model.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel, trigger_threshold_parameter
 from simtools.production_configuration.grid import generate_job_grid
 from simtools.production_configuration.jobs_io import read_job_grid, serialize_job_grid
 from simtools.utils.value_conversion import ensure_list
@@ -216,11 +216,7 @@ def _threshold_param_name(args, telescope, context):
         context=context,
     )
     default_trigger = telescope_model.get_parameter_value("default_trigger")
-    if default_trigger == "AnalogSum":
-        return "asum_threshold"
-    if default_trigger == "Majority":
-        return "discriminator_threshold"
-    return "dsum_threshold"
+    return trigger_threshold_parameter(default_trigger) or "dsum_threshold"
 
 
 def _scan_config(curve_name, telescope, args):

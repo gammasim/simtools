@@ -25,7 +25,7 @@ from simtools.production_configuration.production_file_selection import (
     validate_required_production_outputs,
 )
 from simtools.production_configuration.production_metadata import build_production_job_manifest
-from simtools.simulator import Simulator
+from simtools.runners.simulator import Simulator
 
 logger = logging.getLogger(__name__)
 

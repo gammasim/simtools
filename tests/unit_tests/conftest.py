@@ -30,13 +30,13 @@ from simtools.configuration.arguments import (
     TELESCOPE,
 )
 from simtools.configuration.commandline_parser import CommandLineParser
-from simtools.context import RunContext, SimulationSoftware
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io.output_paths import OutputPaths
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_stage import CorsikaStage
+from simtools.runtime.context import RunContext, SimulationSoftware
 
 logger = logging.getLogger()
 _REPO_ROOT = Path(__file__).parent.parent.parent
@@ -99,6 +99,15 @@ def command_runner(mocker):
     runner.commands = []
     runner.side_effect = lambda *args, **kwargs: runner.commands.append((args, kwargs))
     return runner
+
+
+@pytest.fixture(autouse=True)
+def restore_environment():
+    """Undo environment changes of a test (e.g. a ``.env`` file loaded while parsing arguments)."""
+    saved = dict(os.environ)
+    yield
+    os.environ.clear()
+    os.environ.update(saved)
 
 
 @pytest.fixture(autouse=True)
@@ -249,7 +258,6 @@ def run_context(tmp_test_directory, mock_model_reader):
     context = RunContext.from_arguments(
         {},
         model_reader=mock_model_reader,
-        resolve_sim_software_executables=False,
         paths=OutputPaths(
             output_path=Path(tmp_test_directory) / "output",
             model_path=Path(tmp_test_directory) / "model",
@@ -641,6 +649,8 @@ def corsika_config_mock_array_model(corsika_config_data, model_version, run_cont
     array_model.site_model = mock.MagicMock()
     array_model.site_model._parameters = {
         "geomag_rotation": -4.533,
+        "geomag_horizontal": 20.0,
+        "geomag_vertical": -23.0,
         "corsika_observation_level": 2200.0,
     }
     array_model.model_version = model_version
@@ -651,6 +661,21 @@ def corsika_config_mock_array_model(corsika_config_data, model_version, run_cont
 
     # Set the mock behavior
     array_model.site_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    def mock_get_parameter_value_with_unit(par_name):
+        if par_name == "corsika_observation_level":
+            return 2200.0 * u.m
+        # Other parameters use the mock's return_value, as set by individual tests
+        return mock.DEFAULT
+
+    array_model.site_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_parameter_value_with_unit
+    )
+    # Site model writer: supplies the atmospheric profile file name for the SITE PARAMETERS block
+    # and absorbs the atmospheric transmission export (no file I/O in these unit tests)
+    site_model_writer = mock.MagicMock()
+    site_model_writer.get_atmospheric_profile_file_name.return_value = "atmprof_south.dat"
+    array_model.site_model.configuration_writers = {"sim_telarray": site_model_writer}
 
     corsika_params_from_repository = {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
@@ -691,9 +716,16 @@ def corsika_stage_mock_array_model(corsika_config_mock_array_model, run_context)
     for executable in (corsika_executable, curved_executable):
         executable.touch()
         executable.chmod(0o755)
+    from simtools.corsika.build_options import CorsikaBuildVariant
+
     software = SimpleNamespace(
-        corsika_exe=corsika_executable,
-        corsika_exe_curved=curved_executable,
+        corsika_root=corsika_root,
+        corsika_path=corsika_root,
+        corsika_build_variants=(
+            CorsikaBuildVariant("corsika", "config", "flat", "qgs3", "urqmd"),
+            CorsikaBuildVariant("corsika_curved", "config", "curved", "qgs3", "urqmd"),
+        ),
+        corsika_flat_executable=corsika_executable,
         corsika_interaction_models=("qgs3", "urqmd"),
         sim_telarray_path=Path(run_context.software.sim_telarray_root),
         he_interaction="qgs3",

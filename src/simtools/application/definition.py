@@ -9,7 +9,8 @@ from simtools.application.model_reader import create_model_reader_from_configura
 from simtools.configuration import arguments as configurator_arguments
 from simtools.configuration import configurator
 from simtools.configuration.arguments import STANDARD_ARGUMENTS, ArgumentDefinition
-from simtools.context import RunContext
+from simtools.corsika.build_options import with_installed_build_variants
+from simtools.runtime.context import RunContext
 
 PostParseHook = Callable[[dict, Mapping[str, str], object], None]
 
@@ -118,10 +119,11 @@ class ApplicationDefinition:
             )
 
             try:
-                context = RunContext.from_arguments(
-                    args_dict,
-                    resolve_sim_software_executables="corsika" in self.needs,
-                )
+                context = RunContext.from_arguments(args_dict)
+                if "corsika" in self.needs:
+                    context = context.replace(
+                        software=with_installed_build_variants(context.software)
+                    )
                 if self._show_options_need_model_reader(args_dict):
                     context = context.replace(
                         model_reader=create_model_reader_from_configuration(args_dict)

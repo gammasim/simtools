@@ -170,7 +170,7 @@ def build_simulation_job_metadata(args_dict, simulator, include_sct=True):
     ----------
     args_dict : dict
         Resolved ``simulate_prod`` application arguments.
-    simulator : simtools.simulator.Simulator
+    simulator : simtools.runners.simulator.Simulator
         Simulator for the completed run.
     include_sct : bool, optional
         Include the SCT-presence catalog field when the resolved array elements are available.
@@ -218,7 +218,7 @@ def build_production_job_manifest(
     ----------
     args_dict : dict
         Resolved ``simulate_prod`` application arguments.
-    simulator : simtools.simulator.Simulator
+    simulator : simtools.runners.simulator.Simulator
         Simulator for the completed and validated run.
     output_directory : str or pathlib.Path
         Directory containing the packaged output files.

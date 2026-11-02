@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from simtools import dependency_versions
 from simtools import version as versioning
+from simtools.model_repository import dependency_versions
 from simtools.testing import options
 
 pytest_plugins = ("resource_benchmark",)

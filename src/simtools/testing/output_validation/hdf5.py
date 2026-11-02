@@ -1,8 +1,9 @@
 """HDF5 integration-output validators."""
 
-from operator import methodcaller
-
-from simtools.sim_events import validate_run_outputs
+from simtools.sim_events.hdf5_output_validation import (
+    validate_reduced_event_data_file,
+    validate_trigger_histograms_file,
+)
 from simtools.testing import assertions
 
 
@@ -18,10 +19,12 @@ def validate_datasets(path, required=None, minimum_rows=None):
 
 def validate_product(path, product):
     """Validate one structured HDF5 product using its registered validator."""
-    validator_name = f"validate_{product}_file"
+    validators = {
+        "reduced_event_data": validate_reduced_event_data_file,
+        "trigger_histograms": validate_trigger_histograms_file,
+    }
     try:
-        methodcaller(validator_name, path)(validate_run_outputs)
-    except AttributeError as exc:
+        validator = validators[product]
+    except KeyError as exc:
         raise ValueError(f"Unsupported HDF5 product '{product}'.") from exc
-    except TypeError as exc:
-        raise ValueError(f"HDF5 product validator '{validator_name}' is not callable.") from exc
+    validator(path)

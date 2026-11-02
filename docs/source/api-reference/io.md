@@ -72,3 +72,12 @@ enforce deletion or content validation.
 .. automodule:: simtools.io.legacy_data_handler
    :members:
 ```
+
+(io_log_inspector)=
+
+## Log inspection
+
+```{eval-rst}
+.. automodule:: simtools.io.log_inspector
+   :members:
+```

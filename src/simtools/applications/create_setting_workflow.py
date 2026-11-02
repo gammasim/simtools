@@ -6,7 +6,7 @@ from pathlib import Path
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import argument_helpers
 from simtools.configuration import arguments as cli
-from simtools.data_model.setting_workflow import create_setting_workflow, run_setting_workflow
+from simtools.runners.setting_workflow import create_setting_workflow, run_setting_workflow
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,

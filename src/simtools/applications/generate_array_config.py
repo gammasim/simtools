@@ -4,6 +4,7 @@
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.model.array_model import ArrayModel
+from simtools.simulation.configuration import get_model_writer
 
 _ARGUMENTS = ()
 
@@ -37,7 +38,7 @@ def main():
         context=app_context,
     )
     array_model.print_telescope_list()
-    array_model.export_all_simtel_config_files()
+    get_model_writer(array_model, context=app_context).export_all_simtel_config_files()
 
 
 if __name__ == "__main__":
