@@ -19,6 +19,82 @@ logger = logging.getLogger()
 mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
 
 
+@pytest.mark.parametrize(
+    ("entry", "value", "valid"),
+    [
+        ({"allowed_values": ["Gauss"]}, "gAuSs", True),
+        ({"allowed_values": ["Gauss"], "case_sensitive": False}, "GAUSS", True),
+        ({"allowed_values": ["Gauss"], "case_sensitive": True}, "Gauss", True),
+        ({"allowed_values": ["Gauss"], "case_sensitive": True}, "gauss", False),
+        ({"allowed_values": ["Gauss"]}, "other", False),
+        ({"allowed_values": [1, "Gauss"]}, 1, True),
+        ({"allowed_values": [1, "Gauss"]}, "GAUSS", True),
+        ({"allowed_values": [1, "Gauss"]}, 2, False),
+        ({"type": "string"}, "anything", True),
+    ],
+)
+def test_allowed_values_case_sensitivity(entry, value, valid):
+    """Compare string choices according to the schema without changing other types."""
+    validator = validate_data.DataValidator()
+    validator._data_description = [entry]
+
+    if valid:
+        validator._check_allowed_values(value, 0)
+    else:
+        with pytest.raises(ValueError, match="is not in allowed values"):
+            validator._check_allowed_values(value, 0)
+
+
+@pytest.mark.parametrize(
+    ("parameter", "version", "value", "unit", "parameter_type"),
+    [
+        ("flasher_angular_distribution", "0.1.0", "iSoTrOpIc", None, "string"),
+        (
+            "flasher_pulse_shape",
+            "0.2.0",
+            ["gAuSs-ExPoNeNtIaL", 0.4, 1.59],
+            [None, "ns", "ns"],
+            ["string", "float64", "float64"],
+        ),
+    ],
+)
+def test_validate_model_parameter_preserves_string_case(
+    parameter, version, value, unit, parameter_type
+):
+    """Actual scalar and mixed schemas accept case variants without changing values."""
+    data = {
+        "parameter": parameter,
+        "model_parameter_schema_version": version,
+        "type": parameter_type,
+        "value": value,
+        "unit": unit,
+    }
+
+    expected = value[0] if isinstance(value, list) else value
+    result = validate_data.DataValidator.validate_model_parameter(data)
+
+    if isinstance(value, list):
+        assert result["value"][0] == expected
+    else:
+        assert result["value"] == expected
+
+
+def test_validate_case_sensitive_schema_from_file(tmp_test_directory):
+    """An explicit schema flag enforces the spelling of an allowed string."""
+    definition = schema.get_model_parameter_schema("flasher_angular_distribution", "0.1.0")
+    definition["data"][0]["case_sensitive"] = True
+    schema_file = tmp_test_directory / "flasher.schema.yml"
+    ascii_handler.write_data_to_file(definition, schema_file)
+    data = {"value": "gauss", "unit": None}
+    validator = validate_data.DataValidator(schema_file=schema_file, data_dict=data)
+
+    with pytest.raises(ValueError, match="is not in allowed values"):
+        validator.validate_and_transform()
+
+    data["value"] = "Gauss"
+    assert validator.validate_and_transform()["value"] == "Gauss"
+
+
 def _write_mirror_file(tmp_test_directory):
     mirror_table = Table(
         {
@@ -595,7 +671,7 @@ def test_validate_model_parameter_rejects_disallowed_value():
         "parameter": "flasher_angular_distribution",
         "type": "string",
         "unit": None,
-        "value": "gauss",
+        "value": "unknown",
     }
 
     with pytest.raises(ValueError, match=r"not in allowed values"):

@@ -110,8 +110,8 @@ def test_source_filters_parameter_metadata_and_rejects_missing_values():
         source.read_parameters({"missing": "1.0.0"}, "telescopes", "LSTN-01", "North")
 
 
-def test_source_normalizes_string_parameter_values():
-    """String values are case insensitive while identifying metadata retains its case."""
+def test_source_preserves_string_parameter_values():
+    """String values and identifying metadata retain their case."""
     path = (
         "simulation-models/model_parameters/ILLN-design/flasher_angular_distribution/"
         "flasher_angular_distribution-1.0.0.json"
@@ -132,7 +132,7 @@ def test_source_normalizes_string_parameter_values():
         {"flasher_angular_distribution": "1.0.0"}, "calibration", "ILLN-design", "North"
     )
 
-    assert result == [{**document, "value": "isotropic"}]
+    assert result == [document]
 
 
 def test_source_reads_ecsv_with_parameter_metadata_and_checks_asset_paths(tmp_test_directory):

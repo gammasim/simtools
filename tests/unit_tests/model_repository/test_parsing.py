@@ -22,8 +22,8 @@ def test_normalize_model_parameter_preserves_file_name_case():
     assert normalize_model_parameter(data)["value"] == "Model.DAT"
 
 
-def test_normalize_model_parameter_lowercases_mixed_list_values():
-    """Normalize strings in a mixed parameter without changing numbers or units."""
+def test_normalize_model_parameter_preserves_mixed_list_values():
+    """Preserve strings, numbers and units in a mixed parameter."""
     data = {
         "type": ["string", "float64", "float64"],
         "file": False,
@@ -33,17 +33,17 @@ def test_normalize_model_parameter_lowercases_mixed_list_values():
 
     result = normalize_model_parameter(data)
 
-    assert result["value"][0] == "gauss-exponential"
+    assert result["value"][0] == "Gauss-Exponential"
     assert result["value"][1:] == pytest.approx(data["value"][1:])
     assert result["unit"] == data["unit"]
     assert data["value"][0] == "Gauss-Exponential"
 
 
-def test_normalize_model_parameter_lowercases_string_lists():
-    """Normalize each string in a list-valued parameter."""
+def test_normalize_model_parameter_preserves_string_lists():
+    """Preserve each string in a list-valued parameter."""
     data = {"type": "string", "file": False, "unit": None, "value": ["Majority", "SUM"]}
 
-    assert normalize_model_parameter(data)["value"] == ["majority", "sum"]
+    assert normalize_model_parameter(data)["value"] == data["value"]
 
 
 def test_normalize_model_parameter_preserves_file_list_case():
