@@ -494,7 +494,7 @@ def test_flasher_gauss_exponential_uses_simtel_table_writer(tmp_test_directory, 
         patch.object(
             rp.model_reader,
             "read_production_table",
-            return_value={"parameters": {"MSTx-NectarCam": {}}},
+            return_value={"parameters": {"MSTx-NectarCam": {"calibration_devices": "1.0.0"}}},
         ),
         patch(
             "simtools.reporting.model_figures.simtel_file_writer"
@@ -521,6 +521,55 @@ def test_flasher_gauss_exponential_uses_simtel_table_writer(tmp_test_directory, 
     )
     assert "current sim_telarray configuration generator" in buf.getvalue()
     assert list((Path(tmp_test_directory) / "_images").glob("flasher_pulse_shape_*.png"))
+
+
+def test_flasher_pulse_plot_skips_designs_without_site_calibration_devices(
+    tmp_test_directory, run_context
+):
+    rp = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-01", "model_version": "7.0.0"},
+        output_path=Path(tmp_test_directory),
+        context=run_context,
+    )
+    selected_parameters = {
+        "flasher_pulse_shape": {
+            "parameter_version": "1.0.0",
+            "value": ["Gauss-Exponential", 1.2879, 2.0961],
+        }
+    }
+    comparison_items = [{"parameter_version": "1.0.0", "model_version": "7.0.0"}]
+    requested = []
+
+    def get_model_parameters(**kwargs):
+        requested.append(kwargs)
+        if kwargs["array_element_name"] == "MSFx-NectarCam":
+            return selected_parameters
+        raise ValueError("No parameters found for telescopes")
+
+    rp.model_reader.get_model_parameters = get_model_parameters
+    rp.model_reader.read_production_table = lambda *_args, **_kwargs: {
+        "parameters": {
+            "LSTN-design": {"fadc_sum_bins": "1.0.0"},
+            "LSTS-design": {
+                "calibration_devices": "1.0.0",
+                "fadc_sum_bins": "1.0.0",
+            },
+        }
+    }
+    output = StringIO()
+
+    write_flasher_pulse_shape_plots(
+        output,
+        comparison_items,
+        "calibration_devices",
+        rp.model_reader,
+        "North",
+        "MSFx-NectarCam",
+        context=rp.context,
+    )
+
+    assert [request["array_element_name"] for request in requested] == ["MSFx-NectarCam"]
+    assert output.getvalue() == ""
 
 
 def test_produce_array_element_report_writes_design_note_and_dict_table(
