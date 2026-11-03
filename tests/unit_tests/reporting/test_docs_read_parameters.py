@@ -523,11 +523,11 @@ def test_flasher_gauss_exponential_uses_simtel_table_writer(tmp_test_directory, 
     assert list((Path(tmp_test_directory) / "_images").glob("flasher_pulse_shape_*.png"))
 
 
-def test_flasher_pulse_plot_skips_telescope_without_calibration_devices(
+def test_flasher_pulse_plot_skips_designs_without_site_calibration_devices(
     tmp_test_directory, run_context
 ):
     rp = ReadParameters(
-        args={"site": "North", "telescope": "LSTN-01", "model_version": "6.3.0"},
+        args={"site": "North", "telescope": "LSTN-01", "model_version": "7.0.0"},
         output_path=Path(tmp_test_directory),
         context=run_context,
     )
@@ -537,7 +537,7 @@ def test_flasher_pulse_plot_skips_telescope_without_calibration_devices(
             "value": ["Gauss-Exponential", 1.2879, 2.0961],
         }
     }
-    comparison_items = [{"parameter_version": "1.0.0", "model_version": "6.3.0"}]
+    comparison_items = [{"parameter_version": "1.0.0", "model_version": "7.0.0"}]
     requested = []
 
     def get_model_parameters(**kwargs):
@@ -548,7 +548,13 @@ def test_flasher_pulse_plot_skips_telescope_without_calibration_devices(
 
     rp.model_reader.get_model_parameters = get_model_parameters
     rp.model_reader.read_production_table = lambda *_args, **_kwargs: {
-        "parameters": {"LSTN-design": {"fadc_sum_bins": "1.0.0"}}
+        "parameters": {
+            "LSTN-design": {"fadc_sum_bins": "1.0.0"},
+            "LSTS-design": {
+                "calibration_devices": "1.0.0",
+                "fadc_sum_bins": "1.0.0",
+            },
+        }
     }
     output = StringIO()
 
