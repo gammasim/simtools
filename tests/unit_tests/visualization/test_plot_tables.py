@@ -321,6 +321,7 @@ def test_generate_plot_configurations(
     # Mock the table data
     mock_table = Table()
     mock_table["time"] = [1.0, 2.0, 3.0]
+    mock_table["kind"] = ["a", "b", "c"]
     mock_table["amplitude"] = [0.1, 0.2, 0.3]
     mock_read_table.return_value = mock_table
     mock_read_parameter_dict.return_value = {"model_parameter_schema_version": "0.2.0"}
