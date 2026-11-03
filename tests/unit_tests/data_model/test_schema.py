@@ -21,6 +21,23 @@ _INTEGRATION_CONFIG_FILES = sorted(
 )
 
 
+@pytest.mark.parametrize("version", ["0.1.0", "0.2.0"])
+@pytest.mark.parametrize("case_sensitive", [True, False])
+def test_model_parameter_metaschema_accepts_case_sensitive(version, case_sensitive):
+    """Both metaschema versions accept a boolean case-comparison option."""
+    metaschema = schema.load_schema(
+        SCHEMA_PATH / "model_parameter_and_data_schema.metaschema.yml", version
+    )
+    parameter_schema = schema.get_model_parameter_schema("flasher_angular_distribution", "0.1.0")
+    parameter_schema["data"][0]["case_sensitive"] = case_sensitive
+
+    jsonschema.Draft6Validator(metaschema).validate(parameter_schema)
+
+    parameter_schema["data"][0]["case_sensitive"] = "yes"
+    with pytest.raises(jsonschema.ValidationError, match="not valid under any"):
+        jsonschema.Draft6Validator(metaschema).validate(parameter_schema)
+
+
 def test_get_parameter_type_and_unit_from_schema():
     assert (
         schema.get_parameter_attribute_from_schema("mirror_focal_length", "0.1.0", "type")
