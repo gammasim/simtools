@@ -352,6 +352,83 @@ def test_produce_simulation_configuration_report(tmp_path, run_context):
     assert "| LSTN-design | muon+ | 580.0 g/cm2 |" in content
 
 
+def test_simulation_configuration_report_uses_declared_scopes(
+    tmp_test_directory, mocker, run_context
+):
+    """Global and design settings appear once at the scopes declared by the table."""
+    rp = ReadParameters(
+        args={"model_version": "6.0.0", "simulation_software": "sim_telarray"},
+        output_path=Path(tmp_test_directory),
+        context=run_context,
+    )
+    production = {
+        "parameters": {
+            "global": {"random_generator": "1.0.0"},
+            "LSTN-design": {"tailcut_scale": "1.0.0"},
+            "MSTx-FlashCam": {"min_photons": "1.0.0"},
+        }
+    }
+    mocker.patch.object(rp.model_reader, "read_production_table", return_value=production)
+
+    def scope_data(scope, site, parameter_names):
+        return [
+            (scope, name, "1.0.0", name, "Description", "Short description")
+            for name in parameter_names
+        ], []
+
+    scope_reader = mocker.patch.object(
+        rp, "_get_simulation_configuration_data_for_telescope_site", side_effect=scope_data
+    )
+    rp.produce_simulation_configuration_report()
+
+    report = (Path(tmp_test_directory) / "configuration_sim_telarray.md").read_text(
+        encoding="utf-8"
+    )
+    assert report.count("## [") == 2
+    assert "## global" in report
+    assert "## [LSTN-design](LSTN-design.md)" in report
+    assert "## [MSTx-FlashCam](MSTx-FlashCam.md)" in report
+    assert "LSTN-01" not in report
+    assert [call.args[0] for call in scope_reader.call_args_list] == [
+        "global",
+        "LSTN-design",
+        "MSTx-FlashCam",
+    ]
+    assert [call.args[1] for call in scope_reader.call_args_list] == [None, "North", "North"]
+
+
+def test_simtel_scope_omits_values_from_other_scopes(tmp_test_directory, mocker, run_context):
+    """A design section contains its declared parameters, not inherited global rows."""
+    rp = ReadParameters(
+        args={"model_version": "6.0.0", "simulation_software": "sim_telarray"},
+        output_path=Path(tmp_test_directory),
+        context=run_context,
+    )
+    all_scopes = {
+        "random_generator": {
+            "value": "mt19937",
+            "unit": None,
+            "parameter_version": "1.0.0",
+        },
+        "tailcut_scale": {"value": 2.6, "unit": None, "parameter_version": "1.0.0"},
+    }
+    mocker.patch.object(
+        rp.model_reader, "get_simulation_configuration_parameters", return_value=all_scopes
+    )
+    mocker.patch.object(
+        rp,
+        "get_all_parameter_descriptions",
+        return_value={"tailcut_scale": {"description": "Tailcut", "short_description": ""}},
+    )
+    mocker.patch.object(rp.model_reader, "export_model_files")
+
+    rows, _ = rp._get_simulation_configuration_data_for_telescope_site(
+        "LSTN-design", "North", {"tailcut_scale"}
+    )
+
+    assert [row[1] for row in rows] == ["tailcut_scale"]
+
+
 def test_produce_calibration_reports(mocker, tmp_path, run_context):
     rp = ReadParameters(args={"model_version": "6.0.0"}, output_path=tmp_path, context=run_context)
     mocker.patch.object(rp.model_reader, "get_array_elements", return_value=["ILLN-01"])

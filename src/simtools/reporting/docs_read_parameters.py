@@ -222,8 +222,15 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
             parameter_dict = all_param_data.get(version, {})
             if not parameter_dict:
                 continue
-            self._export_model_files(all_param_data.get(version))
-            for parameter_name in filter(parameter_dict.__contains__, all_parameter_names):
+            selected = [
+                name
+                for name in all_parameter_names
+                if name in parameter_dict
+                and parameter_dict[name].get("instrument") == self.array_element
+                and parameter_dict[name].get("value") is not None
+            ]
+            self._export_model_files({name: parameter_dict[name] for name in selected})
+            for parameter_name in selected:
                 item = self._build_version_parameter_item(
                     version, parameter_name, parameter_dict.get(parameter_name)
                 )
@@ -366,24 +373,45 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
 
         results = []
         dict_tables = []
-        for telescope in self.model_reader.get_array_elements(self.model_version):
-            valid_site = names.get_site_from_array_element_name(telescope)
-            for site in valid_site if isinstance(valid_site, list) else [valid_site]:
-                data, tables = self._get_simulation_configuration_data_for_telescope_site(
-                    telescope, site
-                )
-                results.extend(data)
-                dict_tables.extend(tables)
+        production = self.model_reader.read_production_table(
+            "configuration_sim_telarray", self.model_version
+        )
+        for scope, parameter_versions in production["parameters"].items():
+            site = names.get_site_from_array_element_name(scope) if scope != "global" else None
+            if isinstance(site, list):
+                site = site[0]
+            data, tables = self._get_simulation_configuration_data_for_telescope_site(
+                scope, site, parameter_versions.keys()
+            )
+            results.extend(data)
+            dict_tables.extend(tables)
         return results, dict_tables
 
-    def _get_simulation_configuration_data_for_telescope_site(self, telescope, site):
-        """Retrieve and format simulation-configuration parameter data for one telescope-site."""
-        param_dict = self.model_reader.get_simulation_configuration_parameters(
-            simulation_software=self.software,
-            site=site,
-            array_element_name=telescope,
-            model_version=self.model_version,
-        )
+    def _get_simulation_configuration_data_for_telescope_site(
+        self, telescope, site, parameter_names=None
+    ):
+        """Retrieve and format sim_telarray parameters declared for a configuration scope."""
+        if telescope == "global":
+            param_dict = self.model_reader.get_model_parameters(
+                site,
+                telescope,
+                "configuration_sim_telarray",
+                self.model_version,
+                parameter_names=parameter_names,
+            )
+        else:
+            param_dict = self.model_reader.get_simulation_configuration_parameters(
+                simulation_software=self.software,
+                site=site,
+                array_element_name=telescope,
+                model_version=self.model_version,
+            )
+            if parameter_names is not None:
+                param_dict = {
+                    parameter: value
+                    for parameter, value in param_dict.items()
+                    if parameter in parameter_names
+                }
         parameter_descriptions = self.get_all_parameter_descriptions(
             collection=f"configuration_{self.software}"
         )
@@ -428,17 +456,32 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
         with output_filename.open("w", encoding="utf-8") as file:
             file.write(f"# configuration_{self.software}\n\n\n")
             if self.software == "sim_telarray":
-                data.sort(key=lambda x: (x[0], x[1]))
-                for telescope, group in groupby(data, key=lambda x: x[0]):
-                    file.write(f"## [{telescope}]({telescope}.md)\n\n\n")
-                    self._write_to_file(group, file)
-                    for table_telescope, parameter, value_data, unit in dict_tables:
-                        if table_telescope == telescope:
-                            self._write_dict_table(parameter, file, value_data, unit)
+                self._write_scoped_configuration_data(data, dict_tables, file)
             else:
-                self._write_to_file(data, file)
-                for _, parameter, value_data, unit in dict_tables:
-                    self._write_dict_table(parameter, file, value_data, unit)
+                self._write_configuration_data(data, dict_tables, file)
+
+    def _write_scoped_configuration_data(self, data, dict_tables, file):
+        """Write sim_telarray configuration values grouped by declared scope."""
+        data.sort(key=lambda x: (x[0], x[1]))
+        tables_by_scope = {}
+        for telescope, parameter, value_data, unit in dict_tables:
+            tables_by_scope.setdefault(telescope, []).append((parameter, value_data, unit))
+        for telescope, group in groupby(data, key=lambda x: x[0]):
+            heading = (
+                "## global\n\n\n"
+                if telescope == "global"
+                else (f"## [{telescope}]({telescope}.md)\n\n\n")
+            )
+            file.write(heading)
+            self._write_to_file(group, file)
+            for parameter, value_data, unit in tables_by_scope.get(telescope, []):
+                self._write_dict_table(parameter, file, value_data, unit)
+
+    def _write_configuration_data(self, data, dict_tables, file):
+        """Write unscoped simulation configuration values and dictionary tables."""
+        self._write_to_file(data, file)
+        for _, parameter, value_data, unit in dict_tables:
+            self._write_dict_table(parameter, file, value_data, unit)
 
     def _report_base_version(self, update_info):
         """Use declared patch history, falling back for versions without update metadata."""
@@ -494,6 +537,11 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
 
         with output_filename.open("w", encoding="utf-8") as file:
             file.write(f"# {telescope_model.name}\n")
+            if not is_design_model:
+                file.write(
+                    "\nThis array element is based on the design model "
+                    f"[{telescope_model.design_model}]({telescope_model.design_model}.md).\n\n"
+                )
             if update_type != "patch_update":
                 write_telescope_structure_figure(
                     file, telescope_model, self._logger, context=self.context
@@ -591,8 +639,23 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
                 f"# {self.array_element}\n\n"
                 "Model parameters and their values for all model versions.\n\n"
             )
+            design_model = self._design_model_for_element(collection)
+            if design_model:
+                file.write(f"Design model: {design_model}.\n\n")
             for parameter in parameters:
                 self._write_parameter_section(file, parameter, comparison_data, collection)
+
+    def _design_model_for_element(self, collection):
+        """Return the newest declared design model for this element across versions."""
+        for version in sort_versions(
+            self.model_reader.get_model_versions(collection), reverse=True
+        ):
+            design_model = self.model_reader.get_design_model(
+                version, self.array_element, collection=collection
+            )
+            if design_model != self.array_element:
+                return design_model
+        return None
 
     def _write_parameter_section(self, file, parameter, comparison_data, collection):
         """Write the section of a single parameter comparing values across model versions."""

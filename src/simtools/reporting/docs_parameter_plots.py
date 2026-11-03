@@ -588,7 +588,9 @@ class ParameterPlotMixin:  # pylint: disable=too-few-public-methods
 
         model_path = Path(self.output_path) / "model"
         model_path.mkdir(parents=True, exist_ok=True)
-        self.model_reader.export_model_files(parameters=parameter_data, dest=model_path)
+        self.model_reader.export_model_files(
+            parameters={parameter: selected_parameter}, dest=model_path
+        )
         plot_names = self._generate_plots(
             parameter,
             latest_parameter_version,

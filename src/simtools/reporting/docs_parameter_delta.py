@@ -146,6 +146,15 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
                 f"Full base report: [{base_model_version}](../{base_model_version}/{element}.md)"
                 "\n\n"
             )
+            if collection in ("telescopes", "calibration_devices"):
+                design_model = self.model_reader.get_design_model(
+                    self.model_version, element, collection=collection
+                )
+                if design_model != element:
+                    file.write(
+                        "This array element is based on the design model "
+                        f"[{design_model}]({design_model}.md).\n\n"
+                    )
             if not changes:
                 file.write("No parameter changes detected.\n")
             else:
