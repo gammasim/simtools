@@ -16,8 +16,9 @@ amplitudes already encode the complete response. Interpolation is linear in the
 input tables; it does not reproduce internal sim_telarray resampling or noise.
 At the first response-table intensity, the analysis uses the tabulated response;
 sim_telarray uses the linear response at that exact threshold.
-The conventional pulse is peak-normalized before transit-time-jitter smearing;
-the non-linear tables already include jitter.
+The `single_pe` pulse is peak-normalized before transit-time-jitter smearing.
+The `intensity_dependent` tables contain complete waveforms that already include
+jitter, so they are not jittered again.
 
 Widths use 95% of the peak by default. Set an absolute ADC threshold to measure
 time-over-threshold instead. A missing threshold crossing produces a truncation

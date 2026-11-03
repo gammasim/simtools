@@ -39,7 +39,8 @@ WIDTH_FRACTION = "width_fraction"
 THRESHOLD_ADC = "threshold_adc"
 TEMPLATE_KIND = "template_kind"
 GAIN = "gain"
-REFERENCE = "reference"
+REFERENCE = "single_pe"
+INTENSITY_DEPENDENT = "intensity_dependent"
 
 
 def template_responses(model, illuminations, width_fraction=0.95, threshold_adc=None):
@@ -109,7 +110,7 @@ def _time_ns(table):
 def _gain_response(model, unified, gain_index):
     """Build one gain's uniformly sampled linear reference and ADC conversion."""
     nonlinear = unified[
-        (np.asarray(unified[TEMPLATE_KIND]) == "response")
+        (np.asarray(unified[TEMPLATE_KIND]) == INTENSITY_DEPENDENT)
         & (np.asarray(unified[GAIN]) == GAINS[gain_index])
     ]
     reference = unified[

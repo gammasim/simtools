@@ -38,7 +38,7 @@ def pulse_model():
     for gain in pulse_response.GAINS:
         rows.extend(
             {
-                "template_kind": "reference",
+                "template_kind": "single_pe",
                 "gain": gain,
                 INTENSITY: 1.0,
                 "time": time,
@@ -54,7 +54,7 @@ def pulse_model():
         ):
             rows.extend(
                 {
-                    "template_kind": "response",
+                    "template_kind": "intensity_dependent",
                     "gain": gain,
                     INTENSITY: intensity,
                     "time": time,
@@ -78,7 +78,7 @@ def test_template_scaling_interpolation_and_holding(pulse_model):
 
 def test_first_response_level_uses_table(pulse_model):
     table = pulse_model.get_parameter_table.return_value
-    selected = (table["template_kind"] == RESPONSE) & (table[INTENSITY] == 10)
+    selected = (table["template_kind"] == "intensity_dependent") & (table[INTENSITY] == 10)
     table[AMPLITUDE][selected] *= 0.8
     result, _ = pulse_response.template_responses(pulse_model, [9, 10, 10.001])
     hg = result[(result["gain"] == "HG") & (result[RESPONSE] == "nonlinear")]
@@ -102,7 +102,7 @@ def test_template_responses_reads_unified_reference_and_gain_templates(pulse_mod
     for gain in ("HG", "LG"):
         rows.extend(
             {
-                "template_kind": "reference",
+                "template_kind": "single_pe",
                 "gain": gain,
                 INTENSITY: 1.0,
                 "time": time,
@@ -113,7 +113,7 @@ def test_template_responses_reads_unified_reference_and_gain_templates(pulse_mod
         for intensity, pulse in ((10, [0, 0, 10, 0, 0]), (20, [0, 0, 20, 0, 0])):
             rows.extend(
                 {
-                    "template_kind": "response",
+                    "template_kind": "intensity_dependent",
                     "gain": gain,
                     INTENSITY: intensity,
                     "time": time,

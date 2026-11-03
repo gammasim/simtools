@@ -65,30 +65,29 @@ plot_configuration:
         column_x: time
         column_y: amplitude
 ---
-title: Schema for unified fadc_pulse_shape reference and response templates
+title: Schema for unified fadc_pulse_shape templates
 schema_version: 0.4.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
 name: fadc_pulse_shape
 description: >-
-  Linear reference pulse shapes and gain-specific intensity-dependent pulse
-  response templates. Rows use template_kind=reference or response and gain=HG
-  or LG. Reference rows have intensity 1 and preserve the unsmeared linear
-  reference. Response amplitudes are complete waveforms relative to the
-  nominal single-photoelectron peak and already include transit-time jitter.
-  The response templates are not jittered again. Each gain has its own
-  intensity grid.
-short_description: FADC reference pulse and intensity-dependent response templates.
+  Linear single-photoelectron pulse shapes and gain-specific intensity-dependent pulse
+  templates. Rows use template_kind=single_pe or intensity_dependent and gain=HG
+  or LG. Single_pe rows have intensity 1 and preserve the unsmeared linear pulse.
+  Intensity-dependent amplitudes are complete waveforms relative to the nominal
+  single-photoelectron peak and already include transit-time jitter. These rows
+  are not jittered again. Each gain has its own intensity grid.
+short_description: FADC single-photoelectron and intensity-dependent pulse templates.
 data:
   - type: file
     unit: dimensionless
     table_columns:
       - name: template_kind
-        description: Reference pulse or intensity-dependent response template
+        description: Single-photoelectron pulse or intensity-dependent response template
         type: string
         required: true
-        allowed_values: [reference, response]
+        allowed_values: [single_pe, intensity_dependent]
       - name: gain
         description: Readout gain channel
         type: string

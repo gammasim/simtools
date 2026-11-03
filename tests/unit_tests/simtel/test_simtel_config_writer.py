@@ -424,7 +424,7 @@ def test_write_tel_config_adds_response_table_metadata(
     for gain in ("HG", "LG"):
         rows.extend(
             {
-                "template_kind": "reference",
+                "template_kind": "single_pe",
                 "gain": gain,
                 "intensity": 1.0,
                 "time": time,
@@ -435,7 +435,7 @@ def test_write_tel_config_adds_response_table_metadata(
         for intensity in (10.0, 20.0):
             rows.extend(
                 {
-                    "template_kind": "response",
+                    "template_kind": "intensity_dependent",
                     "gain": gain,
                     "intensity": intensity,
                     "time": time,
@@ -1057,7 +1057,7 @@ def test_unified_fadc_config_export(simtel_config_writer, tmp_test_directory, mo
     for gain, amplitudes in (("HG", [1.0, 0.5]), ("LG", [2.0, 1.0])):
         rows.extend(
             {
-                "template_kind": "reference",
+                "template_kind": "single_pe",
                 "gain": gain,
                 "intensity": 1.0,
                 "time": time,
@@ -1068,7 +1068,7 @@ def test_unified_fadc_config_export(simtel_config_writer, tmp_test_directory, mo
         for intensity in (10.0, 20.0):
             rows.extend(
                 {
-                    "template_kind": "response",
+                    "template_kind": "intensity_dependent",
                     "gain": gain,
                     "intensity": intensity,
                     "time": time,
@@ -1108,7 +1108,7 @@ def test_unified_fadc_config_export(simtel_config_writer, tmp_test_directory, mo
         "20 1 10",
     ]
     simtel_config_writer._model_reader.get_parameter_table.return_value = table[
-        ~((table["template_kind"] == "reference") & (table["gain"] == "LG"))
+        ~((table["template_kind"] == "single_pe") & (table["gain"] == "LG"))
     ]
     with pytest.raises(ValueError, match="no LG reference pulse"):
         simtel_config_writer._get_parameters_for_sim_telarray(

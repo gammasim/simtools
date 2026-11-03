@@ -220,7 +220,7 @@ class SimtelConfigWriter:
     @staticmethod
     def _write_fadc_reference_template(table, output_path):
         """Write HG and LG unsmeared reference pulses on their shared time grid."""
-        reference = table[table["template_kind"] == "reference"]
+        reference = table[table["template_kind"] == "single_pe"]
         channels = {}
         for gain in ("HG", "LG"):
             selected = reference[reference["gain"] == gain]
@@ -243,7 +243,9 @@ class SimtelConfigWriter:
     @staticmethod
     def _write_fadc_gain_response(table, gain, output_path):
         """Write one gain's intensity-dependent response rows."""
-        selected = table[(table["template_kind"] == "response") & (table["gain"] == gain)]
+        selected = table[
+            (table["template_kind"] == "intensity_dependent") & (table["gain"] == gain)
+        ]
         if len(selected) == 0:
             raise ValueError(f"Unified FADC table has no {gain} response templates")
         selected.sort(["intensity", "time"])

@@ -345,12 +345,16 @@ def test_validate_table_asset_rejects_missing_required_metadata():
 
 def test_unified_fadc_schema_accepts_columns_without_group_validation():
     entry = schema.get_model_parameter_schema("fadc_pulse_shape", "0.4.0")["data"][0]
+    template_kind = next(
+        column for column in entry["table_columns"] if column["name"] == "template_kind"
+    )
+    assert template_kind["allowed_values"] == ["single_pe", "intensity_dependent"]
     rows = []
     for gain in ("HG", "LG"):
         for time, amplitude in ((0.0, 0.0), (1.0, 1.0)):
             rows.append(
                 {
-                    "template_kind": "reference",
+                    "template_kind": "single_pe",
                     "gain": gain,
                     "intensity": 1.0,
                     "time": time,
@@ -361,7 +365,7 @@ def test_unified_fadc_schema_accepts_columns_without_group_validation():
             for time, amplitude in ((0.0, 0.0), (1.0, intensity)):
                 rows.append(
                     {
-                        "template_kind": "response",
+                        "template_kind": "intensity_dependent",
                         "gain": gain,
                         "intensity": intensity,
                         "time": time,
@@ -374,5 +378,5 @@ def test_unified_fadc_schema_accepts_columns_without_group_validation():
         table[name].info.description = name
     validate_table_asset(table, schema_entry=entry)
 
-    malformed = table[~((table["template_kind"] == "reference") & (table["gain"] == "LG"))]
+    malformed = table[~((table["template_kind"] == "single_pe") & (table["gain"] == "LG"))]
     validate_table_asset(malformed, schema_entry=entry)
