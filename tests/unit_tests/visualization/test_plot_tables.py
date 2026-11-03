@@ -321,6 +321,7 @@ def test_generate_plot_configurations(
     # Mock the table data
     mock_table = Table()
     mock_table["time"] = [1.0, 2.0, 3.0]
+    mock_table["kind"] = ["a", "b", "c"]
     mock_table["amplitude"] = [0.1, 0.2, 0.3]
     mock_read_table.return_value = mock_table
     mock_read_parameter_dict.return_value = {"model_parameter_schema_version": "0.2.0"}
@@ -342,7 +343,8 @@ def test_generate_plot_configurations(
     # Mock schema for atmospheric_profile
     mock_collect_data.return_value = {
         "plot_configuration": [
-            {"type": "profile_plot", "tables": [{"column_x": "time", "column_y": "amplitude"}]}
+            {"type": "profile_plot", "tables": [{"column_x": "time", "column_y": "amplitude"}]},
+            {"type": "kind_plot", "tables": [{"column_x": "kind", "column_y": "amplitude"}]},
         ]
     }
 
@@ -355,7 +357,7 @@ def test_generate_plot_configurations(
         output_path=tmp_test_directory,
         plot_type="all",
     )
-    assert len(configs) > 0
+    assert {config["type"] for config in configs} == {"profile_plot", "kind_plot"}
     for _file in output_files:
         assert "atmospheric_profile" in str(_file)
 
