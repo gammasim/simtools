@@ -13,6 +13,8 @@ def normalize_model_parameter(data):
     data["value"], base_unit, _ = value_conversion.get_value_unit_type(
         value=data["value"], unit_str=data.get("unit")
     )
+    if data.get("type") == "string" and not data.get("file") and isinstance(data["value"], str):
+        data["value"] = data["value"].lower()
     data["unit"] = value_conversion.normalize_model_parameter_unit(data["value"], base_unit)
     validate_finite_json_values(data["value"])
     return data

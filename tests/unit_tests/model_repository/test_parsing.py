@@ -11,3 +11,10 @@ def test_normalize_model_parameter_preserves_input_and_normalizes_unit():
 
     assert result == {"type": "int64", "unit": "cm", "value": 42}
     assert data == {"type": "int64", "unit": "cm", "value": "42"}
+
+
+def test_normalize_model_parameter_preserves_file_name_case():
+    """File-backed values retain the case needed to locate their assets."""
+    data = {"type": "string", "file": True, "unit": None, "value": "Model.DAT"}
+
+    assert normalize_model_parameter(data)["value"] == "Model.DAT"
