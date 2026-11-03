@@ -1,6 +1,6 @@
 """Tests for model-parameter parsing helpers."""
 
-import pytest
+import math
 
 from simtools.model_repository.parsing import normalize_model_parameter
 
@@ -34,7 +34,8 @@ def test_normalize_model_parameter_preserves_mixed_list_values():
     result = normalize_model_parameter(data)
 
     assert result["value"][0] == "Gauss-Exponential"
-    assert result["value"][1:] == pytest.approx(data["value"][1:])
+    assert math.isclose(result["value"][1], data["value"][1], abs_tol=1e-12)
+    assert math.isclose(result["value"][2], data["value"][2], abs_tol=1e-12)
     assert result["unit"] == data["unit"]
     assert data["value"][0] == "Gauss-Exponential"
 

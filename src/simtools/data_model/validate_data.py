@@ -369,7 +369,11 @@ class DataValidator:
         allowed_values = entry.get("allowed_values")
         if allowed_values is None:
             return
-        if isinstance(value, str) and not entry.get("case_sensitive", False):
+        if (
+            entry.get("type") == "string"
+            and isinstance(value, str)
+            and not entry.get("case_sensitive", False)
+        ):
             matched = any(
                 isinstance(option, str) and value.casefold() == option.casefold()
                 for option in allowed_values

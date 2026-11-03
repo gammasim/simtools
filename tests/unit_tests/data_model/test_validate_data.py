@@ -30,6 +30,8 @@ mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.y
         ({"allowed_values": [1, "Gauss"]}, 1, True),
         ({"allowed_values": [1, "Gauss"]}, "GAUSS", True),
         ({"allowed_values": [1, "Gauss"]}, 2, False),
+        ({"type": "file", "allowed_values": ["Model.DAT"]}, "model.dat", False),
+        ({"type": "file", "allowed_values": ["Model.DAT"]}, "Model.DAT", True),
         ({"type": "string"}, "anything", True),
     ],
 )
