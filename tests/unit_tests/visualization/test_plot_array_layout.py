@@ -360,7 +360,7 @@ def test_plot_array_layouts(
         captured["plotted"] = True
         return Mock()
 
-    def dummy_save_figure(fig, path, dpi):
+    def dummy_save_figure(fig, path, dpi, figure_format=None):
         assert fig is not None
         assert path.parent == Path(tmp_test_directory)
         captured["name"] = path.name
@@ -410,7 +410,7 @@ def test_plot_array_layouts_reuses_identical_rendered_layout(tmp_test_directory,
         calls["plot"] += 1
         return Mock()
 
-    def save(_figure, output_file, dpi):
+    def save(_figure, output_file, dpi, figure_format=None):
         calls["save"] += 1
         Path(output_file).with_suffix(".png").touch()
 

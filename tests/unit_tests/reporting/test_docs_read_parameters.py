@@ -720,9 +720,7 @@ def test_produce_array_element_report_design_model_lists_all_parameters(
     assert write_dict_table.call_count == 1
 
 
-def test_production_table_keeps_parameter_name_plain_when_page_is_missing(
-    tmp_test_directory,
-):
+def test_production_table_links_parameter_page_without_checking_file(tmp_test_directory):
     output_path = Path(tmp_test_directory) / "productions" / "8.0.0"
     rp = ReadParameters(args={"telescope": "SCTS-01"}, output_path=output_path)
     output = StringIO()
@@ -732,8 +730,70 @@ def test_production_table_keeps_parameter_name_plain_when_page_is_missing(
         output,
     )
 
-    assert "| camera_body_shape | 1.0.0 | 2 |" in output.getvalue()
-    assert "../../parameters/" not in output.getvalue()
+    assert (
+        '| <a href="../../parameters/SCTS-design.html#camera-body-shape">camera_body_shape</a>'
+        " | 1.0.0 | 2 |"
+    ) in output.getvalue()
+
+
+def test_production_table_keeps_emphasis_of_specific_parameters(tmp_test_directory):
+    output_path = Path(tmp_test_directory) / "productions" / "8.0.0"
+    rp = ReadParameters(args={"telescope": "SCTS-01"}, output_path=output_path)
+    output = StringIO()
+
+    rp._write_production_table(
+        [["Camera", "***camera_body_shape***", "***1.0.0***", "***2***", "D", "S", "SCTS-01"]],
+        output,
+        keep_emphasis=True,
+    )
+
+    assert (
+        '| ***<a href="../../parameters/SCTS-01.html#camera-body-shape">camera_body_shape</a>***'
+        " | ***1.0.0*** | ***2*** |"
+    ) in output.getvalue()
+
+
+def test_produce_array_element_report_notes_inherited_design_parameters(
+    tmp_path, mocker, run_context
+):
+    output_path = tmp_path / "productions" / "6.0.0"
+    output_path.mkdir(parents=True)
+    model_reader = SimulationModelReader.from_memory(
+        {
+            "simulation-models/productions/6.0.0/info.yml": b"model_update: patch_update\n",
+        }
+    )
+    rp = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-01", "model_version": "6.0.0"},
+        output_path=output_path,
+        model_reader=model_reader,
+        context=run_context,
+    )
+    mocker.patch(
+        "simtools.reporting.docs_read_parameters.TelescopeModel",
+        return_value=DummyTelescope(
+            site="North", name="LSTN-01", model_version="6.0.0", design_model="LSTN-design"
+        ),
+    )
+    mocker.patch.object(
+        rp,
+        "get_array_element_parameter_data",
+        return_value=(
+            [
+                ["Structure", "inherited_param", "1.0.0", "1 m", "desc", "short"],
+                ["Structure", "***param***", "***1.0.0***", "***2 m***", "desc", "short"],
+            ],
+            [],
+        ),
+    )
+
+    rp.produce_array_element_report()
+
+    content = (output_path / "LSTN-01.md").read_text(encoding="utf-8")
+    assert "Parameters specific to LSTN-01 (shown in ***bold and italics***)." in content
+    assert "[LSTN-design](LSTN-design.md)" in content
+    assert "inherited_param" not in content
+    assert "***" in content
 
 
 def test_patch_report_uses_declared_previous_version(tmp_path, run_context):

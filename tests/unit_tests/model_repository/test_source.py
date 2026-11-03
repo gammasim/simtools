@@ -216,3 +216,14 @@ def test_source_export_reuses_identical_files_and_rejects_ambiguous_exports(
         source.export_model_files(file_names="model.dat", dest=destination)
     with pytest.raises(ValueError, match="Destination path is required"):
         source.export_model_files(parameters={"data": parameter})
+
+
+@pytest.mark.parametrize("content", [b"", b"- not a mapping\n"])
+def test_source_update_info_treats_non_mapping_metadata_as_empty(content):
+    """Metadata that does not parse to a mapping falls back to the empty update info."""
+    source = ModelSource(MemoryStorage({"simulation-models/productions/3.0.0/info.yml": content}))
+
+    assert source.get_model_update_info("3.0.0") == {
+        "model_update": None,
+        "model_version_history": [],
+    }

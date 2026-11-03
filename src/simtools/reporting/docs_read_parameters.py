@@ -443,10 +443,12 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
     def _report_base_version(self, update_info):
         """Use declared patch history, falling back for versions without update metadata."""
         update_type = update_info.get("model_update")
-        if update_type is None:
-            return base_version_for_patch_delta(self.model_version)
-        history = update_info.get("model_version_history", [])
-        return history[-1] if update_type == "patch_update" and history else None
+        history = update_info.get("model_version_history") or []
+        if update_type == "patch_update" and history:
+            return history[-1]
+        if update_type == "full_update":
+            return None
+        return base_version_for_patch_delta(self.model_version)
 
     def produce_array_element_report(self):
         """Produce a markdown report of all model parameters per array element."""
@@ -475,7 +477,8 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
         output_filename.parent.mkdir(parents=True, exist_ok=True)
         data, dict_tables = self.get_array_element_parameter_data(telescope_model)
         is_design_model = telescope_model.name == telescope_model.design_model
-        if not is_design_model and update_type != "full_update":
+        is_specific_selection = not is_design_model and update_type != "full_update"
+        if is_specific_selection:
             data, dict_tables = self._select_specific_parameters(data, dict_tables)
         positions = [
             row
@@ -495,19 +498,36 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
                 write_telescope_structure_figure(
                     file, telescope_model, self._logger, context=self.context
                 )
-            if not is_design_model and update_type != "full_update":
-                file.write("All listed parameters are specific to this array element.\n\n")
+            if is_specific_selection:
+                file.write(
+                    f"Parameters specific to {telescope_model.name}"
+                    " (shown in ***bold and italics***).\n"
+                    "All other parameters are inherited from the design model "
+                    f"[{telescope_model.design_model}]({telescope_model.design_model}.md).\n\n"
+                )
             if positions:
                 file.write("## Positions\n\n")
-                self._write_production_table(sorted(positions, key=lambda row: row[1]), file)
+                self._write_production_table(
+                    sorted(positions, key=lambda row: row[1]),
+                    file,
+                    keep_emphasis=is_specific_selection,
+                )
             for class_name, group in groupby(data, key=lambda x: x[0]):
                 file.write(f"## {class_name}\n\n")
-                self._write_production_table(sorted(group, key=lambda x: x[1]), file)
+                self._write_production_table(
+                    sorted(group, key=lambda x: x[1]),
+                    file,
+                    keep_emphasis=is_specific_selection,
+                )
             for parameter, value_data, unit in dict_tables:
                 self._write_dict_table(parameter, file, value_data, unit)
 
-    def _write_production_table(self, data, file):
-        """Write production values with links to parameter reference pages."""
+    def _write_production_table(self, data, file, keep_emphasis=False):
+        """Write production values with links to parameter reference pages.
+
+        With ``keep_emphasis``, rows emphasised as specific to the array element
+        stay in bold italics.
+        """
         file.write(
             "| Parameter Name | Parameter Version | Values |\n"
             "|----------------|------------------|--------|\n"
@@ -518,15 +538,19 @@ class ReadParameters(ParameterDeltaMixin, ParameterPlotMixin):
             parameter_name = self._parameter_reference_link(parameter, instrument)
             clean_version = parameter_version.strip("*") if parameter_version else ""
             clean_value = value.replace("***", "") if isinstance(value, str) else value
+            if keep_emphasis and parameter.startswith("***"):
+                parameter_name, clean_version, clean_value = (
+                    f"***{cell}***" if cell else cell
+                    for cell in (parameter_name, clean_version, clean_value)
+                )
             file.write(f"| {parameter_name} | {clean_version} | {clean_value} |\n")
         file.write("\n\n")
 
     def _parameter_reference_link(self, parameter, instrument=None):
-        """Link to a parameter reference when its page exists."""
+        """Link to the parameter reference page of the instrument (path known, not checked)."""
         parameter = parameter.strip("*")
         instrument = instrument or self.array_element or (f"OBS-{self.site}" if self.site else None)
-        parameter_file = Path(self.output_path).parent.parent / "parameters" / f"{instrument}.md"
-        if not instrument or not parameter_file.is_file():
+        if not instrument:
             return parameter
         anchor = re.sub(r"[^a-z0-9-]", "", parameter.lower().replace("_", "-"))
         return f'<a href="../../parameters/{instrument}.html#{anchor}">{parameter}</a>'

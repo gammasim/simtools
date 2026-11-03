@@ -388,3 +388,7 @@ def test_patch_report_falls_back_when_metadata_is_missing(tmp_test_directory, ru
     )
     assert rp._report_base_version({}) == "6.0.0"
     assert rp._report_base_version({"model_update": "full_update"}) is None
+    assert (
+        rp._report_base_version({"model_update": "patch_update", "model_version_history": []})
+        == "6.0.0"
+    )

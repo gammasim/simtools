@@ -120,7 +120,12 @@ def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
             x_lim=tuple(args_dict["x_lim"]) if args_dict["x_lim"] else None,
             y_lim=tuple(args_dict["y_lim"]) if args_dict["y_lim"] else None,
         )
-        visualize.save_figure(fig_out, output_path / plot_file_name, dpi=400)
+        visualize.save_figure(
+            fig_out,
+            output_path / plot_file_name,
+            figure_format=formats,
+            dpi=args_dict.get("figure_dpi") or 400,
+        )
         plt.close()
 
 

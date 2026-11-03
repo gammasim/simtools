@@ -103,6 +103,8 @@ class ModelSource:
             info_path = (prefix / info_name).as_posix()
             if info_path in paths:
                 info = self._read_document(info_path)
+                if not isinstance(info, dict):
+                    info = {}
                 return {
                     "model_update": info.get("model_update"),
                     "model_version_history": info.get("model_version_history", []),

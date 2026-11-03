@@ -26,6 +26,23 @@ from simtools.visualization.visualize import save_figure
 logger = logging.getLogger()
 
 
+def _configured_figure_formats(context):
+    """Return the figure formats that save_figure writes for this context (PNG by default)."""
+    formats = visualize.figure_output_settings(context).get("figure_format")
+    if not formats:
+        return ["png"]
+    return [formats] if isinstance(formats, str) else list(formats)
+
+
+def _first_written_figure(output_dir, name, formats):
+    """Return the first existing figure file of a plot name, in the order of the formats."""
+    for figure_format in formats:
+        path = Path(output_dir) / f"{name}.{figure_format}"
+        if path.is_file():
+            return path
+    return None
+
+
 def _count_trigger_groups_per_pixel(pixel_ids, trigger_groups, trigger_members):
     """Count distinct configured trigger groups containing each camera pixel."""
     pixel_ids = np.asarray(pixel_ids, dtype=int)
@@ -131,7 +148,10 @@ def _table_axis_units(table_config, model_reader, context):
             str(getattr(table[column], "unit", None) or "")
             for column in (table_config["column_x"], table_config["column_y"])
         )
-    except KeyError, OSError, RuntimeError, ValueError:
+    except (KeyError, OSError, RuntimeError, ValueError) as exc:
+        logger.debug(
+            "Axis units of %s could not be resolved: %s", table_config.get("parameter"), exc
+        )
         return None
 
 
@@ -154,11 +174,16 @@ def _parameter_plot_candidates(all_versions, parameter, parameter_version, model
 
 def _matching_version_plot_config(configs, current_signature, table_config, model_reader, context):
     """Find an equivalent plot config with matching axis units."""
-    for config in configs:
-        if _plot_signature(config) != current_signature or len(config.get("tables", [])) != 1:
-            continue
+    candidates = [
+        config
+        for config in configs
+        if _plot_signature(config) == current_signature and len(config.get("tables", [])) == 1
+    ]
+    if not candidates:
+        return None
+    reference_units = _table_axis_units(table_config, model_reader, context)
+    for config in candidates:
         units = _table_axis_units(config["tables"][0], model_reader, context)
-        reference_units = _table_axis_units(table_config, model_reader, context)
         if units is not None and units == reference_units:
             return config
     return None
@@ -278,8 +303,9 @@ def _plot_camera_trigger_membership(
         context=context,
     )
     plot_name = f"camera_trigger_membership_{telescope}_{cache_key}"
-    image_path = (Path(output_path) / plot_name).with_suffix(".png")
-    if not image_path.is_file():
+    formats = _configured_figure_formats(context)
+    image_paths = [Path(output_path) / f"{plot_name}.{fmt}" for fmt in formats]
+    if not all(path.is_file() for path in image_paths):
         figure, axes = plt.subplots(figsize=(8, 8))
         points = axes.scatter(
             np.asarray(camera.pixels["x"].value, dtype=float),
@@ -293,8 +319,8 @@ def _plot_camera_trigger_membership(
         axes.set_ylabel("Camera y [cm]")
         axes.set_aspect("equal", adjustable="box")
         figure.colorbar(points, ax=axes, label="Distinct trigger groups per pixel")
-        save_figure(figure, image_path.with_suffix(""), close=True, context=context)
-    return [plot_name] if image_path.is_file() else []
+        save_figure(figure, Path(output_path) / plot_name, close=True, context=context)
+    return [plot_name] if all(path.is_file() for path in image_paths) else []
 
 
 # Mixin kept as a class: its helpers are patched by name in the unit tests.
@@ -572,7 +598,12 @@ class ParameterPlotMixin:  # pylint: disable=too-few-public-methods
             site=self.site,
             model_version=latest_model_version,
         )
-        image_paths = [p for p in (outpath / f"{name}.png" for name in plot_names) if p.is_file()]
+        formats = _configured_figure_formats(self.context)
+        image_paths = [
+            path
+            for path in (_first_written_figure(outpath, name, formats) for name in plot_names)
+            if path is not None
+        ]
         if not image_paths:
             logger.info(
                 "No plot configuration or generated image found for %s version %s",
@@ -625,6 +656,16 @@ class ParameterPlotMixin:  # pylint: disable=too-few-public-methods
             file.write(f"### {layout_name}\n\n| Element |\n|---------|\n")
             for element in sorted(layout["elements"]):
                 file.write(f"| [{element}]({element}.md) |\n")
-            resolved_layout = resolved_layouts_by_name[layout_name]
+            resolved_layout = resolved_layouts_by_name.get(layout_name)
+            if resolved_layout is None:
+                logger.warning(
+                    "No resolved array layout for %s; its figure is not linked.", layout_name
+                )
+                continue
             figure_name = array_layout_figure_name(resolved_layout, plot_args)
-            file.write(f"\n![{layout_name} Layout](/_images/{figure_name}.png)\n\n\n")
+            formats = _configured_figure_formats(self.context)
+            figure_path = _first_written_figure(
+                self.context.paths.get_output_directory("_images"), figure_name, formats
+            )
+            figure_format = figure_path.suffix[1:] if figure_path else formats[0]
+            file.write(f"\n![{layout_name} Layout](/_images/{figure_name}.{figure_format})\n\n\n")

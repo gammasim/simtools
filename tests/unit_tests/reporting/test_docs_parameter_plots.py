@@ -431,7 +431,8 @@ def test_matching_version_plot_config_requires_same_signature_and_axis_units(run
     )
 
     assert result == matching
-    assert model_reader.export_model_file.call_count == 4
+    # one read for the reference units and one per candidate with matching signature
+    assert model_reader.export_model_file.call_count == 3
 
 
 def test_table_axis_units_returns_none_when_export_or_columns_are_unavailable(run_context, mocker):
@@ -839,3 +840,32 @@ def test__plot_mirror_config(
                 data_file_path=input_file,
                 mirrors=mock_plot.call_args.kwargs["mirrors"],
             )
+
+
+def test_write_array_layouts_section_skips_figure_for_unresolved_layout(
+    tmp_test_directory, mocker, run_context
+):
+    rp = ReadParameters(
+        args={"site": "North", "model_version": "6.0.0"},
+        output_path=tmp_test_directory,
+        context=run_context,
+    )
+    mocker.patch.object(docs_parameter_plots, "read_layouts", return_value=([], None))
+    buf = StringIO()
+
+    rp._write_array_layouts_section(buf, [{"name": "alpha", "elements": ["LSTN-01"]}])
+
+    content = buf.getvalue()
+    assert "### alpha" in content
+    assert "[LSTN-01](LSTN-01.md)" in content
+    assert "alpha Layout" not in content
+
+
+def test_first_written_figure_returns_first_existing_configured_format(tmp_test_directory):
+    (Path(tmp_test_directory) / "plot_a.svg").write_text("<svg/>", encoding="utf-8")
+
+    assert (
+        docs_parameter_plots._first_written_figure(tmp_test_directory, "plot_a", ["png", "svg"])
+        == Path(tmp_test_directory) / "plot_a.svg"
+    )
+    assert docs_parameter_plots._first_written_figure(tmp_test_directory, "plot_b", ["png"]) is None
