@@ -179,8 +179,8 @@ def test_flasher_readout_lookup_skips_other_site_and_missing_parameters(mocker):
     model_reader.read_production_table.return_value = {
         "parameters": {
             "LSTS-design": {},
-            "LSTN-design": {},
-            "MSTx-NectarCam": {},
+            "LSTN-design": {"calibration_devices": "1.0.0"},
+            "MSTx-NectarCam": {"calibration_devices": "1.0.0"},
             "LSTN-01": {},
         }
     }
@@ -209,7 +209,9 @@ def test_flasher_readout_lookup_skips_other_site_and_missing_parameters(mocker):
 
 def test_flasher_readout_lookup_propagates_unexpected_parameter_errors(mocker):
     model_reader = mocker.Mock()
-    model_reader.read_production_table.return_value = {"parameters": {"LSTN-design": {}}}
+    model_reader.read_production_table.return_value = {
+        "parameters": {"LSTN-design": {"calibration_devices": "1.0.0"}}
+    }
     model_reader.get_model_parameters.side_effect = ValueError("metadata is malformed")
 
     with pytest.raises(ValueError, match="metadata is malformed"):
@@ -234,7 +236,9 @@ def test_write_flasher_pulse_shape_plots_uses_width_parameters_for_string_shape(
             "fadc_sum_bins": {"value": 60},
         },
     ]
-    model_reader.read_production_table.return_value = {"parameters": {"LSTN-design": {}}}
+    model_reader.read_production_table.return_value = {
+        "parameters": {"LSTN-design": {"calibration_devices": "1.0.0"}}
+    }
     output = StringIO()
 
     write_flasher_pulse_shape_plots(

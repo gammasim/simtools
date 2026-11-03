@@ -244,8 +244,10 @@ def _get_flasher_readout_models(model_reader, site, model_version, calibration_d
     production = model_reader.read_production_table("telescopes", model_version)
     telescope_models = production["parameters"]
     readout_models = []
-    for telescope_model in telescope_models:
+    for telescope_model, model_parameters in telescope_models.items():
         if not _is_design_for_site(telescope_model, site):
+            continue
+        if "calibration_devices" not in model_parameters:
             continue
         readout_parameters = _get_flasher_readout_parameters(
             model_reader, telescope_model, site, model_version
@@ -277,7 +279,7 @@ def _get_flasher_readout_parameters(model_reader, telescope_model, site, model_v
             parameter_names=("calibration_devices", "fadc_sum_bins"),
         )
     except ValueError as exc:
-        if str(exc).startswith("No parameters found for telescopes:"):
+        if str(exc).startswith("No parameters found for telescopes"):
             return None
         raise
     devices = parameters.get("calibration_devices", {}).get("value") or {}
