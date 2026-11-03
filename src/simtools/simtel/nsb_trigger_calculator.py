@@ -46,9 +46,6 @@ def extract_run_number(file_path):
 def extract_threshold(file_path):
     """Read the common active telescope threshold from SIMULATION_METADATA.
 
-    All input files and telescopes must have the same active threshold parameter
-    and value. Thresholds are never inferred from filenames.
-
     Parameters
     ----------
     file_path : Path or str
@@ -73,7 +70,15 @@ def extract_threshold(file_path):
             )
         if len(thresholds) != 1:
             raise ValueError("Expected one common active threshold parameter and value.")
-    except (OSError, ValueError, KeyError, TypeError, AttributeError, ImportError) as exc:
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        TypeError,
+        AttributeError,
+        ImportError,
+        OverflowError,
+    ) as exc:
         _logger.warning(
             f"Cannot read trigger threshold from SIMULATION_METADATA in {file_path}: {exc}"
         )

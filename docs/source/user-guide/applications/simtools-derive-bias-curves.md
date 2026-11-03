@@ -33,9 +33,7 @@ The input files can be generated using `simtools-generate-bias-curve-submissions
   must fall within the threshold range shared by both fits.
 - Thresholds are read from per-telescope values in HDF5 `SIMULATION_METADATA`.
   `default_trigger` selects `asum_threshold`, `dsum_threshold`, or
-  `discriminator_threshold`. Decimal values remain separate simulation points.
-  All telescopes and inputs in a file must share the same active parameter and
-  threshold. Files with missing, invalid, or inconsistent threshold metadata are
+  `discriminator_threshold`. Files with missing, invalid, or inconsistent threshold metadata are
   skipped; thresholds are not inferred from filenames.
 - The exported model parameter (`asum_threshold`, `dsum_threshold`, or `discriminator_threshold`) is written to the standard model data output directory under `<telescope>/<parameter_name>/`.
 - If no intersection point is found, the application raises an error.
