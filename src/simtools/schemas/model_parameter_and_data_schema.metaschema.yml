@@ -126,6 +126,9 @@ definitions:
         $ref: '#/definitions/ValueRange'
       allowed_values:
         type: array
+      case_sensitive:
+        type: boolean
+        description: "compare string values against allowed_values case-sensitively (default false)"
       default:
         type:
           - number
@@ -688,6 +691,9 @@ definitions:
         $ref: '#/definitions/ValueRange'
       allowed_values:
         type: array
+      case_sensitive:
+        type: boolean
+        description: "compare string values against allowed_values case-sensitively (default false)"
       default:
         type:
           - number

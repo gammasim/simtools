@@ -367,7 +367,20 @@ class DataValidator:
         """Check a value against the schema's allowed values (ValueError otherwise)."""
         entry = self._get_data_description(column_name)
         allowed_values = entry.get("allowed_values")
-        if allowed_values is not None and value not in allowed_values:
+        if allowed_values is None:
+            return
+        if (
+            entry.get("type") == "string"
+            and isinstance(value, str)
+            and not entry.get("case_sensitive", False)
+        ):
+            matched = any(
+                isinstance(option, str) and value.casefold() == option.casefold()
+                for option in allowed_values
+            )
+        else:
+            matched = value in allowed_values
+        if not matched:
             raise ValueError(
                 f"Value '{value}' for column '{entry.get('name', column_name)}' "
                 f"is not in allowed values "

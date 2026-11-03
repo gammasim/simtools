@@ -102,6 +102,7 @@ The `data` field is used to describe the actual type, format, and allowed values
 - `default`: Default value of the parameter.
 - `allowed_range`: Allowed range of the parameter.
 - `allowed_values`: Allowed values of the parameter. Use if values are not continuous and restricted to a small list of allowed values.
+- `case_sensitive`: Set to `true` to compare string values with `allowed_values` case-sensitively. The default is `false`.
 
 Tables of any dimensions can be described using the `data_table` field. Example:
 

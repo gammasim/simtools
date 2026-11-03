@@ -31,8 +31,10 @@ The input files can be generated using `simtools-generate-bias-curve-submissions
   for NSB and proton rates scaled by `0.1 * scaling_factor`. Each fit uses its finite,
   positive rates and requires at least two distinct thresholds. The intersection
   must fall within the threshold range shared by both fits.
-- Threshold labels in the HDF5 `FILE_INFO` filenames preserve decimal values
-  such as `asum7.2` and `asum7.4` as separate simulation points.
+- Thresholds are read from per-telescope values in HDF5 `SIMULATION_METADATA`.
+  `default_trigger` selects `asum_threshold`, `dsum_threshold`, or
+  `discriminator_threshold`. Files with missing, invalid, or inconsistent threshold metadata are
+  skipped; thresholds are not inferred from filenames.
 - The exported model parameter (`asum_threshold`, `dsum_threshold`, or `discriminator_threshold`) is written to the standard model data output directory under `<telescope>/<parameter_name>/`.
 - If no intersection point is found, the application raises an error.
 
