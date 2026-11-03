@@ -858,3 +858,32 @@ def test_ignore_existing_parameter_version_is_passed_only_to_accepting_applicati
     configurations = [{"application": application, "configuration": {}}]
     simtools_runner.apply_execution_overrides(configurations, {option: True}, {}, None)
     assert (option in configurations[0]["configuration"]) is accepted
+
+
+@pytest.mark.parametrize("metadata_pattern", ["input/*.meta.yml", "*/input.meta.yml"])
+@pytest.mark.parametrize("absolute", [False, True])
+def test_collection_from_metadata_directory(
+    tmp_test_directory, monkeypatch, metadata_pattern, absolute
+):
+    root = Path(tmp_test_directory)
+    monkeypatch.chdir(root)
+    source = root / "input"
+    source.mkdir()
+    (source / "input.meta.yml").touch()
+    (source / "visibility.ecsv").write_text("table", encoding="utf-8")
+    destination = root / "output"
+    simtools_runner._copy_collection_files(
+        [
+            {
+                "configuration": {
+                    "input_meta": [str(root / metadata_pattern) if absolute else metadata_pattern]
+                }
+            }
+        ],
+        {
+            "output_path": str(destination),
+            "source_directory": "input_meta",
+            "files": ["visibility.ecsv"],
+        },
+    )
+    assert (destination / "visibility.ecsv").read_text(encoding="utf-8") == "table"

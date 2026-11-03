@@ -35,7 +35,7 @@ def table_file(name, destination, rows=None):
         raise ValueError("A model-table file must contain at least one row")
     for column in definitions:
         column_name = column["name"]
-        dtype = str if column["type"] == "string" else column["type"]
+        dtype = {"string": str, "boolean": bool}.get(column["type"], column["type"])
         table[column_name] = table[column_name].astype(dtype)
         unit = column.get("unit")
         table[column_name].unit = None if unit == "dimensionless" else unit
