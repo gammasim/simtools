@@ -211,6 +211,11 @@ def _get_flasher_readout_models(model_reader, site, model_version, calibration_d
     for telescope_model, model_parameters in telescope_models.items():
         if not names.is_design_type(telescope_model):
             continue
+        model_sites = names.get_site_from_array_element_name(telescope_model)
+        if isinstance(model_sites, str):
+            model_sites = [model_sites]
+        if site not in model_sites:
+            continue
         if "calibration_devices" not in model_parameters:
             continue
         parameters = model_reader.get_model_parameters(
