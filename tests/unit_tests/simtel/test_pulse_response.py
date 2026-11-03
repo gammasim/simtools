@@ -76,6 +76,15 @@ def test_template_scaling_interpolation_and_holding(pulse_model):
     assert len(waves) == 20
 
 
+def test_unsorted_reference_samples(pulse_model):
+    expected, _ = pulse_response.template_responses(pulse_model, [5])
+    table = pulse_model.get_parameter_table.return_value
+    pulse_model.get_parameter_table.return_value = table[::-1]
+    actual, _ = pulse_response.template_responses(pulse_model, [5])
+    assert actual[PEAK].tolist() == pytest.approx(expected[PEAK].tolist())
+    assert actual[ADC_SUM].tolist() == pytest.approx(expected[ADC_SUM].tolist())
+
+
 def test_first_response_level_uses_table(pulse_model):
     table = pulse_model.get_parameter_table.return_value
     selected = (table["template_kind"] == "intensity_dependent") & (table[INTENSITY] == 10)

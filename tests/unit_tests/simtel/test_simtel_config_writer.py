@@ -402,7 +402,7 @@ def test_write_tel_config_file_orders_generated_parameters_and_metadata(
 
     simtel_config_writer.write_telescope_config_file(
         config_file,
-        {"fadc_pulse_shape": {"value": "pulse.dat"}},
+        {"fadc_pulse_shape": {"value": "pulse.dat", "model_parameter_schema_version": "0.1.0"}},
         telescope_name="MSTS-03",
     )
 

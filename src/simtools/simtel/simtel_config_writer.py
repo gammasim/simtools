@@ -154,6 +154,19 @@ class SimtelConfigWriter:
             )
             file.write("".join(f"{meta}\n" for meta in metadata))
 
+    @staticmethod
+    def _uses_unified_fadc_schema(parameter_name, parameter_data):
+        """Check whether an FADC pulse parameter declares unified table rows."""
+        if parameter_name != "fadc_pulse_shape":
+            return False
+        parameter_schema = schema.get_model_parameter_schema(
+            parameter_name, parameter_data.get("model_parameter_schema_version")
+        )
+        return any(
+            entry.get("name") == "sim_telarray" and entry.get("table_format") == "fadc_templates"
+            for entry in parameter_schema.get("simulation_software", [])
+        )
+
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path, telescope_name=None):
         """Convert model parameters to sim_telarray names and values."""
         simtel_par = {}
@@ -167,15 +180,7 @@ class SimtelConfigWriter:
         for par, value in parameters.items():
             if par in _SKIPPED_PARAMETERS:
                 continue
-            unified_fadc = (
-                par == "fadc_pulse_shape"
-                and get_simtel_serialization(
-                    schema.get_model_parameter_schema(
-                        par, value.get("model_parameter_schema_version")
-                    )
-                )["table_format"]
-                == "fadc_templates"
-            )
+            unified_fadc = self._uses_unified_fadc_schema(par, value)
             if unified_fadc:
                 simtel_par.update(self._write_fadc_templates(value, config_file_path))
                 continue

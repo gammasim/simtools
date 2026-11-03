@@ -126,6 +126,7 @@ def _gain_response(model, unified, gain_index):
     if frequency <= 0 or jitter < 0:
         raise ValueError("Sampling frequency must be positive and jitter non-negative")
     dt = 1000 / frequency
+    reference.sort(TIME)
     raw_time = _time_ns(reference)
     time_nl = _time_ns(nonlinear)
     start = min(raw_time.min(), time_nl.min()) - 5 * jitter
