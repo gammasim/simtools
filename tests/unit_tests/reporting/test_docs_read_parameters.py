@@ -494,7 +494,7 @@ def test_flasher_gauss_exponential_uses_simtel_table_writer(tmp_test_directory, 
         patch.object(
             rp.model_reader,
             "read_production_table",
-            return_value={"parameters": {"MSTx-NectarCam": {}}},
+            return_value={"parameters": {"MSTx-NectarCam": {"calibration_devices": "1.0.0"}}},
         ),
         patch(
             "simtools.reporting.model_figures.simtel_file_writer"
