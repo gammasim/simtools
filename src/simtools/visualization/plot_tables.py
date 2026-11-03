@@ -267,7 +267,11 @@ def generate_plot_configurations(
         return None
 
     table = _read_table_from_model_repository(table_config, model_reader, context=context)
-    valid_columns = [col for col in table.colnames if not all(np.isnan(table[col]))]
+    valid_columns = [
+        col
+        for col in table.colnames
+        if not np.issubdtype(table[col].dtype, np.number) or not np.all(np.isnan(table[col]))
+    ]
     valid_configs = [
         config
         for config in configs
