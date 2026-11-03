@@ -208,8 +208,10 @@ def _get_flasher_readout_models(model_reader, site, model_version, calibration_d
     readout_models = []
     production = model_reader.read_production_table("telescopes", model_version)
     telescope_models = production["parameters"]
-    for telescope_model in telescope_models:
+    for telescope_model, model_parameters in telescope_models.items():
         if not names.is_design_type(telescope_model):
+            continue
+        if "calibration_devices" not in model_parameters:
             continue
         parameters = model_reader.get_model_parameters(
             site=site,
