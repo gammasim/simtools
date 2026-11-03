@@ -110,6 +110,31 @@ def test_source_filters_parameter_metadata_and_rejects_missing_values():
         source.read_parameters({"missing": "1.0.0"}, "telescopes", "LSTN-01", "North")
 
 
+def test_source_preserves_string_parameter_values():
+    """String values and identifying metadata retain their case."""
+    path = (
+        "simulation-models/model_parameters/ILLN-design/flasher_angular_distribution/"
+        "flasher_angular_distribution-1.0.0.json"
+    )
+    document = {
+        "file": False,
+        "instrument": "ILLN-design",
+        "parameter": "flasher_angular_distribution",
+        "parameter_version": "1.0.0",
+        "site": "North",
+        "type": "string",
+        "unit": None,
+        "value": "IsOtRoPiC",
+    }
+    source = ModelSource(MemoryStorage({path: _json(document)}))
+
+    result = source.read_parameters(
+        {"flasher_angular_distribution": "1.0.0"}, "calibration", "ILLN-design", "North"
+    )
+
+    assert result == [document]
+
+
 def test_source_reads_ecsv_with_parameter_metadata_and_checks_asset_paths(tmp_test_directory):
     """ECSV reads resolve within parameter metadata and validate the table schema."""
     asset_path = "simulation-models/model_parameters/LSTN-01/camera_trigger_groups/groups.ecsv"
