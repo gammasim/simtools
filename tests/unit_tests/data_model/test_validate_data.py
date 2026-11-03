@@ -22,13 +22,17 @@ mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.y
 @pytest.mark.parametrize(
     ("entry", "value", "valid"),
     [
-        ({"allowed_values": ["Gauss"]}, "gAuSs", True),
-        ({"allowed_values": ["Gauss"], "case_sensitive": False}, "GAUSS", True),
+        ({"type": "string", "allowed_values": ["Gauss"]}, "gAuSs", True),
+        (
+            {"type": "string", "allowed_values": ["Gauss"], "case_sensitive": False},
+            "GAUSS",
+            True,
+        ),
         ({"allowed_values": ["Gauss"], "case_sensitive": True}, "Gauss", True),
         ({"allowed_values": ["Gauss"], "case_sensitive": True}, "gauss", False),
         ({"allowed_values": ["Gauss"]}, "other", False),
         ({"allowed_values": [1, "Gauss"]}, 1, True),
-        ({"allowed_values": [1, "Gauss"]}, "GAUSS", True),
+        ({"type": "string", "allowed_values": [1, "Gauss"]}, "GAUSS", True),
         ({"allowed_values": [1, "Gauss"]}, 2, False),
         ({"type": "file", "allowed_values": ["Model.DAT"]}, "model.dat", False),
         ({"type": "file", "allowed_values": ["Model.DAT"]}, "Model.DAT", True),
