@@ -1,8 +1,10 @@
 """Unit tests for bias_curve_generator."""
 
+import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import h5py
 import numpy as np
 import pytest
 from astropy import units as u
@@ -27,11 +29,31 @@ def _base_args(tmp_path):
     }
 
 
-def _write_file_info_hdf5(file_path, file_name):
-    """Create a minimal HDF5 file with FILE_INFO/file_name metadata."""
+def _write_file_info_hdf5(file_path, file_name, threshold=220):
+    """Create an HDF5 file with run and explicit telescope threshold metadata."""
     Table({"file_name": [file_name]}).write(
         file_path, path="FILE_INFO", format="hdf5", overwrite=True
     )
+
+    if threshold is not None:
+        metadata = {
+            "inputs": {
+                "files": [
+                    {
+                        "sim_telarray_telescope_metadata": {
+                            "1": {
+                                "values": {
+                                    "default_trigger": "AnalogSum",
+                                    "asum_threshold": str(threshold),
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+        with h5py.File(file_path, "a") as file:
+            file.create_dataset("SIMULATION_METADATA", data=[json.dumps(metadata)])
 
 
 def test_calculate_time_window_requires_telescope(tmp_path, run_context):
@@ -91,6 +113,7 @@ def test_group_hdf5_files_by_threshold_and_run(tmp_path):
     _write_file_info_hdf5(
         tmp_path / "proton_missing_threshold.reduced_event_data.hdf5",
         "proton_run000001.simtel.zst",
+        threshold=None,
     )
 
     grouped = bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
@@ -119,7 +142,7 @@ def test_extract_proton_rates_raises_when_no_files(tmp_path, run_context):
     ):
         with pytest.raises(
             FileNotFoundError,
-            match="No proton HDF5 files with threshold labels found",
+            match="No proton HDF5 files with threshold metadata found",
         ):
             bias_curve_generator._extract_proton_rates(args, run_context)
 
@@ -665,7 +688,7 @@ def test_group_proton_files_preserves_decimal_thresholds(tmp_test_directory):
     expected = {}
     for threshold in (7, 7.2, 7.4, 8, 9):
         file_path = tmp_test_directory / f"proton_asum{threshold}.reduced_event_data.hdf5"
-        _write_file_info_hdf5(file_path, f"proton_run000001_asum{threshold}.simtel.zst")
+        _write_file_info_hdf5(file_path, "proton_run000001_asum999.simtel.zst", threshold=threshold)
         expected[threshold] = {1: file_path}
     assert (
         bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_test_directory) == expected
