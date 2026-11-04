@@ -4,6 +4,8 @@ import json
 import math
 import re
 import shlex
+import subprocess
+import sys
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -220,3 +222,30 @@ def test_route_command_preserves_git_model_source(route_inputs):
     assert all("SIMTOOLS_SIMULATION_MODELS_GIT_PATH=/models.git" in line for line in lines)
     assert all("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=abc123" in line for line in lines)
     assert all("-u SIMTOOLS_SIMULATION_MODELS_PATH" in line for line in lines)
+
+
+def test_route_shell_text_fails_the_job_and_shows_the_log(tmp_test_directory):
+    log_file = tmp_test_directory / "route.log"
+    failing = [
+        sys.executable,
+        "-c",
+        "import sys; print('route broke', file=sys.stderr); sys.exit(3)",
+    ]
+    script = f"set -e\n{ShowerRouting._route_shell_text(failing, log_file)}\n"
+
+    result = subprocess.run(["sh", "-c", script], capture_output=True, text=True, check=False)
+
+    assert result.returncode == 3
+    assert "route broke" in result.stderr
+    assert "route broke" in log_file.read_text(encoding="utf-8")
+
+
+def test_route_shell_text_passes_on_success(tmp_test_directory):
+    log_file = tmp_test_directory / "route.log"
+    succeeding = [sys.executable, "-c", "print('ok')"]
+    script = f"set -e\n{ShowerRouting._route_shell_text(succeeding, log_file)}\n"
+
+    result = subprocess.run(["sh", "-c", script], capture_output=True, text=True, check=False)
+
+    assert result.returncode == 0
+    assert log_file.exists()

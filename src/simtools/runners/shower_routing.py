@@ -296,6 +296,8 @@ class ShowerRouting:
             str(instrument_seed),
             "--tracing-seed",
             str(tracing_seed),
+            "--threads",
+            str(self.context.args.get("shower_route_threads", 1)),
             "--output-path",
             _absolute_path_argument(str(map_file.parent / f"shower_route_{group}")),
         ]
@@ -340,8 +342,21 @@ class ShowerRouting:
 
     @staticmethod
     def _route_shell_text(command, log_file):
-        """Return the shell text of the route command with its stderr redirected to a log file."""
-        return f"{shlex.join(command)} 2> {shlex.quote(_absolute_path_argument(str(log_file)))}"
+        """
+        Return the shell text of the route command with its stderr redirected to a log file.
+
+        The text is a group, so that it can start a pipeline. A failing route prints its log to
+        the job output and fails the job. In a stream, the multipipe_corsika process
+        (``MULTIPIPE_PID``) is also stopped, since it would wait for wakeups that the route no
+        longer sends.
+        """
+        log = shlex.quote(_absolute_path_argument(str(log_file)))
+        on_failure = (
+            f"{{ status=$?; cat {log} >&2; "
+            '[ -z "${MULTIPIPE_PID:-}" ] || kill -TERM "$MULTIPIPE_PID" 2>/dev/null; '
+            "exit $status; }"
+        )
+        return f"{{ {shlex.join(command)} 2> {log} || {on_failure}; }}"
 
     def _camera_file(self, simulator_array, run_number, group):
         """Return the camera photon-bunch file of one telescope type of one model version."""

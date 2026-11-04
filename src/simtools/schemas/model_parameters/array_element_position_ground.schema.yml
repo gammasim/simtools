@@ -18,7 +18,9 @@ data:
     description: Array element position in y-direction (towards West)
   - type: float64
     unit: m
-    description: Array element altitude above reference_point_altitude
+    description: >-
+      Elevation-axis altitude relative to the CORSIKA observation level,
+      including the telescope axis height above ground.
 instrument:
   class: Structure
 activity:

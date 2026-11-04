@@ -32,8 +32,8 @@ class ArrayModel:
         Instance label. Used for output file naming.
     site: str, optional
         Site name.
-    layout_name: str, optional
-        Layout name.
+    layout_name: str or list of str, optional
+        Layout or telescope names. Multiple names are combined in the given order.
     array_elements: Union[str, Path, List[str]], optional
         Array element definitions (list of array element or path to file with
         the array element positions).
@@ -66,11 +66,8 @@ class ArrayModel:
         if self.model_reader is None:
             raise RuntimeError("No simulation model reader is configured.")
         self.label = label
-        self.layout_name = (
-            layout_name[0]
-            if isinstance(layout_name, list) and len(layout_name) == 1
-            else layout_name
-        )
+        self._layout_names = layout_name if isinstance(layout_name, list) else [layout_name]
+        self.layout_name = "_".join(self._layout_names) if layout_name else None
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = self.context.paths
@@ -136,9 +133,7 @@ class ArrayModel:
             array_elements = self._get_array_elements_from_list(array_elements_config, site_model)
         # Case 3: array elements defined in the model repository by array layout name
         elif self.layout_name is not None:
-            array_elements = self._get_array_elements_from_list(
-                site_model.get_array_elements_for_layout(self.layout_name)
-            )
+            array_elements = self._get_array_elements_from_layouts(site_model)
         else:
             raise ValueError(
                 "No array elements found. "
@@ -432,6 +427,18 @@ class ArrayModel:
             "file": False,
             "model_parameter_schema_version": "0.1.0",
         }
+
+    def _get_array_elements_from_layouts(self, site_model):
+        """Return the array elements of all layout (or telescope) names, in the given order."""
+        array_elements = {}
+        for layout_name in self._layout_names:
+            for element in site_model.get_array_elements_for_layout(layout_name):
+                elements = self._get_array_elements_from_list([element], site_model)
+                for name, element_data in elements.items():
+                    if name in array_elements:
+                        raise ValueError(f"Duplicate array element '{name}' in array layouts.")
+                    array_elements[name] = element_data
+        return array_elements
 
     def _get_array_elements_from_list(self, array_elements_list, site_model=None):
         """

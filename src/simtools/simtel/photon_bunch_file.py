@@ -296,6 +296,38 @@ def _write_telescope_block(output, telescope_id, bunches, reuse=0):
     output.write(memoryview(bunches))
 
 
+def write_shower_photon_stream(path, objects):
+    """Write input objects with replacement camera bunches and return the event count.
+
+    Each item contains an EventIO object, its raw bytes, and either None or the
+    replacement (telescope id, bunches) pairs for a telescope-array object.
+    """
+    count = 0
+    with _open_output(path) as output:
+        for obj, raw, blocks in objects:
+            if blocks is None:
+                output.write(raw)
+                count += obj.header.type == 1202
+                output.flush()
+                continue
+            reuse = obj.header.id
+            payload = bytearray()
+            for telescope_id, bunches in blocks:
+                telescope_id, bunches = _telescope_block(telescope_id, bunches)
+                if telescope_id >= 1000:
+                    raise ValueError(f"Telescope id must be from 0 to 999: {telescope_id}")
+                photons = (
+                    struct.pack(
+                        "<hhfi", reuse, telescope_id, float(bunches["photons"].sum()), len(bunches)
+                    )
+                    + bunches.tobytes()
+                )
+                payload.extend(_object(1205, 1000 * reuse + telescope_id, photons, top_level=False))
+            output.write(_object(1204, reuse, payload, only_subobjects=True))
+            output.flush()
+    return count
+
+
 def _corsika_card_payload(lines):
     """Return the payload of the CORSIKA input-card object (1212) for the given card lines.
 

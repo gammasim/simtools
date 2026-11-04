@@ -83,6 +83,13 @@ FITS keywords; the module also validates sim_telarray metadata against the meta-
    :members:
 ```
 
+## shower_transmission
+
+```{eval-rst}
+.. automodule:: simtel.shower_transmission
+   :members:
+```
+
 ## shower_route
 
 ```{eval-rst}

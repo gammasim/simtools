@@ -85,6 +85,12 @@ _ARGUMENTS = (
         default="stream",
     ),
     cli.ArgumentDefinition(
+        "shower_route_threads",
+        help="Threads per shower route process (default 1; 0 divides usable cores among routes).",
+        type=int,
+        default=1,
+    ),
+    cli.ArgumentDefinition(
         "reduced_event_lists",
         help=(
             "Save reduced event lists with event data on simulated and triggered events. "

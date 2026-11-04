@@ -227,3 +227,34 @@ def test_on_object_called_after_each_processed_object(tmp_test_directory, atmosp
     assert len(rest) == 2
     assert objects.count(1204) == 3
     assert objects[-1] == 1210
+
+
+def test_iter_photon_objects_preserves_bytes_and_callback_timing(atmospheric_profile):
+    from simtools.corsika.photon_bunches import iter_photon_objects
+
+    output = io.BytesIO()
+    _write(output, [_bunches(2)], atmospheric_profile)
+    original = output.getvalue()
+    calls = []
+    objects = iter_photon_objects(io.BytesIO(original), on_object=lambda obj: calls.append(obj))
+    first = next(objects)
+    assert calls == []
+    remaining = list(objects)
+    assert len(calls) == 1 + len(remaining)
+    assert b"".join(raw for _, raw, _ in [first, *remaining]) == original
+    blocks = [blocks for _, _, blocks in remaining if blocks is not None]
+    assert len(blocks) == 1
+    assert blocks[0][0]["event_number"] == 1
+    assert len(blocks[0][0]["x"]) == 2
+
+
+def test_zstd_compressed_input(tmp_test_directory, atmospheric_profile):
+    zstandard = pytest.importorskip("zstandard")
+    plain = tmp_test_directory / "photons.iact"
+    compressed = tmp_test_directory / "photons.iact.zst"
+    _write(plain, [_bunches(2)], atmospheric_profile)
+    Path(compressed).write_bytes(zstandard.ZstdCompressor().compress(Path(plain).read_bytes()))
+
+    (telescope,) = read_photon_bunches(compressed)
+
+    np.testing.assert_array_equal(telescope["x"], _bunches(2)["x"])

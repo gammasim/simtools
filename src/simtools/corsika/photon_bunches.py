@@ -5,12 +5,13 @@ per event and telescope. Values are kept in the units of the file (cm, ns, nm).
 Files are read from a path or from an uncompressed binary stream (e.g. a pipe).
 """
 
+import gzip
 import io
 import logging
 import os
 
 import numpy as np
-from eventio import EventIOFile
+import zstandard
 from eventio.base import KNOWN_OBJECTS, EventIOObject, read_header, read_sync_marker
 from eventio.iact import EventHeader, Photons, TelescopeData
 
@@ -47,6 +48,7 @@ class _ForwardStream:
         self._pos = 0
 
     def read(self, size):
+        """Read up to size bytes, fewer only at the end of the stream."""
         data = bytearray()
         while len(data) < size:
             chunk = self._stream.read(size - len(data))
@@ -57,6 +59,7 @@ class _ForwardStream:
         return bytes(data)
 
     def seek(self, offset, whence=0):
+        """Seek forward by reading and discarding bytes; backward seeks are rejected."""
         if whence not in (0, 1):
             raise ValueError("Only absolute and relative seeks are supported on a stream")
         target = offset if whence == 0 else self._pos + offset
@@ -72,28 +75,61 @@ class _ForwardStream:
         return self._pos
 
     def tell(self):
+        """Return the number of bytes consumed so far."""
         return self._pos
 
 
 def _iter_stream_objects(stream):
-    """Yield the top-level EventIO objects of an uncompressed binary stream."""
+    """Yield top-level objects and their exact bytes from a forward-only stream."""
     handle = _ForwardStream(stream)
-    position = 0
     while True:
-        handle.seek(position)
+        start = handle.tell()
+        captured = bytearray()
+
+        class RecordingStream:
+            """Stream wrapper that keeps the exact bytes of the object being read."""
+
+            def read(self, size):
+                """Read from the shared handle and record the bytes."""
+                data = handle.read(size)
+                captured.extend(data)
+                return data
+
+            def tell(self):
+                """Return the position of the shared handle."""
+                return handle.tell()
+
+        recording = RecordingStream()
         try:
-            read_sync_marker(handle)
+            read_sync_marker(recording)
         except StopIteration:
             return
-        header = read_header(handle, offset=position, toplevel=True)
-        position += header.total_size
-        yield KNOWN_OBJECTS.get(header.type, EventIOObject)(header, filehandle=handle)
+        header = read_header(recording, offset=start, toplevel=True)
+        remaining = header.total_size - len(captured)
+        captured.extend(handle.read(remaining))
+        if len(captured) != header.total_size:
+            raise EOFError("Truncated EventIO object")
+        raw = bytes(captured)
+        buffer = io.BytesIO(raw)
+        read_sync_marker(buffer)
+        local_header = read_header(buffer, offset=0, toplevel=True)
+        obj = KNOWN_OBJECTS.get(local_header.type, EventIOObject)(local_header, filehandle=buffer)
+        yield obj, raw
 
 
 def _iter_path_objects(path):
-    """Yield the top-level EventIO objects of a file (compression detected by eventio)."""
-    with EventIOFile(str(path)) as f:
-        yield from f
+    """Yield objects from an uncompressed, gzip, or zstd-compressed file."""
+    with open(path, "rb") as source:
+        magic = source.read(4)
+        source.seek(0)
+        if magic.startswith(b"\x1f\x8b"):
+            with gzip.GzipFile(fileobj=source) as stream:
+                yield from _iter_stream_objects(stream)
+        elif magic == b"\x28\xb5\x2f\xfd":
+            with zstandard.ZstdDecompressor().stream_reader(source) as stream:
+                yield from _iter_stream_objects(stream)
+        else:
+            yield from _iter_stream_objects(source)
 
 
 def _is_path(file_name):
@@ -148,42 +184,42 @@ def read_photon_bunches(file_name, on_object=None):
         If the file contains photo-electron bunches (negative wavelength).
     """
     _check_source(file_name)
+    return (
+        bunches
+        for _, _, telescopes in iter_photon_objects(file_name, on_object=on_object)
+        if telescopes is not None
+        for bunches in telescopes
+    )
+
+
+def iter_photon_objects(file_name, on_object=None):
+    """Yield each input object, its raw bytes, and parsed telescope blocks if present.
+
+    The callback runs after the consumer has processed each top-level object.
+    """
+    _check_source(file_name)
     if _is_path(file_name):
         name, objects = str(file_name), _iter_path_objects(file_name)
     else:
         name = getattr(file_name, "name", "<stream>")
         objects = _iter_stream_objects(file_name)
-    return _iter_telescope_bunches(objects, name, on_object)
-
-
-def _iter_telescope_bunches(objects, name, on_object=None):
-    """Yield the photon bunches per telescope and event from top-level EventIO objects."""
     event_number = None
     wavelength_limits = {"wavelength_min_nm": None, "wavelength_max_nm": None}
-    n_events = n_telescopes = n_skipped = 0
-    for obj in objects:
+    for obj, raw in objects:
+        telescopes = None
         if isinstance(obj, EventHeader):
             header = obj.parse()
             event_number = int(header["event_number"])
             wavelength_limits = _wavelength_limits(header)
-            n_events += 1
         elif isinstance(obj, TelescopeData):
-            for photons in obj:
-                if not isinstance(photons, Photons):
-                    continue
-                telescope = _read_telescope_bunches(photons, name, event_number, wavelength_limits)
-                n_telescopes += 1
-                n_skipped += telescope["skipped_bunches"]
-                yield telescope
+            telescopes = [
+                _read_telescope_bunches(photons, name, event_number, wavelength_limits)
+                for photons in obj
+                if isinstance(photons, Photons)
+            ]
+        yield obj, raw, telescopes
         if on_object is not None:
             on_object(obj)
-    _logger.debug(
-        "Read photon bunches from %s: %d events, %d telescopes, %d skipped bunches",
-        name,
-        n_events,
-        n_telescopes,
-        n_skipped,
-    )
 
 
 def _wavelength_limits(header):

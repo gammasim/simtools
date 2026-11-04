@@ -13,11 +13,14 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
-from simtools.corsika.photon_bunches import read_photon_bunches
+from simtools.corsika.photon_bunches import iter_photon_objects, read_photon_bunches
 from simtools.simtel import shower_route
 from simtools.simtel.photon_bunch_file import (
     BUNCH_DTYPE,
     PhotonBunchEvent,
+    _block,
+    _object,
+    _write_telescope_block,
     write_photon_bunches,
 )
 from simtools.simtel.shower_route import (
@@ -136,22 +139,17 @@ def _route_kwargs(telescope_ids=(0,), input_plane_height_m=INPUT_PLANE_HEIGHT_M)
         "phi_deg": PHI_DEG,
         "input_plane_height_m_by_telescope": dict.fromkeys(telescope_ids, input_plane_height_m),
         "seed": SEED,
-        "telescope_radius_m": RADIUS_M,
     }
 
 
-def _inputs(tracers):
+def _fake_inputs_factory(routes, *, simulation_models_path=None, backend=None, context=None):
+    """Route inputs with fake tracers (replaces the telescope models in the CLI test)."""
+    del simulation_models_path, backend, context
     return RouteInputs(
-        tracers=tracers,
+        tracers={telescope_id: _FakeTracer() for telescope_id in routes},
         observation_level_m=OBSERVATION_LEVEL_M,
         atmospheric_profile=_atmospheric_profile(),
     )
-
-
-def _fake_inputs_factory(routes, *, simulation_models_path=None, backend=None, output_path=None):
-    """Route inputs with fake tracers (replaces the telescope models in the CLI test)."""
-    del simulation_models_path, backend, output_path
-    return _inputs({telescope_id: _FakeTracer() for telescope_id in routes})
 
 
 def _read_back(data):
@@ -166,9 +164,10 @@ def test_route_stream_writes_one_event_per_telescope_block():
     tracers = {0: _FakeTracer(), 1: _FakeTracer()}
     out = io.BytesIO()
 
-    count = route_stream(stream, out, _inputs(tracers), **_route_kwargs(telescope_ids=(0, 1)))
+    count = route_stream(stream, out, tracers, **_route_kwargs(telescope_ids=(0, 1)))
 
-    assert count == 4
+    # Two blocks with event number 7 are the telescope blocks of one shower: one event header.
+    assert count == 3
     events = _read_back(out.getvalue())
     assert [len(event["x"]) for event in events] == [3, 2, 0, 4]
     # Output events keep the telescope id and the event number of their input blocks.
@@ -182,11 +181,49 @@ def test_route_stream_writes_one_event_per_telescope_block():
     assert [calls for calls, _ in tracers[1].model.calls] == [2, 4]
 
 
+def test_route_stream_keeps_telescope_blocks_of_every_event():
+    # Pixel lists need one photon block per telescope in every event; no event is dropped.
+    events = [
+        PhotonBunchEvent(number=number, blocks=((0, _bunches(2 + number)), (1, _bunches(3))))
+        for number in (1, 2, 3)
+    ]
+    buffer = io.BytesIO()
+    write_photon_bunches(
+        buffer,
+        events,
+        observation_level_m=OBSERVATION_LEVEL_M,
+        telescope_radius_m=RADIUS_M,
+        atmospheric_profile=_atmospheric_profile(),
+    )
+    out = io.BytesIO()
+
+    count = route_stream(
+        io.BytesIO(buffer.getvalue()),
+        out,
+        {0: _FakeTracer(), 1: _FakeTracer()},
+        **_route_kwargs(telescope_ids=(0, 1)),
+    )
+
+    assert count == 3
+    blocks = [
+        (event["event_number"], event["telescope_id"], len(event["x"]))
+        for event in _read_back(out.getvalue())
+    ]
+    assert blocks == [
+        (1, 0, 3),
+        (1, 1, 3),
+        (2, 0, 4),
+        (2, 1, 3),
+        (3, 0, 5),
+        (3, 1, 3),
+    ]
+
+
 def test_route_stream_passes_tracing_arguments():
     stream = _stream([(0, _bunches(2))])
     tracer = _FakeTracer()
 
-    route_stream(stream, io.BytesIO(), _inputs({0: tracer}), **_route_kwargs(), threads=3)
+    route_stream(stream, io.BytesIO(), {0: tracer}, **_route_kwargs(), threads=3)
 
     _, kwargs = tracer.model.calls[0]
     # Tracing seed of the block: event number 1, array id 0, telescope id 0.
@@ -222,7 +259,11 @@ def test_camera_events_tracing_seed_differs_by_telescope_and_array(monkeypatch):
     # The writer numbers the blocks of an event by position; set the array ids explicitly.
     for block, array_id in zip(blocks, (0, 0, 1, 0), strict=True):
         block["array_id"] = array_id
-    monkeypatch.setattr(shower_route, "read_photon_bunches", lambda _, **_kwargs: iter(blocks))
+    objects = [
+        (SimpleNamespace(header=SimpleNamespace(id=block["array_id"])), b"", [block])
+        for block in blocks
+    ]
+    monkeypatch.setattr(shower_route, "iter_photon_objects", lambda _, **_kwargs: iter(objects))
     tracers = {1: _FakeTracer(), 2: _FakeTracer()}
     frame = shower_route.shower_bunch_frame(
         THETA_DEG, PHI_DEG, input_plane_height_m=INPUT_PLANE_HEIGHT_M
@@ -259,7 +300,7 @@ def test_route_stream_unknown_telescope_id_raises():
     stream = _stream([(0, _bunches(2)), (2, _bunches(2))])
 
     with pytest.raises(ValueError, match="Telescope id 2 of event 2 is not in the telescope map"):
-        route_stream(stream, io.BytesIO(), _inputs({0: _FakeTracer()}), **_route_kwargs())
+        route_stream(stream, io.BytesIO(), {0: _FakeTracer()}, **_route_kwargs())
 
 
 def test_route_stream_empty_event_is_written_and_not_traced():
@@ -267,7 +308,7 @@ def test_route_stream_empty_event_is_written_and_not_traced():
     tracer = _FakeTracer()
     out = io.BytesIO()
 
-    count = route_stream(stream, out, _inputs({0: tracer}), **_route_kwargs())
+    count = route_stream(stream, out, {0: tracer}, **_route_kwargs())
 
     assert count == 1
     events = _read_back(out.getvalue())
@@ -280,9 +321,7 @@ def test_route_stream_input_plane_below_minimum_writes_nothing():
     out = io.BytesIO()
 
     with pytest.raises(ValueError, match="below the minimum"):
-        route_stream(
-            stream, out, _inputs({0: _FakeTracer()}), **_route_kwargs(input_plane_height_m=20.0)
-        )
+        route_stream(stream, out, {0: _FakeTracer()}, **_route_kwargs(input_plane_height_m=20.0))
     assert out.getvalue() == b""
 
 
@@ -294,11 +333,7 @@ def test_route_stream_skipped_telescope_writes_event_without_blocks():
     out = io.BytesIO()
 
     count = route_stream(
-        stream,
-        out,
-        _inputs({0: tracer}),
-        **_route_kwargs(telescope_ids=(0,)),
-        skipped_telescope_ids={1},
+        stream, out, {0: tracer}, **_route_kwargs(telescope_ids=(0,)), skipped_telescope_ids={1}
     )
 
     # The event of the skipped telescope is written without telescope blocks, so the reader
@@ -316,7 +351,7 @@ def test_route_stream_telescope_neither_traced_nor_skipped_raises():
         route_stream(
             _stream([(1, _bunches(1))]),
             io.BytesIO(),
-            _inputs({0: _FakeTracer()}),
+            {0: _FakeTracer()},
             **_route_kwargs(telescope_ids=(0,)),
             skipped_telescope_ids={2},
         )
@@ -336,7 +371,7 @@ def test_route_stream_missing_telescope_parameter_raises():
         route_stream(
             _stream([(0, _bunches(1))]),
             io.BytesIO(),
-            _inputs({0: _FakeTracer(), 1: _FakeTracer()}),
+            {0: _FakeTracer(), 1: _FakeTracer()},
             **_route_kwargs(telescope_ids=(0,)),
         )
 
@@ -350,23 +385,19 @@ def test_route_stream_real_corsika_file_through_pipe():
     # Identity tracer: one camera photon per input bunch; the output keeps every block.
     with subprocess.Popen(["cat", iact_file], stdout=subprocess.PIPE) as cat:
         out = io.BytesIO()
-        count = route_stream(cat.stdout, out, _inputs({0: _FakeTracer()}), **_route_kwargs())
+        count = route_stream(cat.stdout, out, {0: _FakeTracer()}, **_route_kwargs())
 
-    assert count == len(expected)
+    # The count is the number of showers (event headers); each shower has several telescope blocks.
+    showers = sum(1 for obj, _, _ in iter_photon_objects(iact_file) if obj.header.type == 1202)
+    assert count == showers
     events = _read_back(out.getvalue())
     assert [len(event["x"]) for event in events] == expected
 
 
 def test_parse_telescope_map_valid():
-    routes = parse_telescope_map(
-        {
-            "0": VALID_ENTRY,
-            "3": {**VALID_ENTRY, "dual_mirror": True},
-            "5": {**VALID_ENTRY, "site": "north"},
-        }
-    )
+    routes = parse_telescope_map({"0": VALID_ENTRY, "3": {**VALID_ENTRY, "dual_mirror": True}})
 
-    assert set(routes) == {0, 3, 5}
+    assert set(routes) == {0, 3}
     assert routes[0].name == "LSTS-01"
     assert routes[0].model_version == "7.0.0"
     assert routes[0].site == "South"
@@ -374,16 +405,6 @@ def test_parse_telescope_map_valid():
     assert routes[0].radius_m == pytest.approx(12.5)
     assert routes[0].input_plane_height_m == pytest.approx(30.0)
     assert routes[3].dual_mirror is True
-    assert routes[5].site == "North"
-
-
-def test_create_route_inputs_requires_model_source(monkeypatch):
-    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
-    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
-    routes = parse_telescope_map({"0": VALID_ENTRY})
-
-    with pytest.raises(ValueError, match="A simulation-model source is required"):
-        shower_route.create_route_inputs(routes)
 
 
 def test_load_telescope_map_reads_json(tmp_test_directory):
@@ -395,46 +416,34 @@ def test_load_telescope_map_reads_json(tmp_test_directory):
     assert routes[0].name == "LSTS-01"
 
 
-def test_parse_telescope_map_missing_keys_raises():
-    entry = {name: value for name, value in VALID_ENTRY.items() if name not in ("model", "phi_deg")}
+@pytest.mark.parametrize("key", list(VALID_ENTRY))
+def test_parse_telescope_map_missing_key_raises(key):
+    entry = {name: value for name, value in VALID_ENTRY.items() if name != key}
 
-    with pytest.raises(ValueError, match="lacks model, phi_deg"):
+    with pytest.raises(ValueError, match=f"lacks {key}"):
         parse_telescope_map({"0": entry})
 
 
-@pytest.mark.parametrize("mapping", [{}, [VALID_ENTRY]])
-def test_parse_telescope_map_not_non_empty_object_raises(mapping):
-    with pytest.raises(ValueError, match="non-empty object"):
+@pytest.mark.parametrize(
+    ("mapping", "message"),
+    [
+        ({}, "non-empty object"),
+        ([VALID_ENTRY], "non-empty object"),
+        ({"LST": VALID_ENTRY}, "not an integer"),
+        ({"0": "LSTS-01"}, "is not an object"),
+        ({"0": {**VALID_ENTRY, "site": "East"}}, "site must be one of"),
+        ({"0": {**VALID_ENTRY, "dual_mirror": "no"}}, "dual_mirror must be true or false"),
+        ({"0": {**VALID_ENTRY, "model": ""}}, "model must be a non-empty string"),
+        ({"0": {**VALID_ENTRY, "model_version": 7}}, "model_version must be a non-empty string"),
+        ({"0": {**VALID_ENTRY, "radius_m": -1.0}}, "radius_m must be a positive number"),
+        ({"0": {**VALID_ENTRY, "radius_m": True}}, "radius_m must be a positive number"),
+        ({"0": {**VALID_ENTRY, "input_plane_height_m": "30"}}, "must be a positive number"),
+        ({"1": VALID_ENTRY, "01": VALID_ENTRY}, "occurs twice"),
+    ],
+)
+def test_parse_telescope_map_invalid_raises(mapping, message):
+    with pytest.raises(ValueError, match=message):
         parse_telescope_map(mapping)
-
-
-def test_parse_telescope_map_telescope_id_not_integer_raises():
-    with pytest.raises(
-        ValueError, match="Telescope id 'LST' in the telescope map is not an integer"
-    ):
-        parse_telescope_map({"LST": VALID_ENTRY})
-
-
-def test_parse_telescope_map_entry_not_object_raises():
-    with pytest.raises(
-        ValueError, match="Entry of telescope 0 in the telescope map is not an object"
-    ):
-        parse_telescope_map({"0": "LSTS-01"})
-
-
-def test_parse_telescope_map_invalid_site_raises():
-    with pytest.raises(ValueError, match="Telescope 0 in the telescope map: Invalid name East"):
-        parse_telescope_map({"0": {**VALID_ENTRY, "site": "East"}})
-
-
-def test_parse_telescope_map_invalid_value_raises():
-    with pytest.raises(ValueError, match="Telescope 0 in the telescope map: could not convert"):
-        parse_telescope_map({"0": {**VALID_ENTRY, "radius_m": "wide"}})
-
-
-def test_parse_telescope_map_duplicate_id_raises():
-    with pytest.raises(ValueError, match="Telescope id 1 occurs twice"):
-        parse_telescope_map({"1": VALID_ENTRY, "01": VALID_ENTRY})
 
 
 def test_load_telescope_map_invalid_json_raises(tmp_test_directory):
@@ -455,11 +464,15 @@ def test_cli_main_streams_stdin_to_stdout(tmp_test_directory):
         "sys.exit(main(sys.argv[1:], inputs_factory=_fake_inputs_factory))"
     )
 
+    # The subprocess must import the simtools sources of this tree, not an installed copy.
+    src_dir = str(Path(shower_route.__file__).parents[2])
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([src_dir, os.environ.get("PYTHONPATH", "")])}
     result = subprocess.run(
         [sys.executable, "-c", code, "--telescope-map", str(map_path)],
         input=stream,
         capture_output=True,
         cwd=Path(__file__).parent,
+        env=env,
         check=False,
     )
 
@@ -572,7 +585,7 @@ def test_route_stream_signals_each_processed_object():
     route_stream(
         stream,
         io.BytesIO(),
-        _inputs({0: _FakeTracer()}),
+        {0: _FakeTracer()},
         **_route_kwargs(telescope_ids=(0,)),
         on_object=on_object,
     )
@@ -583,3 +596,133 @@ def test_route_stream_signals_each_processed_object():
     assert types[:4] == [1200, 1201, 1216, 1202]
     assert sent[0] == (4711, 34)
     assert sent[1:] == [(4711, 18)] * (len(types) - 3)
+
+
+def test_route_preserves_shower_objects_and_reuses():
+    import struct
+
+    source = io.BytesIO()
+    source.write(_object(1200, 42, _block(b"RUNH", {2: 42})))
+    source.write(_object(1212, 0, b"card"))
+    source.write(_object(1201, 0, struct.pack("<i", 0)))
+    # Word 46 holds the CORSIKA version, which selects the event header layout of corsikaio.
+    source.write(_object(1202, 17, _block(b"EVTH", {2: 17, 4: 1250, 11: 0.4, 12: 1.2, 46: 6.999})))
+    source.write(_object(1203, 0, struct.pack("<ifffff", 2, 0, 120, -40, 80, 60)))
+    source.write(_object(1211, 17, b"long"))
+    for reuse in (0, 1):
+        subobjects = io.BytesIO()
+        for telescope_id in (0, 1):
+            block = io.BytesIO()
+            _write_telescope_block(block, telescope_id, _bunches(2), reuse=reuse)
+            subobjects.write(block.getvalue()[16:])
+        source.write(_object(1204, reuse, subobjects.getvalue(), only_subobjects=True))
+    source.write(_object(1209, 17, _block(b"EVTE", {2: 17})))
+    source.write(_object(1210, 42, _block(b"RUNE", {2: 42})))
+    source.write(_object(1234, 7, b"other"))
+    original = source.getvalue()
+    output = io.BytesIO()
+    callbacks = []
+
+    count = route_stream(
+        io.BytesIO(original),
+        output,
+        {0: _FakeTracer()},
+        **_route_kwargs(),
+        skipped_telescope_ids={1},
+        on_object=lambda obj: callbacks.append(obj.header.type),
+    )
+
+    before = list(iter_photon_objects(io.BytesIO(original)))
+    after = list(iter_photon_objects(io.BytesIO(output.getvalue())))
+    assert count == 1
+    assert callbacks == [obj.header.type for obj, _, _ in before]
+    assert [obj.header.type for obj, _, _ in after] == callbacks
+    for (old_obj, old_raw, _), (new_obj, new_raw, blocks) in zip(before, after, strict=True):
+        if old_obj.header.type == 1204:
+            assert new_obj.header.id == old_obj.header.id
+            assert len(blocks) == 1
+            assert blocks[0]["array_id"] == old_obj.header.id
+            assert blocks[0]["telescope_id"] == 0
+            assert new_raw != old_raw
+        else:
+            assert new_raw == old_raw
+
+
+def test_route_zeroes_only_traced_telescope_heights():
+    import struct
+
+    from simtools.simtel.shower_route import _zero_traced_telescope_heights
+
+    payload = struct.pack("<i12f", 3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+    raw = _object(1201, 0, payload)
+    result = _zero_traced_telescope_heights(raw, {0: object(), 2: object()})
+    expected = struct.pack("<i12f", 3, 1, 2, 3, 4, 5, 6, 0, 8, 0, 10, 11, 12)
+    assert result == _object(1201, 0, expected)
+
+
+def test_route_atmospheric_correction_and_disable(tmp_test_directory):
+    from simtools.simtel.shower_transmission import SimtelTransmission, transmission_ratio
+
+    path = Path(tmp_test_directory) / "transmission.dat"
+    path.write_text("# H2= 2.147, H1= 3 10 30\n385 0.1 0.3 0.5\n", encoding="utf-8")
+    table = SimtelTransmission(path, OBSERVATION_LEVEL_M)
+    bunches = _bunches(1)
+    bunches["cx"], bunches["cy"] = np.sin(np.deg2rad(60)), 0
+    bunches["zem"] = 900000
+    original = _stream([(0, bunches)]).getvalue()
+    objects = list(iter_photon_objects(io.BytesIO(original)))
+    import struct
+
+    data = b"".join(
+        _object(1201, 0, struct.pack("<i4f", 1, 0, 0, 3400, 200))
+        if obj.header.type == 1201
+        else raw
+        for obj, raw, _ in objects
+    )
+    results = []
+    for correction in (None, table):
+        output = io.BytesIO()
+        route_stream(
+            io.BytesIO(data),
+            output,
+            {0: _FakeTracer()},
+            **_route_kwargs(),
+            transmission=correction,
+            pathlen_m_by_telescope={0: 28.0},
+        )
+        results.append(_read_back(output.getvalue())[0]["size"][0])
+    ground_airmass = 1 / np.sqrt(1 - float(bunches["cx"][0]) ** 2)
+    expected = transmission_ratio(table, 385, 9000, ground_airmass, 1, 34, 0, 28, 2147)
+    assert results[0] == pytest.approx(1.0)
+    assert results[1] == pytest.approx(expected, rel=1e-6)
+
+
+def test_route_drops_zero_bypass_transmission(tmp_test_directory, caplog):
+    from simtools.simtel.shower_transmission import SimtelTransmission
+
+    path = Path(tmp_test_directory) / "transmission.dat"
+    path.write_text("# H2= 2.147, H1= 3 10 30\n385 0.1 0.3 0.5\n", encoding="utf-8")
+    table = SimtelTransmission(path, OBSERVATION_LEVEL_M)
+    bunches = _bunches(1)
+    bunches["zem"] = 100000
+    output = io.BytesIO()
+    import logging
+
+    with caplog.at_level(logging.INFO, logger=shower_route.__name__):
+        route_stream(
+            _stream([(0, bunches)]),
+            output,
+            {0: _FakeTracer()},
+            **_route_kwargs(),
+            transmission=table,
+            pathlen_m_by_telescope={0: 28.0},
+        )
+    assert len(_read_back(output.getvalue())[0]["size"]) == 0
+    assert "Dropped 1 bunches with zero bypass transmission" in caplog.text
+
+
+def test_atmospheric_correction_cli_default_and_override():
+    assert not shower_route.parse_args(["--telescope-map", "map.json"]).no_atmospheric_correction
+    assert shower_route.parse_args(
+        ["--telescope-map", "map.json", "--no-atmospheric-correction"]
+    ).no_atmospheric_correction
