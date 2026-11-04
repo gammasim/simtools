@@ -137,6 +137,26 @@ class SimulationModelReader:
         """Return model-version descriptions from the selected source."""
         return self._source.get_production_descriptions()
 
+    def get_model_update_info(self, model_version):
+        """Return update type and history declared by a production version.
+
+        Parameters
+        ----------
+        model_version : str
+            Production model version to inspect.
+
+        Returns
+        -------
+        dict
+            ``model_update`` and ``model_version_history`` values from the version metadata.
+            Missing metadata yields ``None`` and an empty list.
+        """
+        info = self._source.get_model_update_info(model_version)
+        return {
+            "model_update": info.get("model_update"),
+            "model_version_history": info.get("model_version_history", []),
+        }
+
     def read_production_table(self, collection_name, model_version):
         """Read a production table."""
         model_version = resolve_version_to_latest_patch(

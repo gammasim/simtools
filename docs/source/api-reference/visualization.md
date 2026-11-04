@@ -32,6 +32,13 @@ the visualization module.
    :members:
 ```
 
+## array_layout_cache
+
+```{eval-rst}
+.. automodule:: visualization.array_layout_cache
+   :members:
+```
+
 (plot-camera)=
 
 ## plot_camera

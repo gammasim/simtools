@@ -13,6 +13,7 @@ from matplotlib.colors import to_rgba
 
 from simtools.utils import geometry as transf
 from simtools.visualization import plot_array_layout as pal
+from simtools.visualization.array_layout_cache import array_layout_figure_name
 from simtools.visualization.plot_array_layout import (
     finalize_plot,
     generate_plot_combinations,
@@ -336,13 +337,13 @@ def _layout_args(**overrides):
 
 
 @pytest.mark.parametrize(
-    ("figure_name", "site", "coordinate_system", "layout_name", "expected_filename"),
+    ("figure_name", "site", "coordinate_system", "layout_name", "expected_prefix"),
     [
-        (None, None, "utm", "testlayout", "array_layout_testlayout_utm_6-0-0"),
-        (None, "North", "ground", "alpha", "array_layout_alpha_North_ground_6-0-0"),
+        (None, None, "utm", "testlayout", "array_layout_"),
+        (None, "North", "ground", "alpha", "array_layout_"),
         ("custom_name", "North", "ground", "alpha", "custom_name"),
     ],
-    ids=["layout_name", "default_filename_includes_model_version", "figure_name_override"],
+    ids=["content_name", "content_name", "figure_name_override"],
 )
 def test_plot_array_layouts(
     monkeypatch,
@@ -351,7 +352,7 @@ def test_plot_array_layouts(
     site,
     coordinate_system,
     layout_name,
-    expected_filename,
+    expected_prefix,
 ):
     captured = {"name": None, "plotted": False}
 
@@ -359,7 +360,7 @@ def test_plot_array_layouts(
         captured["plotted"] = True
         return Mock()
 
-    def dummy_save_figure(fig, path, dpi):
+    def dummy_save_figure(fig, path, dpi, figure_format=None):
         assert fig is not None
         assert path.parent == Path(tmp_test_directory)
         captured["name"] = path.name
@@ -378,7 +379,55 @@ def test_plot_array_layouts(
     pal.plot_array_layouts(args, Path(tmp_test_directory), layouts)
 
     assert captured["plotted"]
-    assert captured["name"] == expected_filename
+    assert captured["name"].startswith(expected_prefix)
+    if figure_name is None:
+        assert len(captured["name"].removeprefix(expected_prefix)) == 64
+
+
+def test_array_layout_figure_name_reuses_identical_layouts_and_tracks_positions():
+    args = _layout_args()
+    layout = {
+        "array_elements": _layout_table(["LSTN-01"], [0], [12]),
+        "name": "4lst",
+        "site": "North",
+    }
+    other_version = {**args, "model_version": "8.0.0"}
+    shifted_layout = {
+        **layout,
+        "array_elements": _layout_table(["LSTN-01"], [10], [12]),
+    }
+
+    original_name = array_layout_figure_name(layout, args)
+
+    assert array_layout_figure_name(layout, other_version) == original_name
+    assert array_layout_figure_name(shifted_layout, args) != original_name
+
+
+def test_plot_array_layouts_reuses_identical_rendered_layout(tmp_test_directory, monkeypatch):
+    calls = {"plot": 0, "save": 0}
+
+    def plot(**_kwargs):
+        calls["plot"] += 1
+        return Mock()
+
+    def save(_figure, output_file, dpi, figure_format=None):
+        calls["save"] += 1
+        Path(output_file).with_suffix(".png").touch()
+
+    monkeypatch.setattr(pal, "plot_array_layout", plot)
+    monkeypatch.setattr(pal.visualize, "save_figure", save)
+    layouts = [
+        {
+            "array_elements": _layout_table(["LSTN-01"], [0], [12]),
+            "name": layout_name,
+            "site": "North",
+        }
+        for layout_name in ("4lst", "CTAO-North-Alpha")
+    ]
+
+    pal.plot_array_layouts(_layout_args(figure_format="png"), Path(tmp_test_directory), layouts)
+
+    assert calls == {"plot": 1, "save": 1}
 
 
 def test_generate_plot_combinations_default():

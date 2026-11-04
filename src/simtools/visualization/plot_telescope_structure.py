@@ -42,7 +42,7 @@ def _cross(o, a, b):
 
 def _draw(ax, element, i, j, face, edge, *, lw, zorder, linestyle="-"):
     """Draw an element projected on axes (i, j): a line for wires and cylinders, else a polygon."""
-    if element.side_only and (i, j) != (0, 2):
+    if (element.side_only and (i, j) != (0, 2)) or (element.top_only and (i, j) != (0, 1)):
         return
     projected = element.points[:, [i, j]]
     if element.kind == "wire" or element.is_cylinder:
