@@ -376,9 +376,10 @@ def test_discover_product_manifests_filters_invalid_and_other_products(tmp_test_
         "skip.yml": {"product_type": "other_product"},
         "invalid.yml": ["not a mapping"],
     }
+    collect_data = collect_data_from_file
     mocker.patch(
         "simtools.production_configuration.production_file_selection.ascii_handler.collect_data_from_file",
-        side_effect=lambda file_name: data[Path(file_name).name],
+        side_effect=lambda file_name: data.get(Path(file_name).name, collect_data(file_name)),
     )
 
     result = discover_product_manifests(tmp_test_directory, "custom_product")
