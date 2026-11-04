@@ -156,7 +156,10 @@ def _gain_parameters(model, gain_index):
     if gain_index and pedestal < 0:
         pedestal = _scalar(model, "fadc_pedestal")
     scale = _scalar(model, f"{prefix}{AMPLITUDE}") * sensitivity
-    ceiling = _scalar(model, "fadc_max_signal") - pedestal
+    maximum = _scalar(model, f"{prefix}max_signal")
+    if gain_index and maximum < 0:
+        maximum = _scalar(model, "fadc_max_signal")
+    ceiling = maximum - pedestal
     if scale <= 0 or ceiling <= 0:
         raise ValueError("Gain and ADC headroom must be positive")
     return scale, pedestal, ceiling

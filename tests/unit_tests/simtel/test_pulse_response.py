@@ -31,6 +31,7 @@ def pulse_model():
         "fadc_pedestal": 10,
         "fadc_lg_pedestal": -1,
         "fadc_max_signal": 100,
+        "fadc_lg_max_signal": -1,
         "transit_time_jitter": 0,
     }
     model.get_parameter_value.side_effect = parameters.__getitem__
@@ -104,6 +105,17 @@ def test_template_clipping(pulse_model):
     table, _ = pulse_response.template_responses(pulse_model, [100])
     linear = table[(table["gain"] == "HG") & (table[RESPONSE] == "linear_clipped")]
     assert linear[PEAK][0] == pytest.approx(90)
+
+
+@pytest.mark.parametrize(("maximum", "expected"), [(40, 30), (-1, 90)])
+def test_low_gain_clipping_uses_its_own_maximum(pulse_model, maximum, expected):
+    original = pulse_model.get_parameter_value.side_effect
+    pulse_model.get_parameter_value.side_effect = lambda name: (
+        maximum if name == "fadc_lg_max_signal" else original(name)
+    )
+    table, _ = pulse_response.template_responses(pulse_model, [100])
+    linear = table[(table["gain"] == "LG") & (table[RESPONSE] == "linear_clipped")]
+    assert linear[PEAK][0] == pytest.approx(expected)
 
 
 def test_template_responses_reads_unified_reference_and_gain_templates(pulse_model):
