@@ -15,19 +15,19 @@ class ModelStorage(Protocol):
 
     def read_bytes(self, path: str) -> bytes:
         """Read a repository-relative file as bytes."""
-        ...
+        raise NotImplementedError
 
     def open(self, path: str) -> BinaryIO:
         """Open a repository-relative file as a binary stream."""
-        ...
+        raise NotImplementedError
 
     def iter_files(self, prefix: str) -> list[str]:
         """List repository-relative files below a directory prefix."""
-        ...
+        raise NotImplementedError
 
     def exists(self, path: str) -> bool:
         """Return whether a repository-relative file exists."""
-        ...
+        raise NotImplementedError
 
 
 def _relative_path(path: str) -> PurePosixPath:

@@ -21,6 +21,12 @@ _ARGUMENTS = (
         required=True,
         help="Root directory of the Sphinx documentation source.",
     ),
+    cli.ArgumentDefinition(
+        "simulation_models_path",
+        type=Path,
+        default=None,
+        help="Root directory of the simulation-models repository.",
+    ),
 )
 
 
@@ -34,7 +40,7 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    generate_toctree(app_context.args["docs_path"])
+    generate_toctree(app_context.args["docs_path"], app_context.args["simulation_models_path"])
     app_context.logger.info(f"Toctree index files written to {app_context.args['docs_path']}")
 
 

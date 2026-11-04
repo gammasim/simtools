@@ -3,6 +3,7 @@
 # pylint: disable=protected-access,redefined-outer-name,unused-argument
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 import astropy.units as u
@@ -15,6 +16,43 @@ from PIL import Image
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
+
+
+def test_figure_cache_key_tracks_rendered_data(tmp_path):
+    renderer = tmp_path / "renderer.py"
+    renderer.write_text("def render(): return 1\n", encoding="utf-8")
+    kwargs = {
+        "renderer": "test.renderer",
+        "renderer_modules": {"renderer": renderer},
+        "plot_config": {"title": "Test"},
+        "rendered_data": {"samples": np.array([1.0, 2.0])},
+    }
+
+    original = visualize.figure_cache_key(**kwargs)
+    changed = {**kwargs, "rendered_data": {"samples": np.array([1.0, 3.0])}}
+
+    assert visualize.figure_cache_key(**kwargs) == original
+    assert visualize.figure_cache_key(**changed) != original
+
+
+def test_figure_cache_canonicalizes_dataclasses_paths_numpy_scalars_and_nonfinite_values(
+    tmp_path,
+):
+    @dataclass
+    class RenderOptions:
+        output_path: Path
+        sample_count: np.int64
+        threshold: float
+
+    canonical = visualize._canonicalize(
+        RenderOptions(tmp_path / "plot.png", np.int64(4), float("nan"))
+    )
+
+    assert canonical == {
+        "output_path": (tmp_path / "plot.png").as_posix(),
+        "sample_count": 4,
+        "threshold": "nan",
+    }
 
 
 @pytest.fixture

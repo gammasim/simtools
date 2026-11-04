@@ -47,6 +47,21 @@ def _validate_descriptor(descriptor, configuration, active_versions, context):
     if descriptor_versions and not versions_match(active_versions, descriptor_versions):
         return
     artifact = OutputArtifact.from_descriptor(configuration, descriptor)
+    if "minimum_matches" in descriptor:
+        matches = sorted(
+            path for path in artifact.path.parent.glob(artifact.path.name) if path.is_file()
+        )
+        minimum = descriptor["minimum_matches"]
+        if len(matches) < minimum:
+            raise AssertionError(
+                f"Output pattern {artifact.path} matched {len(matches)} files; "
+                f"expected at least {minimum}."
+            )
+        for path in matches:
+            matched_artifact = OutputArtifact(path, descriptor)
+            for rule in descriptor.get("validations", []):
+                _validate_rule(matched_artifact, rule, configuration, context)
+        return
     artifact.assert_exists()
     for rule in descriptor.get("validations", []):
         _validate_rule(artifact, rule, configuration, context)

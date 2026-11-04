@@ -2,7 +2,30 @@
 
 from pathlib import Path
 
+import pytest
+
 from simtools.testing.output_validation import runner
+
+
+def test_runner_validates_pattern_count_and_each_match(tmp_test_directory, mocker):
+    directory = Path(tmp_test_directory)
+    (directory / "array_layout_a.png").touch()
+    descriptor = {
+        "path_descriptor": "output_path",
+        "file": "array_layout_*.png",
+        "minimum_matches": 2,
+        "validations": [{"type": "format", "format": "png"}],
+    }
+    config = {
+        "configuration": {"output_path": directory},
+        "integration_tests": [{"test_outputs": [descriptor]}],
+    }
+    with pytest.raises(AssertionError, match="matched 1 files; expected at least 2"):
+        runner.validate_application_output(config)
+    (directory / "array_layout_b.png").touch()
+    dispatch = mocker.patch.object(runner, "run_validator")
+    runner.validate_application_output(config)
+    assert dispatch.call_count == 2
 
 
 def test_versions_match_requires_an_intersection():
