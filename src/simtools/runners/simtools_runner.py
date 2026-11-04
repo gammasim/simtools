@@ -322,7 +322,7 @@ def _collection_directories(source_key, source_dir):
         return []
     if source_key != "input_meta":
         return [Path(source_dir)]
-    patterns = [source_dir] if isinstance(source_dir, str) else source_dir
+    patterns = [source_dir] if isinstance(source_dir, (str, Path)) else source_dir
     directories = []
     for pattern in patterns:
         path = Path(pattern)
