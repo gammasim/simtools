@@ -5,6 +5,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import pytest
+
 from simtools.applications import validate_repository_consistency
 
 
@@ -74,6 +76,83 @@ def test_malformed_product_data_does_not_crash_validation(tmp_path):
         )
         == []
     )
+
+
+def test_accepts_submitter_file_renamed_by_workflow_collection(tmp_path):
+    input_directory = tmp_path / "input" / "workflow"
+    input_directory.mkdir(parents=True)
+    (input_directory / "submitter_north.ecsv").write_text("data\n", encoding="utf-8")
+    (input_directory / "config.yml").write_text(
+        "applications: []\n"
+        "collection:\n"
+        "  files:\n"
+        "  - source: submitter_north.ecsv\n"
+        "    destination: product-1.0.1.ecsv\n",
+        encoding="utf-8",
+    )
+    _write_metadata(input_directory, "product-1.0.1.ecsv", "product")
+
+    assert (
+        validate_repository_consistency.validate_repository_consistency(
+            tmp_path, [Path("input")], Path("input")
+        )
+        == []
+    )
+
+
+def test_rejects_product_without_submitter_file_or_collection_mapping(tmp_path):
+    input_directory = tmp_path / "input" / "workflow"
+    input_directory.mkdir(parents=True)
+    (input_directory / "submitter_north.ecsv").write_text("data\n", encoding="utf-8")
+    (input_directory / "config.yml").write_text(
+        "applications: []\ncollection:\n  files:\n  - source: submitter_north.ecsv\n",
+        encoding="utf-8",
+    )
+    _write_metadata(input_directory, "product-1.0.1.ecsv", "product")
+
+    errors = validate_repository_consistency.validate_repository_consistency(
+        tmp_path, [Path("input")], Path("input")
+    )
+
+    assert len(errors) == 1
+    assert "product file is missing or untracked" in errors[0]
+
+
+@pytest.mark.parametrize(
+    ("config_text", "create_submitter_file"),
+    [
+        (
+            (
+                "applications: []\ncollection:\n  files:\n"
+                "  - source: submitter_north.ecsv\n    destination: other-1.0.1.ecsv\n"
+            ),
+            True,
+        ),
+        (
+            (
+                "applications: []\ncollection:\n  files:\n"
+                "  - source: submitter_north.ecsv\n    destination: product-1.0.1.ecsv\n"
+            ),
+            False,
+        ),
+    ],
+)
+def test_rejects_collection_mapping_with_other_destination_or_missing_source(
+    tmp_path, config_text, create_submitter_file
+):
+    input_directory = tmp_path / "input" / "workflow"
+    input_directory.mkdir(parents=True)
+    if create_submitter_file:
+        (input_directory / "submitter_north.ecsv").write_text("data\n", encoding="utf-8")
+    (input_directory / "config.yml").write_text(config_text, encoding="utf-8")
+    _write_metadata(input_directory, "product-1.0.1.ecsv", "product")
+
+    errors = validate_repository_consistency.validate_repository_consistency(
+        tmp_path, [Path("input")], Path("input")
+    )
+
+    assert len(errors) == 1
+    assert "product file is missing or untracked" in errors[0]
 
 
 def test_rejects_missing_scan_roots(tmp_path):
