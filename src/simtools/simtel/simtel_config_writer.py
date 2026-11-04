@@ -46,6 +46,13 @@ _SKIPPED_PARAMETERS = (
 )
 
 
+def _dimensionless_values(column):
+    """Return a table column as dimensionless values, honoring any unit."""
+    return u.Quantity(column, unit=column.unit or u.dimensionless_unscaled).to_value(
+        u.dimensionless_unscaled
+    )
+
+
 class SimtelConfigWriter:
     """
     SimtelConfigWriter writes sim_telarray configuration files.
@@ -135,11 +142,30 @@ class SimtelConfigWriter:
                 parameters,
                 telescope_name,
                 telescope_design_model=_telescope_design_model,
-                additional_meta_parameters=(
-                    ["camera_config_file"] if "camera_config_file" in simtel_par else []
-                ),
+                additional_meta_parameters=[
+                    parameter
+                    for parameter in (
+                        "camera_config_file",
+                        "fadc_hg_response_table",
+                        "fadc_lg_response_table",
+                    )
+                    if parameter in simtel_par
+                ],
             )
             file.write("".join(f"{meta}\n" for meta in metadata))
+
+    @staticmethod
+    def _uses_unified_fadc_schema(parameter_name, parameter_data):
+        """Check whether an FADC pulse parameter declares unified table rows."""
+        if parameter_name != "fadc_pulse_shape":
+            return False
+        parameter_schema = schema.get_model_parameter_schema(
+            parameter_name, parameter_data.get("model_parameter_schema_version")
+        )
+        return any(
+            entry.get("name") == "sim_telarray" and entry.get("table_format") == "fadc_templates"
+            for entry in parameter_schema.get("simulation_software", [])
+        )
 
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path, telescope_name=None):
         """Convert model parameters to sim_telarray names and values."""
@@ -153,6 +179,10 @@ class SimtelConfigWriter:
             simtel_par["camera_config_file"] = parameters["camera_config_file"]["value"]
         for par, value in parameters.items():
             if par in _SKIPPED_PARAMETERS:
+                continue
+            unified_fadc = self._uses_unified_fadc_schema(par, value)
+            if unified_fadc:
+                simtel_par.update(self._write_fadc_templates(value, config_file_path))
                 continue
             if par == "mirror_list" and uses_segmented_dual_mirror_geometry(parameters):
                 simtel_par["mirror_list"] = None
@@ -173,6 +203,65 @@ class SimtelConfigWriter:
         return dict(
             sorted(self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par).items())
         )
+
+    def _write_fadc_templates(self, parameter_data, config_file_path):
+        """Write unified reference and response rows to sim_telarray's three inputs."""
+        table = self._read_parameter_table(parameter_data)
+        destination = Path(config_file_path).parent
+        suffix = Path(config_file_path).stem
+        outputs = {
+            "fadc_pulse_shape": f"fadc_pulse_shape-{suffix}.dat",
+            "fadc_hg_response_table": f"fadc_hg_response_table-{suffix}.dat",
+            "fadc_lg_response_table": f"fadc_lg_response_table-{suffix}.dat",
+        }
+        self._write_fadc_reference_template(table, destination / outputs["fadc_pulse_shape"])
+        for gain, simtel_name in (
+            ("HG", "fadc_hg_response_table"),
+            ("LG", "fadc_lg_response_table"),
+        ):
+            self._write_fadc_gain_response(table, gain, destination / outputs[simtel_name])
+        return outputs
+
+    @staticmethod
+    def _write_fadc_reference_template(table, output_path):
+        """Write HG and LG unsmeared reference pulses on their shared time grid."""
+        reference = table[table["template_kind"] == "single_pe"]
+        channels = {}
+        for gain in ("HG", "LG"):
+            selected = reference[reference["gain"] == gain]
+            if len(selected) == 0:
+                raise ValueError(f"Unified FADC table has no {gain} reference pulse")
+            selected.sort("time")
+            channels[gain] = selected
+        high, low = channels["HG"], channels["LG"]
+        if len(high) != len(low) or list(high["time"]) != list(low["time"]):
+            raise ValueError("HG and LG reference pulses must share their time grid")
+        columns = (
+            u.Quantity(high["time"], unit=high["time"].unit or u.ns).to_value(u.ns),
+            _dimensionless_values(high["amplitude"]),
+            _dimensionless_values(low["amplitude"]),
+        )
+        with output_path.open("w", encoding="utf-8") as file:
+            for row in zip(*columns, strict=True):
+                file.write(" ".join(f"{value:.12g}" for value in row) + "\n")
+
+    @staticmethod
+    def _write_fadc_gain_response(table, gain, output_path):
+        """Write one gain's intensity-dependent response rows."""
+        selected = table[
+            (table["template_kind"] == "intensity_dependent") & (table["gain"] == gain)
+        ]
+        if len(selected) == 0:
+            raise ValueError(f"Unified FADC table has no {gain} response templates")
+        selected.sort(["intensity", "time"])
+        columns = (
+            _dimensionless_values(selected["intensity"]),
+            u.Quantity(selected["time"], unit=selected["time"].unit or u.ns).to_value(u.ns),
+            _dimensionless_values(selected["amplitude"]),
+        )
+        with output_path.open("w", encoding="utf-8") as file:
+            for row in zip(*columns, strict=True):
+                file.write(" ".join(f"{value:.12g}" for value in row) + "\n")
 
     def _write_camera_file(self, parameters, config_file_path, telescope_name=None):
         """Write a sim_telarray camera file from independent camera parameters."""
@@ -773,6 +862,8 @@ class SimtelConfigWriter:
             "camera_config_file": f"{telescope_name}_single_pixel_camera.dat",
             "discriminator_pulse_shape": f"{telescope_name}_pulse.dat",
             "fadc_pulse_shape": f"{telescope_name}_pulse.dat",
+            "fadc_hg_response_table": "none",
+            "fadc_lg_response_table": "none",
             "mirror_list": f"{telescope_name}_single_12m_mirror.dat",
             "mirror_reflectivity": f"{telescope_name}_reflectivity.dat",
             "camera_pixels": 1,

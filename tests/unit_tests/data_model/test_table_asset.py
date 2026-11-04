@@ -6,6 +6,7 @@ import astropy.units as u
 import pytest
 from astropy.table import QTable, Table
 
+from simtools.data_model import schema
 from simtools.data_model.table_asset import (
     get_simtel_serialization,
     read_ecsv_asset,
@@ -340,6 +341,45 @@ def test_validate_table_asset_rejects_missing_required_metadata():
             table,
             schema_entry={"table_metadata": [{"name": "source_file_name", "required": True}]},
         )
+
+
+def test_unified_fadc_schema_accepts_columns_without_group_validation():
+    entry = schema.get_model_parameter_schema("fadc_pulse_shape", "0.4.0")["data"][0]
+    template_kind = next(
+        column for column in entry["table_columns"] if column["name"] == "template_kind"
+    )
+    assert template_kind["allowed_values"] == ["single_pe", "intensity_dependent"]
+    rows = []
+    for gain in ("HG", "LG"):
+        for time, amplitude in ((0.0, 0.0), (1.0, 1.0)):
+            rows.append(
+                {
+                    "template_kind": "single_pe",
+                    "gain": gain,
+                    "intensity": 1.0,
+                    "time": time,
+                    "amplitude": amplitude,
+                }
+            )
+        for intensity in (10.0, 20.0):
+            for time, amplitude in ((0.0, 0.0), (1.0, intensity)):
+                rows.append(
+                    {
+                        "template_kind": "intensity_dependent",
+                        "gain": gain,
+                        "intensity": intensity,
+                        "time": time,
+                        "amplitude": amplitude,
+                    }
+                )
+    table = QTable(rows=rows)
+    table["time"].unit = u.ns
+    for name in table.colnames:
+        table[name].info.description = name
+    validate_table_asset(table, schema_entry=entry)
+
+    malformed = table[~((table["template_kind"] == "single_pe") & (table["gain"] == "LG"))]
+    validate_table_asset(malformed, schema_entry=entry)
 
 
 def test_validate_boolean_table_column():
