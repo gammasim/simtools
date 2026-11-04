@@ -83,11 +83,17 @@ def test_patch_version_reports_write_delta(
 ):
     patch_history = "6.0.0" if args.get("telescope") else "6.2.0"
     info_path = f"simulation-models/productions/{args['model_version']}/info.yml"
+    element = args.get("telescope", f"OBS-{args['site']}")
+    base_production_path = f"simulation-models/productions/{patch_history}/{element}.json"
     model_reader = SimulationModelReader.from_memory(
         {
             info_path: (
                 f"model_update: patch_update\nmodel_version_history:\n  - {patch_history}\n"
-            ).encode()
+            ).encode(),
+            base_production_path: f'{{"parameters": {{"{element}": {{}}}}}}'.encode(),
+            f"simulation-models/productions/{args['model_version']}/{element}.json": (
+                f'{{"parameters": {{"{element}": {{}}}}}}'.encode()
+            ),
         }
     )
     read_parameters = ReadParameters(
