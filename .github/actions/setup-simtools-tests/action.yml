@@ -22,6 +22,10 @@ inputs:
     description: simtools-tests branch used by tests.
     required: false
     default: "main"
+  extras:
+    description: pip extras installed with simtools.
+    required: false
+    default: "tests"
 runs:
   using: composite
   steps:
@@ -34,8 +38,10 @@ runs:
     - name: Python dependencies
       if: ${{ inputs.install-dependencies == 'true' }}
       shell: bash -leo pipefail {0}
+      env:
+        EXTRAS: ${{ inputs.extras }}
       run: |
-        bash .github/scripts/install_python_dependencies.sh -e '.[tests,obdeect]'
+        bash .github/scripts/install_python_dependencies.sh -e ".[${EXTRAS}]"
 
     - name: Export test repository settings
       if: ${{ inputs.extract-simulation-model == 'true' }}

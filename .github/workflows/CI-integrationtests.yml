@@ -512,17 +512,17 @@ jobs:
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
           bash .github/scripts/install_python_dependencies.sh \
-            --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-xdist pytest-retry
+            --no-cache-dir -e '.[tests]'
 
       - name: Install resource benchmark dependency
         if: ${{ inputs.benchmark }}
         run: |
-          bash .github/scripts/install_python_dependencies.sh --no-cache-dir psutil
+          bash .github/scripts/install_python_dependencies.sh --no-cache-dir -e '.[benchmark]'
 
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
         run: |
-          bash .github/scripts/install_python_dependencies.sh --no-cache-dir -e '.[tests,dev,doc,obdeect]'
+          bash .github/scripts/install_python_dependencies.sh --no-cache-dir -e '.[tests,dev,doc]'
 
       - name: Integration tests
         shell: bash -l {0}
