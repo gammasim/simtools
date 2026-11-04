@@ -31,10 +31,6 @@ jobs:
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
         with:
           python-version: "3.14"
-          cache: pip
-          cache-dependency-path: |
-            pyproject.toml
-            .github/workflows/CI-linter.yml
 
       - name: Check for non-ASCII characters
         run: |
@@ -81,7 +77,7 @@ jobs:
           dotenv_linter_flags: check -i UnorderedKey .env*
 
       - name: Restore pre-commit cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         id: precommit-cache
         with:
           path: ~/.cache/pre-commit
@@ -94,8 +90,11 @@ jobs:
           SKIP=no-commit-to-branch pre-commit run --all-files
 
       - name: Save pre-commit cache
-        if: success()  # only save if previous steps succeeded
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
+        if: >-
+          success()
+          && github.ref == 'refs/heads/main'
+          && steps.precommit-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}

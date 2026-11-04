@@ -10,10 +10,11 @@ import numpy as np
 from astropy.table import Table
 
 from simtools.io.file_type import product_value
+from simtools.io.table_handler import read_metadata_document
+from simtools.model.telescope_model import trigger_threshold_parameter
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
-_THRESHOLD_RE = re.compile(r"_(?:[ad]sum|discriminator)(?P<threshold>\d+(?:\.\d+)?)(?=\.)")
 _RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
 _DEFAULT_REDUCED_EVENT_DATA_PATTERN = (
     f"*{product_value('sim_telarray_event_data', 'default_suffix')}"
@@ -43,26 +44,62 @@ def extract_run_number(file_path):
 
 
 def extract_threshold(file_path):
-    """Extract threshold from the FILE_INFO table in the HDF5 file."""
+    """Read the common active telescope threshold from SIMULATION_METADATA.
+
+    Parameters
+    ----------
+    file_path : Path or str
+        Reduced event-data HDF5 file containing SIMULATION_METADATA.
+
+    Returns
+    -------
+    int or float or None
+        Common active threshold, or None for missing, invalid, or inconsistent
+        metadata.
+    """
     try:
-        file_info = Table.read(file_path, path="FILE_INFO", format="hdf5")
-    except OSError, ValueError, KeyError, ImportError:
-        _logger.exception(f"Failed to read FILE_INFO from {file_path}")
+        metadata = read_metadata_document(file_path, "SIMULATION_METADATA")
+        thresholds = set()
+        for source in metadata["inputs"]["files"]:
+            telescopes = source["sim_telarray_telescope_metadata"]
+            if not telescopes:
+                raise ValueError("No telescope threshold metadata found.")
+            thresholds.update(
+                _active_telescope_threshold(telescope["values"])
+                for telescope in telescopes.values()
+            )
+        if len(thresholds) != 1:
+            raise ValueError("Expected one common active threshold parameter and value.")
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        TypeError,
+        AttributeError,
+        ImportError,
+        OverflowError,
+    ) as exc:
+        _logger.warning(
+            f"Cannot read trigger threshold from SIMULATION_METADATA in {file_path}: {exc}"
+        )
         return None
 
-    simtel_path = file_info["file_name"][0]
+    _, threshold = thresholds.pop()
+    return int(threshold) if threshold.is_integer() else threshold
 
-    # astropy may return bytes
-    if isinstance(simtel_path, bytes):
-        simtel_path = simtel_path.decode()
 
-    match = _THRESHOLD_RE.search(simtel_path)
-    if match:
-        threshold = float(match.group("threshold"))
-        return int(threshold) if threshold.is_integer() else threshold
-
-    _logger.warning(f"Could not extract threshold from FILE_INFO in {file_path}")
-    return None
+def _active_telescope_threshold(values):
+    """Return the active threshold parameter and its finite, nonnegative value."""
+    parameter = trigger_threshold_parameter(values["default_trigger"])
+    if parameter is None:
+        raise ValueError(f"Unknown default_trigger: {values['default_trigger']!r}.")
+    value = values[parameter]
+    if isinstance(value, bool):
+        raise ValueError(f"Invalid {parameter}: {value!r}.")
+    threshold = float(value)
+    if not np.isfinite(threshold) or threshold < 0:
+        raise ValueError(f"Invalid {parameter}: {value!r}; expected a finite nonnegative value.")
+    return parameter, threshold
 
 
 def parse_nsb_hdf5_file(file_path):

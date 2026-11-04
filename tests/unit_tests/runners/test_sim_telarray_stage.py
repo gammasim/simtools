@@ -90,3 +90,41 @@ def test_output_file_environment_resources(sim_telarray_stage):
     assert "sim_telarray" in str(sim_telarray_stage.output_file(1))
     assert sim_telarray_stage.environment() == {"SIM_TELARRAY_CONFIG_PATH": ""}
     assert sim_telarray_stage.get_resources(runtime=1.5)["runtime"] == pytest.approx(1.5)
+
+
+@pytest.mark.parametrize("mode", ["stream", "disk"])
+def test_instances_configure_shower_routing(corsika_config_mock_array_model, mode):
+    from dataclasses import replace
+
+    config = corsika_config_mock_array_model
+    context = config.context.replace(
+        software=replace(config.context.software, ray_tracing_backend="obdeect")
+    )
+    inputs = StageInputs(
+        array_models=(config.array_model,),
+        simulation_parameters=(config.simulation_parameters,),
+        shower_configurations=(config,),
+        args={"shower_route_mode": mode},
+        context=context,
+    )
+    (stage,) = SimTelArrayStage.instances(inputs)
+    assert stage.shower_routing is not None
+    assert stage.streams == (mode == "stream")
+
+
+def test_instances_reject_invalid_shower_route_mode(corsika_config_mock_array_model):
+    from dataclasses import replace
+
+    config = corsika_config_mock_array_model
+    context = config.context.replace(
+        software=replace(config.context.software, ray_tracing_backend="obdeect")
+    )
+    inputs = StageInputs(
+        array_models=(config.array_model,),
+        simulation_parameters=(config.simulation_parameters,),
+        shower_configurations=(config,),
+        args={"shower_route_mode": "file"},
+        context=context,
+    )
+    with pytest.raises(ValueError, match="Invalid shower route mode"):
+        SimTelArrayStage.instances(inputs)

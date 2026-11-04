@@ -118,7 +118,7 @@ class MultiIlluminatorSimulator:
         - model_version: str
         - number_of_events: int
         - other SimulatorLightEmission parameters
-    visibility_data : list of dict, optional
+    visibility_data : list of dict or astropy.table.Table, optional
         Structured visibility records with ``illuminator_id``, ``telescope_id``,
         and ``visible`` keys.
         If not provided, the visibility table is retrieved from the site model
@@ -178,8 +178,8 @@ class MultiIlluminatorSimulator:
 
         Returns
         -------
-        list of dict
-            Structured visibility records.
+        list of dict or astropy.table.QTable
+            Visibility records or a validated model table.
         """
         # Import here to avoid loading SiteModel when visibility_data is provided directly
         from simtools.model.site_model import SiteModel  # pylint: disable=import-outside-toplevel
@@ -190,7 +190,10 @@ class MultiIlluminatorSimulator:
             model_reader=model_reader,
             context=context,
         )
-        return site_model.get_parameter_value("illuminator_telescope_visibility")
+        parameter = "illuminator_telescope_visibility"
+        if site_model.get_parameter_type(parameter) == "file":
+            return site_model.get_parameter_table(parameter)
+        return site_model.get_parameter_value(parameter)
 
     def simulate(self, wavelengths=None, illuminators=None, telescopes=None):
         """

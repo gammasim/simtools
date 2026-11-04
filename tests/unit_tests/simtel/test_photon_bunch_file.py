@@ -2,7 +2,9 @@
 
 import gzip
 import hashlib
+import io
 import math
+import sys
 from pathlib import Path
 
 import astropy.units as u
@@ -13,6 +15,7 @@ from eventio import EventIOFile
 
 from simtools.simtel.photon_bunch_file import (
     BUNCH_DTYPE,
+    PhotonBunchEvent,
     bypass_optics_level,
     camera_bunches,
     write_photon_bunches,
@@ -133,7 +136,7 @@ def test_write_photon_bunches_reference_bytes(tmp_test_directory, atmospheric_pr
         run_number=7,
     )
     path = Path(path)
-    content = gzip.open(path).read() if name.endswith(".gz") else path.read_bytes()
+    content = gzip.open(path).read() if name.endswith(".gz") else Path(path).read_bytes()
     assert hashlib.sha256(content).hexdigest() == REFERENCE_SHA256
 
 
@@ -179,3 +182,178 @@ def test_camera_bunches_dual_mirror_in_the_camera_frame():
 def test_bypass_optics_level():
     assert bypass_optics_level(False) == 1
     assert bypass_optics_level(True) == 2
+
+
+def _write_reference(destination, atmospheric_profile):
+    return write_photon_bunches(
+        destination,
+        _reference_events(),
+        observation_level_m=2147.0,
+        telescope_radius_m=2.0,
+        atmospheric_profile=atmospheric_profile,
+        run_number=7,
+    )
+
+
+def test_write_to_stream_is_byte_identical_to_file(tmp_test_directory, atmospheric_profile):
+    path = tmp_test_directory / "photons.iact"
+    _write_reference(path, atmospheric_profile)
+
+    buffer = io.BytesIO()
+    assert _write_reference(buffer, atmospheric_profile) == 3
+    assert not buffer.closed
+    assert buffer.getvalue() == Path(path).read_bytes()
+    assert hashlib.sha256(buffer.getvalue()).hexdigest() == REFERENCE_SHA256
+
+
+def test_write_to_stdout_dash(monkeypatch, tmp_test_directory, atmospheric_profile):
+    path = tmp_test_directory / "photons.iact"
+    _write_reference(path, atmospheric_profile)
+
+    buffer = io.BytesIO()
+    monkeypatch.setattr(sys, "stdout", io.TextIOWrapper(buffer))
+    assert _write_reference("-", atmospheric_profile) == 3
+    assert buffer.getvalue() == Path(path).read_bytes()
+
+
+def test_write_to_text_stream_raises(tmp_test_directory, atmospheric_profile):
+    with pytest.raises(TypeError, match="binary stream"):
+        _write_reference(io.StringIO(), atmospheric_profile)
+
+
+def test_write_several_telescopes_per_event(tmp_test_directory, atmospheric_profile):
+    path = tmp_test_directory / "photons.iact"
+    events = [
+        PhotonBunchEvent(number=7, blocks=((0, _bunches(3)), (1, _bunches(2)))),
+        PhotonBunchEvent(number=9, blocks=((2, _bunches(0)),)),
+        [(1, _bunches(4)), (0, _bunches(1))],
+    ]
+    count = write_photon_bunches(
+        path,
+        events,
+        observation_level_m=2147.0,
+        telescope_radius_m=2.0,
+        atmospheric_profile=atmospheric_profile,
+    )
+
+    assert count == 3
+    objects = []
+    blocks = []
+    for item in EventIOFile(str(path)):
+        objects.append(item.header.type)
+        if item.header.type == 1202:
+            event_number = int(item.parse()["event_number"])
+        elif item.header.type == 1204:
+            photons = next(iter(item))
+            blocks.append((event_number, photons.telescope, photons.parse()[0]))
+    # One photon bunch object (1204) per telescope block, after the event header.
+    assert objects == [
+        1200,
+        1201,
+        1216,
+        1202,
+        1203,
+        1204,
+        1204,
+        1209,
+        1202,
+        1203,
+        1204,
+        1209,
+        1202,
+        1203,
+        1204,
+        1204,
+        1209,
+        1210,
+    ]
+    assert [(number, telescope, len(bunches)) for number, telescope, bunches in blocks] == [
+        (7, 0, 3),
+        (7, 1, 2),
+        (9, 2, 0),
+        (3, 1, 4),
+        (3, 0, 1),
+    ]
+    assert np.array_equal(blocks[1][2], events[0].blocks[1][1])
+
+
+def test_write_telescope_id_out_of_range_raises(atmospheric_profile):
+    with pytest.raises(ValueError, match="Telescope id must be from 0 to 32767"):
+        write_photon_bunches(
+            io.BytesIO(),
+            [[(40000, _bunches(1))]],
+            observation_level_m=2147.0,
+            telescope_radius_m=2.0,
+            atmospheric_profile=atmospheric_profile,
+        )
+
+
+def test_write_telescope_id_not_integer_raises(atmospheric_profile):
+    with pytest.raises(TypeError, match="Telescope id must be an integer"):
+        write_photon_bunches(
+            io.BytesIO(),
+            [[("1", _bunches(1))]],
+            observation_level_m=2147.0,
+            telescope_radius_m=2.0,
+            atmospheric_profile=atmospheric_profile,
+        )
+
+
+def test_write_core_reuses_share_one_shower_header(tmp_test_directory, atmospheric_profile):
+    """Consecutive events with one number are core reuses: one shower header, reuse identifiers."""
+    events = [
+        PhotonBunchEvent(number=number, blocks=((0, _bunches(3)),)) for number in (1, 1, 1, 2, 2)
+    ]
+    path = Path(tmp_test_directory) / "reuses.iact"
+
+    count = write_photon_bunches(
+        path,
+        events,
+        observation_level_m=2147.0,
+        telescope_radius_m=12.5,
+        atmospheric_profile=atmospheric_profile,
+        reuses=3,
+    )
+
+    assert count == 5
+    objects = list(EventIOFile(path))
+    names = [type(obj).__name__ for obj in objects]
+    assert names.count("EventHeader") == 2
+    assert names.count("TelescopeData") == 5
+    # The identifier of a telescope block is its core-reuse index within the shower.
+    reuse_ids = [obj.header.id for obj in objects if type(obj).__name__ == "TelescopeData"]
+    assert reuse_ids == [0, 1, 2, 0, 1]
+
+
+class _FlushCounter(io.BytesIO):
+    """Binary stream counting its flushes."""
+
+    def __init__(self):
+        super().__init__()
+        self.flushes = 0
+
+    def flush(self):
+        self.flushes += 1
+        super().flush()
+
+
+def test_write_flushes_each_event_before_the_next_is_read(atmospheric_profile):
+    output = _FlushCounter()
+    flushes_before_event = []
+
+    def events():
+        for number in (1, 2, 3):
+            flushes_before_event.append(output.flushes)
+            yield PhotonBunchEvent(number=number, blocks=((0, _bunches(2)),))
+
+    write_photon_bunches(
+        output,
+        events(),
+        observation_level_m=2147.0,
+        telescope_radius_m=2.0,
+        atmospheric_profile=atmospheric_profile,
+    )
+
+    # Each event is flushed before the producer is asked for the next one.
+    assert flushes_before_event[1] > flushes_before_event[0]
+    assert flushes_before_event[2] > flushes_before_event[1]

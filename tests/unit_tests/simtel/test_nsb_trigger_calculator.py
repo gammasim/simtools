@@ -1,7 +1,9 @@
 """Unit tests for nsb_trigger_calculator."""
 
+import json
 from unittest.mock import patch
 
+import h5py
 import pytest
 from astropy.table import Table
 
@@ -24,13 +26,25 @@ def _write_nsb_hdf5(file_path, n_showers=0, n_triggers=None, threshold=None):
 
     file_info_table = Table({"file_name": [file_info_name]})
     file_info_table.write(file_path, path="FILE_INFO", format="hdf5", append=True)
+    if threshold is not None:
+        _write_threshold_metadata(file_path, "AnalogSum", "asum_threshold", threshold)
 
 
-def _write_file_info_hdf5(file_path, file_name):
-    """Create an HDF5 file containing only FILE_INFO/file_name metadata."""
-    Table({"file_name": [file_name]}).write(
-        file_path, path="FILE_INFO", format="hdf5", overwrite=True
-    )
+def _write_threshold_metadata(file_path, trigger, parameter, threshold):
+    """Write per-telescope threshold metadata without relying on a filename."""
+    metadata = {
+        "inputs": {
+            "files": [
+                {
+                    "sim_telarray_telescope_metadata": {
+                        "1": {"values": {"default_trigger": trigger, parameter: str(threshold)}}
+                    }
+                }
+            ]
+        }
+    }
+    with h5py.File(file_path, "a") as file:
+        file.create_dataset("SIMULATION_METADATA", data=[json.dumps(metadata)])
 
 
 def test_extract_run_number_returns_none_when_missing(tmp_path):
@@ -342,11 +356,18 @@ def test_derive_nsb_triggers_raises_for_non_numeric_time_window(tmp_path):
         )
 
 
-@pytest.mark.parametrize("label", ["asum", "dsum", "discriminator"])
-@pytest.mark.parametrize("threshold", [7, 7.2, 7.4, 8, 9])
-def test_extract_threshold_preserves_decimals(tmp_test_directory, label, threshold):
+@pytest.mark.parametrize(
+    ("trigger", "parameter"),
+    [
+        ("AnalogSum", "asum_threshold"),
+        ("DigitalSum", "dsum_threshold"),
+        ("Majority", "discriminator_threshold"),
+    ],
+)
+@pytest.mark.parametrize("threshold", [0, 7, 7.2, 7.4, 8, 9])
+def test_extract_threshold_preserves_decimals(tmp_test_directory, trigger, parameter, threshold):
     file_path = tmp_test_directory / "events.hdf5"
-    _write_file_info_hdf5(file_path, f"gamma_run000001_{label}{threshold}.simtel.zst")
+    _write_threshold_metadata(file_path, trigger, parameter, threshold)
     assert nsb_trigger_calculator.extract_threshold(file_path) == pytest.approx(threshold)
 
 
@@ -359,3 +380,115 @@ def test_nsb_grouping_preserves_decimal_thresholds(tmp_test_directory):
     grouped = nsb_trigger_calculator.group_by_threshold_and_run(parsed)
     assert set(grouped) == {7, 7.2, 7.4}
     assert all(data[1]["triggers"] == 2 for data in grouped.values())
+
+
+@pytest.mark.parametrize("threshold", ["bad", "nan", "inf", "-inf", -1])
+def test_extract_threshold_rejects_invalid_values(tmp_test_directory, threshold):
+    file_path = tmp_test_directory / "gamma_run000001_asum220.hdf5"
+    _write_threshold_metadata(file_path, "AnalogSum", "asum_threshold", threshold)
+    assert nsb_trigger_calculator.extract_threshold(file_path) is None
+
+
+def test_extract_threshold_does_not_fall_back_to_filename(tmp_test_directory):
+    file_path = tmp_test_directory / "gamma_run000001_asum220.hdf5"
+    Table({"file_name": ["gamma_run000001_asum220.simtel.zst"]}).write(
+        file_path, path="FILE_INFO", format="hdf5"
+    )
+    assert nsb_trigger_calculator.extract_threshold(file_path) is None
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        {},
+        {"default_trigger": "unknown"},
+        {"default_trigger": "AnalogSum"},
+        {"default_trigger": "AnalogSum", "asum_threshold": None},
+        {"default_trigger": "AnalogSum", "asum_threshold": True},
+        {"default_trigger": "AnalogSum", "asum_threshold": []},
+    ],
+)
+def test_extract_threshold_rejects_incomplete_metadata(tmp_test_directory, values):
+    metadata = {
+        "inputs": {"files": [{"sim_telarray_telescope_metadata": {"1": {"values": values}}}]}
+    }
+    file_path = tmp_test_directory / "events.hdf5"
+    with h5py.File(file_path, "w") as file:
+        file.create_dataset("SIMULATION_METADATA", data=[json.dumps(metadata)])
+    assert nsb_trigger_calculator.extract_threshold(file_path) is None
+
+
+@pytest.mark.parametrize(
+    ("sources", "expected"),
+    [
+        ([], None),
+        ([{}], None),
+        ([{"1": {"values": None}}], None),
+        ([{"1": {"values": {"default_trigger": "AnalogSum", "asum_threshold": 7.2}}}] * 2, 7.2),
+        ([{"1": {"values": {"default_trigger": "AnalogSum", "asum_threshold": 7.2}}}, {}], None),
+    ],
+)
+def test_extract_threshold_validates_all_inputs(tmp_test_directory, sources, expected):
+    metadata = {
+        "inputs": {
+            "files": [{"sim_telarray_telescope_metadata": telescopes} for telescopes in sources]
+        }
+    }
+    file_path = tmp_test_directory / "events.hdf5"
+    with h5py.File(file_path, "w") as file:
+        file.create_dataset("SIMULATION_METADATA", data=[json.dumps(metadata)])
+    result = nsb_trigger_calculator.extract_threshold(file_path)
+    if expected is None:
+        assert result is None
+    else:
+        assert result == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("trigger", "parameter", "value", "expected"),
+    [
+        ("AnalogSum", "asum_threshold", 7.2, 7.2),
+        ("AnalogSum", "asum_threshold", 7.4, None),
+        ("Majority", "discriminator_threshold", 7.2, None),
+    ],
+)
+def test_extract_threshold_validates_all_telescopes(
+    tmp_test_directory, trigger, parameter, value, expected
+):
+    metadata = {
+        "inputs": {
+            "files": [
+                {
+                    "sim_telarray_telescope_metadata": {
+                        "1": {
+                            "values": {
+                                "default_trigger": "AnalogSum",
+                                "asum_threshold": "7.2",
+                                "discriminator_threshold": "9999",
+                            }
+                        },
+                        "2": {"values": {"default_trigger": trigger, parameter: value}},
+                    }
+                }
+            ]
+        }
+    }
+    file_path = tmp_test_directory / "events.hdf5"
+    Table({"file_name": ["gamma_run000001_asum999.simtel.zst"]}).write(
+        file_path, path="FILE_INFO", format="hdf5"
+    )
+    with h5py.File(file_path, "a") as file:
+        file.create_dataset("SIMULATION_METADATA", data=[json.dumps(metadata)])
+    result = nsb_trigger_calculator.extract_threshold(file_path)
+    if expected is None:
+        assert result is None
+    else:
+        assert result == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("document", ["not-json", "null", "{}"])
+def test_extract_threshold_rejects_malformed_document(tmp_test_directory, document):
+    file_path = tmp_test_directory / "events.hdf5"
+    with h5py.File(file_path, "w") as file:
+        file.create_dataset("SIMULATION_METADATA", data=[document])
+    assert nsb_trigger_calculator.extract_threshold(file_path) is None

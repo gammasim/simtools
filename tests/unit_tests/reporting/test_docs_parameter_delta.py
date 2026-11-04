@@ -1,7 +1,9 @@
 from io import StringIO
+from pathlib import Path
 
 import pytest
 
+from simtools.model_repository.reader import SimulationModelReader
 from simtools.reporting.docs_parameter_delta import ParameterDelta
 from simtools.reporting.docs_read_parameters import ReadParameters
 
@@ -79,7 +81,27 @@ def test_patch_version_reports_write_delta(
     patch_telescope_model,
     run_context,
 ):
-    read_parameters = ReadParameters(args=args, output_path=tmp_test_directory, context=run_context)
+    patch_history = "6.0.0" if args.get("telescope") else "6.2.0"
+    info_path = f"simulation-models/productions/{args['model_version']}/info.yml"
+    element = args.get("telescope", f"OBS-{args['site']}")
+    base_production_path = f"simulation-models/productions/{patch_history}/{element}.json"
+    model_reader = SimulationModelReader.from_memory(
+        {
+            info_path: (
+                f"model_update: patch_update\nmodel_version_history:\n  - {patch_history}\n"
+            ).encode(),
+            base_production_path: f'{{"parameters": {{"{element}": {{}}}}}}'.encode(),
+            f"simulation-models/productions/{args['model_version']}/{element}.json": (
+                f'{{"parameters": {{"{element}": {{}}}}}}'.encode()
+            ),
+        }
+    )
+    read_parameters = ReadParameters(
+        args=args,
+        output_path=tmp_test_directory,
+        model_reader=model_reader,
+        context=run_context,
+    )
     get_model_parameters = mocker.patch.object(
         read_parameters.model_reader,
         "get_model_parameters",
@@ -274,3 +296,105 @@ def test__delta_report_no_changes(
     assert report_method(base_version) is True
     content = (tmp_path / output_filename).read_text()
     assert "No parameter changes detected" in content
+
+
+def test_patch_report_links_parameter_and_original_file(tmp_test_directory, run_context):
+    root = Path(tmp_test_directory)
+    output = root / "productions" / "6.0.1"
+    output.mkdir(parents=True)
+    parameters = root / "parameters"
+    parameters.mkdir()
+    (parameters / "LSTN-design.md").write_text("## camera_trigger_members\n", encoding="utf-8")
+    rp = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-01", "model_version": "6.0.1"},
+        output_path=output,
+        context=run_context,
+    )
+    previous = {
+        "camera_trigger_members": {
+            "value": "members-1.0.0-LSTN-design.ecsv",
+            "_simtools_export_source_value": "members-1.0.0.ecsv",
+            "instrument": "LSTN-design",
+            "parameter_version": "1.0.0",
+            "file": True,
+        }
+    }
+    current = {
+        "camera_trigger_members": {
+            **previous["camera_trigger_members"],
+            "value": "members-1.1.0-LSTN-design.ecsv",
+            "_simtools_export_source_value": "members-1.1.0.ecsv",
+            "parameter_version": "1.1.0",
+        }
+    }
+    changes = rp._build_delta_changes(previous, current)
+    buf = StringIO()
+    rp._write_delta_report_table(buf, changes)
+    content = buf.getvalue()
+    assert "../../parameters/LSTN-design.html#camera-trigger-members" in content
+    assert "/LSTN-design/camera_trigger_members/members-1.0.0.ecsv" in content
+    assert "/LSTN-design/camera_trigger_members/members-1.1.0.ecsv" in content
+
+
+def test_observatory_report_uses_declared_patch_history(tmp_test_directory, mocker, run_context):
+    model_reader = SimulationModelReader.from_memory(
+        {
+            "simulation-models/productions/6.0.1/info.yml": (
+                b"model_update: patch_update\nmodel_version_history:\n  - 5.0.0\n"
+            )
+        }
+    )
+    rp = ReadParameters(
+        args={"site": "North", "model_version": "6.0.1"},
+        output_path=Path(tmp_test_directory),
+        model_reader=model_reader,
+        context=run_context,
+    )
+    model_parameters = mocker.patch.object(
+        model_reader, "get_model_parameters", side_effect=[DELTA_SITE_DATA, DELTA_SITE_DATA]
+    )
+    rp.produce_observatory_report()
+    assert model_parameters.call_args_list[0].kwargs["model_version"] == "5.0.0"
+
+
+@pytest.mark.parametrize("changed", [True, False])
+def test_observatory_delta_renders_changed_column_table(
+    tmp_test_directory, mocker, run_context, changed
+):
+    rp = ReadParameters(
+        args={"site": "South", "model_version": "6.0.1"},
+        output_path=tmp_test_directory,
+        context=run_context,
+    )
+    value = {"columns": ["illuminator_id", "visible"], "rows": [["ILLS-01", True]]}
+    previous = {"illuminator_telescope_visibility": _delta_entry(value)}
+    current_value = {**value, "rows": [["ILLS-01", False]]} if changed else value
+    current = {"illuminator_telescope_visibility": _delta_entry(current_value)}
+    previous["unchanged"] = _delta_entry(value)
+    current["unchanged"] = _delta_entry(value)
+    mocker.patch.object(rp.model_reader, "get_model_parameters", side_effect=[previous, current])
+
+    assert rp._produce_observatory_delta_report("6.0.0")
+    content = (tmp_test_directory / "OBS-South.md").read_text(encoding="utf-8")
+    if changed:
+        assert "| 1 rows | 1 rows |" in content
+        assert "## Illuminator Telescope Visibility" in content
+        assert "| ILLS-01 | False |" in content
+        assert "## Unchanged" not in content
+    else:
+        assert "No parameter changes detected" in content
+        assert "## Illuminator Telescope Visibility" not in content
+
+
+def test_patch_report_falls_back_when_metadata_is_missing(tmp_test_directory, run_context):
+    rp = ReadParameters(
+        args={"model_version": "6.0.1"},
+        output_path=Path(tmp_test_directory),
+        context=run_context,
+    )
+    assert rp._report_base_version({}) == "6.0.0"
+    assert rp._report_base_version({"model_update": "full_update"}) is None
+    assert (
+        rp._report_base_version({"model_update": "patch_update", "model_version_history": []})
+        == "6.0.0"
+    )

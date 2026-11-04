@@ -337,7 +337,9 @@ class Simulator:
         """Save file lists for output and log files."""
         outdir = self.io_handler.get_output_directory()
 
-        for file_type, files in self.file_list.items():
+        for file_type, value in self.file_list.items():
+            # Single files (e.g., from runner_services.load_files) are stored as Path objects.
+            files = value_conversion.ensure_list(value)
             if not files or any(f is None for f in files):
                 self.logger.debug(f"No files to save for {file_type} files.")
                 continue
@@ -596,6 +598,8 @@ class Simulator:
             "corsika_resources",
             "sim_telarray_resources",
             "multi_pipe_resources",
+            "shower_route_resources",
+            "shower_route_log",
             "sim_telarray_err",
             "corsika_err",
         )
