@@ -6,28 +6,6 @@ from functools import cache
 
 import astropy.units as u
 from astropy.time import Time
-from ctao_datamodel import instance_to_fits_header
-from ctao_datamodel.models.common import SiteID
-from ctao_datamodel.models.dataproducts import (
-    Activity,
-    Contact,
-    Curation,
-    DataAssociation,
-    DataDivision,
-    DataLevel,
-    DataModel,
-    DataModelName,
-    DataType,
-    FacilityName,
-    InstanceIdentifier,
-    ObservatoryProcess,
-    Product,
-    ProductType,
-    Simulation,
-    SimulationGridNode,
-    Software,
-)
-from ctao_datamodel.models.dataproducts.reference import PRODUCT_MODEL_VERSION
 
 from simtools import version
 from simtools.constants import (
@@ -40,6 +18,8 @@ from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.sim_events.simtel_io_metadata import normalize_sim_telarray_metadata
 from simtools.utils.primary_particle import PrimaryParticle
 
+PRODUCT_MODEL_VERSION = "2.1.0"
+_EMAIL_PATTERN = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter", "ctao_datamodel")
 # sources whose scope and values are fully described by the registry
 _REGISTRY_DEFINED_SOURCE_TYPES = {"generated", "ctao_datamodel"}
@@ -81,72 +61,65 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None):
 
     created = Time.now() if created is None else created
     primary = PrimaryParticle(args.get("primary_id_type") or "common_name", args["primary"])
-    production_id = args.get("production_id") or args.get("label") or "simulate_prod"
-    product = Product(
-        description="Simulated CTAO air-shower events",
-        creation_time=created,
-        data=ProductType(
-            level=DataLevel.SIM,
-            division=DataDivision.EVENT,
-            association=DataAssociation.ARRAY,
-            type=DataType.AIRSHOWER_SIM,
-        ),
-        instance=InstanceIdentifier(
-            facility_name=FacilityName.SIMULATED_CTAO,
-            site_id=SiteID(f"CTAO-{site}"),
-            particle_pdgid=primary.pdg_id,
-            messenger=_get_messenger(primary),
-        ),
-        curation=Curation(),
-        model=DataModel(
-            name=DataModelName.CTAO, version=PRODUCT_MODEL_VERSION, url="https://www.ctao.org"
-        ),
-        contact=Contact(
-            name=args.get("user_name") or "not set",
-            organization=args.get("user_organization") or "not set",
-            email=args.get("user_email") or "not-set@example.org",
-        ),
-        activity=Activity(
-            process=ObservatoryProcess.SIMULATION,
-            name="simulate_prod",
-            id=uuid.UUID(str(args["activity_id"])) if args.get("activity_id") else uuid.uuid4(),
-            start=created,
-            configuration_id=production_id,
-            software=Software(
-                name="simtools",
-                version=version.__version__,
-                url="https://github.com/gammasim/simtools",
-            ),
-        ),
-        simulation=Simulation(
-            production_name=production_id,
-            node=SimulationGridNode(
-                **{
-                    key: value
-                    for key, value in {
-                        "zenith": _get_angle(args, "zenith_angle", required=True),
-                        "azimuth": _get_angle(args, "azimuth_angle", required=True),
-                        "hour_angle": _get_angle(args, "ha"),
-                        "declination": _get_angle(args, "dec"),
-                        "nsb_factor": _get_nsb_factor(args, site_model),
-                    }.items()
-                    if value is not None
-                }
-            ),
-        ),
+    activity_id = str(
+        uuid.UUID(str(args["activity_id"])) if args.get("activity_id") else uuid.uuid4()
     )
-    header = instance_to_fits_header(product, use_short=True)
-    metadata = {card.keyword: card.value for card in header.cards}
-    if any(keyword.startswith("HIERARCH") for keyword in metadata):
-        raise ValueError(
-            "CTAO sim_telarray metadata contains a field without a short FITS keyword."
-        )
-    return metadata
+    production_id = args.get("production_id") or args.get("label") or "simulate_prod"
+    metadata = {
+        "CTAOMETA": PRODUCT_MODEL_VERSION,
+        "TITLE": "Simulated CTAO air-shower events",
+        "DATALEVL": "SIM",
+        "DATADIV": "Event",
+        "DATAASSO": "Array",
+        "DATATYPE": "AirShowerSim",
+        "DATAID": str(uuid.uuid4()),
+        "TELESCOP": "Simulated-CTAO",
+        "INSTRUME": f"CTAO-{site}",
+        "PDGID": int(primary.pdg_id),
+        "MSNGR": _get_messenger(primary),
+        "LICENSE": "CC-BY-SA-4.0",
+        "LICENURL": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "MODEL": "ctao",
+        "MODELVER": PRODUCT_MODEL_VERSION,
+        "MODELURL": "https://www.ctao.org/",
+        "CREATED": _format_time(created),
+        "AUTHOR": args.get("user_name") or "not set",
+        "ORIGIN": args.get("user_organization") or "not set",
+        "EMAIL": _get_email(args),
+        "ACTPROC": "simulation",
+        "ACTIVITY": "simulate_prod",
+        "ACTID": activity_id,
+        "ACTSTART": _format_time(created),
+        "SOFTWARE": "simtools",
+        "SOFTVER": version.__version__,
+        "SOFTURL": "https://github.com/gammasim/simtools",
+        "ACTCONF": production_id,
+        "SIMPROD": production_id,
+        "SIMZEN": _get_angle_degrees(args, "zenith_angle", required=True),
+        "SIMAZ": _get_angle_degrees(args, "azimuth_angle", required=True),
+        "SIMHA": _get_angle_degrees(args, "ha"),
+        "SIMDEC": _get_angle_degrees(args, "dec"),
+        "SIMNSB": _get_nsb_factor(args, site_model),
+    }
+    return {key: value for key, value in metadata.items() if value is not None}
+
+
+def _get_email(args):
+    """Return the contact email (placeholder if unset); raise for a malformed address."""
+    email = args.get("user_email") or "not-set@example.org"
+    if not _EMAIL_PATTERN.fullmatch(email):
+        raise ValueError(f"Invalid contact email for CTAO sim_telarray metadata: {email!r}")
+    return email
+
+
+def _format_time(time):
+    """Return a UTC ISO timestamp with nanosecond precision."""
+    return Time(time, precision=9).utc.isot
 
 
 @cache
 def get_ctao_metadata_registry():
-    """Build validator definitions from the installed model's FITS serialization."""
+    """Build validator definitions from the CTAO FITS keywords written by simtools."""
     metadata = get_ctao_simtel_metadata(
         _REGISTRY_SAMPLE_ARGS, created=Time("2000-01-01T00:00:00", scale="utc")
     )
@@ -187,6 +160,12 @@ def _get_angle(args, name, required=False):
             raise ValueError(f"Missing required angle '{name}' for CTAO sim_telarray metadata.")
         return None
     return value.to(u.deg) if hasattr(value, "to") else float(value) * u.deg
+
+
+def _get_angle_degrees(args, name, required=False):
+    """Return an angle in degrees as a float, or None if it is optional and missing."""
+    angle = _get_angle(args, name, required=required)
+    return None if angle is None else float(angle.value)
 
 
 def _get_nsb_factor(args, site_model):
