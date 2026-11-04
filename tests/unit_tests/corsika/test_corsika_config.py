@@ -785,6 +785,16 @@ def test_corsika_configuration_interaction_flags_with_epos(
     assert any("EPOPAR fname" in key for key in interaction_flags.keys())
 
 
+def test_corsika_telescope_ids_start_at_zero():
+    from simtools.corsika.corsika_config import corsika_telescope_ids
+
+    assert corsika_telescope_ids({"LSTN-01": None, "LSTN-02": None, "MSTN-01": None}) == {
+        "LSTN-01": 0,
+        "LSTN-02": 1,
+        "MSTN-01": 2,
+    }
+
+
 def test_corsika_card_matches_previous_parameter_formatting(
     corsika_config_mock_array_model, tmp_test_directory
 ):

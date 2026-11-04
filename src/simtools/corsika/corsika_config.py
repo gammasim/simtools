@@ -656,3 +656,24 @@ def get_site_config_parameters(site_model, model_directory=None):
         ],
         "ARRANG": [site_model.get_parameter_value("geomag_rotation")],
     }
+
+
+def corsika_telescope_ids(telescope_models):
+    """
+    IACT telescope id of each telescope: its position in the CORSIKA ``TELESCOPE`` list.
+
+    The telescopes are listed in the order of ``telescope_models``, as in
+    ``CorsikaConfig.get_corsika_telescope_list``. The ids start at 0: the telescope blocks of the
+    CORSIKA IACT output are numbered from 0 (verified on a CORSIKA IACT file).
+
+    Parameters
+    ----------
+    telescope_models: dict
+        Telescope models keyed by array element name.
+
+    Returns
+    -------
+    dict
+        IACT telescope id of each array element name.
+    """
+    return {name: position for position, name in enumerate(telescope_models)}

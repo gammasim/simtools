@@ -63,6 +63,29 @@ def test_array_model_run_specific_config_directory(model_version, io_handler, ru
     assert am.telescope_models["LSTN-01"].config_file_path.parent == expected
 
 
+def test_array_model_multiple_layout_names(model_version, run_context):
+    am = ArrayModel(
+        context=run_context,
+        label="test",
+        site="North",
+        model_version=model_version,
+        layout_name=["LSTN-01", "MSTN-01"],
+    )
+    assert am.layout_name == "LSTN-01_MSTN-01"
+    assert list(am.telescope_models) == ["LSTN-01", "MSTN-01"]
+
+
+def test_array_model_duplicate_element_in_layout_names_raises(model_version, run_context):
+    with pytest.raises(ValueError, match=r"Duplicate array element 'LSTN-01'"):
+        ArrayModel(
+            context=run_context,
+            label="test",
+            site="North",
+            model_version=model_version,
+            layout_name=["LSTN-01", "LSTN-01"],
+        )
+
+
 def test_array_model_north_init_without_layout_or_telescope_list(model_version, run_context):
     with pytest.raises(ValueError, match=r"No array elements found."):
         ArrayModel(context=run_context, label="test", site="North", model_version=model_version)
