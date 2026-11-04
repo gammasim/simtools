@@ -3,6 +3,7 @@
 """Unit tests for illuminator_visibility module."""
 
 import pytest
+from astropy.table import QTable
 
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
 
@@ -67,3 +68,14 @@ def test_properties(simple_visibility_data):
 
     assert visibility.n_telescopes == 3
     assert visibility.n_valid_pairs == 4
+
+
+def test_init_accepts_visibility_table():
+    table = QTable(
+        {
+            "illuminator_id": ["ILLN-01", "ILLN-01"],
+            "telescope_id": ["LSTN-01", "MSTN-01"],
+            "visible": [False, True],
+        }
+    )
+    assert IlluminatorTelescopeVisibility(table).get_valid_pairs() == [("ILLN-01", "MSTN-01")]

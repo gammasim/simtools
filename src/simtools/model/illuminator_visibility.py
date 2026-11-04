@@ -2,6 +2,8 @@
 
 import logging
 
+from astropy.table import Table
+
 _logger = logging.getLogger(__name__)
 
 
@@ -13,9 +15,8 @@ class IlluminatorTelescopeVisibility:
     illuminator, accounting for shadowing, blocking, topography, and distance
     constraints.
 
-    The input is a list of structured records. Schema version 0.1.0 model
-    records store the same data as a ``columns``/``rows`` mapping and are
-    normalized before parsing. The record structure is:
+    The input is an Astropy table, a list of structured records, or a
+    ``columns``/``rows`` mapping. The record structure is:
 
     .. code-block:: python
 
@@ -26,7 +27,7 @@ class IlluminatorTelescopeVisibility:
 
     Parameters
     ----------
-    visibility_data : list of dict
+    visibility_data : astropy.table.Table, list of dict, or dict
         One record per illuminator-telescope combination.
 
     Raises
@@ -137,7 +138,9 @@ class IlluminatorTelescopeVisibility:
 
 
 def _normalize_visibility_records(visibility_data):
-    """Return structured records from a schema 0.1 row-table mapping."""
+    """Return structured records from a table or a columns/rows mapping."""
+    if isinstance(visibility_data, Table):
+        return [dict(zip(visibility_data.colnames, row, strict=True)) for row in visibility_data]
     if not isinstance(visibility_data, dict):
         return visibility_data
 
