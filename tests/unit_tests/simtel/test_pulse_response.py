@@ -210,6 +210,29 @@ def test_summary_and_outputs(pulse_model, tmp_test_directory):
     assert np.allclose(summary["peak_adc_std"], 0)
 
 
+def test_summary_keeps_repeated_illumination_steps_separate():
+    table = Table(
+        {
+            "illumination": [100, 100],
+            "gain": ["HG", "HG"],
+            RESPONSE: ["flasher", "flasher"],
+            "step": [0, 1],
+            "pixel": [0, 0],
+            "truncated": [False, False],
+            PEAK: [10, 20],
+            ADC_SUM: [10, 20],
+            "integral_adc_ns": [10, 20],
+            "width_ns": [1, 2],
+        }
+    )
+
+    summary = pulse_response.summarize_response(table)
+
+    assert summary["step"].tolist() == [0, 1]
+    assert summary[PEAK].tolist() == [10, 20]
+    assert summary["event_count"].tolist() == [1, 1]
+
+
 @pytest.mark.parametrize("value", [0, -1, float("nan")])
 def test_invalid_gain_parameters(pulse_model, value):
     original = pulse_model.get_parameter_value.side_effect
@@ -229,11 +252,25 @@ def test_invalid_frequency(pulse_model):
         pulse_response.template_responses(pulse_model, [5])
 
 
+def test_nonlinear_response_sorts_samples_before_interpolation():
+    table = Table(
+        {
+            INTENSITY: [1, 1, 2, 2],
+            "time": [1, 0, 1, 0],
+            AMPLITUDE: [2, 0, 4, 0],
+        }
+    )
+
+    response = pulse_response._interpolate_response(table, np.asarray([0, 0.5, 1]), np.ones(3), 2)
+
+    assert response.tolist() == pytest.approx([0, 2, 4])
+
+
 @pytest.mark.parametrize(
     "table",
     [
         Table({INTENSITY: [1, 1], "time": [0, 1], AMPLITUDE: [0, 1]}),
-        Table({INTENSITY: [1, 1, 2, 2], "time": [1, 0, 1, 0], AMPLITUDE: [0, 1, 0, 2]}),
+        Table({INTENSITY: [1, 1, 2, 2], "time": [0, 0, 0, 1], AMPLITUDE: [0, 1, 0, 2]}),
     ],
 )
 def test_invalid_nonlinear_table(table):

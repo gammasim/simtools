@@ -175,6 +175,7 @@ def _interpolate_response(table, time, single, level):
     pulses = []
     for index in (lower, upper):
         selected = table[np.asarray(table[TABLE_INTENSITY]) == levels[index]]
+        selected.sort(TIME)
         times = _time_ns(selected)
         amplitudes = np.asarray(selected[AMPLITUDE], dtype=float)
         if not np.all(np.diff(times) > 0) or not np.all(np.isfinite(amplitudes)):
@@ -402,6 +403,8 @@ def summarize_response(table):
         Mean metrics, population standard deviations, counts and truncation counts.
     """
     keys = [INTENSITY, "gain", RESPONSE]
+    if "step" in table.colnames:
+        keys.append("step")
     if PIXEL in table.colnames:
         keys.append(PIXEL)
     rows = []
