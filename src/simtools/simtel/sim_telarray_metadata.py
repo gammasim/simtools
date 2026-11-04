@@ -19,6 +19,8 @@ from simtools.sim_events.simtel_io_metadata import normalize_sim_telarray_metada
 from simtools.utils.primary_particle import PrimaryParticle
 
 PRODUCT_MODEL_VERSION = "2.1.0"
+_EMAIL_MAX_LENGTH = 254
+_EMAIL_LABEL_MAX_LENGTH = 63
 META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter", "ctao_datamodel")
 # sources whose scope and values are fully described by the registry
 _REGISTRY_DEFINED_SOURCE_TYPES = {"generated", "ctao_datamodel"}
@@ -112,12 +114,40 @@ def _get_email(args):
 
 
 def _is_valid_email(email):
-    """Check for a single '@' with a non-empty local part and a dotted domain (no whitespace)."""
+    """Check an address against the local-part, domain-label and length rules of the data model."""
+    if not isinstance(email, str) or len(email) > _EMAIL_MAX_LENGTH:
+        return False
     if any(character.isspace() for character in email):
         return False
     local, separator, domain = email.partition("@")
-    host, dot, top_level = domain.rpartition(".")
-    return bool(local and separator and "@" not in domain and host and dot and top_level)
+    return bool(separator) and _is_valid_email_local_part(local) and _is_valid_email_domain(domain)
+
+
+def _is_valid_email_local_part(local):
+    """Check the local part: non-empty, no leading, trailing or consecutive dots."""
+    return (
+        bool(local) and not local.startswith(".") and not local.endswith(".") and ".." not in local
+    )
+
+
+def _is_valid_email_domain(domain):
+    """Check the domain: at least two valid labels and a non-numeric top-level label."""
+    labels = domain.split(".")
+    return (
+        len(labels) > 1
+        and all(_is_valid_email_label(label) for label in labels)
+        and not labels[-1].isdigit()
+    )
+
+
+def _is_valid_email_label(label):
+    """Check a domain label: 1-63 alphanumeric or hyphen characters, no edge hyphens."""
+    return (
+        0 < len(label) <= _EMAIL_LABEL_MAX_LENGTH
+        and not label.startswith("-")
+        and not label.endswith("-")
+        and all(character.isalnum() or character == "-" for character in label)
+    )
 
 
 def _format_time(time):

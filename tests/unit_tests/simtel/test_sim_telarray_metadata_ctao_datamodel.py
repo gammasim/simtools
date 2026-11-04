@@ -264,22 +264,46 @@ def test_metadata_matches_data_model_with_nsb_factor():
     assert actual["SIMNSB"] == pytest.approx(expected["SIMNSB"])
 
 
-@pytest.mark.parametrize(
-    "bad_contact",
-    [
-        {"user_email": "not-an-email"},
-        {"user_email": "a@b"},
-        {"user_name": "x" * 10000},
-    ],
-)
-def test_contact_values_rejected_by_data_model_are_rejected_by_simtools(bad_contact):
-    """Contact values rejected by the data model are rejected by simtools."""
-    args = {**_BASE_ARGS, **bad_contact}
-    try:
+_INVALID_EMAILS = [
+    "not-an-email",
+    "a@b",
+    "a@b..org",
+    "a@-b.org",
+    "a@b-.org",
+    "a@b_c.org",
+    "a@b.123",
+    ".a@b.org",
+    "a.@b.org",
+    "a..b@b.org",
+    "a b@c.org",
+    "a@" + "b" * 64 + ".org",
+    "a@b." + "o" * 260,
+]
+_VALID_EMAILS = ["a@b.org", "a@b.c", "first.last@sub.domain.org", "a-b@c-d.org"]
+
+
+@pytest.mark.parametrize("email", _INVALID_EMAILS)
+def test_email_rejected_by_data_model_is_rejected_by_simtools(email):
+    """Emails rejected by the data model are rejected by simtools."""
+    args = {**_BASE_ARGS, "user_email": email}
+    with pytest.raises(ValueError, match=r"."):
         _reference_header(args)
-    except ValueError:
-        with pytest.raises(ValueError, match=r"."):
-            _simtools_metadata(args)
+    with pytest.raises(ValueError, match="Invalid contact email"):
+        _simtools_metadata(args)
+
+
+@pytest.mark.parametrize("email", _VALID_EMAILS)
+def test_email_accepted_by_data_model_is_accepted_by_simtools(email):
+    """Emails accepted by the data model are accepted by simtools."""
+    args = {**_BASE_ARGS, "user_email": email}
+    assert _reference_header(args)["EMAIL"] == _simtools_metadata(args)["EMAIL"] == email
+
+
+def test_long_contact_name_and_organization_accepted_by_both():
+    """The data model has no length limit on name and organization."""
+    args = {**_BASE_ARGS, "user_name": "x" * 10000, "user_organization": "y" * 10000}
+    assert _reference_header(args)["AUTHOR"] == _simtools_metadata(args)["AUTHOR"]
+    assert _reference_header(args)["ORIGIN"] == _simtools_metadata(args)["ORIGIN"]
 
 
 def test_registry_covers_all_data_model_keywords():

@@ -171,6 +171,17 @@ def test_ctao_registry_uses_simtools_keywords():
         ("a@b.org", True),
         ("first.last@sub.domain.org", True),
         ("a@b", False),
+        ("a@b..org", False),
+        ("a@-b.org", False),
+        ("a@b-.org", False),
+        ("a@b_c.org", False),
+        ("a@b.123", False),
+        (".a@b.org", False),
+        ("a.@b.org", False),
+        ("a..b@b.org", False),
+        ("a@" + "b" * 64 + ".org", False),
+        ("a@b." + "o" * 260, False),
+        ("a@b.c", True),
         ("@b.org", False),
         ("a@.org", False),
         ("a@b.", False),
@@ -183,3 +194,9 @@ def test_ctao_registry_uses_simtools_keywords():
 )
 def test_is_valid_email(email, expected):
     assert sim_telarray_metadata._is_valid_email(email) is expected
+
+
+@pytest.mark.parametrize("email", [123, ["a@b.org"]])
+def test_get_ctao_simtel_metadata_rejects_non_string_email(email):
+    with pytest.raises(ValueError, match="Invalid contact email"):
+        sim_telarray_metadata.get_ctao_simtel_metadata({**_BASE_ARGS, "user_email": email})
