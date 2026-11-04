@@ -195,12 +195,11 @@ def _write_camera_file(tracer, iact_file, telescope_model, output_path, atmosphe
         phi_deg=PHI_DEG,
         dual_mirror=kw.get("dual_mirror", False),
         camera_rotation_deg=kw.get("camera_rotation_deg", 0.0),
-        header=CameraFileHeader(2147.0, 2.0, atmospheric_profile),
+        header=CameraFileHeader(2147.0, 2.0, atmospheric_profile, reuses=kw.get("reuses", 1)),
         seed=SEED,
         telescope_id=0,
         input_plane_height_m=kw.get("input_plane_height_m", INPUT_PLANE_HEIGHT_M),
         threads=kw.get("threads", 2),
-        reuses=kw.get("reuses", 1),
     )
 
 

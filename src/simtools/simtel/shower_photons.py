@@ -179,11 +179,15 @@ class CameraFileHeader:
         Radius of the telescope's fiducial sphere [m].
     atmospheric_profile: astropy.table.Table
         Atmospheric profile.
+    reuses: int
+        Core reuses per shower of the IACT file (CSCAT of the CORSIKA card); the telescope
+        offsets of each shower hold one array per reuse.
     """
 
     observation_level_m: float
     telescope_radius_m: float
     atmospheric_profile: object
+    reuses: int = 1
 
 
 def write_camera_bunch_file(
@@ -201,7 +205,6 @@ def write_camera_bunch_file(
     telescope_id,
     input_plane_height_m,
     threads=0,
-    reuses=1,
 ):
     """
     Trace CORSIKA photon bunches to the camera entrance and write them for sim_telarray.
@@ -245,9 +248,6 @@ def write_camera_bunch_file(
         incoming obscurers (see minimum_input_plane_height_m).
     threads: int
         Number of threads used for tracing (0: default of the optical model).
-    reuses: int
-        Core reuses per shower of the IACT file (CSCAT of the CORSIKA card); the telescope
-        offsets of each shower hold one array per reuse.
 
     Returns
     -------
@@ -283,7 +283,7 @@ def write_camera_bunch_file(
         observation_level_m=header.observation_level_m,
         telescope_radius_m=header.telescope_radius_m,
         atmospheric_profile=header.atmospheric_profile,
-        reuses=reuses,
+        reuses=header.reuses,
     )
     _logger.debug(
         "Wrote %d events of camera photon bunches for %s (theta=%.2f deg) to %s",
