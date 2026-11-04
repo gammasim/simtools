@@ -112,7 +112,7 @@ jobs:
       - name: Download integration benchmarks
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8
         with:
-          pattern: resource-benchmark-[0-9]*
+          pattern: resource-benchmark-git-*
           path: benchmark-input/integration
 
       - name: Combine benchmark records
