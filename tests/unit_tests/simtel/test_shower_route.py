@@ -33,6 +33,7 @@ from simtools.simtel.shower_route import (
     parse_telescope_map,
     route_stream,
     select_routes,
+    transmission_correction,
 )
 
 THETA_DEG = 20.0
@@ -680,15 +681,14 @@ def test_route_atmospheric_correction_and_disable(tmp_test_directory):
         for obj, raw, _ in objects
     )
     results = []
-    for correction in (None, table):
+    for transmission in (None, table):
         output = io.BytesIO()
         route_stream(
             io.BytesIO(data),
             output,
             {0: _FakeTracer()},
             **_route_kwargs(),
-            transmission=correction,
-            pathlen_m_by_telescope={0: 28.0},
+            correction=transmission_correction(transmission, {0: 28.0}),
         )
         results.append(_read_back(output.getvalue())[0]["size"][0])
     ground_airmass = 1 / np.sqrt(1 - float(bunches["cx"][0]) ** 2)
@@ -714,8 +714,7 @@ def test_route_drops_zero_bypass_transmission(tmp_test_directory, caplog):
             output,
             {0: _FakeTracer()},
             **_route_kwargs(),
-            transmission=table,
-            pathlen_m_by_telescope={0: 28.0},
+            correction=transmission_correction(table, {0: 28.0}),
         )
     assert len(_read_back(output.getvalue())[0]["size"]) == 0
     assert "Dropped 1 bunches with zero bypass transmission" in caplog.text

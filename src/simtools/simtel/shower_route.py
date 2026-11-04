@@ -30,12 +30,12 @@ import astropy.units as u
 from astropy.table import Table
 
 from simtools import constants
-from simtools.application.model_reader import create_model_reader
 from simtools.corsika.photon_bunches import iter_photon_objects
 from simtools.io.output_paths import OutputPaths
 from simtools.model.model_utils import export_model_files
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model_repository.reader import SimulationModelReader, resolve_model_reader
 from simtools.ray_tracing.backends.interface import create_shower_tracer
 from simtools.runtime.context import RunContext
 from simtools.simtel.photon_bunch_file import write_shower_photon_stream
@@ -129,7 +129,7 @@ class RouteInputs:
     observation_level_m: float
     atmospheric_profile: Table
     transmission: object = None
-    pathlen_m_by_telescope: dict = None
+    pathlen_m_by_telescope: dict | None = None
 
 
 class MultipipeWakeup:
@@ -383,7 +383,12 @@ def create_route_inputs(routes, *, simulation_models_path=None, backend=None, co
     """
     site = _single_value(routes, "site")
     model_version = _single_value(routes, "model_version")
-    reader = create_model_reader(simulation_models_path=simulation_models_path)
+    if simulation_models_path:
+        reader = SimulationModelReader.from_files(simulation_models_path)
+    else:
+        reader = resolve_model_reader()
+    if reader is None:
+        raise ValueError("A filesystem path or Git simulation-model source is required.")
     site_model = SiteModel(
         site=site, model_version=model_version, model_reader=reader, context=context
     )
@@ -448,8 +453,7 @@ def route_stream(
     threads=0,
     tracing_seed=None,
     on_object=None,
-    transmission=None,
-    pathlen_m_by_telescope=None,
+    correction=None,
 ):
     """
     Trace the photon bunches of a CORSIKA IACT stream and write camera photon bunches.
@@ -486,10 +490,9 @@ def route_stream(
     on_object: callable or None
         Called with each top-level input object once it is processed (see
         ``read_photon_bunches``); used for the wakeups of sequential multipipe_corsika.
-    transmission: SimtelTransmission or None
-        Lookup for correcting the atmospheric transmission; None disables the correction.
-    pathlen_m_by_telescope: dict or None
-        sim_telarray instrument path lengths [m], required with the lookup.
+    correction: _TransmissionCorrection or None
+        Atmospheric transmission correction of the bunch weights (see
+        ``transmission_correction``); None disables the correction.
 
     Returns
     -------
@@ -516,11 +519,6 @@ def route_stream(
         )
         for telescope_id, tracer in tracers.items()
     }
-    correction = (
-        None
-        if transmission is None
-        else _TransmissionCorrection(transmission, pathlen_m_by_telescope or {})
-    )
     count = write_shower_photon_stream(
         out_stream,
         _camera_events(
@@ -537,6 +535,27 @@ def route_stream(
         _logger.info("Dropped %d bunches with zero bypass transmission", correction.dropped)
     _logger.info("Routed %d events of photon bunches for %d telescopes", count, len(telescopes))
     return count
+
+
+def transmission_correction(transmission, pathlen_m_by_telescope):
+    """
+    Return the atmospheric transmission correction for ``route_stream``.
+
+    Parameters
+    ----------
+    transmission: SimtelTransmission or None
+        Atmospheric transmission lookup; None disables the correction.
+    pathlen_m_by_telescope: dict or None
+        sim_telarray instrument path lengths [m] of each telescope id.
+
+    Returns
+    -------
+    _TransmissionCorrection or None
+        Correction, or None if no transmission lookup is given.
+    """
+    if transmission is None:
+        return None
+    return _TransmissionCorrection(transmission, pathlen_m_by_telescope or {})
 
 
 def _traced_telescope(
@@ -883,8 +902,10 @@ def main(argv=None, *, inputs_factory=create_route_inputs):
         skipped_telescope_ids=set(routes) - set(selected),
         threads=args.threads,
         on_object=None if wakeup is None else wakeup.on_object,
-        transmission=None if args.no_atmospheric_correction else inputs.transmission,
-        pathlen_m_by_telescope=inputs.pathlen_m_by_telescope,
+        correction=transmission_correction(
+            None if args.no_atmospheric_correction else inputs.transmission,
+            inputs.pathlen_m_by_telescope,
+        ),
     )
     return 0
 

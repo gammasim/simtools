@@ -8,7 +8,7 @@ Faithful to the C code in RT/sim_telarray/common (sim_telarray 2025-11-30 tree):
 - atmospheric_transmission()   sim_absorb.c:655-675   (SIMPLE_ATMOSPHERIC_TRANSMISSION)
 - atmospheric_transmission2()  sim_absorb.c:763-791   (default in sim_telarray.c:2860)
 - telescope optical depths     sim_telarray.c:1859-1870 (od2tel, od2focus)
-- airmass                      sim_telarray.c:2713      (1/|cz| of the bunch direction)
+- airmass                      sim_telarray.c:2713      (1/``|cz|`` of the bunch direction)
 
 Units follow the C code: altitudes in cm inside the lookup (log10 cm), the
 optical depth table is indexed by integer wavelength in nm.

@@ -162,6 +162,25 @@ def project_to_input_plane(bunches, plane_z):
     }
 
 
+@dataclass(frozen=True)
+class CameraFileHeader:
+    """Header values of a camera photon-bunch file.
+
+    Parameters
+    ----------
+    observation_level_m: float
+        Altitude of the observation level a.s.l. [m].
+    telescope_radius_m: float
+        Radius of the telescope's fiducial sphere [m].
+    atmospheric_profile: astropy.table.Table
+        Atmospheric profile.
+    """
+
+    observation_level_m: float
+    telescope_radius_m: float
+    atmospheric_profile: object
+
+
 def write_camera_bunch_file(
     tracer,
     iact_file,
@@ -172,9 +191,7 @@ def write_camera_bunch_file(
     phi_deg,
     dual_mirror,
     camera_rotation_deg,
-    observation_level_m,
-    telescope_radius_m,
-    atmospheric_profile,
+    header,
     seed,
     telescope_id,
     input_plane_height_m,
@@ -211,12 +228,8 @@ def write_camera_bunch_file(
         Dual-mirror telescope.
     camera_rotation_deg: float
         Camera rotation (dual-mirror telescopes) [deg].
-    observation_level_m: float
-        Altitude of the observation level a.s.l. [m].
-    telescope_radius_m: float
-        Radius of the telescope's fiducial sphere [m].
-    atmospheric_profile: astropy.table.Table
-        Atmospheric profile, written into the file.
+    header: CameraFileHeader
+        Observation level, telescope radius and atmospheric profile written into the file.
     seed: int
         Seed of the instrument instance and of the random roulette and wavelength sampling.
     telescope_id: int
@@ -257,9 +270,9 @@ def write_camera_bunch_file(
     count = write_photon_bunches(
         output_path,
         events,
-        observation_level_m=observation_level_m,
-        telescope_radius_m=telescope_radius_m,
-        atmospheric_profile=atmospheric_profile,
+        observation_level_m=header.observation_level_m,
+        telescope_radius_m=header.telescope_radius_m,
+        atmospheric_profile=header.atmospheric_profile,
     )
     _logger.debug(
         "Wrote %d events of camera photon bunches for %s (theta=%.2f deg) to %s",
