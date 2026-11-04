@@ -156,7 +156,7 @@ def _render_simulation_links(directory, reports, latest_version):
         f"[{name}]({_report_target(name, directory, reports, latest_version)})"
         for name in ("configuration_corsika", "configuration_sim_telarray")
     ]
-    return " · ".join(simulation_links) + "\n\n"
+    return " | ".join(simulation_links) + "\n\n"
 
 
 def _report_site_category(report):
@@ -260,7 +260,7 @@ def _design_type_table(reports, available_reports, design_models, directory, lat
 
     content = "| Design type | Array Element |\n| --- | --- |\n"
     if not groups:
-        return content + "| — | — |\n\n"
+        return content + "| - | - |\n\n"
     for design, elements in sorted(groups.items()):
         others = [element for element in elements if element != design]
         other_links = ", ".join(

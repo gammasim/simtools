@@ -43,7 +43,7 @@ def test_generate_toctree(tmp_test_directory):
     assert "[OBS-North](../productions/6.0.0/OBS-North)" in parameters_index
     assert "### Simulation" in parameters_index
     assert (
-        "[configuration_corsika](../productions/6.0.0/configuration_corsika) · "
+        "[configuration_corsika](../productions/6.0.0/configuration_corsika) | "
         "[configuration_sim_telarray](../productions/6.0.0/configuration_sim_telarray)"
     ) in parameters_index
     assert "| Design type | Array Element |" in parameters_index
