@@ -83,7 +83,7 @@ class SimulatorArray(SimtelRunner):
         """Build sim_telarray command for calibration simulations."""
         cfg = self.context.args
         altitude = self.array_model.site_model.get_parameter_value_with_unit(
-            "reference_point_altitude"
+            "corsika_observation_level"
         ).to_value("m")
 
         options = {"Altitude": altitude}
