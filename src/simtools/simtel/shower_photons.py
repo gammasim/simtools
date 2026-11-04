@@ -14,7 +14,12 @@ from dataclasses import dataclass
 import numpy as np
 
 from simtools.corsika.photon_bunches import read_photon_bunches
-from simtools.simtel.photon_bunch_file import BUNCH_DTYPE, camera_bunches, write_photon_bunches
+from simtools.simtel.photon_bunch_file import (
+    BUNCH_DTYPE,
+    PhotonBunchEvent,
+    camera_bunches,
+    write_photon_bunches,
+)
 from simtools.utils import geometry
 
 _logger = logging.getLogger(__name__)
@@ -196,6 +201,7 @@ def write_camera_bunch_file(
     telescope_id,
     input_plane_height_m,
     threads=0,
+    reuses=1,
 ):
     """
     Trace CORSIKA photon bunches to the camera entrance and write them for sim_telarray.
@@ -239,6 +245,9 @@ def write_camera_bunch_file(
         incoming obscurers (see minimum_input_plane_height_m).
     threads: int
         Number of threads used for tracing (0: default of the optical model).
+    reuses: int
+        Core reuses per shower of the IACT file (CSCAT of the CORSIKA card); the telescope
+        offsets of each shower hold one array per reuse.
 
     Returns
     -------
@@ -255,11 +264,12 @@ def write_camera_bunch_file(
         )
     frame = shower_bunch_frame(theta_deg, phi_deg, input_plane_height_m=input_plane_height_m)
     events = (
-        camera_bunches_of_event(
+        _camera_event(
             model,
             bunches,
             frame,
-            seed=derive_seed(seed, bunches["event_number"], bunches["array_id"], telescope_id),
+            seed=seed,
+            telescope_id=telescope_id,
             threads=threads,
             dual_mirror=dual_mirror,
             camera_rotation_deg=camera_rotation_deg,
@@ -273,6 +283,7 @@ def write_camera_bunch_file(
         observation_level_m=header.observation_level_m,
         telescope_radius_m=header.telescope_radius_m,
         atmospheric_profile=header.atmospheric_profile,
+        reuses=reuses,
     )
     _logger.debug(
         "Wrote %d events of camera photon bunches for %s (theta=%.2f deg) to %s",
@@ -282,6 +293,26 @@ def write_camera_bunch_file(
         output_path,
     )
     return count
+
+
+def _camera_event(
+    model, bunches, frame, *, seed, telescope_id, threads, dual_mirror, camera_rotation_deg
+):
+    """Return the camera photon bunches of one telescope block as an event of its shower.
+
+    The event number and the core reuse (array id) of the input block are kept, so that the
+    output has the same showers and core reuses as the input.
+    """
+    camera = camera_bunches_of_event(
+        model,
+        bunches,
+        frame,
+        seed=derive_seed(seed, bunches["event_number"], bunches["array_id"], telescope_id),
+        threads=threads,
+        dual_mirror=dual_mirror,
+        camera_rotation_deg=camera_rotation_deg,
+    )
+    return PhotonBunchEvent(number=bunches["event_number"], blocks=((telescope_id, camera),))
 
 
 def camera_bunches_of_event(

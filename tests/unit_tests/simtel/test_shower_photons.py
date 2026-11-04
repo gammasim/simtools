@@ -10,7 +10,7 @@ import pytest
 from astropy.table import Table
 
 from simtools.corsika.photon_bunches import read_photon_bunches
-from simtools.simtel.photon_bunch_file import BUNCH_DTYPE, write_photon_bunches
+from simtools.simtel.photon_bunch_file import BUNCH_DTYPE, PhotonBunchEvent, write_photon_bunches
 from simtools.simtel.shower_photons import (
     CORSIKA_LENGTH_UNIT_M,
     CORSIKA_PLANE_Z,
@@ -200,7 +200,42 @@ def _write_camera_file(tracer, iact_file, telescope_model, output_path, atmosphe
         telescope_id=0,
         input_plane_height_m=kw.get("input_plane_height_m", INPUT_PLANE_HEIGHT_M),
         threads=kw.get("threads", 2),
+        reuses=kw.get("reuses", 1),
     )
+
+
+def test_write_camera_bunch_file_keeps_event_numbers_and_core_reuses(
+    tmp_test_directory, atmospheric_profile, telescope_model
+):
+    # Two core reuses of event 7 (one shower), and one event 11.
+    events = [
+        PhotonBunchEvent(number=7, blocks=((0, _iact_events(2, INPUT_ZEM_CM[0])),)),
+        PhotonBunchEvent(number=7, blocks=((0, _iact_events(1, INPUT_ZEM_CM[0])),)),
+        PhotonBunchEvent(number=11, blocks=((0, _iact_events(3, INPUT_ZEM_CM[1])),)),
+    ]
+    iact_file = tmp_test_directory / "input.iact"
+    write_photon_bunches(
+        iact_file,
+        events,
+        observation_level_m=2147.0,
+        telescope_radius_m=2.0,
+        atmospheric_profile=atmospheric_profile,
+    )
+    output_path = tmp_test_directory / "camera.iact"
+
+    _write_camera_file(
+        _FakeTracer(),
+        iact_file,
+        telescope_model,
+        output_path,
+        atmospheric_profile,
+        reuses=2,
+    )
+
+    events_out = [
+        (e["event_number"], e["array_id"], len(e["x"])) for e in read_photon_bunches(output_path)
+    ]
+    assert events_out == [(7, 0, 2), (7, 1, 1), (11, 0, 3)]
 
 
 def test_write_camera_bunch_file_passes_tracing_arguments(

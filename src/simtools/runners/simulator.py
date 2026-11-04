@@ -598,6 +598,8 @@ class Simulator:
             "corsika_resources",
             "sim_telarray_resources",
             "multi_pipe_resources",
+            "shower_route_resources",
+            "shower_route_log",
             "sim_telarray_err",
             "corsika_err",
         )

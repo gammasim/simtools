@@ -116,6 +116,15 @@ def test_resources(corsika_stage_mock_array_model):
     )
 
 
+def test_disk_routing_is_not_sequential(corsika_stage_mock_array_model):
+    stage = corsika_stage_mock_array_model
+    stage.sequential = True
+    stage.disk_route = True
+    stage.prepare(run_number=1)
+    script = stage.stream_service.get_file_name("multi_pipe_script", run_number=1)
+    assert "--sequential" not in script.read_text(encoding="utf-8")
+
+
 def test_disk_routing_saves_streamed_corsika_output(corsika_stage_mock_array_model):
     stage = corsika_stage_mock_array_model
     stage.disk_route = True

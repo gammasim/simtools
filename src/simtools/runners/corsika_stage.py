@@ -151,7 +151,9 @@ class CorsikaStage:
             "-c",
             multipipe_file,
         ]
-        if self.sequential:
+        # A disk route has no downstream command to signal: sequential mode would wait for wakeups
+        # that never come, so the producer-only pipe runs in parallel.
+        if self.sequential and not self.disk_route:
             multipipe_command.append("--sequential")
         accounting_command = build_accounting_command(
             multipipe_command,

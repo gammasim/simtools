@@ -60,11 +60,43 @@ def _shower_route_seeds(sim_telarray_seed):
     return int(instrument), int(tracing)
 
 
+def route_threads(requested, routes, *, sequential, usable_cores):
+    """
+    Return the tracing threads of each shower route process.
+
+    A positive request is used as it is. The value 0 divides the usable cores among all
+    telescope-type routes (of all model versions); with sequential CORSIKA, each route uses one
+    thread.
+
+    Parameters
+    ----------
+    requested: int
+        Threads requested per route (``--shower_route_threads``); 0 for the automatic setting.
+    routes: int
+        Number of telescope-type routes sharing the cores.
+    sequential: bool
+        Whether CORSIKA runs in sequential mode.
+    usable_cores: int
+        Number of cores usable by this job.
+
+    Returns
+    -------
+    int
+        Threads per route process.
+    """
+    if requested > 0:
+        return requested
+    if sequential:
+        return 1
+    return max(1, usable_cores // max(1, routes))
+
+
 class ShowerRouting:
     """Build the photon conversion and sim_telarray commands of one array."""
 
-    def __init__(self, corsika_config, context, label=None):
+    def __init__(self, corsika_config, context, label=None, threads=1):
         self.context = context
+        self.threads = threads
         self._logger = logging.getLogger(__name__)
         self.corsika_service = RunnerServices(
             corsika_config, run_type="corsika", label=label, context=context
@@ -75,6 +107,7 @@ class ShowerRouting:
         map_file, groups = self._write_telescope_route_map(simulator_array, run_number)
         lines = []
         grouped_files = {}
+        route_files = {"shower_route_resources": [], "shower_route_log": []}
         for group, info in groups.items():
             telescope_ids = ",".join(str(telescope_id) for telescope_id in info["ids"])
             streamed = input_file == "-"
@@ -100,12 +133,17 @@ class ShowerRouting:
                 run_number,
             )
             log_file = self._route_log_file(simulator_array, group, run_number)
+            route_files["shower_route_resources"].append(
+                self._route_resources_file(simulator_array, group, run_number)
+            )
+            route_files["shower_route_log"].append(log_file)
             route_text = self._route_shell_text(route, log_file)
             if streamed:
                 lines.append(f"{route_text} | {_WITHOUT_MULTIPIPE_SEQUENTIAL} {simtel}")
             else:
                 lines.extend((route_text, simtel))
         simulator_array.file_list.update(grouped_files)
+        simulator_array.file_list.update(route_files)
         return lines
 
     @staticmethod
@@ -297,7 +335,7 @@ class ShowerRouting:
             "--tracing-seed",
             str(tracing_seed),
             "--threads",
-            str(self.context.args.get("shower_route_threads", 1)),
+            str(self.threads),
             "--output-path",
             _absolute_path_argument(str(map_file.parent / f"shower_route_{group}")),
         ]
@@ -316,16 +354,21 @@ class ShowerRouting:
             ]
         if models_path:
             command += ["--simulation-models-path", _absolute_path_argument(str(models_path))]
-        resources_file = simulator_array.runner_service.get_file_name(
-            file_type="shower_route_resources", run_number=run_number
-        )
         return build_accounting_command(
             command,
-            resources_file.with_name(f"{group}_{resources_file.name}"),
+            self._route_resources_file(simulator_array, group, run_number),
             "shower_route",
             run_number,
             model_version=array_model.model_version,
         )
+
+    @staticmethod
+    def _route_resources_file(simulator_array, group, run_number):
+        """Return the resources JSON file of the shower route of one telescope type."""
+        resources_file = simulator_array.runner_service.get_file_name(
+            file_type="shower_route_resources", run_number=run_number
+        )
+        return resources_file.with_name(f"{group}_{resources_file.name}")
 
     def _route_log_file(self, simulator_array, group, run_number):
         """
@@ -334,11 +377,8 @@ class ShowerRouting:
         The log is named like the route resources file (``<group>_..._shower_route.log``). The
         route's stdout is the data stream, so only its stderr is kept, by the shell.
         """
-        resources_file = simulator_array.runner_service.get_file_name(
-            file_type="shower_route_resources", run_number=run_number
-        )
-        name = f"{group}_{resources_file.name}".replace(".resources.json", ".log")
-        return resources_file.with_name(name)
+        resources_file = self._route_resources_file(simulator_array, group, run_number)
+        return resources_file.with_name(resources_file.name.replace(".resources.json", ".log"))
 
     @staticmethod
     def _route_shell_text(command, log_file):

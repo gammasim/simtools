@@ -1,10 +1,11 @@
 """sim_telarray as a simulation stage (telescope and camera response)."""
 
+import os
 import shlex
 
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.ray_tracing.backends.interface import get_backend
-from simtools.runners.shower_routing import ShowerRouting
+from simtools.runners.shower_routing import ShowerRouting, route_threads
 from simtools.runners.stages import CAMERA_EVENTS, CHERENKOV_PHOTONS, STDIN
 from simtools.simtel.simtel_runner import SIM_TELARRAY_ENV, sim_telarray_env_as_string
 from simtools.simtel.simulator_array import SimulatorArray
@@ -57,9 +58,28 @@ class SimTelArrayStage:
             if mode not in ("stream", "disk"):
                 raise ValueError(f"Invalid shower route mode: {mode}; choose from stream, disk")
             if getattr(get_backend(context=inputs.context), "traces_shower_photons", False):
+                # Routes of all model versions share the usable cores (see route_threads).
+                routes = sum(
+                    len(
+                        {
+                            telescope.name
+                            for telescope in stage.array_model.telescope_models.values()
+                        }
+                    )
+                    for stage in stages
+                )
+                threads = route_threads(
+                    inputs.args.get("shower_route_threads", 1),
+                    routes,
+                    sequential=inputs.args.get("sequential", False),
+                    usable_cores=os.process_cpu_count() or 1,
+                )
                 for stage in stages:
                     stage.shower_routing = ShowerRouting(
-                        inputs.shower_configurations[0], inputs.context, label=label
+                        inputs.shower_configurations[0],
+                        inputs.context,
+                        label=label,
+                        threads=threads,
                     )
                     stage.streams = mode == "stream"
         return stages

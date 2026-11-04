@@ -102,6 +102,11 @@ products:
     default_suffix: .shower_route.resources.json
     role: metadata
     retention: persistent
+  shower_route_log:
+    suffixes: [.shower_route.log]
+    default_suffix: .shower_route.log
+    role: diagnostic
+    retention: persistent
   telescope_route_map:
     suffixes: [.telescope_map.json]
     default_suffix: .telescope_map.json

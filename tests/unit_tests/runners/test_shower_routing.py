@@ -14,7 +14,7 @@ import astropy.units as u
 import pytest
 
 from simtools.job_execution.runner_services import RunnerServices
-from simtools.runners.shower_routing import ShowerRouting, _shower_route_seeds
+from simtools.runners.shower_routing import ShowerRouting, _shower_route_seeds, route_threads
 
 SHOWER_ROUTE_MODULE = "simtools.simtel.shower_route"
 PIPE_SEPARATOR = " | "
@@ -138,6 +138,27 @@ def test_routing_commands_by_telescope_type(route_inputs, input_file):
     )
     assert mapping["2"]["dual_mirror"] is True
     assert math.isclose(mapping["0"]["input_plane_height_m"], 29.9)
+
+    # Route resources and logs are registered for packaging, one per telescope type.
+    assert len(simulator.file_list["shower_route_resources"]) == 2
+    assert len(simulator.file_list["shower_route_log"]) == 2
+    assert all(
+        path.name.startswith(("LST_", "MST_")) for path in simulator.file_list["shower_route_log"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("requested", "routes", "sequential", "cores", "expected"),
+    [
+        (3, 2, False, 8, 3),  # A positive request is used as it is.
+        (0, 2, False, 8, 4),  # Automatic: usable cores divided among the routes.
+        (0, 3, False, 8, 2),  # Rounded down, at least one thread.
+        (0, 16, False, 8, 1),  # More routes than cores: one thread each.
+        (0, 2, True, 8, 1),  # Sequential CORSIKA: one thread per route.
+    ],
+)
+def test_route_threads(requested, routes, sequential, cores, expected):
+    assert route_threads(requested, routes, sequential=sequential, usable_cores=cores) == expected
 
 
 def test_seed_file_requires_instrument_seed():
