@@ -19,7 +19,6 @@ from simtools.sim_events.simtel_io_metadata import normalize_sim_telarray_metada
 from simtools.utils.primary_particle import PrimaryParticle
 
 PRODUCT_MODEL_VERSION = "2.1.0"
-_EMAIL_PATTERN = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter", "ctao_datamodel")
 # sources whose scope and values are fully described by the registry
 _REGISTRY_DEFINED_SOURCE_TYPES = {"generated", "ctao_datamodel"}
@@ -107,9 +106,18 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None):
 def _get_email(args):
     """Return the contact email (placeholder if unset); raise for a malformed address."""
     email = args.get("user_email") or "not-set@example.org"
-    if not _EMAIL_PATTERN.fullmatch(email):
+    if not _is_valid_email(email):
         raise ValueError(f"Invalid contact email for CTAO sim_telarray metadata: {email!r}")
     return email
+
+
+def _is_valid_email(email):
+    """Check for a single '@' with a non-empty local part and a dotted domain (no whitespace)."""
+    if any(character.isspace() for character in email):
+        return False
+    local, separator, domain = email.partition("@")
+    host, dot, top_level = domain.rpartition(".")
+    return bool(local and separator and "@" not in domain and host and dot and top_level)
 
 
 def _format_time(time):

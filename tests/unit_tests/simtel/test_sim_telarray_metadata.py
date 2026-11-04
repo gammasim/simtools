@@ -163,3 +163,23 @@ def test_ctao_registry_uses_simtools_keywords():
     assert registry["dataid"]["source_type"] == "ctao_datamodel"
     assert registry["simnsb"]["value_schema"]["data_type"] == "number"
     assert set(registry) == {keyword.lower() for keyword in metadata}
+
+
+@pytest.mark.parametrize(
+    ("email", "expected"),
+    [
+        ("a@b.org", True),
+        ("first.last@sub.domain.org", True),
+        ("a@b", False),
+        ("@b.org", False),
+        ("a@.org", False),
+        ("a@b.", False),
+        ("a@@b.org", False),
+        ("a b@c.org", False),
+        ("a@b .org", False),
+        ("no-at-sign.org", False),
+        ("a" * 100000 + "@" * 1000, False),
+    ],
+)
+def test_is_valid_email(email, expected):
+    assert sim_telarray_metadata._is_valid_email(email) is expected
