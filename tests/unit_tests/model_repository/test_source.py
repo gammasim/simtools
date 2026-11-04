@@ -45,6 +45,7 @@ def test_source_combines_patch_history_and_descriptions():
             "simulation-models/productions/1.1.0/LSTN-01.json": _json(
                 {"parameters": {"LSTN-01": {"new_parameter": "1.0.0"}}}
             ),
+            "simulation-models/productions/2.0.0/info.yml": b"model_update: full_update\n",
         }
     )
     source = ModelSource(storage)
@@ -55,8 +56,20 @@ def test_source_combines_patch_history_and_descriptions():
         "LSTN-design": {"old_parameter": "1.0.0"},
         "LSTN-01": {"new_parameter": "1.0.0"},
     }
-    assert source.get_model_versions() == ["1.0.0", "1.1.0"]
-    assert source.get_production_descriptions() == [("1.1.0", "Updated")]
+    assert source.get_model_versions() == ["1.0.0", "1.1.0", "2.0.0"]
+    assert source.get_production_descriptions() == [("1.1.0", "Updated"), ("2.0.0", "")]
+    assert source.get_model_update_info("1.1.0") == {
+        "model_update": "patch_update",
+        "model_version_history": ["1.0.0"],
+    }
+    assert source.get_model_update_info("1.0.0") == {
+        "model_update": None,
+        "model_version_history": [],
+    }
+    assert source.get_model_update_info("2.0.0") == {
+        "model_update": "full_update",
+        "model_version_history": [],
+    }
 
 
 def test_source_reports_missing_tables_and_parameters():
@@ -108,6 +121,31 @@ def test_source_filters_parameter_metadata_and_rejects_missing_values():
         source.read_parameters({"camera_body_diameter": "1.0.0"}, "telescopes", "LSTN-01", "South")
     with pytest.raises(ValueError, match="No parameters found"):
         source.read_parameters({"missing": "1.0.0"}, "telescopes", "LSTN-01", "North")
+
+
+def test_source_preserves_string_parameter_values():
+    """String values and identifying metadata retain their case."""
+    path = (
+        "simulation-models/model_parameters/ILLN-design/flasher_angular_distribution/"
+        "flasher_angular_distribution-1.0.0.json"
+    )
+    document = {
+        "file": False,
+        "instrument": "ILLN-design",
+        "parameter": "flasher_angular_distribution",
+        "parameter_version": "1.0.0",
+        "site": "North",
+        "type": "string",
+        "unit": None,
+        "value": "IsOtRoPiC",
+    }
+    source = ModelSource(MemoryStorage({path: _json(document)}))
+
+    result = source.read_parameters(
+        {"flasher_angular_distribution": "1.0.0"}, "calibration", "ILLN-design", "North"
+    )
+
+    assert result == [document]
 
 
 def test_source_reads_ecsv_with_parameter_metadata_and_checks_asset_paths(tmp_test_directory):
@@ -203,3 +241,14 @@ def test_source_export_reuses_identical_files_and_rejects_ambiguous_exports(
         source.export_model_files(file_names="model.dat", dest=destination)
     with pytest.raises(ValueError, match="Destination path is required"):
         source.export_model_files(parameters={"data": parameter})
+
+
+@pytest.mark.parametrize("content", [b"", b"- not a mapping\n"])
+def test_source_update_info_treats_non_mapping_metadata_as_empty(content):
+    """Metadata that does not parse to a mapping falls back to the empty update info."""
+    source = ModelSource(MemoryStorage({"simulation-models/productions/3.0.0/info.yml": content}))
+
+    assert source.get_model_update_info("3.0.0") == {
+        "model_update": None,
+        "model_version_history": [],
+    }

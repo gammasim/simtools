@@ -39,14 +39,21 @@ def test_generate_toctree(tmp_test_directory):
     assert "parameters/index\nproductions/index\n" in root_index
 
     parameters_index = (docs / PARAMETERS / INDEX).read_text(encoding=ENCODING)
+    assert "## North\n\n### Site\n\n" in parameters_index
+    assert "[OBS-North](../productions/6.0.0/OBS-North)" in parameters_index
+    assert "### Simulation" in parameters_index
     assert (
-        parameters_index
-        == "# Parameters\n\n```{toctree}\n:maxdepth: 1\n\nLSTN-01\nLSTN-design\n```\n"
-    )
+        "[configuration_corsika](../productions/6.0.0/configuration_corsika) | "
+        "[configuration_sim_telarray](../productions/6.0.0/configuration_sim_telarray)"
+    ) in parameters_index
+    assert "| Design type | Array Element |" in parameters_index
+    assert "LSTN-01" in parameters_index
+    assert "LSTN-design" in parameters_index
 
     productions_index = (docs / PRODUCTIONS / INDEX).read_text(encoding=ENCODING)
     assert "6.0.0/index\nlayout.png\n" in productions_index
-    assert "OBS-North" in (docs / PRODUCTIONS / MODEL_VERSION / INDEX).read_text(encoding=ENCODING)
+    version_index = (docs / PRODUCTIONS / MODEL_VERSION / INDEX).read_text(encoding=ENCODING)
+    assert "[OBS-North](OBS-North)" in version_index
     assert not (docs / PRODUCTIONS / MODEL_VERSION / DATA_FILES / INDEX).exists()
     assert not (docs / STATIC / INDEX).exists()
 

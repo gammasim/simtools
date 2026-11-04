@@ -154,7 +154,7 @@ def _extract_proton_rates(args, context):
     proton_files = _group_hdf5_files_by_threshold_and_run(data_dir)
 
     if not proton_files:
-        raise FileNotFoundError(f"No proton HDF5 files with threshold labels found in {data_dir}")
+        raise FileNotFoundError(f"No proton HDF5 files with threshold metadata found in {data_dir}")
 
     _logger.info(f"Found proton HDF5 files for {len(proton_files)} thresholds")
 
@@ -169,7 +169,7 @@ def _extract_proton_rates(args, context):
 
 
 def _group_hdf5_files_by_threshold_and_run(proton_dir):
-    """Group proton HDF5 files by threshold and run extracted from file names."""
+    """Group proton HDF5 files by metadata threshold and run number."""
     threshold_files = {}
 
     for hdf5_file in sorted(proton_dir.rglob(f"*{_REDUCED_EVENT_DATA_SUFFIX}")):

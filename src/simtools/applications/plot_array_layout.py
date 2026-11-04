@@ -148,7 +148,7 @@ def main():
         for model_version, site in generate_plot_combinations(
             app_context.args, app_context.model_reader, context=app_context
         ):
-            run_args = app_context.args.copy()
+            run_args = dict(app_context.args)  # mutable copy; context args are read-only
             run_args.update(
                 {
                     "model_version": model_version,

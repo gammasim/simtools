@@ -29,7 +29,9 @@ For this option, array element positions are retrieved from the input file:
 * from a file containing an astropy table with a list of array elements and their positions
   (e.g., ``-array_layout_file tests/resources/telescope_positions-North-ground.ecsv``)
 
-Plots are saved as png files in the output directory by default.
+Plots are saved as png files in the output directory by default. Default filenames
+include a digest of the rendered inputs, so identical layouts share a figure. Use
+``--figure_name`` to set a specific output filename.
 
 Example of a layout plot:
 
