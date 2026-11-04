@@ -3,6 +3,7 @@
 import logging
 from copy import deepcopy
 
+import astropy.units as u
 import pytest
 
 from simtools.simtel.simulator_array import SimulatorArray
@@ -65,16 +66,17 @@ def test_make_run_command_for_calibration_simulations_basic(simtel_runner, mocke
     mock_config.args = {"run_mode": "pedestals", "number_of_events": 1000}
     _set_context_config(simtel_runner, mock_config)
 
-    # Mock site model parameter
-    mock_param = mocker.Mock()
-    mock_param.to_value.return_value = 1800.0
-    simtel_runner.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.side_effect = {
+        "reference_point_altitude": 2177 * u.m,
+        "corsika_observation_level": 2156 * u.m,
+    }.get
 
     result = simtel_runner._make_run_command_for_calibration_simulations()
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.side_effect = None
 
     # Should return a string with configuration options
     assert isinstance(result, list)
-    assert any("Altitude" in str(item) for item in result)
+    assert "Altitude=2156.0" in result
 
 
 def test_make_run_command_for_calibration_direct_injection(simtel_runner, mocker):
@@ -188,7 +190,7 @@ def test_make_run_command_for_calibration_simulations_pedestals(simtel_runner, m
 
     assert isinstance(result, list)
     assert "-C" in result
-    assert "Altitude=1800.0" in result
+    assert "Altitude=2200.0" in result
     assert "pedestal_events=500" in result
 
 
