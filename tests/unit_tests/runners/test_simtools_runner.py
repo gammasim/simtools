@@ -727,6 +727,25 @@ def test_copy_collection_files_name_collision(tmp_test_directory, overwrite):
             simtools_runner._copy_collection_files(configurations, collection_config)
 
 
+def test_copy_collection_files_rerun_with_identical_destination(tmp_test_directory):
+    tmp_path = Path(str(tmp_test_directory))
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "table_North.ecsv").write_text("same", encoding="utf-8")
+    collection_output = tmp_path / "coll_rerun"
+    collection_output.mkdir()
+    (collection_output / "table-1.0.0.ecsv").write_text("same", encoding="utf-8")
+    collection_config = {
+        "output_path": str(collection_output),
+        "files": [{"source": "table_North.ecsv", "destination": "table-1.0.0.ecsv"}],
+    }
+    configurations = [{"configuration": {"output_path": str(src)}}]
+
+    simtools_runner._copy_collection_files(configurations, collection_config)
+
+    assert (collection_output / "table-1.0.0.ecsv").read_text(encoding="utf-8") == "same"
+
+
 def test_copy_collection_files_list_format(tmp_test_directory):
     tmp_path = Path(str(tmp_test_directory))
     src = tmp_path / "app_out"

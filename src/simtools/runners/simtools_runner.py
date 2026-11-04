@@ -243,10 +243,16 @@ def _copy_pattern_files(
         relative_path = _collection_relative_path(source_file, source_directories)
         name = relative_path if preserve_relative_paths else source_file.name
         dest = destination / (destination_name or name)
-        if not overwrite_files and dest.exists() and dest.resolve() != source_file.resolve():
+        if (
+            not overwrite_files
+            and dest.exists()
+            and dest.resolve() != source_file.resolve()
+            and _sha256(dest) != _sha256(source_file)
+        ):
             raise FileExistsError(
-                f"Filename collision in collection: '{source_file.name}' would be "
-                f"overwritten by '{source_file}'. Ensure output files have unique names."
+                f"Filename collision in collection: '{dest}' already exists with different "
+                f"content and would be overwritten by '{source_file}'. Ensure output files have "
+                "unique names or set overwrite_collection_files."
             )
         if dest.resolve() != source_file.resolve():
             dest.parent.mkdir(parents=True, exist_ok=True)
