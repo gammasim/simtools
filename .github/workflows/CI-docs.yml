@@ -223,6 +223,7 @@ jobs:
           MANIFEST: default-branch/docs/_static/switcher.json
           EVENT_NAME: ${{ github.event_name }}
           RELEASE_TAG: ${{ github.ref_name }}
+          PYTHONPATH: ${{ github.workspace }}/src
         run: |
           set -euo pipefail
           python .github/scripts/publish_docs.py versions "$MANIFEST" \
