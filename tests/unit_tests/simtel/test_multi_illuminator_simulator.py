@@ -650,3 +650,17 @@ def test_simulate_wavelength_labels_formatted_correctly(
     # Verify base label is preserved
     labels = [job["label"] for job in job_specs]
     assert all(label == "mytest" for label in labels)
+
+
+@patch("simtools.model.site_model.SiteModel")
+def test_load_visibility_from_file_parameter(mock_site_model_class, base_config, run_context):
+    from astropy.table import QTable
+
+    site_model = mock_site_model_class.return_value
+    site_model.get_parameter_type.return_value = "file"
+    site_model.get_parameter_table.return_value = QTable(
+        {"illuminator_id": ["ILLS-01"], "telescope_id": ["MSTS-01"], "visible": [True]}
+    )
+    simulator = MultiIlluminatorSimulator(context=run_context, config=base_config)
+    assert simulator.visibility.get_valid_pairs() == [("ILLS-01", "MSTS-01")]
+    site_model.get_parameter_table.assert_called_once_with("illuminator_telescope_visibility")

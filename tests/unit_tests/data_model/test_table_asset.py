@@ -340,3 +340,14 @@ def test_validate_table_asset_rejects_missing_required_metadata():
             table,
             schema_entry={"table_metadata": [{"name": "source_file_name", "required": True}]},
         )
+
+
+def test_validate_boolean_table_column():
+    entry = {"table_columns": [{"name": "visible", "type": "boolean", "required": True}]}
+    table = QTable({"visible": [True, False]})
+    table["visible"].info.description = "Visibility"
+    validate_table_asset(table, schema_entry=entry)
+    table.replace_column("visible", ["true", "false"])
+    table["visible"].info.description = "Visibility"
+    with pytest.raises(ValueError, match=r"visible.*dtype"):
+        validate_table_asset(table, schema_entry=entry)

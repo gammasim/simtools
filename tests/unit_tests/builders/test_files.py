@@ -45,7 +45,9 @@ def test_every_table_file_round_trips(name, tmp_test_directory):
         elif column.get("unit"):
             assert actual.unit == u.Unit(column["unit"])
         if column["type"] != "string":
-            assert actual.dtype == np.dtype(column["type"])
+            assert actual.dtype == np.dtype(
+                "bool" if column["type"] == "boolean" else column["type"]
+            )
             assert np.all(np.isfinite(actual))
         if "default" in column:
             np.testing.assert_array_equal(np.asarray(actual), [column["default"]])

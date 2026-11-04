@@ -243,10 +243,16 @@ def _copy_pattern_files(
         relative_path = _collection_relative_path(source_file, source_directories)
         name = relative_path if preserve_relative_paths else source_file.name
         dest = destination / (destination_name or name)
-        if not overwrite_files and dest.exists() and dest.resolve() != source_file.resolve():
+        if (
+            not overwrite_files
+            and dest.exists()
+            and dest.resolve() != source_file.resolve()
+            and _sha256(dest) != _sha256(source_file)
+        ):
             raise FileExistsError(
-                f"Filename collision in collection: '{source_file.name}' would be "
-                f"overwritten by '{source_file}'. Ensure output files have unique names."
+                f"Filename collision in collection: '{dest}' already exists with different "
+                f"content and would be overwritten by '{source_file}'. Ensure output files have "
+                "unique names or set overwrite_collection_files."
             )
         if dest.resolve() != source_file.resolve():
             dest.parent.mkdir(parents=True, exist_ok=True)
@@ -304,9 +310,26 @@ def _collect_source_directories(configurations, source_directory=None):
         app_configuration = config.get("configuration", {})
         for source_key in keys:
             source_dir = app_configuration.get(source_key)
-            if source_dir is not None and Path(source_dir) not in source_directories:
-                source_directories.append(Path(source_dir))
+            for directory in _collection_directories(source_key, source_dir):
+                if directory not in source_directories:
+                    source_directories.append(directory)
     return source_directories
+
+
+def _collection_directories(source_key, source_dir):
+    """Resolve configured directories or metadata patterns used as collection roots."""
+    if source_dir is None:
+        return []
+    if source_key != "input_meta":
+        return [Path(source_dir)]
+    patterns = [source_dir] if isinstance(source_dir, (str, Path)) else source_dir
+    directories = []
+    for pattern in patterns:
+        path = Path(pattern)
+        root = Path(path.anchor or ".")
+        relative_pattern = path.relative_to(root) if path.is_absolute() else path
+        directories.extend(match.parent for match in root.glob(str(relative_pattern)))
+    return directories
 
 
 def _find_collection_files(pattern, source_directories):

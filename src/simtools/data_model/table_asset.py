@@ -222,7 +222,7 @@ def _validate_dtype(name, column, expected):
             raise ValueError(f"Table column '{name}' must contain strings")
         return
     try:
-        expected_dtype = np.dtype(expected)
+        expected_dtype = np.dtype("bool" if expected == "boolean" else expected)
     except TypeError:
         return
     if (

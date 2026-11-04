@@ -77,6 +77,35 @@ def _metadata_product(metadata_file, relative_metadata):
     return product, filename, None
 
 
+def _collection_entries(config_file):
+    """Return the entries of the ``collection`` block of one workflow file (empty if unreadable)."""
+    if not config_file.is_file():
+        return []
+    try:
+        collection = ascii_handler.collect_data_from_file(config_file).get("collection")
+    except OSError, TypeError, AttributeError, ValueError, yaml.YAMLError:
+        return []
+    entries = [collection] if isinstance(collection, dict) else collection
+    return entries if isinstance(entries, list) else []
+
+
+def _collection_sources(metadata_file, filename):
+    """Return submitter file names that a workflow collection maps to the product filename.
+
+    Submitter files keep their names in the input directory; the ``collection`` block of the
+    workflow beside the metadata maps them to the product filename (``destination``).
+    """
+    file_specs = [
+        file_spec
+        for entry in _collection_entries(metadata_file.parent / "config.yml")
+        if isinstance(entry, dict) and isinstance(entry.get("files"), list)
+        for file_spec in entry["files"]
+        if isinstance(file_spec, dict) and file_spec.get("destination") == filename
+    ]
+    sources = [file_spec.get("source") for file_spec in file_specs]
+    return [source for source in sources if isinstance(source, str) and Path(source).name == source]
+
+
 def _product_file(
     metadata_file,
     product,
@@ -101,6 +130,9 @@ def _product_file(
         and Path(model_name).name == model_name
     ):
         product_files.append(metadata_file.parent / model_name / filename)
+    product_files.extend(
+        metadata_file.parent / source for source in _collection_sources(metadata_file, filename)
+    )
 
     for product_file in product_files:
         relative_product = product_file.relative_to(repository)

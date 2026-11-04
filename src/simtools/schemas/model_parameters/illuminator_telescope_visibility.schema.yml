@@ -1,6 +1,28 @@
 %YAML 1.2
 ---
 title: Schema for illuminator_telescope_visibility model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: illuminator_telescope_visibility
+description: Illumination status for telescope-illuminator pairs.
+short_description: Illuminator-telescope visibility lookup table.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - {name: illuminator_id, description: Illuminator identifier, type: string, required: true}
+      - {name: telescope_id, description: Telescope identifier, type: string, required: true}
+      - {name: visible, description: Visibility status, type: boolean, required: true}
+instrument: {class: Site}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert]
+source: [Calibration]
+simulation_software: [{name: simtools}]
+---
+title: Schema for illuminator_telescope_visibility model parameter
 schema_version: 0.2.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
