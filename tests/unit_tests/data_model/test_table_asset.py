@@ -344,7 +344,9 @@ def test_validate_table_asset_rejects_missing_required_metadata():
 
 
 def test_unified_fadc_schema_accepts_columns_without_group_validation():
-    entry = schema.get_model_parameter_schema("fadc_pulse_shape", "0.4.0")["data"][0]
+    latest = schema.get_model_parameter_schema("fadc_pulse_shape")
+    assert latest["schema_version"] == "0.4.0"
+    entry = latest["data"][0]
     template_kind = next(
         column for column in entry["table_columns"] if column["name"] == "template_kind"
     )
