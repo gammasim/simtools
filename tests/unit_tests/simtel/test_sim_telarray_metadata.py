@@ -1,7 +1,6 @@
 """Tests for the CTAO metadata bridge."""
 
 import math
-from typing import get_args
 
 import astropy.units as u
 import pytest
@@ -23,115 +22,6 @@ _BASE_ARGS = {
 }
 _LABEL_NAME = "label-name"
 _PRODUCTION_NAME = "production-name"
-_USED_CTAO_KEYWORDS = {
-    "ctaometa",
-    "title",
-    "created",
-    "datalevl",
-    "datadiv",
-    "dataasso",
-    "datatype",
-    "dataid",
-    "telescop",
-    "instrume",
-    "pdgid",
-    "msngr",
-    "author",
-    "origin",
-    "email",
-    "license",
-    "licenurl",
-    "model",
-    "modelver",
-    "modelurl",
-    "actproc",
-    "activity",
-    "actid",
-    "actstart",
-    "software",
-    "softver",
-    "softurl",
-    "actconf",
-    "simprod",
-    "simzen",
-    "simaz",
-    "simha",
-    "simdec",
-    "simnsb",
-}
-_SKIPPED_CTAO_KEYWORDS = {
-    "actdesc",
-    "release",
-    "referenc",
-    "copyrigh",
-    "actstop",
-    "ae_class",
-    "ae_id",
-    "alt_max",
-    "alt_min",
-    "assembly",
-    "az_mean",
-    "az_range",
-    "batch_id",
-    "chunk_id",
-    "comment",
-    "datacat",
-    "datasrc",
-    "dec_pnt",
-    "emax",
-    "emin",
-    "evtype",
-    "fov",
-    "locrunid",
-    "locruntp",
-    "luncycle",
-    "mjdref",
-    "object",
-    "obs_id",
-    "obsnight",
-    "obsgeo-b",
-    "obsgeo-h",
-    "obsgeo-l",
-    "period",
-    "pubdate",
-    "radesys",
-    "ra_pnt",
-    "region",
-    "rights",
-    "sb_id",
-    "sdc_nsb",
-    "sub_id",
-    "sublvl",
-    "tracking",
-    "tstart",
-    "tstop",
-    "timedelt",
-    "timesys",
-    "timeunit",
-    "trefpos",
-}
-
-
-def _data_model_keywords(model, ancestors=()):
-    """Collect FITS keywords declared by every nested Product model."""
-    if model in ancestors:
-        return []
-    keywords = []
-    for field in model.model_fields.values():
-        metadata = field.json_schema_extra or {}
-        keyword = metadata.get("fits_keyword")
-        if keyword:
-            keywords.append(keyword.lower())
-        for nested_model in _nested_models(field.annotation):
-            keywords.extend(_data_model_keywords(nested_model, (*ancestors, model)))
-    return keywords
-
-
-def _nested_models(annotation):
-    """Return CTAO model classes nested in a field annotation."""
-    if isinstance(annotation, type) and hasattr(annotation, "model_fields"):
-        return [annotation]
-    return [model for item in get_args(annotation) for model in _nested_models(item)]
 
 
 def test_get_ctao_simtel_metadata_creates_north_product():
@@ -258,6 +148,7 @@ def test_get_ctao_simtel_metadata_uses_default_nsb_factor_missing_from_site_mode
         ({**_BASE_ARGS, "primary": "not-a-particle"}, "Invalid particle name"),
         ({key: value for key, value in _BASE_ARGS.items() if key != "primary"}, "primary particle"),
         ({**_BASE_ARGS, "zenith_angle": None}, "Missing required angle 'zenith_angle'"),
+        ({**_BASE_ARGS, "user_email": "not-an-email"}, "Invalid contact email"),
     ],
 )
 def test_get_ctao_simtel_metadata_rejects_bad_input(args, message):
@@ -265,13 +156,47 @@ def test_get_ctao_simtel_metadata_rejects_bad_input(args, message):
         sim_telarray_metadata.get_ctao_simtel_metadata(args)
 
 
-def test_ctao_registry_uses_serialized_data_model_keywords():
+def test_ctao_registry_uses_simtools_keywords():
     registry = sim_telarray_metadata.get_ctao_metadata_registry()
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata({**_BASE_ARGS, "ha": 1.0, "dec": 2.0})
 
     assert registry["dataid"]["source_type"] == "ctao_datamodel"
     assert registry["simnsb"]["value_schema"]["data_type"] == "number"
-    assert set(registry) == _USED_CTAO_KEYWORDS
-    assert not _SKIPPED_CTAO_KEYWORDS.intersection(registry)
-    discovered_keywords = _data_model_keywords(sim_telarray_metadata.Product)
-    assert len(discovered_keywords) == len(set(discovered_keywords))
-    assert set(discovered_keywords) == _USED_CTAO_KEYWORDS | _SKIPPED_CTAO_KEYWORDS
+    assert set(registry) == {keyword.lower() for keyword in metadata}
+
+
+@pytest.mark.parametrize(
+    ("email", "expected"),
+    [
+        ("a@b.org", True),
+        ("first.last@sub.domain.org", True),
+        ("a@b", False),
+        ("a@b..org", False),
+        ("a@-b.org", False),
+        ("a@b-.org", False),
+        ("a@b_c.org", False),
+        ("a@b.123", False),
+        (".a@b.org", False),
+        ("a.@b.org", False),
+        ("a..b@b.org", False),
+        ("a@" + "b" * 64 + ".org", False),
+        ("a@b." + "o" * 260, False),
+        ("a@b.c", True),
+        ("@b.org", False),
+        ("a@.org", False),
+        ("a@b.", False),
+        ("a@@b.org", False),
+        ("a b@c.org", False),
+        ("a@b .org", False),
+        ("no-at-sign.org", False),
+        ("a" * 100000 + "@" * 1000, False),
+    ],
+)
+def test_is_valid_email(email, expected):
+    assert sim_telarray_metadata._is_valid_email(email) is expected
+
+
+@pytest.mark.parametrize("email", [123, ["a@b.org"]])
+def test_get_ctao_simtel_metadata_rejects_non_string_email(email):
+    with pytest.raises(ValueError, match="Invalid contact email"):
+        sim_telarray_metadata.get_ctao_simtel_metadata({**_BASE_ARGS, "user_email": email})

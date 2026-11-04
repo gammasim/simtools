@@ -29,7 +29,6 @@ dynamic = [
 dependencies = [
   "adjusttext",
   "astropy",
-  "ctao-datamodel>=1.4,<2",
   "ctao-dpps-cosmic-ray-spectra",
   "eventio",
   "h5py",
