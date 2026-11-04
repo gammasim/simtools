@@ -141,14 +141,46 @@ def test_secondary_baffle_is_a_wall_with_rings_and_generators():
     baffle = [
         e for e in geometry_data.telescope_geometry(stub).structure if e.name == "secondary-baffle"
     ]
-    rings, generators = baffle
+    assert len(baffle) == 3
+    rings, *panels = baffle
     assert rings.kind == "wire"
     assert not rings.side_only
-    assert generators.side_only
+    assert rings.top_only
+    assert all(panel.side_only and panel.kind == "polygon" for panel in panels)
     z = rings.points[:, 2]
     assert np.unique(np.round(z[np.isfinite(z)], 6)).tolist() == pytest.approx([3.0, 3.3])
     outer_at_z1 = rings.points[np.isclose(z, 3.0)]
     assert np.linalg.norm(outer_at_z1[:, :2], axis=1).max() == pytest.approx(1.0)
+
+
+def test_secondary_baffle_rings_are_hidden_in_side_projection():
+    stub = _dual_stub(secondary_mirror_baffle=_record([300.0, 330.0, 100.0, 5.0, 95.0], "cm"))
+    rings = next(
+        e
+        for e in geometry_data.telescope_geometry(stub).structure
+        if e.name == "secondary-baffle" and e.top_only
+    )
+    figure, axes = pts.plt.subplots()
+
+    pts._draw(axes, rings, 0, 2, "black", "black", lw=1.0, zorder=1)
+
+    assert not axes.lines
+    pts.plt.close(figure)
+
+
+def test_secondary_baffle_side_panels_follow_sim_telarray_z_order():
+    stub = _dual_stub(secondary_mirror_baffle=_record([330.0, 300.0, 100.0, 5.0, 95.0], "cm"))
+    panels = [
+        e
+        for e in geometry_data.telescope_geometry(stub).structure
+        if e.name == "secondary-baffle" and e.side_only
+    ]
+
+    assert len(panels) == 2
+    assert panels[0].points[:, 2] == pytest.approx([3.0, 3.3, 3.3, 3.0])
+    assert panels[1].points[:, 2] == pytest.approx([3.0, 3.3, 3.3, 3.0])
+    assert np.max(panels[1].points[:, 0]) == pytest.approx(1.0)
+    assert np.min(panels[1].points[:, 0]) == pytest.approx(0.9)
 
 
 def test_secondary_shadow_plate_at_the_secondary_rim_by_default():

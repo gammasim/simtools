@@ -29,6 +29,7 @@ class Element:
     diameter: float = 0.0
     kind: str = "polygon"  # "polygon", or "wire": polylines, separated by rows of nan.
     side_only: bool = False  # Drawn in the side view only (e.g. a profile).
+    top_only: bool = False  # Drawn in the sky view only (e.g. an axisymmetric ring).
 
     @property
     def is_cylinder(self):
@@ -275,32 +276,41 @@ def _secondary_baffle(parameters, overall):
     r2 = r2 or r1
     if thickness >= r1 > 0.0:
         thickness -= r1
+    if z2 < z1:
+        z1, z2 = z2, z1
+        r1, r2 = r2, r1
     z1, z2 = z1 - overall, z2 - overall
-    rings, generators = [], []
+    rings = []
     for radii in ((r1, r2), (r1 - thickness, r2 - thickness)):
         for z, radius in zip((z1, z2), radii, strict=True):
             rings.append(_circle(z, radius))
             rings.append(np.full((1, 3), np.nan))
-    for theta in (0.0, np.pi):
-        for radii in ((r1, r2), (r1 - thickness, r2 - thickness)):
-            generators.append(
-                np.array(
+    panels = []
+    for side in (-1.0, 1.0):
+        panels.append(
+            Element(
+                name="secondary-baffle",
+                group="secondary",
+                points=np.array(
                     [
-                        [radii[0] * np.cos(theta), radii[0] * np.sin(theta), z1],
-                        [radii[1] * np.cos(theta), radii[1] * np.sin(theta), z2],
-                        [np.nan] * 3,
+                        [side * r1, 0.0, z1],
+                        [side * r2, 0.0, z2],
+                        [side * (r2 - thickness), 0.0, z2],
+                        [side * (r1 - thickness), 0.0, z1],
                     ]
-                )
+                ),
+                side_only=True,
             )
+        )
     return [
-        Element(name="secondary-baffle", group="secondary", points=np.vstack(rings), kind="wire"),
         Element(
             name="secondary-baffle",
             group="secondary",
-            points=np.vstack(generators),
+            points=np.vstack(rings),
             kind="wire",
-            side_only=True,
+            top_only=True,
         ),
+        *panels,
     ]
 
 

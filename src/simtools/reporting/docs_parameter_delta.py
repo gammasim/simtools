@@ -8,6 +8,7 @@ from typing import NamedTuple
 import numpy as np
 
 from simtools.data_model import parameter_catalog as catalog
+from simtools.model_repository.asset_names import SOURCE_VALUE_KEY
 
 
 class ParameterDelta(NamedTuple):
@@ -58,6 +59,9 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
             return "-"
         value_data = param_data.get("value")
         file_flag = param_data.get("file", False)
+        column_rows = self._column_table_rows(value_data)
+        if column_rows is not None:
+            return f"{len(column_rows)} rows"
         if self._is_list_of_dicts(value_data):
             return f"{len(value_data)} rows"
         # For delta reports, never convert referenced files to local markdown.
@@ -67,6 +71,7 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
             param_data.get("unit") or "",
             file_flag,
             parameter_version=None if file_flag else "delta",
+            source_value=param_data.get(SOURCE_VALUE_KEY),
         )
 
     def _write_delta_report_table(self, file, changes):
@@ -78,7 +83,8 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
         )
         for row in changes:
             file.write(
-                f"| {row.parameter} | {row.base_param_version} | "
+                f"| {row.parameter} | "
+                f"{row.base_param_version} | "
                 f"{row.new_param_version} | {row.base_value} | "
                 f"{row.new_value} |\n"
             )
@@ -96,7 +102,10 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
             if self._parameter_changed(base, current):
                 changes.append(
                     ParameterDelta(
-                        parameter,
+                        self._parameter_reference_link(
+                            parameter,
+                            (current or {}).get("instrument") or (base or {}).get("instrument"),
+                        ),
                         (base or {}).get("parameter_version", "-"),
                         (current or {}).get("parameter_version", "-"),
                         self._format_value_for_delta(parameter, base),
@@ -137,11 +146,31 @@ class ParameterDeltaMixin:  # pylint: disable=too-few-public-methods
                 f"Full base report: [{base_model_version}](../{base_model_version}/{element}.md)"
                 "\n\n"
             )
+            if collection in ("telescopes", "calibration_devices"):
+                design_model = self.model_reader.get_design_model(
+                    self.model_version, element, collection=collection
+                )
+                if design_model != element:
+                    file.write(
+                        "This array element is based on the design model "
+                        f"[{design_model}]({design_model}.md).\n\n"
+                    )
             if not changes:
                 file.write("No parameter changes detected.\n")
             else:
                 self._write_delta_report_table(file, changes)
+                if collection == "sites":
+                    self._write_changed_column_tables(file, base, current)
         return True
+
+    def _write_changed_column_tables(self, file, base, current):
+        """Write current column tables whose values or metadata changed."""
+        for parameter, data in sorted(current.items()):
+            if not self._parameter_changed(base.get(parameter), data):
+                continue
+            rows = self._column_table_rows(data.get("value"))
+            if rows:
+                self._write_dict_table(parameter, file, rows, data.get("unit") or " ")
 
     def _produce_array_element_delta_report(self, base_model_version):
         """Produce a compact delta report for patch model versions."""
