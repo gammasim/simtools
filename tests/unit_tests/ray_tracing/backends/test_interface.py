@@ -105,3 +105,8 @@ def test_backend_contract(backend_name, class_name, expected_methods):
 def test_get_backend_unknown_name():
     with pytest.raises(ValueError, match="sim_telarray, obdeect"):
         interface.get_backend("unknown")
+
+
+def test_create_shower_tracer_backend_without_factory():
+    with pytest.raises(ValueError, match="does not trace shower photons"):
+        interface.create_shower_tracer(None, name="sim_telarray")

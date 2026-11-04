@@ -29,6 +29,13 @@ Support modules for running CORSIKA.
    :members:
 ```
 
+## photon_bunches
+
+```{eval-rst}
+.. automodule:: corsika.photon_bunches
+   :members:
+```
+
 ## corsika_histograms
 
 (corsika-histograms-1)=

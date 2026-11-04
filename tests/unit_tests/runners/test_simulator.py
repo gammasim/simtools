@@ -1049,6 +1049,35 @@ def test_save_file_lists(array_simulator, mocker, tmp_test_directory, caplog):
     assert "Saving list of path_objects files to" in caplog.text
 
 
+def test_save_file_lists_with_single_paths_and_group_lists(
+    array_simulator, mocker, tmp_test_directory
+):
+    """Single Path values (from load_files) and per-group lists (shower routing) can be mixed."""
+    output_dir = Path(str(tmp_test_directory)) / "output_mixed"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    mocker.patch.object(array_simulator.io_handler, "get_output_directory", return_value=output_dir)
+    array_simulator.file_list = {
+        "sub_out": Path("/path/to/sub_out.out"),
+        "sim_telarray_output": [
+            Path("/path/to/LST_output.simtel.zst"),
+            Path("/path/to/MST_output.simtel.zst"),
+        ],
+        "sim_telarray_resources": Path("/path/to/resources.log.gz"),
+    }
+
+    array_simulator.save_file_lists()
+
+    assert (output_dir / "sub_out_files.txt").read_text(encoding=TEXT_ENCODING) == (
+        "/path/to/sub_out.out\n"
+    )
+    assert (output_dir / "sim_telarray_output_files.txt").read_text(encoding=TEXT_ENCODING) == (
+        "/path/to/LST_output.simtel.zst\n/path/to/MST_output.simtel.zst\n"
+    )
+    assert (output_dir / "sim_telarray_resources_files.txt").read_text(encoding=TEXT_ENCODING) == (
+        "/path/to/resources.log.gz\n"
+    )
+
+
 def test_update_file_lists_with_none_file_list(array_simulator, mocker):
     mock_runner_file_list = {
         "sim_telarray_output": ["output1.simtel.zst"],

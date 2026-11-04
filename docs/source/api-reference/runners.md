@@ -59,6 +59,13 @@ simulation chains.
    :members:
 ```
 
+## shower_routing
+
+```{eval-rst}
+.. automodule:: runners.shower_routing
+   :members:
+```
+
 ## simtel_runner
 
 (simtel-runner-1)=
