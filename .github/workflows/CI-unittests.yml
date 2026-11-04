@@ -94,6 +94,7 @@ jobs:
         run: >-
           pytest tests/unit_tests/simtel/test_sim_telarray_metadata.py
           tests/unit_tests/simtel/test_sim_telarray_metadata_validation.py
+          tests/unit_tests/simtel/test_sim_telarray_metadata_ctao_datamodel.py
 
   unit_tests:
     runs-on: ${{ matrix.os }}

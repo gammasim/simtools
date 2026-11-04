@@ -1,22 +1,23 @@
 # CTAO DataProducts metadata
 
-sim_telarray production files carry CTAO DataProducts metadata alongside existing simtools keys.
-The `ctao-datamodel` package defines the product fields and FITS keywords. simtools maps resolved
-production settings into that model and validates the generated metadata.
+sim_telarray production files carry CTAO DataProducts FITS keywords alongside the existing simtools
+keys. simtools writes these keywords itself; it has no runtime dependency on the `ctao-datamodel`
+package.
 
-## Updating ctao-datamodel
+## Compatibility test
 
-simtools supports `ctao-datamodel>=1.4,<2`. The installed distribution version and the DataProducts
-model version are separate values. The package version appears in the dependency manifest, while
-the DataProducts model version is written as `CTAOMETA` and `MODELVER`.
+The unit test `tests/unit_tests/simtel/test_sim_telarray_metadata_ctao_datamodel.py` serializes the
+same product with the `ctao-datamodel` package and compares the keywords and values with the
+simtools output. The test is skipped when the package is not installed.
 
-For an upgrade:
+CI job `ctao_datamodel_compatibility` in `.github/workflows/CI-unittests.yml` installs
+`ctao-datamodel` at the minimum supported release and at the latest release below version 2, and
+runs the test for each. The job also runs on the scheduled workflow run.
 
-1. Review the upstream model and serializer changes.
-2. Install the candidate package and run the CTAO bridge and sim_telarray metadata unit tests.
-3. Review changes to the generated metadata registry and classify each supported or intentionally
-   omitted field in the compatibility test.
-4. Verify a production configuration contains the expected CTAO and legacy keys.
-5. Update the dependency constraint only after the supported package range passes CI.
+## Updating after an upstream change
 
-CI tests both the minimum supported release and the latest release below version 2.
+1. Install the candidate `ctao-datamodel` release.
+2. Run `pytest tests/unit_tests/simtel/test_sim_telarray_metadata_ctao_datamodel.py`.
+3. Update the keyword table and `PRODUCT_MODEL_VERSION` in
+   `src/simtools/simtel/sim_telarray_metadata.py`, and classify new or changed keywords in the
+   keyword sets of the compatibility test.
