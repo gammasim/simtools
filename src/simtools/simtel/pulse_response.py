@@ -156,7 +156,10 @@ def _gain_parameters(model, gain_index):
     if gain_index and pedestal < 0:
         pedestal = _scalar(model, "fadc_pedestal")
     scale = _scalar(model, f"{prefix}{AMPLITUDE}") * sensitivity
-    ceiling = _scalar(model, "fadc_max_signal") - pedestal
+    maximum = _scalar(model, f"{prefix}max_signal")
+    if gain_index and maximum < 0:
+        maximum = _scalar(model, "fadc_max_signal")
+    ceiling = maximum - pedestal
     if scale <= 0 or ceiling <= 0:
         raise ValueError("Gain and ADC headroom must be positive")
     return scale, pedestal, ceiling
@@ -175,6 +178,7 @@ def _interpolate_response(table, time, single, level):
     pulses = []
     for index in (lower, upper):
         selected = table[np.asarray(table[TABLE_INTENSITY]) == levels[index]]
+        selected.sort(TIME)
         times = _time_ns(selected)
         amplitudes = np.asarray(selected[AMPLITUDE], dtype=float)
         if not np.all(np.diff(times) > 0) or not np.all(np.isfinite(amplitudes)):
@@ -402,6 +406,8 @@ def summarize_response(table):
         Mean metrics, population standard deviations, counts and truncation counts.
     """
     keys = [INTENSITY, "gain", RESPONSE]
+    if "step" in table.colnames:
+        keys.append("step")
     if PIXEL in table.colnames:
         keys.append(PIXEL)
     rows = []
