@@ -336,6 +336,7 @@ ini_options.addopts = [
 ini_options.markers = [
   "uses_model_repository: test reads simulation-model repository data.",
   "verifies_usecase(name): integration test verifies a use case.",
+  "verifies_requirement(name): integration test verifies a requirement."
 ]
 ini_options.filterwarnings = [
   # treat warnings as errors
