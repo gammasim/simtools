@@ -75,8 +75,10 @@ RUN SIMTOOLS_PYTHON="python${PYTHON_VERSION}" \
         --build_option_files \
           /workdir/simulation_software/corsika7/build_opts.yml \
           /workdir/simulation_software/sim_telarray/build_opts.yml && \
-    echo ". /workdir/env/bin/activate" >> /root/.bashrc && \
-    mkdir -p /workdir/external
+    useradd --create-home --shell /bin/bash simtools && \
+    echo ". /workdir/env/bin/activate" >> /home/simtools/.bashrc && \
+    mkdir -p /workdir/external && \
+    chown -R simtools:simtools /workdir
 
 ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
 ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
@@ -88,8 +90,7 @@ ENV PATH="/workdir/env/bin/:$PATH"
 ENV SIMTOOLS_DEPENDENCY_MANIFEST="/opt/simtools/provenance/dependency-manifest.json"
 SHELL ["/bin/bash", "-c"]
 
-# Development requires writing to bind-mounted source trees and to the image virtual environment.
-# A fixed non-root UID cannot portably match host ownership, especially with Podman Desktop.
+USER simtools
 WORKDIR /workdir/external
 
 LABEL org.opencontainers.image.source="https://github.com/gammasim/simtools" \
