@@ -75,7 +75,7 @@ RUN SIMTOOLS_PYTHON="python${PYTHON_VERSION}" \
         --build_option_files \
           /workdir/simulation_software/corsika7/build_opts.yml \
           /workdir/simulation_software/sim_telarray/build_opts.yml && \
-    useradd --create-home --shell /bin/bash simtools && \
+    useradd --uid 1000 --create-home --shell /bin/bash simtools && \
     echo ". /workdir/env/bin/activate" >> /home/simtools/.bashrc && \
     mkdir -p /workdir/external && \
     chown -R simtools:simtools /workdir
@@ -90,7 +90,7 @@ ENV PATH="/workdir/env/bin/:$PATH"
 ENV SIMTOOLS_DEPENDENCY_MANIFEST="/opt/simtools/provenance/dependency-manifest.json"
 SHELL ["/bin/bash", "-c"]
 
-USER simtools
+USER 1000
 WORKDIR /workdir/external
 
 LABEL org.opencontainers.image.source="https://github.com/gammasim/simtools" \
