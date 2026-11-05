@@ -75,7 +75,9 @@ are version-tag references unless optional OCI digests are declared.
 
 `docker/Dockerfile-simtools-dev` installs the same compatible Python dependencies, including the
 development, documentation and test extras, but leaves simtools itself to be installed from a
-bind-mounted checkout.
+bind-mounted checkout. Its default user has UID and GID 1000. Set the `CONTAINER_UID` and
+`CONTAINER_GID` build arguments to match the owner of a bind-mounted checkout when building a
+local image.
 
 Run a development image with
 
@@ -85,6 +87,10 @@ podman run --rm -it \
   ghcr.io/gammasim/simtools-dev:latest \
   bash -lc "cd /workdir/external/simtools && pip install -e . && exec bash"
 ```
+
+When using a published image whose UID and GID do not match the checkout owner, run it with
+`--user "$(id -u):$(id -g)" -e HOME=/tmp` so the mounted checkout and user-level tools remain
+writable.
 
 Published production images include `/opt/simtools/provenance/dependency-manifest.json`. Apptainer
 users should pull a production image directly from the OCI registry with a `docker://` reference.
