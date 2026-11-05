@@ -7,6 +7,206 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.39.0](https://github.com/gammasim/simtools/releases/tag/v0.39.0) - 2026-11-05
+
+### New features
+
+- Add `simtools-run-science-tests` for release campaigns, with shared catalogues, site-specific tests, production gates, grid review, dry-run and host/container preflight, dependency-aware execution, and archived summaries. Configurations are schema-validated; numerical acceptance checks report deviations and PDF-linked distribution statistics, warn about missing metrics, and reject duplicates. Trigger products are validated before reuse or comparison; compact reports use less memory and statistics-only mode retains scalar results without plots. Camera-efficiency tests compare shower, muon, and night-sky-background results per telescope across simtools versions. Atmosphere tests compare profiles and transmissions per site with plots and JSON summaries; acceptance checks common wavelengths, while interpreting differences requires review. Missing reference ECSV files produce candidate plots and a warning. Published summaries omit execution logs and work-directory details. ([#2606](https://github.com/gammasim/simtools/pull/2606), [#2625](https://github.com/gammasim/simtools/pull/2625), [#2628](https://github.com/gammasim/simtools/pull/2628), [#2630](https://github.com/gammasim/simtools/pull/2630), [#2634](https://github.com/gammasim/simtools/pull/2634), [#2645](https://github.com/gammasim/simtools/pull/2645), [#2661](https://github.com/gammasim/simtools/pull/2661))
+
+- Add obdeect as a ray-tracing backend for the optics applications (`--ray_tracing_backend obdeect`). The ray-tracing applications now use backends behind one interface (`simtools.ray_tracing.backends`); obdeect runs in process and builds its optical models from the telescope model parameters. Trace CORSIKA air-shower photon bunches through the obdeect optics before sim_telarray: `simulate_prod --ray_tracing_backend obdeect --shower_route_mode stream|disk` runs one shower route per telescope type, with sim_telarray optics bypassed. ([#2665](https://github.com/gammasim/simtools/pull/2665), [#2760](https://github.com/gammasim/simtools/pull/2760))
+
+- Enable execution backend support in `simtools-derive-psf-parameters` by forwarding `--backend` and `--backend_config` to the execution layer. ([#2623](https://github.com/gammasim/simtools/pull/2623))
+
+- Speed up `simtools-derive-psf-parameters` by executing Monte Carlo repetitions concurrently through the execution backend. Local execution defaults to half the available CPUs and supports an explicit worker limit. PSF comparison plots now display differences in percent. ([#2636](https://github.com/gammasim/simtools/pull/2636))
+
+- Add `simtools-derive-telescope-sphere-radius` tool to calculate CORSIKA telescope sphere radius. ([#2624](https://github.com/gammasim/simtools/pull/2624))
+
+- Add trigger-patch overlays to `plot_camera`, selectable by patch IDs or pixel ID. Overlapping patches are shown with stripes. ([#2638](https://github.com/gammasim/simtools/pull/2638))
+
+- Add an offline report of trigger-patch coverage and camera distances, flagging unusually wide or disconnected groups. ([#2643](https://github.com/gammasim/simtools/pull/2643))
+
+- Add possibility to use monitoring pedestals for quick trace analysis (e.g., with `--pedestal_source monitoring` for `simtools-plot-simtel-events`). ([#2647](https://github.com/gammasim/simtools/pull/2647))
+
+- Improve `simtools-production-generate-grid` to allow for a smooth total number of events distribution as a function of zenith angle. Update `simtools-plot-production-grid` to plot the number of events requested as a function of zenith angle. ([#2650](https://github.com/gammasim/simtools/pull/2650))
+
+- Add a `simtools-compare-atmospheres` application to compare atmospheric profile and transmission model parameters for one or more sites, given as parameter versions or ECSV files in any mix. It plots profiles and direct transmission with differences relative to the first atmosphere and writes a JSON summary. Move `simtools.atmosphere` to `simtools.atmosphere.atmosphere`, and support repeated multi-value options (e.g., `atmosphere: [[North, 1.0.0, 1.0.0], [South, 1.0.0, 1.0.0]]`) in configuration files. ([#2658](https://github.com/gammasim/simtools/pull/2658))
+
+- Add comparison level "per run" for production computing statistics using `simtools-compare-productions`. ([#2618](https://github.com/gammasim/simtools/pull/2618))
+
+- Declare supported simulation-model release ranges in the dependency catalog and check selected models against the actual target runtime before production submission. Report selected versions, paths, allowed ranges, and actionable compatibility errors without modifying existing images. ([#2627](https://github.com/gammasim/simtools/pull/2627))
+
+- Add a clear separation of `stdout` and `stderr` for `CORSIKA` and `sim_telarray` log output. ([#2633](https://github.com/gammasim/simtools/pull/2633))
+
+- Write CTAO Data Product metadata to sim_telarray run configurations while preserving the existing simtools metadata. `simtools-simulate-prod` accepts an optional `--production_id` value for production metadata. ([#2671](https://github.com/gammasim/simtools/pull/2671))
+
+- Record host, CPU, and container identity in process resource records and report the execution environments behind computing comparisons. Coverage mismatches between baseline and candidate productions now name the uncovered configurations and skipped resource records. ([#2672](https://github.com/gammasim/simtools/pull/2672))
+
+- Allow initialization of a new production version from an existing version, and accept multiple typed values when submitting model parameters or preparing setting workflows. Retrying a prepared setting workflow reuses its activity output directory. ([#2674](https://github.com/gammasim/simtools/pull/2674))
+
+- Add tools to analyze high- and low-gain pulse response and saturation from model pulse tables and simulated flasher waveforms, with ECSV summaries and PDF plots. Support exporting intensity-dependent FADC response templates to sim_telarray. ([#2678](https://github.com/gammasim/simtools/pull/2678))
+
+- Add `simtools.model_repository.storage` with directory, Git and in-memory storage for simulation-model repositories. ([#2699](https://github.com/gammasim/simtools/pull/2699))
+
+- Allow plotting of telescope structure with input from an ECSV file. ([#2700](https://github.com/gammasim/simtools/pull/2700))
+
+- Add functionality to read and use `illuminator_telescope_visibility` from ECSV tables. ([#2763](https://github.com/gammasim/simtools/pull/2763))
+
+- Disable safe-ownership validation when opening Git model repositories with pygit2. ([#2620](https://github.com/gammasim/simtools/pull/2620))
+
+- Add registries for simulation configuration writers and event-file readers, separating shared run settings from native simulation formats. ([#2626](https://github.com/gammasim/simtools/pull/2626))
+
+- Write model parameter reports as one page per array element with one section per parameter. Array element reports of non-design telescopes list only telescope-specific parameters and link to the design model for inherited parameters. ([#2660](https://github.com/gammasim/simtools/pull/2660))
+
+- Add `simtools-docs-assemble-pages` to assemble a multi-version documentation site from released builds listed in a version switcher file (identical files stored once, size budget check), and `simtools-docs-generate-toctree` to write toctree index files for the generated simulation model reports. Add the `--figure_png_palette` option to save PNG figures with an optimized 256-color palette. ([#2662](https://github.com/gammasim/simtools/pull/2662))
+
+- Model-parameter reports now generate version-selected plots for table data, telescope structure, camera and mirror layouts, NSB altitude correction, and supported Gauss-Exponential flasher pulses. Identical figures are reused across report pages, and plot configurations are added for `dsum_shaping` and `optics_properties`. ([#2681](https://github.com/gammasim/simtools/pull/2681))
+
+- Document the ray-tracing backend interface as Protocols with a contract test, and add a developer-guide page on adding a ray-tracing backend. ([#2695](https://github.com/gammasim/simtools/pull/2695))
+
+### Simulation model
+
+- Add the model parameter `telescope_structure` (geometry of masts and dish frame, traced explicitly by the ray tracing). ([#2665](https://github.com/gammasim/simtools/pull/2665))
+
+### API and compatibility changes
+
+- Rename the camera plotting application to `simtools-plot-camera` for a name that reflects its main purpose. Rename the validator to `simtools-validate-telescope-throughput` to reflect its calculation of overall telescope throughput, including optics and shadowing. The previous command remains available as a compatibility alias. ([#2642](https://github.com/gammasim/simtools/pull/2642), [#2652](https://github.com/gammasim/simtools/pull/2652))
+
+- Merge `simtools-docs-produce-array-element-report`, `simtools-docs-produce-calibration-reports`, `simtools-docs-produce-model-parameter-reports` and `simtools-docs-produce-simulation-configuration-report` into `simtools-docs-produce-reports`; the report type is selected with `--report`. Merge `simtools-plot-tabular-data-for-model-parameter` into `simtools-plot-tabular-data`; the model-parameter mode is selected with `--parameter`. Merge `simtools-validate-cumulative-psf` into `simtools-validate-optics`; the cumulative PSF validation is selected with `--type cumulative_psf`. ([#2731](https://github.com/gammasim/simtools/pull/2731))
+
+- Rename the seed arguments to `instrument_seed`, `random_instrument_instances` and `simulation_seed` (the `sim_telarray_*` names remain as aliases); they now also apply to the ray-tracing applications, whose sim_telarray runs are reproducible with fixed seeds. ([#2665](https://github.com/gammasim/simtools/pull/2665))
+
+- Add `simtools.context.RunContext` (model reader, output paths, simulation software, activity, arguments) and `simtools.io.output_paths.OutputPaths`. The model classes accept an explicit `context=` keyword; without it they use the context of the running application, as before. Layout, camera, ray-tracing, model-data-writer and model-reading plot functions accept an explicit `context=` keyword; without it they use the context of the running application, as before. Remove global state: `simtools.settings`, the `IOHandler` singleton and `require_model_reader` are gone; library code receives a `RunContext`, and applications declare `needs=(...)` instead of start-up flags. Place the remaining top-level modules in the import layers: `context` and `dependencies` move to `simtools.runtime`, `simulator` to `simtools.runners`, `telescope_trigger_rates` to `simtools.simtel` and `dependency_versions` to `simtools.model_repository`. `RunContext.from_environment()` no longer creates a model reader; use `simtools.model_repository.reader.resolve_model_reader` instead. ([#2716](https://github.com/gammasim/simtools/pull/2716), [#2720](https://github.com/gammasim/simtools/pull/2720), [#2727](https://github.com/gammasim/simtools/pull/2727), [#2751](https://github.com/gammasim/simtools/pull/2751))
+
+- Application settings from defaults, environment variables, configuration files and the command line are merged directly; flags and lists can now be set through `SIMTOOLS_*` environment variables. Product metadata records the source of each setting (metadata metaschema 2.1.0). `Configurator(config=...)` is removed. ([#2717](https://github.com/gammasim/simtools/pull/2717))
+
+- Event-data histograms (`EventDataHistograms.histograms[name]["histogram"]`) are now `simtools.histogram.histogram.Histogram` objects with `values` and per-axis `edges`; the definition key `bin_edges` is replaced by `edges`. Trigger histograms, CORSIKA limits, trigger rates and histogram plots are unchanged. Event-data histograms (`EventDataHistograms.histograms`) are `Histogram` objects with axis names and units. Trigger-histogram files store the axis names and units and use `format_version` 2; files with format version 1 are no longer read and must be regenerated. ([#2710](https://github.com/gammasim/simtools/pull/2710), [#2718](https://github.com/gammasim/simtools/pull/2718))
+
+- Simulations are built from stages (CORSIKA, sim_telarray) connected by data products (`simtools.runners.stages`, `ChainRunner`), so that simulation programs can be replaced or split. `CorsikaRunner`, `CorsikaSimtelRunner` and `SimulatorArray.prepare_run` are removed. ([#2719](https://github.com/gammasim/simtools/pull/2719))
+
+- Commands are run with `simtools.job_execution.execution.run_command`; `job_execution.job_manager` is removed and `JobExecutionError` moved to `simtools.job_execution.execution`. `parameter_scan_generator` and `bias_curve_submissions` merged into `production_configuration.parameter_scans`. ([#2721](https://github.com/gammasim/simtools/pull/2721))
+
+- Consolidate production configuration: `grid`, `jobs_io`, `production_metadata`, `parameter_scans` and one `comparison` module replace eleven modules; rename `simtools-maintain-simulation-model-compare-productions` to `simtools-maintain-simulation-model-compare-production-tables`. Generated job grids are unchanged. ([#2726](https://github.com/gammasim/simtools/pull/2726))
+
+- Rename the file-product lookup helpers in `simtools.io.file_type` to the public names `product_filename`, `product_value` and `product_suffixes` (previously `_get_product_filename`, `_get_product_value` and `_get_product_suffixes`). ([#2682](https://github.com/gammasim/simtools/pull/2682))
+
+- Remove the `simtools.testing.validate_output` module; import `validate_application_output` from `simtools.testing.output_validation.runner`. ([#2683](https://github.com/gammasim/simtools/pull/2683))
+
+- Move `simtools.testing.log_inspector` to `simtools.job_execution.log_inspector`. ([#2684](https://github.com/gammasim/simtools/pull/2684))
+
+- Move `simtools.model.model_repository` (model-repository maintenance: new production versions, parameter changes, production-table verification) to `simtools.model_repository.maintenance`. ([#2685](https://github.com/gammasim/simtools/pull/2685))
+
+- Make helpers that other modules use public (leading underscore removed; `model_repository.compatibility._validate` is now `validate_release`), and merge `simtools.atmosphere.atmosphere_characterization_helpers` into `simtools.atmosphere.atmosphere_characterization`. ([#2687](https://github.com/gammasim/simtools/pull/2687))
+
+- Remove unused functions and classes: `available_model_writers`, `build_production_subdirectories`, `get_core_scatter_max_for_zenith_angle`, `get_energy_range_for_zenith_angle`, `get_viewcone_max_for_zenith_angle`, `GeneratedRowSummary`, `ShowerRoundingSummary`, `SimulationJobContext`, `interpolate_grid_limits`, `log_streamed_row_summary`, `process_files`, `read_job_grid_row`, `register_backend`, `register_light_source_writer`, `register_model_writer`, `register_reader`, `register_shower_writer`, `retry_command`, `rebin_2d_histogram` and `trigger_fraction`. ([#2688](https://github.com/gammasim/simtools/pull/2688))
+
+- Remove unused functions, methods and attributes: `CorsikaConfig.corsika_exec`, `find_signal_peaks`, `schema_loader.clear_cache`, `set_effective_area`, `write_tested_parameters_to_file`, `RayTracing.get_mean`, `RayTracing.get_std_dev`, `MultiIlluminatorSimulator.get_summary`, `get_failed_pairs`, `get_failed_results`, `parse_segmentation_file`, `assert_expected_sim_telarray_output`, `save_seeds`, `get_available_wavelengths`, `MeanRadiusOuterEdgeObject`, `MeanRadiusOuterEdgeHandler`, `plot_grid_coverage`, `create_parameter_progression_plots`, `create_summary_psf_comparison_plot`, `get_colors`, `get_markers` and `get_lines`. ([#2689](https://github.com/gammasim/simtools/pull/2689))
+
+- Remove unused functions, methods and classes: `DEFAULT_SIMULATION_MODELS`, `is_utf8_file`, `get_test_data_file`, `InvalidCoordinateDataTypeError`, `ArrayLayout.add_telescope`, `ArrayLayout.get_number_of_telescopes`, `TelescopePosition.get_altitude`, `get_lightguide_efficiency_angle_file_name`, `get_lightguide_efficiency_wavelength_file_name`, `get_illuminators`, `is_valid_pair`, `get_telescopes_for_illuminator`, `get_illuminators_for_telescope`, `n_illuminators`, `get_parameter_file_flag`, `overwrite_model_file`, `is_file_2d`, `read_two_dim_wavelength_angle`, `read_incidence_angle_distribution`, `calc_average_curve`, `export_table_to_model_directory`, `query_model_parameters`, `export_parameter_data`, `user_confirm`, `get_list_of_files_from_command_line`, `telescope_parameters`, `sanitize_name` and `format_quantity`. ([#2690](https://github.com/gammasim/simtools/pull/2690))
+
+- Save figures with `visualize.save_figure` and multi-page PDF reports with the new context manager `visualize.pdf_report`; `visualize.save_figures_to_single_document` is removed. ([#2691](https://github.com/gammasim/simtools/pull/2691))
+
+- Move the schema-based model-parameter catalog functions (model_parameters, site_parameters, scopes and simulation-software lookups) from `simtools.utils.names` to `simtools.data_model.parameter_catalog`. ([#2693](https://github.com/gammasim/simtools/pull/2693))
+
+- Replace `simtools.sim_events.formats.registry` by `simtools.sim_events.formats.readers`, which also defines the `EventReader` Protocol. ([#2698](https://github.com/gammasim/simtools/pull/2698))
+
+- Shrink `utils/general.py` (conversion helpers now in `utils.value_conversion`) and the plotting modules; plot functions receive data instead of reading models (`plot_pixels.plot`, `plot_trigger_histograms`; several helpers removed without alias). ([#2725](https://github.com/gammasim/simtools/pull/2725))
+
+- CORSIKA input cards are generated from a `format` entry in the model-parameter schemas by one generic writer (cards are unchanged). ([#2728](https://github.com/gammasim/simtools/pull/2728))
+
+- The validation, metadata and run-output checks of simulations now each have a single implementation; results agree with the previous code on all current model parameters (some error messages changed). ([#2730](https://github.com/gammasim/simtools/pull/2730))
+
+- Remove all exceptions from the import-layer rules: modules moved to the layer they belong to (`SimulationParameters`, `RunnerServices`, `SimtelRunner`, `simtel_io_metadata`, `log_inspector`, `setting_workflow`, output validators split by engine), model classes no longer call their writers, and plots receive prepared event data. ([#2748](https://github.com/gammasim/simtools/pull/2748))
+
+- Add the `--shower_route_threads` option of `simulate_prod` (threads per shower route) and the `simtools.simtel.shower_route`, `simtools.simtel.shower_transmission` and `simtools.simtel.photon_bunch_file` modules. Array layouts: `ArrayModel` accepts a list of layout or telescope names. ([#2760](https://github.com/gammasim/simtools/pull/2760))
+
+### Bug fixes
+
+- Calculate NSB rate uncertainty from valid, exposure-weighted run statistics. Preserve fractional trigger thresholds when configuring simulations and correctly name parameter exports for discriminator thresholds. Bias-curve intersections are now determined using log-linear fits instead of interpolation. Production comparisons that merge event histograms with different binning now distribute counts by bin overlap. Before, whole bins were assigned by their centre, which could move counts into the wrong bin. ([#2573](https://github.com/gammasim/simtools/pull/2573), [#2622](https://github.com/gammasim/simtools/pull/2622), [#2704](https://github.com/gammasim/simtools/pull/2704))
+
+- Mirror layout plots now render single-position mirror data with valid axis limits, avoiding Matplotlib warnings. Fix pixel rotation for camera plots. ([#2641](https://github.com/gammasim/simtools/pull/2641), [#2746](https://github.com/gammasim/simtools/pull/2746))
+
+- Reduce memory use of `simtools-derive-psf-parameters` and `simtools-derive-mirror-rnda`: PSF images are no longer kept where only the results table is used. Fix parallel RNDA optimisation (`simtools-derive-mirror-rnda --max_workers`): each mirror has its own model directory, so workers no longer overwrite the sim_telarray configuration (with their trial RNDA values) and model files of other workers. ([#2664](https://github.com/gammasim/simtools/pull/2664), [#2666](https://github.com/gammasim/simtools/pull/2666))
+
+- The `store_photoelectrons` model parameter schema (version 0.2.0) accepts its default -1 (no photo-electron storage); the allowed range was [0, 10000]. Model parameter validation checks length units and array trigger names in structured parameters (both checks were registered under wrong names and never ran), and keeps one-item lists of structured parameters as lists. Fix case-insensitive handling of flasher pulse shapes and default trigger types in simulation model workflows. Validate string-valued model parameter choices case-insensitively by default, with an option for case-sensitive comparisons. ([#2705](https://github.com/gammasim/simtools/pull/2705), [#2708](https://github.com/gammasim/simtools/pull/2708), [#2749](https://github.com/gammasim/simtools/pull/2749), [#2755](https://github.com/gammasim/simtools/pull/2755))
+
+- Allow simulation model documentation generation when not all telescopes have calibration devices defined in every production model. Allow simulation model documentation generation to skip telescope designs that do not apply to the selected site. Fix documentation report generation for parameter tables containing non-numeric columns. ([#2756](https://github.com/gammasim/simtools/pull/2756), [#2757](https://github.com/gammasim/simtools/pull/2757), [#2759](https://github.com/gammasim/simtools/pull/2759))
+
+- Fix reading of simtools-tests-related path variables in integration test configurations and allow direct execution of test configurations with applications. ([#2619](https://github.com/gammasim/simtools/pull/2619))
+
+- Fix running of `simtools-validate-camera-efficiency` with integration test configuration files. ([#2653](https://github.com/gammasim/simtools/pull/2653))
+
+- Fix a large number of issues and inconsistencies in reading and exposing command-line parameters of simtools applications. ([#2659](https://github.com/gammasim/simtools/pull/2659))
+
+- Pass sim_telarray's own names for parameter changes to sim_telarray (`parameter_changes.sim_telarray_options`): the simulation-models names were passed unchanged, so for example `secondary_mirror_baffle` reached sim_telarray instead of its `secondary_baffle`. Parameters that sim_telarray does not read are no longer passed. ([#2665](https://github.com/gammasim/simtools/pull/2665))
+
+- Simulate the requested number of illuminator events with the sim_telarray backend (`xyzls -N`); one event was simulated regardless of `--number_of_events`. Place the flasher of `simtools-simulate-flasher` (`ff-1m`) at its distance from the camera, which sits at the focal length plus the focus offset; the flasher was 2.55 cm (MST) to 6.55 cm (LST) too close, giving 0.3-0.5% too much light. ([#2667](https://github.com/gammasim/simtools/pull/2667))
+
+- Fix the missing copying of data tables by `simtools-maintain-simulation-model-add-production` in case simulation model parameters have co-located ecsv files. ([#2675](https://github.com/gammasim/simtools/pull/2675))
+
+- Fix the shower route process, which failed at start-up, and let a failing route stop the job and print its log instead of leaving CORSIKA waiting. `simulate_prod --array_layout_name` accepts several layout names. ([#2760](https://github.com/gammasim/simtools/pull/2760))
+
+- Use the CORSIKA observation level for the sim_telarray calibration altitude. ([#2762](https://github.com/gammasim/simtools/pull/2762))
+
+- Fix CORSIKA7 and sim_telarray builds failing checksum verification when using cached source snapshots. ([#2651](https://github.com/gammasim/simtools/pull/2651))
+
+- Fix simtools documentation deployment: ensure Latest release pages update correctly. ([#2617](https://github.com/gammasim/simtools/pull/2617))
+
+### Documentation
+
+- Change sorting of documentation versions starting now from the newest. Improve simulation model documentation generation with authored landing pages and production overviews sorted by version, with links to individual production reports. Improve documentation on simulation model path description. ([#2614](https://github.com/gammasim/simtools/pull/2614), [#2677](https://github.com/gammasim/simtools/pull/2677), [#2734](https://github.com/gammasim/simtools/pull/2734))
+
+- Improve documentation on usage of full flasher simulation brightness. Document the shower route: physics approach, telescope height convention, failure behaviour, and the API of the route modules. ([#2648](https://github.com/gammasim/simtools/pull/2648), [#2760](https://github.com/gammasim/simtools/pull/2760))
+
+- Update the developer-guide page *Architecture Rules* for the ray-tracing, event-reader and model-storage Protocols and the unit-test table builders. The developer guide explains how to add a simple line or histogram plot with `plot_tables.plot` and a plot configuration. Version 1.0 prepares the stable interface: `docs/source/user-guide/public_api.md` lists what is stable (applications, schemas, file formats, extension points) and what is internal. ([#2702](https://github.com/gammasim/simtools/pull/2702), [#2714](https://github.com/gammasim/simtools/pull/2714), [#2731](https://github.com/gammasim/simtools/pull/2731))
+
+### Maintenance
+
+- Update skills and agents instructions to reflect recent changes in simtools and avoid duplicated instructions. Update AGENTS.md to take into account the most recent changes in simtools. ([#2615](https://github.com/gammasim/simtools/pull/2615), [#2680](https://github.com/gammasim/simtools/pull/2680))
+
+- Use a shared dependency installer to bootstrap a verified pip version before installing Python dependencies in CI workflows and development and production container builds. Improve consistency in pip installation for CI workflows. Reduce GitHub Actions cache storage by avoiding pip and pull request scoped caches. ([#2668](https://github.com/gammasim/simtools/pull/2668), [#2764](https://github.com/gammasim/simtools/pull/2764), [#2761](https://github.com/gammasim/simtools/pull/2761))
+
+- Include application modules in unit-test coverage and run pylint checks on application code. Add schema-driven builders for reduced-event and trigger-histogram tables used by unit tests. Add test helpers that build small simulation-model repositories (in memory or on disk) from the packaged parameter schemas, with per-parameter overrides. Add test helpers that write schema-valid model-parameter files (ECSV tables and a minimal camera configuration) for unit tests. Add tests for reading application settings from defaults, environment variables, configuration files and the command line, including their precedence. Include declared base and current production documents in patch-version report test fixtures. ([#2669](https://github.com/gammasim/simtools/pull/2669), [#2692](https://github.com/gammasim/simtools/pull/2692), [#2711](https://github.com/gammasim/simtools/pull/2711), [#2712](https://github.com/gammasim/simtools/pull/2712), [#2715](https://github.com/gammasim/simtools/pull/2715), [#2753](https://github.com/gammasim/simtools/pull/2753))
+
+- Add the developer-guide page *Architecture Rules* (package layers, extension points, public API, unit-test mocking boundaries). Stop enforcing SonarQube rule `python:S1192` (duplicated string literals). Add CI checks for package layering (import-linter), unused code (vulture), private imports between modules (Ruff PLC2701) and a ratchet on patches of simtools internals in unit tests. Fix the CI guards after the architecture changes and count internal test patches made through string-constant or f-string targets, `patch.dict` and `patch.multiple`. ([#2686](https://github.com/gammasim/simtools/pull/2686), [#2696](https://github.com/gammasim/simtools/pull/2696), [#2701](https://github.com/gammasim/simtools/pull/2701))
+
+- Reduce CI turnaround time by parallelizing independent checks, caching dependencies, distributing integration cases across workers, and omitting automatically generated command-line checks. Add a CI job that compares application outputs (job grids, CORSIKA limits, statistics, trigger histograms) between the merge base and a pull request; label intended changes `expected-output-change`. ([#2707](https://github.com/gammasim/simtools/pull/2707), [#2724](https://github.com/gammasim/simtools/pull/2724))
+
+- Move optics package `obdeect` from an optional to a general dependency to simplify e.g., testing (it is a tiny package with few dependencies). Cleanup of testing dependencies, remove duplicated entries. Replace hardly used boost-histogram dependency with simpler numpy histogram function. Remove ctao-datamodel as a runtime dependency: CTAO FITS metadata is written by simtools and checked against the ctao-datamodel package in a CI compatibility test. Install only required extras in CI workflows. ([#2732](https://github.com/gammasim/simtools/pull/2732), [#2743](https://github.com/gammasim/simtools/pull/2743), [#2744](https://github.com/gammasim/simtools/pull/2744), [#2767](https://github.com/gammasim/simtools/pull/2767))
+
+- Implement single-photoelectron spectrum normalization and afterpulse folding in the existing simtools spectrum module, removing the runtime dependency on the `sim_telarray` `norm_spe` executable. ([#2561](https://github.com/gammasim/simtools/pull/2561))
+
+- Improve naming of columns in output generated by `simtools-validate-camera-efficiency`. ([#2611](https://github.com/gammasim/simtools/pull/2611))
+
+- Avoid plotting warning in `simtools-validate-optics`. ([#2616](https://github.com/gammasim/simtools/pull/2616))
+
+- Centralize simulation file formats, product suffixes, generated defaults, and shared filenames in a packaged registry. Reuse it across runner outputs, production selection, metadata recognition, reduced-event discovery, and shared workflow reports while keeping placement, native naming, and cleanup with their existing owners. Record intermediate and temporary roles descriptively without changing cleanup behavior. ([#2637](https://github.com/gammasim/simtools/pull/2637))
+
+- Remove pull-request triggers from the production and development image builds. Keep path-filtered main-branch, manual, release, and RC-tag builds. Weekly scheduled runs build without publishing images. ([#2644](https://github.com/gammasim/simtools/pull/2644))
+
+- Fail fast when site and telescope configurations are not compatible (e.g., a `LSTN` on the `South` site). ([#2649](https://github.com/gammasim/simtools/pull/2649))
+
+- Simplify the science-test runner: drop the telescope-throughput manifest, move application- and test-specific settings into workflow placeholders and configuration_overrides, and split loading, acceptance, and production checks into separate modules. ([#2657](https://github.com/gammasim/simtools/pull/2657))
+
+- Move sim_telarray-specific file inspection from `simtools.io.file_inspector` to `simtools.simtel.file_inspector`. ([#2694](https://github.com/gammasim/simtools/pull/2694))
+
+- Move sim_telarray and CORSIKA input-metadata reading from `MetadataCollector` to `simtools.simtel.metadata_reader` and `simtools.sim_events.metadata_reader`. ([#2697](https://github.com/gammasim/simtools/pull/2697))
+
+- Simulation models are read by one implementation for model-repository checkouts, Git commits and in-memory test data. The filesystem source now reads a whole model version on first use, like the Git source. ([#2703](https://github.com/gammasim/simtools/pull/2703))
+
+- Production comparison statistics are computed in `simtools.sim_events.production_comparison_statistics`, separate from plotting; results and output files are unchanged. ([#2706](https://github.com/gammasim/simtools/pull/2706))
+
+- Update `simulation_software` keys for simulation model parameter relevant for ray tracing. ([#2709](https://github.com/gammasim/simtools/pull/2709))
+
+- Trigger-histogram files are written and read through `simtools.histogram.hdf5`, which returns `Histogram` objects; the file layout is unchanged. ([#2713](https://github.com/gammasim/simtools/pull/2713))
+
+- Large modules (documentation reports, PSF optimisation, ray tracing, array layouts, simulation model maintenance, sim_telarray configuration writer) were shrunk and split; their outputs are unchanged. ([#2729](https://github.com/gammasim/simtools/pull/2729))
+
+- Deploy documentation and the test resource dashboard as a GitHub Pages artifact instead of pushing to the gh-pages branch; store benchmark history as release assets. The version switcher lists only `latest`, so versioned documentation URLs are no longer published. ([#2747](https://github.com/gammasim/simtools/pull/2747))
+
+- Write out column-oriented parameters as tables in observatory reports. ([#2752](https://github.com/gammasim/simtools/pull/2752))
+
+- Read trigger thresholds from simulation metadata instead of file name. ([#2758](https://github.com/gammasim/simtools/pull/2758))
+
 ## [v0.38.3](https://github.com/gammasim/simtools/releases/tag/v0.38.3) - 2026-10-06
 
 ### Bugfixes
