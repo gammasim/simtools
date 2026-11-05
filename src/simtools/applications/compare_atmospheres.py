@@ -144,10 +144,8 @@ def main():
             )
             if index != 0 or not context.args[_FALLBACK_TO_CANDIDATE] or not has_candidate:
                 raise
-            warning = (
-                f"Reference atmosphere for {site} is unavailable ({exc}); "
-                "generating plots from candidate atmosphere only."
-            )
+            warning = f"Reference atmosphere for {site} is unavailable ({exc}); "
+            warning += "generating plots from candidate atmosphere only."
             logger.warning(warning)
             fallback_warnings.append(warning)
             continue

@@ -73,7 +73,7 @@ def _metadata_product(metadata_file, relative_metadata):
         product = ascii_handler.collect_data_from_file(metadata_file)["cta"]["product"]
         filename = product["filename"]
     except (OSError, TypeError, KeyError, ValueError, yaml.YAMLError) as exc:
-        return None, None, (f"{relative_metadata}: cannot read cta.product.filename: {exc}")
+        return None, None, f"{relative_metadata}: cannot read cta.product.filename: {exc}"
     return product, filename, None
 
 
@@ -118,7 +118,7 @@ def _product_file(
     if filename is None:
         return None, None
     if not isinstance(filename, str) or not filename or Path(filename).name != filename:
-        return None, (f"{relative_metadata}: filename must name a file beside the metadata")
+        return None, f"{relative_metadata}: filename must name a file beside the metadata"
 
     product_files = [metadata_file.parent / filename]
     product_data = product.get("data", {})
@@ -140,7 +140,7 @@ def _product_file(
             return product_file, None
 
     relative_product = product_files[0].relative_to(repository)
-    return None, (f"{relative_metadata}: product file is missing or untracked: {relative_product}")
+    return None, f"{relative_metadata}: product file is missing or untracked: {relative_product}"
 
 
 def _validate_metadata_file(metadata_file, repository, tracked):
@@ -232,7 +232,7 @@ def _submission_key(application, relative_config):
             str(configuration[name]) for name in ("instrument", "parameter", "parameter_version")
         )
     except KeyError, TypeError:
-        return None, (f"{relative_config}: submit application is missing configuration fields")
+        return None, f"{relative_config}: submit application is missing configuration fields"
     return key, None
 
 
