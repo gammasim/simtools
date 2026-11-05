@@ -24,7 +24,7 @@ corsika-interaction-tables:
 model-repository:
   name: CTAO-Simulation-Model
   default-ref: v0.18.0
-  compatible-versions: "==0.18.0"
+  compatible-versions: ">=0.18.0"
   repository-url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git
 simtools-tests:
   repository: gammasim/simtools-tests
