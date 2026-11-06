@@ -2,10 +2,12 @@
 
 """Generate and check versioned integration-test resources for a simtools release."""
 
+import os
 from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import bounded_int
 from simtools.testing import resource_generation
 
 _ARGUMENTS = (
@@ -39,7 +41,7 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "n_workers",
-        type=int,
+        type=bounded_int(1, os.cpu_count() or 1),
         default=1,
         help="Number of workflows to run in parallel.",
     ),

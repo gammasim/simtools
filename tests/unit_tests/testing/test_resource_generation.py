@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import threading
 import urllib.error
 from pathlib import Path
 
@@ -458,12 +459,17 @@ def _write_workflow_configs(root, names):
 
 
 def test_run_configured_applications_parallel_runs_all_configs(tmp_test_directory, monkeypatch):
-    names = ["a", "b", "c"]
+    names = ["a", "b"]
     config_root = _write_workflow_configs(tmp_test_directory, names)
     called_configs = []
-    monkeypatch.setattr(
-        resource_generation.simtools_runner, "run_applications", _fake_run(called_configs)
-    )
+    barrier = threading.Barrier(2, timeout=10)
+
+    def _run(config_dict, **kwargs):
+        # Only passes if both workflows are inside the runner at the same time.
+        barrier.wait()
+        called_configs.append((config_dict, kwargs))
+
+    monkeypatch.setattr(resource_generation.simtools_runner, "run_applications", _run)
 
     resource_generation.run_configured_applications(
         args_dict={"n_workers": 2},
@@ -534,3 +540,69 @@ def test_run_configured_applications_parallel_logs_progress(
     assert "[a] inner message" in messages
     assert "[b] inner message" in messages
     assert not any(record.getMessage().startswith("[") for record in caplog.records[-1:])
+
+
+def test_run_configured_applications_parallel_unique_provenance(tmp_test_directory, monkeypatch):
+    config_root = _write_workflow_configs(tmp_test_directory, ["a", "b"])
+    called_configs = []
+    monkeypatch.setattr(
+        resource_generation.simtools_runner, "run_applications", _fake_run(called_configs)
+    )
+    log_dir = Path(tmp_test_directory) / "log_files"
+
+    resource_generation.run_configured_applications(
+        args_dict={"n_workers": 2},
+        config_dir=config_root,
+        log_dir=log_dir,
+        run_time=None,
+        replacements={},
+    )
+
+    assert sorted(config[0]["provenance_path"] for config in called_configs) == [
+        str(log_dir / "provenance" / "a.yml"),
+        str(log_dir / "provenance" / "b.yml"),
+    ]
+
+
+def test_run_configured_applications_serial_keeps_default_provenance(
+    tmp_test_directory, monkeypatch
+):
+    config_root = _write_workflow_configs(tmp_test_directory, ["a"])
+    called_configs = []
+    monkeypatch.setattr(
+        resource_generation.simtools_runner, "run_applications", _fake_run(called_configs)
+    )
+
+    resource_generation.run_configured_applications(
+        args_dict={},
+        config_dir=config_root,
+        log_dir=Path(tmp_test_directory) / "log_files",
+        run_time=None,
+        replacements={},
+    )
+
+    assert "provenance_path" not in called_configs[0][0]
+
+
+def test_run_configured_applications_parallel_rejects_duplicate_names(
+    tmp_test_directory, monkeypatch
+):
+    config_root = Path(tmp_test_directory) / "config_files"
+    for subdirectory in ("one", "two"):
+        (config_root / subdirectory).mkdir(parents=True)
+        (config_root / subdirectory / "same.config.yml").write_text("steps: []\n", encoding="utf-8")
+    called_configs = []
+    monkeypatch.setattr(
+        resource_generation.simtools_runner, "run_applications", _fake_run(called_configs)
+    )
+
+    with pytest.raises(ValueError, match=r"must be unique.*same"):
+        resource_generation.run_configured_applications(
+            args_dict={"n_workers": 2},
+            config_dir=config_root,
+            log_dir=Path(tmp_test_directory) / "log_files",
+            run_time=None,
+            replacements={},
+        )
+
+    assert not called_configs

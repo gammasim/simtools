@@ -130,6 +130,8 @@ def run_configured_applications(
 
     Raises
     ------
+    ValueError
+        If parallel workflows share a config name.
     RuntimeError
         If workflows run in parallel (``args_dict["n_workers"] > 1``) and one or more fail.
         All workflows are run before the error is raised.
@@ -137,6 +139,8 @@ def run_configured_applications(
     config_dir = Path(config_dir)
     log_dir = Path(log_dir)
     workflow_configs = _get_selected_config_files(config_dir, args_dict.get("config_file"))
+
+    n_workers_requested = args_dict.get("n_workers") or 1
 
     def run_workflow(workflow_config):
         _run_workflow(
@@ -147,14 +151,27 @@ def run_configured_applications(
             replacements,
             unique_tmp_directories,
             context,
+            unique_provenance=n_workers_requested > 1,
         )
 
-    n_workers = min(int(args_dict.get("n_workers") or 1), len(workflow_configs))
+    n_workers = min(n_workers_requested, len(workflow_configs))
     if n_workers <= 1:
         for workflow_config in workflow_configs:
             run_workflow(workflow_config)
         return
+    _check_unique_workflow_names(workflow_configs)
     _run_workflows_in_parallel(workflow_configs, run_workflow, n_workers)
+
+
+def _check_unique_workflow_names(workflow_configs):
+    """Raise an error if workflows share a name, as logs and provenance files would collide."""
+    names = [config.name.removesuffix(".config.yml") for config in workflow_configs]
+    duplicates = sorted({name for name in names if names.count(name) > 1})
+    if duplicates:
+        raise ValueError(
+            "Workflow config names must be unique to run workflows in parallel: "
+            + ", ".join(duplicates)
+        )
 
 
 class _WorkflowProgress:
@@ -247,9 +264,20 @@ def _run_workflows_in_parallel(workflow_configs, run_workflow, n_workers):
 
 
 def _run_workflow(
-    args_dict, workflow_config, log_dir, run_time, replacements, unique_tmp_directories, context
+    args_dict,
+    workflow_config,
+    log_dir,
+    run_time,
+    replacements,
+    unique_tmp_directories,
+    context,
+    unique_provenance=False,
 ):
-    """Run a single resource-generation workflow."""
+    """Run a single resource-generation workflow.
+
+    With ``unique_provenance``, the resolved workflow is written to a file specific to this
+    workflow instead of the shared default location below the output directory.
+    """
     logger.info("Executing applications configured in %s", workflow_config)
     workflow_replacements = replacements
     if unique_tmp_directories:
@@ -269,6 +297,10 @@ def _run_workflow(
         "ignore_runtime_environment": args_dict.get("ignore_runtime_environment", False),
         "overwrite_collection_files": args_dict.get("overwrite_collection_files", False),
     }
+    if unique_provenance:
+        tmp_args_dict["provenance_path"] = str(
+            log_dir / "provenance" / f"{workflow_config.name.removesuffix('.config.yml')}.yml"
+        )
     for key in (
         "simulation_models_path",
         "simulation_models_git_path",
