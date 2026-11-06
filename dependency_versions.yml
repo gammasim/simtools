@@ -23,7 +23,7 @@ corsika-interaction-tables:
   source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-interaction-tables.git
 model-repository:
   name: CTAO-Simulation-Model
-  default-ref: v0.18.0
+  default-ref: v0.19.0
   compatible-versions: ">=0.18.0"
   repository-url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git
 simtools-tests:
