@@ -38,6 +38,12 @@ _ARGUMENTS = (
         help="Test static files in the simtools-tests repository.",
     ),
     cli.ArgumentDefinition(
+        "n_workers",
+        type=int,
+        default=1,
+        help="Number of workflows to run in parallel.",
+    ),
+    cli.ArgumentDefinition(
         "config_file",
         type=Path,
         help="Run only the selected workflow config file from integration_tests/config_files.",
@@ -49,7 +55,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
     arguments=(*_ARGUMENTS,),
-    needs=(),
+    needs=("corsika",),
 )
 
 

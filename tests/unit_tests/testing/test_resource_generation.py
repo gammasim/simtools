@@ -447,3 +447,90 @@ def test_remove_empty_download_directories(tmp_test_directory):
     assert not removable_dir.exists()
     assert preserved_dir.is_dir()
     assert nonempty_dir.is_dir()
+
+
+def _write_workflow_configs(root, names):
+    config_root = Path(root) / "config_files"
+    config_root.mkdir(parents=True, exist_ok=True)
+    for name in names:
+        (config_root / f"{name}.config.yml").write_text("steps: []\n", encoding="utf-8")
+    return config_root
+
+
+def test_run_configured_applications_parallel_runs_all_configs(tmp_test_directory, monkeypatch):
+    names = ["a", "b", "c"]
+    config_root = _write_workflow_configs(tmp_test_directory, names)
+    called_configs = []
+    monkeypatch.setattr(
+        resource_generation.simtools_runner, "run_applications", _fake_run(called_configs)
+    )
+
+    resource_generation.run_configured_applications(
+        args_dict={"n_workers": 2},
+        config_dir=config_root,
+        log_dir=Path(tmp_test_directory) / "log_files",
+        run_time=None,
+        replacements={},
+    )
+
+    assert sorted(Path(config[0]["config_file"]).name for config in called_configs) == [
+        f"{name}.config.yml" for name in names
+    ]
+
+
+def test_run_configured_applications_parallel_reports_all_failures(tmp_test_directory, monkeypatch):
+    config_root = _write_workflow_configs(tmp_test_directory, ["a", "b", "c"])
+    called_configs = []
+
+    def _run(config_dict, **kwargs):
+        called_configs.append(config_dict["config_file"])
+        if not config_dict["config_file"].endswith("c.config.yml"):
+            raise ValueError("workflow broke")
+
+    monkeypatch.setattr(resource_generation.simtools_runner, "run_applications", _run)
+
+    with pytest.raises(
+        RuntimeError, match=r"(?s)2 of 3 workflows failed.*a.config.yml.*b.config.yml"
+    ):
+        resource_generation.run_configured_applications(
+            args_dict={"n_workers": 3},
+            config_dir=config_root,
+            log_dir=Path(tmp_test_directory) / "log_files",
+            run_time=None,
+            replacements={},
+        )
+
+    assert len(called_configs) == 3
+
+
+def test_run_configured_applications_parallel_logs_progress(
+    tmp_test_directory, monkeypatch, caplog
+):
+    config_root = _write_workflow_configs(tmp_test_directory, ["a", "b"])
+
+    def _run(config_dict, **kwargs):
+        resource_generation.logger.info("inner message")
+        if config_dict["config_file"].endswith("b.config.yml"):
+            raise ValueError("workflow broke")
+
+    monkeypatch.setattr(resource_generation.simtools_runner, "run_applications", _run)
+
+    with caplog.at_level("INFO"), pytest.raises(RuntimeError, match="1 of 2 workflows failed"):
+        resource_generation.run_configured_applications(
+            args_dict={"n_workers": 2},
+            config_dir=config_root,
+            log_dir=Path(tmp_test_directory) / "log_files",
+            run_time=None,
+            replacements={},
+        )
+
+    messages = [record.getMessage() for record in caplog.records]
+    assert any(message.startswith("Started a (running") for message in messages)
+    assert any(message.startswith("Finished a after") for message in messages)
+    assert any(
+        message.startswith("FAILED b after") and "finished 2/2 (1 failed)" in message
+        for message in messages
+    )
+    assert "[a] inner message" in messages
+    assert "[b] inner message" in messages
+    assert not any(record.getMessage().startswith("[") for record in caplog.records[-1:])
