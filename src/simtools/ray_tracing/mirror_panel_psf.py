@@ -416,7 +416,6 @@ class MirrorPanelPSF:
             backend=self.args_dict.get("backend", "local"),
             max_workers=max_workers,
             backend_config=self.args_dict.get("backend_config"),
-            mp_start_method="fork",
             context=self.context,
         )
 

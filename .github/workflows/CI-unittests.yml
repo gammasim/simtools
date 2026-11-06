@@ -107,6 +107,9 @@ jobs:
           - os: ubuntu-24.04
             python-version: "3.14"
             extra-args: ["random-order"]
+          - os: ubuntu-24.04
+            python-version: "3.15"
+            extra-args: ["random-order"]
 
     defaults:
       run:
@@ -122,6 +125,7 @@ jobs:
         uses: ./.github/actions/setup-simtools-tests
         with:
           python-version: ${{ matrix.python-version }}
+          extras: tests,benchmark
           simulation-model-branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
           simtools-tests-branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
 

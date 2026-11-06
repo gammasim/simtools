@@ -297,7 +297,7 @@ def map_ordered(
     backend_config=None,
     initializer=None,
     initargs=(),
-    mp_start_method="fork",
+    mp_start_method=None,
     work_dir=None,
     context=None,
 ):
@@ -316,7 +316,7 @@ def map_ordered(
         for index, item in enumerate(items)
     ]
     execution_config = _load_backend_config(backend_config)
-    if backend == "local":
+    if backend == "local" and mp_start_method is not None:
         execution_config.setdefault("mp_start_method", mp_start_method)
     options = ExecutionOptions(
         backend=backend,
