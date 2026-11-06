@@ -76,6 +76,20 @@ def test_development_release_version_detected_without_scm(
     assert is_development_build
 
 
+def test_local_version_suffix_detected_as_development(
+    monkeypatch, mocker, simtools__version, simtools_dev_version, simtools_version
+):
+    monkeypatch.delitem(sys.modules, simtools_version, raising=False)
+    monkeypatch.setitem(sys.modules, simtools_dev_version, None)
+    mock_version = mocker.Mock()
+    mock_version.version = "0.39.0+g2b261c7"
+    monkeypatch.setitem(sys.modules, simtools__version, mock_version)
+
+    from simtools.version import is_development_build
+
+    assert is_development_build
+
+
 def test_both_imports_fail(
     monkeypatch, mocker, simtools__version, simtools_dev_version, simtools_version
 ):
