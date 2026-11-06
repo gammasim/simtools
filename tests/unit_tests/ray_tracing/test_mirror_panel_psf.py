@@ -98,7 +98,7 @@ def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
         assert [item.mirror_index for item in items] == [0, 1]
         assert [item.measured_psf for item in items] == [10.0, 11.0]
         assert kwargs["max_workers"] == 4
-        assert kwargs["mp_start_method"] == "fork"
+        assert "mp_start_method" not in kwargs
         return [
             mpp.MirrorOptimizationResult(
                 mirror=0,

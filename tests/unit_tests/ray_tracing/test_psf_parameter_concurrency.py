@@ -26,6 +26,11 @@ SIGMA = "sigma"
 OTHER_PARAMETER = "other"
 BACKEND = "backend"
 SOURCE_CONFIG = {"kind": "test"}
+# Workers must inherit the monkeypatched functions, which requires forked workers.
+FORK_CONFIG = {"mp_start_method": "fork"}
+FORK_WARNING = pytest.mark.filterwarnings(
+    "ignore:This process .* is multi-threaded, use of fork\\(\\):DeprecationWarning"
+)
 
 
 @pytest.fixture
@@ -137,6 +142,7 @@ def test_monte_carlo_aggregates_successes_in_order(optimizer, mocker):
     assert result[8] == [2.0, 6.0]
 
 
+@FORK_WARNING
 def test_real_local_workers_overlap(optimizer, monkeypatch):
     """A barrier requires two real processes to run evaluation work simultaneously."""
     barrier = get_context("fork").Barrier(2, timeout=10)
@@ -151,6 +157,7 @@ def test_real_local_workers_overlap(optimizer, monkeypatch):
     # The worker runtime and model source are unrelated to process-pool scheduling.
     monkeypatch.setattr(INITIALIZE_RUNTIME, lambda _job: None)
     optimizer.max_workers = 2
+    optimizer.args_dict["backend_config"] = FORK_CONFIG
     values = optimizer._run_parameter_batch([{}, {}], False)
     assert values[0][0] != values[1][0]
     assert all(value[0] != os.getpid() for value in values)
@@ -166,6 +173,7 @@ def test_gradient_step_does_not_retry_backend_failure(optimizer, mocker):
     calculate.assert_called_once()
 
 
+@FORK_WARNING
 @pytest.mark.parametrize("workers", [1, 2])
 def test_serial_and_parallel_gradient_match_analytic_result(optimizer, monkeypatch, workers):
     def simulate(_telescope, _site, _args, parameters, *_rest, **_kwargs):
@@ -175,6 +183,7 @@ def test_serial_and_parallel_gradient_match_analytic_result(optimizer, monkeypat
     monkeypatch.setattr(psf, SIMULATE, simulate)
     monkeypatch.setattr(INITIALIZE_RUNTIME, lambda _job: None)
     optimizer.max_workers = workers
+    optimizer.args_dict["backend_config"] = FORK_CONFIG
     gradient = optimizer.calculate_gradient({SIGMA: 2.0, OTHER_PARAMETER: 0.0}, 6.0)
     assert gradient[SIGMA] == pytest.approx(3.0)
     assert gradient[OTHER_PARAMETER] == pytest.approx(0.0)

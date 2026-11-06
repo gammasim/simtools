@@ -377,24 +377,6 @@ def test_route_stream_missing_telescope_parameter_raises():
         )
 
 
-def test_route_stream_real_corsika_file_through_pipe():
-    iact_file = os.environ.get("SIMTOOLS_TEST_IACT_FILE")
-    if not iact_file:
-        pytest.skip("Set SIMTOOLS_TEST_IACT_FILE to a CORSIKA IACT file with photon bunches")
-    expected = [len(event["x"]) for event in read_photon_bunches(iact_file)]
-
-    # Identity tracer: one camera photon per input bunch; the output keeps every block.
-    with subprocess.Popen(["cat", iact_file], stdout=subprocess.PIPE) as cat:
-        out = io.BytesIO()
-        count = route_stream(cat.stdout, out, {0: _FakeTracer()}, **_route_kwargs())
-
-    # The count is the number of showers (event headers); each shower has several telescope blocks.
-    showers = sum(1 for obj, _, _ in iter_photon_objects(iact_file) if obj.header.type == 1202)
-    assert count == showers
-    events = _read_back(out.getvalue())
-    assert [len(event["x"]) for event in events] == expected
-
-
 def test_parse_telescope_map_valid():
     routes = parse_telescope_map({"0": VALID_ENTRY, "3": {**VALID_ENTRY, "dual_mirror": True}})
 

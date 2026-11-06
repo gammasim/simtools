@@ -154,3 +154,16 @@ def test_local_backend_pool_reports_failures_and_cancels_pending_jobs(mocker):
     LocalBackend().cancel(submission)
     assert future.cancelled
     assert executor.shutdown_calls == [{"wait": True}, {"wait": False, "cancel_futures": True}]
+
+
+def test_local_backend_pool_defaults_to_forkserver(mocker, tmp_test_directory):
+    """Worker pools avoid fork() from a multi-threaded process by default."""
+    get_context = mocker.patch(
+        "simtools.job_execution.backends.local.get_context", return_value="context"
+    )
+    mocker.patch("simtools.job_execution.backends.local.ProcessPoolExecutor")
+    jobs = [JobSpec(f"job-{index:06d}", index, function=_square, item=index) for index in range(2)]
+
+    LocalBackend().submit(jobs, ExecutionOptions(max_workers=2, work_dir=tmp_test_directory))
+
+    get_context.assert_called_once_with("forkserver")

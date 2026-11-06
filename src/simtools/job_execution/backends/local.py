@@ -15,6 +15,7 @@ from simtools.job_execution.worker import execute_job_spec
 logger = logging.getLogger(__name__)
 
 _CONFIG_KEYS = {"mp_start_method"}
+DEFAULT_MP_START_METHOD = "forkserver"
 
 
 def determine_max_workers(max_workers=None, default_fraction=0.6):
@@ -65,7 +66,7 @@ class LocalBackend:
     @staticmethod
     def _submit_pool(item_list, workers, options):
         """Submit a job set to a local process pool."""
-        start_method = options.backend_config.get("mp_start_method", "fork")
+        start_method = options.backend_config.get("mp_start_method", DEFAULT_MP_START_METHOD)
         context = get_context(str(start_method)) if start_method else None
         executor_kwargs = {
             "max_workers": int(workers),
