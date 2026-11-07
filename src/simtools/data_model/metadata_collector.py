@@ -198,7 +198,7 @@ class MetadataCollector:
                 contact_dict["name"] = "UNKNOWN_USER"
                 self._logger.warning(f"Failed to get user name: {exc}, setting it to UNKNOWN_USER ")
         for key, arg in (
-            ("email", "user_mail"),
+            ("email", "user_email"),
             ("orcid", "user_orcid"),
             ("organization", "user_organization"),
         ):

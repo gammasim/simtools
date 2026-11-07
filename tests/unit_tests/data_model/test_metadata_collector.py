@@ -49,6 +49,25 @@ def test_fill_contact_meta(args_dict_site, caplog):
         pass
 
 
+def test_fill_contact_meta_from_args():
+    collector = metadata_collector.MetadataCollector.__new__(metadata_collector.MetadataCollector)
+    collector._logger = logger
+    collector.args_dict = {
+        "user_name": "Jane Doe",
+        "user_email": "jane.doe@example.org",
+        "user_orcid": "0000-0000-0000-0000",
+        "user_organization": "Example Lab",
+    }
+    contact_dict = {}
+    collector._fill_contact_meta(contact_dict)
+    assert contact_dict == {
+        "name": "Jane Doe",
+        "email": "jane.doe@example.org",
+        "orcid": "0000-0000-0000-0000",
+        "organization": "Example Lab",
+    }
+
+
 def test_get_site(args_dict_site, tmp_test_directory):
     _collector_1 = metadata_collector.MetadataCollector(
         args_dict=args_dict_site,
