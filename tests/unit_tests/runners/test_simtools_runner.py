@@ -287,10 +287,11 @@ def test_model_source_options_are_applied_per_application():
 def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     mock_configurations = [
         {
-            "application": f"app{i}",
+            "application": "simtools-simulate-flasher" if i == 1 else f"app{i}",
             "run_application": run,
             "configuration": {
                 "key": f"value{i}",
+                "max_workers": 2,
                 "activity_id": f"cfg-id-{i}",
                 "output_path": str(tmp_test_directory),
             },
@@ -321,11 +322,11 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     content = log_file_path.read_text(encoding="utf-8")
     assert "Running simtools applications" in content
     assert "simtools version: 1.2.3" in content
-    assert "STDOUT:\napp1_stdout" in content
+    assert "STDOUT:\nsimtools-simulate-flasher_stdout" in content
     assert "STDERR:\napp3_stderr" in content
     assert "Application: app2" not in content  # skipped
 
-    assert [c["app"] for c in submit_calls] == ["app1", "app3"]
+    assert [c["app"] for c in submit_calls] == ["simtools-simulate-flasher", "app3"]
     for call, activity in zip(submit_calls, ("cfg-id-1", "cfg-id-3"), strict=True):
         configuration = call["configuration"]
         assert configuration["activity_id"] == activity
