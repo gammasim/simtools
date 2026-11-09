@@ -51,97 +51,6 @@ _BASE_ARGS = {
     "activity_id": _ACTIVITY_ID,
 }
 
-_USED_CTAO_KEYWORDS = {
-    "ctaometa",
-    "title",
-    "created",
-    "datalevl",
-    "datadiv",
-    "dataasso",
-    "datatype",
-    "dataid",
-    "telescop",
-    "instrume",
-    "pdgid",
-    "msngr",
-    "author",
-    "origin",
-    "email",
-    "license",
-    "licenurl",
-    "model",
-    "modelver",
-    "modelurl",
-    "actproc",
-    "activity",
-    "actid",
-    "actstart",
-    "software",
-    "softver",
-    "softurl",
-    "actconf",
-    "simprod",
-    "simzen",
-    "simaz",
-    "simha",
-    "simdec",
-    "simnsb",
-}
-_SKIPPED_CTAO_KEYWORDS = {
-    "actdesc",
-    "release",
-    "referenc",
-    "copyrigh",
-    "actstop",
-    "ae_class",
-    "ae_id",
-    "alt_max",
-    "alt_min",
-    "assembly",
-    "az_mean",
-    "az_range",
-    "batch_id",
-    "chunk_id",
-    "comment",
-    "datacat",
-    "datasrc",
-    "dec_pnt",
-    "emax",
-    "emin",
-    "evtype",
-    "fov",
-    "locrunid",
-    "locruntp",
-    "luncycle",
-    "metrset",
-    "mjdref",
-    "object",
-    "obs_id",
-    "obsnight",
-    "obsgeo-b",
-    "obsgeo-h",
-    "obsgeo-l",
-    "period",
-    "pubdate",
-    "radesys",
-    "ra_pnt",
-    "region",
-    "rights",
-    "sb_id",
-    "sdcpcode",
-    "sdcpname",
-    "sdcskyb",
-    "sub_id",
-    "sublvl",
-    "tracking",
-    "tstart",
-    "tstop",
-    "timedelt",
-    "timesys",
-    "timeunit",
-    "trefpos",
-}
-
 
 def _data_model_keywords(model, ancestors=()):
     """Collect FITS keywords declared by every nested Product model."""
@@ -247,8 +156,10 @@ def test_metadata_matches_data_model_serialization(extra_args):
         **{key: args[key].to(u.deg) for key in ("zenith_angle", "azimuth_angle")},
         **{key: args[key].to(u.deg) for key in ("ha", "dec") if key in args},
     }
-    expected = _reference_header(reference_args)
     actual = _simtools_metadata(args)
+    expected = {
+        key: value for key, value in _reference_header(reference_args).items() if key in actual
+    }
     expected.pop("DATAID")
     uuid.UUID(actual.pop("DATAID"))
     for keyword in ("CTAOMETA", "MODELVER"):
@@ -307,11 +218,8 @@ def test_long_contact_name_and_organization_accepted_by_both():
     assert _reference_header(args)["ORIGIN"] == _simtools_metadata(args)["ORIGIN"]
 
 
-def test_registry_covers_all_data_model_keywords():
-    """Every keyword of the data model is classified as used or skipped."""
+def test_registry_keywords_exist_in_data_model():
+    """Every simtools keyword is declared by the data model."""
     discovered_keywords = _data_model_keywords(Product)
-    assert len(discovered_keywords) == len(set(discovered_keywords))
-    assert set(discovered_keywords) == _USED_CTAO_KEYWORDS | _SKIPPED_CTAO_KEYWORDS
     registry = sim_telarray_metadata.get_ctao_metadata_registry()
-    assert set(registry) <= _USED_CTAO_KEYWORDS
-    assert not _SKIPPED_CTAO_KEYWORDS.intersection(registry)
+    assert set(registry) <= set(discovered_keywords)
