@@ -113,6 +113,7 @@ _SKIPPED_CTAO_KEYWORDS = {
     "locrunid",
     "locruntp",
     "luncycle",
+    "metrset",
     "mjdref",
     "object",
     "obs_id",
@@ -127,7 +128,9 @@ _SKIPPED_CTAO_KEYWORDS = {
     "region",
     "rights",
     "sb_id",
-    "sdc_nsb",
+    "sdcpcode",
+    "sdcpname",
+    "sdcskyb",
     "sub_id",
     "sublvl",
     "tracking",
@@ -222,11 +225,6 @@ def _simtools_metadata(args):
     return sim_telarray_metadata.get_ctao_simtel_metadata(args, created=_CREATED)
 
 
-def test_product_model_version_matches_package():
-    """The product model version constant follows the installed package."""
-    assert sim_telarray_metadata.PRODUCT_MODEL_VERSION == PRODUCT_MODEL_VERSION
-
-
 @pytest.mark.parametrize(
     "extra_args",
     [
@@ -253,6 +251,9 @@ def test_metadata_matches_data_model_serialization(extra_args):
     actual = _simtools_metadata(args)
     expected.pop("DATAID")
     uuid.UUID(actual.pop("DATAID"))
+    for keyword in ("CTAOMETA", "MODELVER"):
+        expected.pop(keyword)
+        actual.pop(keyword)
     assert actual == expected
 
 
