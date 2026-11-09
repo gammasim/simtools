@@ -61,13 +61,13 @@ resource directory is selected independently by `resource-version`.
 
 ## Custom sim_telarray images
 
-Run the **build-simtel_array** workflow manually with all three custom build inputs: the HTTPS
-repository clone URL, the branch name, and a build name. For example, use
+Run the **build-simtel_array** workflow manually with all three custom sim_telarray inputs: the
+HTTPS repository clone URL, the branch name, and a build name. For example, use
 `https://gitlab.cta-observatory.org/GernotMaier/sim_telarray.git`, `feature/update-defaults`,
 and `update-defaults`. The configured sim_telarray GitLab token must be able to read CTAO GitLab
 repositories. Repositories on other hosts must be publicly accessible from the runner.
 The workflow builds the branch head with the catalog's hessio, stdtools, and GSL inputs and
-records the resolved commits. Its summary gives the multi-platform image reference, tagged
+records resolved commits. Its summary gives the multi-platform image reference, tagged
 `custom-<name>-<run-id>-<attempt>`.
 
 Run **build-simtools-prod** manually with that reference in `simtel_image`. Its summary lists

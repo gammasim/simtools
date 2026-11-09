@@ -60,11 +60,9 @@ corsika:
 sim-telarray:
 - source-ref: v2025-11-30-rc
   source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git
-  hessio-ref: v2025-12-01-rc
+  hessio-ref: master
   hessio-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git
   stdtools-ref: v2025-06-16-rc
   stdtools-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git
   revision: 6de7bb5ce0d6b309fed959eee4fb071f55c91018
-  hessio-revision: b97b807b804aad29ecfeb54a57c54fc7c4fb0820
   stdtools-revision: 9c109a4e2398e30dc014a24cf2b6bc15b61290e7
-  source-snapshot-digest: sha256:557f9f329898e0cee0d11c2a6c00aa43e093636b79b07f18b0ef57f0f565267a
