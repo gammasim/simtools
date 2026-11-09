@@ -302,7 +302,8 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
 
     submit_calls = []
 
-    def mock_submit(app, stdout, stderr, configuration=None, runtime_environment=None):
+    def mock_submit(app, stdout, stderr, configuration=None, runtime_environment=None, **kwargs):
+        assert kwargs["capture_output"] is True
         submit_calls.append({"app": app, "configuration": configuration})
         result_mock = mock.Mock()
         result_mock.output = f"{app}_stdout"
@@ -509,7 +510,10 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
 
 
 def test_run_applications_propagates_job_execution_error(monkeypatch, tmp_test_directory):
-    def mock_submit_failure(app, stdout, stderr, configuration=None, runtime_environment=None):
+    def mock_submit_failure(
+        app, stdout, stderr, configuration=None, runtime_environment=None, **kwargs
+    ):
+        assert kwargs["capture_output"] is True
         raise JobExecutionError("Job failed")
 
     _patch_run_dependencies(
