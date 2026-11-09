@@ -7,12 +7,10 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: fadc_pulse_shape
 description: >-
-  Linear single-photoelectron pulse shapes and gain-specific intensity-dependent pulse
-  templates. Rows use template_kind=single_pe or intensity_dependent and gain=HG
-  or LG. Single_pe rows have intensity 1 and preserve the unsmeared linear pulse.
-  Intensity-dependent amplitudes are complete waveforms relative to the nominal
-  single-photoelectron peak and already include transit-time jitter. These rows
-  are not jittered again. Each gain has its own intensity grid.
+  Linear single-photoelectron reference pulses (template_kind=single_pe, intensity 1,
+  unsmeared) and gain-specific intensity-dependent responses (template_kind=intensity_dependent,
+  complete waveforms including transit-time jitter, each gain on its own intensity grid).
+  Amplitudes are relative to the nominal single-photoelectron peak.
 short_description: FADC single-photoelectron and intensity-dependent pulse templates.
 data:
   - type: file
