@@ -3,6 +3,7 @@
 import gzip
 import logging
 import shutil
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from types import MappingProxyType
 
@@ -80,6 +81,12 @@ def _broadcast_to_runs(values, n_runs, name, hint):
             f"Invalid {name} list length for direct_injection. Use one value or {hint}"
         )
     return values
+
+
+def _simulate_direct_injection_run(simulator):
+    """Simulate and validate one direct-injection intensity setting."""
+    simulator.simulate()
+    simulator.validate_simulations()
 
 
 class Simulator:
@@ -268,16 +275,28 @@ class Simulator:
             photons or [None], n_runs, "flasher_photons", "one value per event setting."
         )
 
+        max_workers = base_args.get("max_workers", 1)
+        if isinstance(max_workers, bool) or not isinstance(max_workers, int) or max_workers < 1:
+            raise ValueError("max_workers must be a positive integer for direct_injection.")
+
+        simulators = []
         for idx in range(n_runs):
             run_args = base_args.copy()
             run_args["run_number"] = base_run_number + idx
             run_args["number_of_events"] = int(events[idx])
             if photons[idx] is not None:
                 run_args["flasher_photons"] = photons[idx]
+            simulators.append(
+                cls(label=label, context=context.replace(args=MappingProxyType(run_args)))
+            )
 
-            simulator = cls(label=label, context=context.replace(args=MappingProxyType(run_args)))
-            simulator.simulate()
-            simulator.validate_simulations()
+        if max_workers == 1 or n_runs == 1:
+            for simulator in simulators:
+                _simulate_direct_injection_run(simulator)
+            return
+
+        with ThreadPoolExecutor(max_workers=min(max_workers, n_runs)) as executor:
+            list(executor.map(_simulate_direct_injection_run, simulators))
 
     def _get_corsika_file(self):
         """Return the CORSIKA input file if the chain reads one, else None."""

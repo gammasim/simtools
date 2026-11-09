@@ -53,6 +53,13 @@ _ARGUMENTS = (
         type=scientific_int,
         nargs="+",
     ),
+    cli.ArgumentDefinition(
+        "max_workers",
+        group="execution",
+        help="Maximum parallel direct-injection runs (default: 1, sequential).",
+        type=int,
+        default=1,
+    ),
 )
 
 

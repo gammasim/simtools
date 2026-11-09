@@ -91,7 +91,8 @@ For mean-based scaling, use
         simtools-simulate-flasher --run_mode direct_injection \
         --light_source MSFx-FlashCam --model_version 7.0.0 \
         --array_layout_name subsystem_msts --site South \
-        --run_number 3
+        --run_number 3 --number_of_events 20 \
+        --flasher_photons 10 30 100 --max_workers 4
 
 **Command Line Arguments**
 
@@ -113,6 +114,9 @@ light_source_type (str, optional)
     for each telescope.
 number_of_events (int, optional):
     Number of events to simulate (default: 1). Can be a single value or a list.
+max_workers (int, optional)
+    Maximum number of direct-injection intensity runs to execute concurrently
+    (default: 1, sequential). This option applies to direct-injection mode.
 flasher_photons (int, optional)
     Photon intensity; its meaning depends on the run mode as described above. Can be a single
     value or a list for filter wheel sequences.
