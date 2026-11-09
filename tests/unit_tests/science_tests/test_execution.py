@@ -4,6 +4,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from simtools.configuration.arguments import SIMULATION_MODELS_GIT_PATH, SIMULATION_MODELS_PATH
+from simtools.configuration.configurator import Configurator
 from simtools.science_tests import definitions as defs
 from simtools.science_tests import execution
 
@@ -221,11 +223,23 @@ def test_derived_products_are_reused_only_when_current(bundle, successful_workfl
 def test_selected_model_source_environment_hides_inactive_source(monkeypatch):
     monkeypatch.setenv(MODELS_PATH_ENV, MODELS)
     with execution._selected_model_source_environment({defs.MODELS_GIT_PATH: "/git"}):
-        assert os.environ[MODELS_PATH_ENV] == ""
+        assert (
+            Configurator()._source_value(
+                SIMULATION_MODELS_PATH, os.environ[MODELS_PATH_ENV], "environment"
+            )
+            is None
+        )
     assert os.environ[MODELS_PATH_ENV] == MODELS
     monkeypatch.delenv(SIMTOOLS_SIMULATION_MODELS_GIT_PATH, raising=False)
     with execution._selected_model_source_environment({defs.MODELS_PATH: MODELS}):
-        assert os.environ[SIMTOOLS_SIMULATION_MODELS_GIT_PATH] == ""
+        assert (
+            Configurator()._source_value(
+                SIMULATION_MODELS_GIT_PATH,
+                os.environ[SIMTOOLS_SIMULATION_MODELS_GIT_PATH],
+                "environment",
+            )
+            is None
+        )
     assert SIMTOOLS_SIMULATION_MODELS_GIT_PATH not in os.environ
     with execution._selected_model_source_environment({}):
         assert os.environ[MODELS_PATH_ENV] == MODELS

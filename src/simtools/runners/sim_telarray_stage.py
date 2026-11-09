@@ -162,7 +162,11 @@ class SimTelArrayStage:
 
     def environment(self):
         """Return the sim_telarray environment variables."""
-        return dict(SIM_TELARRAY_ENV)
+        environment = dict(SIM_TELARRAY_ENV)
+        max_photoelectrons = self.simulator_array.context.args.get("max_photoelectrons")
+        if max_photoelectrons is not None:
+            environment["MAX_PHOTOELECTRONS"] = str(max_photoelectrons)
+        return environment
 
     def get_resources(self, runtime=None):
         """Return computing resources used."""

@@ -12,6 +12,18 @@ from simtools.utils import value_conversion
 
 _LIGHT_SOURCE_GROUP = "light source"
 _TARGET_GROUP = "target"
+_MAX_PHOTOELECTRONS_MIN = 1_000
+_MAX_PHOTOELECTRONS_MAX = 500_000_000
+
+
+def _validate_max_photoelectrons(args_dict, _config_sources, parser):
+    """Validate the sim_telarray photoelectron buffer limit."""
+    max_photoelectrons = args_dict.get("max_photoelectrons")
+    if max_photoelectrons is not None and not (
+        _MAX_PHOTOELECTRONS_MIN <= max_photoelectrons < _MAX_PHOTOELECTRONS_MAX
+    ):
+        parser.error("--max_photoelectrons must be at least 1000 and less than 500000000.")
+
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -53,6 +65,22 @@ _ARGUMENTS = (
         type=scientific_int,
         nargs="+",
     ),
+    cli.ArgumentDefinition(
+        "max_workers",
+        group="execution",
+        help="Maximum parallel direct-injection runs (default: 1, sequential).",
+        type=int,
+        default=1,
+    ),
+    cli.ArgumentDefinition(
+        "max_photoelectrons",
+        group="sim_telarray configuration",
+        help=(
+            "Override sim_telarray's maximum photoelectrons per telescope event (1000-499999999)."
+        ),
+        type=int,
+        default=None,
+    ),
 )
 
 
@@ -70,6 +98,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         cli.RAY_TRACING_BACKEND,
     ),
+    post_parse=_validate_max_photoelectrons,
     needs=("model", "sim_telarray", "corsika"),
 )
 
