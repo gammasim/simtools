@@ -62,7 +62,7 @@ jobs:
             [[ "$SOURCE_BRANCH" =~ ^[A-Za-z0-9_./-]+$ ]]
             git check-ref-format --branch "$SOURCE_BRANCH" > /dev/null
             [[ "$BUILD_NAME" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,59}$ ]]
-            build_id="custom-${BUILD_NAME}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            build_id="custom-${BUILD_NAME}"
             for key in simtel_matrix simtel_build_matrix; do
               matrix=$(sed -n "s/^${key}=//p" dependency-output | jq -c \
                 --arg url "$SOURCE_URL" --arg ref "$SOURCE_BRANCH" --arg id "$build_id" \
@@ -341,7 +341,7 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6
         with:
           tags: |
-            type=raw,value=${{ env.BASE_TAG }}
+            type=raw,value=${{ env.BASE_TAG }}${{ inputs.build_name != '' && format('-{0}-{1}', github.run_id, github.run_attempt) || '' }}
             type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
             type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
             type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
@@ -352,6 +352,7 @@ jobs:
         env:
           FINAL_TAGS: ${{ steps.meta.outputs.tags }}
           BUILD_NAME: ${{ inputs.build_name }}
+          RUN_TAG: "${{ github.run_id }}-${{ github.run_attempt }}"
         run: |
           while IFS= read -r tag; do
             test -z "$tag" && continue
@@ -361,5 +362,5 @@ jobs:
               "${IMAGE}:${BASE_TAG}-arm64-${RUN_TAG}"
           done <<< "$FINAL_TAGS"
           if [[ -n "$BUILD_NAME" ]]; then
-            printf 'Custom sim_telarray image: %s:%s\n' "$IMAGE" "$BASE_TAG" >> "$GITHUB_STEP_SUMMARY"
+            printf 'Custom sim_telarray image: %s:%s-%s\n' "$IMAGE" "$BASE_TAG" "$RUN_TAG" >> "$GITHUB_STEP_SUMMARY"
           fi
