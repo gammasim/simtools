@@ -33,7 +33,8 @@ def plot_response(summary, waves, output_file):
         width_label = f"Width above {threshold:g} ADC [ns]"
     labels = ("Mean event peak [ADC above pedestal]", "Mean ADC sum [ADC samples]", width_label)
     with PdfPages(output_file) as pdf:
-        for gain in GAINS:
+        available_gains = [gain for gain in GAINS if np.any(summary["gain"] == gain)]
+        for gain in available_gains:
             fig, axes = plt.subplots(2, 2, figsize=(11, 8), constrained_layout=True)
             try:
                 _plot_metrics(axes, summary[summary["gain"] == gain], labels, axis)

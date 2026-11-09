@@ -431,7 +431,7 @@ def _selected_model_source_environment(args):
         inactive = "SIMTOOLS_SIMULATION_MODELS_GIT_PATH"
     previous = os.environ.get(inactive) if inactive else None
     if inactive:
-        os.environ[inactive] = ""
+        os.environ[inactive] = "None"
     try:
         yield
     finally:

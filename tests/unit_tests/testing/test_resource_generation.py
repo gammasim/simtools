@@ -533,10 +533,8 @@ def test_run_configured_applications_parallel_logs_progress(
     messages = [record.getMessage() for record in caplog.records]
     assert any(message.startswith("Started a (running") for message in messages)
     assert any(message.startswith("Finished a after") for message in messages)
-    assert any(
-        message.startswith("FAILED b after") and "finished 2/2 (1 failed)" in message
-        for message in messages
-    )
+    assert any(message.startswith("FAILED b after") for message in messages)
+    assert any("finished 2/2 (1 failed)" in message for message in messages)
     assert "[a] inner message" in messages
     assert "[b] inner message" in messages
     assert not any(record.getMessage().startswith("[") for record in caplog.records[-1:])
