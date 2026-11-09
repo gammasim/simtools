@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   changelog:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     if: >-
       github.event.pull_request.draft == false &&
       !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed') &&

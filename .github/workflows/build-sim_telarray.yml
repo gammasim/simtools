@@ -7,6 +7,19 @@ name: build-simtel_array
 
 on:
   workflow_dispatch:
+    inputs:
+      source_url:
+        description: 'Custom sim_telarray HTTPS repository URL'
+        required: false
+        type: string
+      source_branch:
+        description: 'Custom sim_telarray branch'
+        required: false
+        type: string
+      build_name:
+        description: 'Custom build name (letters, digits, underscores, dots and hyphens)'
+        required: false
+        type: string
   pull_request:
     paths:
       - docker/Dockerfile-simtel_array
@@ -36,9 +49,33 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - id: config
+        env:
+          SOURCE_URL: ${{ inputs.source_url }}
+          SOURCE_BRANCH: ${{ inputs.source_branch }}
+          BUILD_NAME: ${{ inputs.build_name }}
         run: |
+          set -euo pipefail
           bash .github/scripts/install_python_dependencies.sh packaging pyyaml
-          python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
+          python src/simtools/applications/dependency_versions.py --format github-output > dependency-output
+          if [[ -n "$SOURCE_URL$SOURCE_BRANCH$BUILD_NAME" ]]; then
+            [[ "$SOURCE_URL" =~ ^https://[A-Za-z0-9.-]+(/[A-Za-z0-9_.-]+)+$ ]]
+            [[ "$SOURCE_BRANCH" =~ ^[A-Za-z0-9_./-]+$ ]]
+            git check-ref-format --branch "$SOURCE_BRANCH" > /dev/null
+            [[ "$BUILD_NAME" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,59}$ ]]
+            build_id="custom-${BUILD_NAME}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            for key in simtel_matrix simtel_build_matrix; do
+              matrix=$(sed -n "s/^${key}=//p" dependency-output | jq -c \
+                --arg url "$SOURCE_URL" --arg ref "$SOURCE_BRANCH" --arg id "$build_id" \
+                '.[0].simtel_build_id as $first |
+                 map(select(.simtel_build_id == $first) |
+                   .simtel_source_url = $url | .simtel_tag = $ref | .simtel_build_id = $id |
+                   .simtel_revision = "" | .simtel_source_snapshot = "")')
+              sed "/^${key}=/d" dependency-output > filtered-output
+              printf '%s=%s\n' "$key" "$matrix" >> filtered-output
+              mv filtered-output dependency-output
+            done
+          fi
+          cat dependency-output >> "$GITHUB_OUTPUT"
 
   download-auxiliary-files:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -153,7 +190,10 @@ jobs:
           STDTOOLS_REVISION: ${{ matrix.stdtools_revision }}
           STDTOOLS_TOKEN: ${{ secrets.STDTOOLS_CTAO_GITLAB }}
         run: |
-          simtel_url="https://oauth2:${SIMTELARRAY_TOKEN}@${SIMTEL_SOURCE_URL#https://}"
+          simtel_url="$SIMTEL_SOURCE_URL"
+          if [[ "$SIMTEL_SOURCE_URL" == https://gitlab.cta-observatory.org/* ]]; then
+            simtel_url="https://oauth2:${SIMTELARRAY_TOKEN}@${SIMTEL_SOURCE_URL#https://}"
+          fi
           simtel_revision=$(./.github/scripts/clone_with_retries.sh \
             "$simtel_url" "$SIMTEL_TAG" sim_telarray "$SIMTEL_REVISION")
           printf '%s\n' "$simtel_revision" > simtel_revision
@@ -306,11 +346,12 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
             type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
           images: ${{ env.IMAGE }}
-          flavor: latest=true
+          flavor: latest=${{ inputs.build_name == '' }}
 
       - name: Publish multi-platform manifest
         env:
           FINAL_TAGS: ${{ steps.meta.outputs.tags }}
+          BUILD_NAME: ${{ inputs.build_name }}
         run: |
           while IFS= read -r tag; do
             test -z "$tag" && continue
@@ -319,3 +360,6 @@ jobs:
               "${IMAGE}:${BASE_TAG}-amd64-${RUN_TAG}" \
               "${IMAGE}:${BASE_TAG}-arm64-${RUN_TAG}"
           done <<< "$FINAL_TAGS"
+          if [[ -n "$BUILD_NAME" ]]; then
+            printf 'Custom sim_telarray image: %s:%s\n' "$IMAGE" "$BASE_TAG" >> "$GITHUB_STEP_SUMMARY"
+          fi

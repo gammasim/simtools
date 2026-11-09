@@ -5,6 +5,10 @@ name: build-simtools-prod
 on:
   workflow_dispatch:
     inputs:
+      simtel_image:
+        description: 'Custom sim_telarray image from the sim_telarray build workflow'
+        required: false
+        type: string
       simulation_model_branch:
         description: 'Simulation model branch for image tests'
         required: false
@@ -68,12 +72,19 @@ jobs:
       - id: config
         env:
           AVX_FLAG: ${{ github.event.inputs.avx_flag || 'all' }}
+          CUSTOM_IMAGE: ${{ inputs.simtel_image }}
         run: |
+          set -euo pipefail
           bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output > dependency-output
-          if [[ "${AVX_FLAG}" != "all" ]]; then
+          if [[ -n "$CUSTOM_IMAGE" ]]; then
+            [[ "$CUSTOM_IMAGE" =~ ^ghcr\.io/gammasim/sim_telarray:custom-[A-Za-z0-9_.-]+$ ]]
+          fi
+          if [[ "${AVX_FLAG}" != "all" || -n "$CUSTOM_IMAGE" ]]; then
             production_matrix=$(sed -n 's/^production_matrix=//p' dependency-output | \
-              jq -c --arg avx_flag "${AVX_FLAG}" 'map(select(.avx_flag == $avx_flag))')
+              jq -c --arg avx_flag "$AVX_FLAG" --arg image "$CUSTOM_IMAGE" \
+                'map(select($avx_flag == "all" or .avx_flag == $avx_flag) |
+                  if $image != "" then .simtel_image = $image else . end)')
             sed '/^production_matrix=/d' dependency-output > filtered-output
             printf 'production_matrix=%s\n' "${production_matrix}" >> filtered-output
             mv filtered-output dependency-output
@@ -144,7 +155,15 @@ jobs:
         id: image-tags
         env:
           IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+          CUSTOM_IMAGE: ${{ inputs.simtel_image }}
+          CORSIKA_BUILD_ID: ${{ matrix.corsika_build_id }}
+          AVX_FLAG: ${{ matrix.avx_flag }}
         run: |
+          if [[ -n "$CUSTOM_IMAGE" ]]; then
+            custom_tag="custom-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            IMAGE_TAGS="${REGISTRY}/gammasim/${BASE_LABEL}:${custom_tag}-${CORSIKA_BUILD_ID}-${AVX_FLAG}"
+            printf 'Custom production image: %s\n' "$IMAGE_TAGS" >> "$GITHUB_STEP_SUMMARY"
+          fi
           tags=()
           while IFS= read -r image; do
             [[ -n "$image" ]] || continue

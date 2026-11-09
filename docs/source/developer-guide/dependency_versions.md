@@ -59,6 +59,22 @@ CI uses `model-repository.default-ref` from `dependency_versions.yml` unless ove
 defaults to `main` and can be overridden with `SIMTOOLS_TESTS_BRANCH` or its workflow input. Its
 resource directory is selected independently by `resource-version`.
 
+## Custom sim_telarray images
+
+Run the **build-simtel_array** workflow manually with all three custom build inputs: the HTTPS
+repository clone URL, the branch name, and a build name. For example, use
+`https://gitlab.cta-observatory.org/GernotMaier/sim_telarray.git`, `feature/update-defaults`,
+and `update-defaults`. The configured sim_telarray GitLab token must be able to read CTAO GitLab
+repositories. Repositories on other hosts must be publicly accessible from the runner.
+The workflow builds the branch head with the catalog's hessio, stdtools, and GSL inputs and
+records the resolved commits. Its summary gives the multi-platform image reference, tagged
+`custom-<name>-<run-id>-<attempt>`.
+
+Run **build-simtools-prod** manually with that reference in `simtel_image`. Its summary lists
+the production images, tagged `custom-<run-id>-<attempt>-<corsika-build-id>-<cpu-variant>`.
+Select `generic` or `all` to run the production-image integration tests. The dependency manifest
+in each image records the sim_telarray image and its source information.
+
 ## Model compatibility
 
 Starting with catalog schema `0.8.0`, `model-repository.compatible-versions` defines accepted
