@@ -117,6 +117,10 @@ number_of_events (int, optional):
 max_workers (int, optional)
     Maximum number of direct-injection intensity runs to execute concurrently
     (default: 1, sequential). This option applies to direct-injection mode.
+max_photoelectrons (int, optional)
+    Override sim_telarray's maximum photoelectrons per telescope event. The value must be
+    at least 1,000 and less than 500,000,000. When omitted, sim_telarray's default or the
+    ``MAX_PHOTOELECTRONS`` environment variable applies.
 flasher_photons (int, optional)
     Photon intensity; its meaning depends on the run mode as described above. Can be a single
     value or a list for filter wheel sequences.

@@ -85,8 +85,35 @@ def _broadcast_to_runs(values, n_runs, name, hint):
 
 def _simulate_direct_injection_run(simulator):
     """Simulate and validate one direct-injection intensity setting."""
-    simulator.simulate()
-    simulator.validate_simulations()
+    args = simulator.context.args
+    run_number = simulator.run_number
+    photons = args.get("flasher_photons", "unspecified")
+    telescope_names = args.get("telescopes", [])
+    telescope_label = ", ".join(telescope_names) if telescope_names else "configured array"
+    simulator.logger.info(
+        "Starting direct-injection run %06d for %s (%s photons, %s events)",
+        run_number,
+        telescope_label,
+        photons,
+        args.get("number_of_events", "unspecified"),
+    )
+    try:
+        simulator.simulate()
+        simulator.validate_simulations()
+    except Exception:
+        simulator.logger.exception(
+            "Direct-injection run %06d failed for %s (%s photons)",
+            run_number,
+            telescope_label,
+            photons,
+        )
+        raise
+    simulator.logger.info(
+        "Finished direct-injection run %06d for %s (%s photons)",
+        run_number,
+        telescope_label,
+        photons,
+    )
 
 
 class Simulator:
@@ -295,6 +322,12 @@ class Simulator:
                 _simulate_direct_injection_run(simulator)
             return
 
+        cls_logger = logging.getLogger(__name__)
+        cls_logger.info(
+            "Running %d direct-injection runs with up to %d workers",
+            n_runs,
+            min(max_workers, n_runs),
+        )
         with ThreadPoolExecutor(max_workers=min(max_workers, n_runs)) as executor:
             list(executor.map(_simulate_direct_injection_run, simulators))
 

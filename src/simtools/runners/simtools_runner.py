@@ -146,6 +146,10 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
                     app_configuration=app_configuration,
                     runtime_environment=run_time,
                     model_parameter_metadata_files=model_parameter_metadata_files,
+                    stream_output=(
+                        app == "simtools-simulate-flasher"
+                        and int(app_configuration.get("max_workers", 1)) > 1
+                    ),
                 )
 
                 file.write("=" * 80 + "\n")
@@ -398,6 +402,7 @@ def _submit_application_and_collect_metadata(
     app_configuration,
     runtime_environment,
     model_parameter_metadata_files,
+    stream_output=False,
 ):
     """Submit one application and collect metadata file before/after submission."""
     metadata_file = _get_model_parameter_metadata_file(app_configuration)
@@ -411,6 +416,7 @@ def _submit_application_and_collect_metadata(
         stderr=None,
         configuration=app_configuration,
         runtime_environment=runtime_environment,
+        capture_output=not stream_output,
     )
 
     if metadata_file is None:
