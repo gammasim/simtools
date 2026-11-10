@@ -53,7 +53,18 @@ def get_configured_test_resources_root():
     resource_version = _get_test_resource_version()
     if not tests_path or not resource_version:
         return None
-    return Path(tests_path).expanduser() / resource_version / "integration_tests"
+    return _versioned_test_resources_path(tests_path, resource_version)
+
+
+def _versioned_test_resources_path(tests_path, resource_version):
+    """Resolve a versioned resource directory from a checkout or its parent."""
+    root = Path(tests_path).expanduser()
+    if (
+        not (root / resource_version).is_dir()
+        and (root / "simtools-tests" / resource_version).is_dir()
+    ):
+        root = root / "simtools-tests"
+    return root / resource_version / "integration_tests"
 
 
 def _get_test_resource_version():

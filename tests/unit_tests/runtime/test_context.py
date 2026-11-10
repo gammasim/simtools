@@ -84,6 +84,17 @@ def test_simulation_software_reports_missing_installations(tmp_test_directory):
     assert SimulationSoftware().corsika_dummy_file is None
 
 
+def test_interaction_table_path_accepts_checkout_and_table_directory(
+    tmp_test_directory, monkeypatch
+):
+    checkout = Path(tmp_test_directory) / "corsika-tables"
+    tables = checkout / "interaction-tables"
+    tables.mkdir(parents=True)
+    for configured in (checkout, tables):
+        monkeypatch.setenv("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH", str(configured))
+        assert SimulationSoftware.from_arguments().corsika_interaction_table_path == tables
+
+
 def test_simulation_software_skips_corsika_without_installation(tmp_test_directory):
     software = SimulationSoftware.from_arguments(
         {"corsika_path": str(Path(tmp_test_directory) / "missing")}
