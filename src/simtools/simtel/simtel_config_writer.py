@@ -217,7 +217,8 @@ class SimtelConfigWriter:
         destination = Path(config_file_path).parent
         suffix = Path(config_file_path).stem
         outputs = {
-            "fadc_pulse_shape": f"fadc_pulse_shape-{suffix}.dat",
+            "fadc_pulse_shape": get_simtel_table_file_name(parameter_data)
+            or f"fadc_pulse_shape-{suffix}.dat",
             "fadc_hg_response_table": f"fadc_hg_response_table-{suffix}.dat",
             "fadc_lg_response_table": f"fadc_lg_response_table-{suffix}.dat",
         }

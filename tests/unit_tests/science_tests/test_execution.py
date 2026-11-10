@@ -65,6 +65,21 @@ def test_prepare_test_plans_without_runtime(bundle):
     assert test.work.parts[-2:] == (NORTH, DERIVE)
 
 
+def test_prepare_uses_labeled_candidate_path(bundle):
+    bundle.context[defs.CANDIDATE_PATH] = str(
+        Path(bundle.context[defs.CANDIDATE_PATH]) / "variants" / "non-linear"
+    )
+    write_workflow(
+        bundle,
+        WORKFLOW_YML,
+        {APPLICATION: VALIDATOR, CONFIGURATION: {OUTPUT_PATH: f"{defs.CANDIDATE_SITE_PATH}/scan"}},
+    )
+    test = prepare(bundle)
+    assert test.workflow[APPLICATIONS][0][CONFIGURATION][OUTPUT_PATH].endswith(
+        "variants/non-linear/north/scan"
+    )
+
+
 def test_prepare_test_expands_telescopes_and_applies_overrides(bundle):
     bundle.suites[NORTH]["camera_telescopes"] = [LSTN_01, MSTN_01]
     bundle.release["configuration_overrides"] = {DERIVE: {FIGURE_FORMAT: ["pdf"]}}

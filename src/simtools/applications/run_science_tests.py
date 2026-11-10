@@ -61,6 +61,11 @@ APPLICATION = ApplicationDefinition.for_module(
             ),
         ),
         cli.ArgumentDefinition(
+            "run_label",
+            type=str,
+            help="Isolate an experimental run's data and reports under this label.",
+        ),
+        cli.ArgumentDefinition(
             "overwrite",
             action="store_true",
             help="Rebuild derived products, or archive and retry failed production after jobs end.",

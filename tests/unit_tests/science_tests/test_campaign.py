@@ -178,6 +178,16 @@ def test_production_requires_explicit_selection_and_preflight(campaign, mocker, 
     assert [call.args[0].site for call in canary.call_args_list] == [NORTH, SOUTH]
     assert canary.call_args.args[2].parts[-2:] == ("preflight", SOUTH)
     assert execute.call_count == 2
+    campaign_runner.run_release(
+        **campaign,
+        tests=[DERIVE],
+        allow_production=True,
+        preflight=True,
+        application_args={"run_label": "non-linear"},
+    )
+    context = yaml.safe_load(campaign[CONTEXT_FILE].read_text(encoding=ENCODING))
+    assert validate.call_args.args[0][defs.CANDIDATE_PATH] == context[defs.CANDIDATE_PATH]
+    assert "variants/non-linear" in str(canary.call_args.args[2])
 
 
 def test_run_applies_release_model_source(campaign, successful_workflow, mocker):
@@ -192,3 +202,28 @@ def test_run_applies_release_model_source(campaign, successful_workflow, mocker)
     )
 
     assert signature.call_args.args[1] == {defs.MODELS_PATH: MODELS}
+
+
+def test_labeled_run_isolates_data_and_reports(campaign, successful_workflow):
+    original = campaign_runner.run_release(**campaign, sites=[NORTH], tests=[DERIVE])
+    labeled = campaign_runner.run_release(
+        **campaign, sites=[NORTH], tests=[DERIVE], application_args={"run_label": "non-linear"}
+    )
+    original_result = results_by_id(original)["derive.north"]
+    result = results_by_id(labeled)["derive.north"]
+    assert "/variants/non-linear/" in result["execution_provenance"]
+    assert original_result["execution_provenance"] != result["execution_provenance"]
+    report_root = campaign[RELEASE_DIR] / "variants" / "non-linear" / REPORTS
+    assert (report_root / NORTH / DERIVE / "metrics.json").is_file()
+    assert (report_root / "release-summary.json").is_file()
+    assert (campaign[RELEASE_DIR] / REPORTS / NORTH / DERIVE / "metrics.json").is_file()
+    second = campaign_runner.run_release(
+        **campaign, sites=[SOUTH], tests=[DERIVE], application_args={"run_label": "non-linear"}
+    )
+    assert results_by_id(second)["derive.north"][STATUS] == result[STATUS]
+
+
+@pytest.mark.parametrize("label", ["", "../escape", ".", "a/b"])
+def test_run_rejects_invalid_label(campaign, label):
+    with pytest.raises(ValueError, match=r"run_label.*filename-safe"):
+        campaign_runner.run_release(**campaign, dry_run=True, application_args={"run_label": label})
