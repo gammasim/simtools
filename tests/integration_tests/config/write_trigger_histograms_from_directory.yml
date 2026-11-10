@@ -6,6 +6,7 @@ applications:
     summary: Group reduced event files by parameter space and write one HDF5 product per group.
   configuration:
     array_element_list:
+    - MSTN-01
     - MSTN-03
     event_data_directory: ${generated:.}
     model_version: 7.0.0
