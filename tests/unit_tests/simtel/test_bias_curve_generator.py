@@ -10,6 +10,8 @@ import pytest
 from astropy import units as u
 from astropy.table import Table
 
+from simtools.applications import derive_bias_curves
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.simtel import bias_curve_generator
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
@@ -810,3 +812,25 @@ def test_trigger_threshold_uses_configured_proton_fraction(fraction):
         {"scaling_factor": 1, "proton_intersection_fraction": fraction}, nsb, proton
     )
     assert threshold == pytest.approx(-np.log10(fraction))
+
+
+def test_trigger_threshold_requires_proton_intersection_fraction():
+    with pytest.raises(KeyError, match="proton_intersection_fraction"):
+        bias_curve_generator._calculate_trigger_threshold({}, {}, {})
+
+
+def test_bias_curve_plot_requires_proton_intersection_fraction():
+    with pytest.raises(KeyError, match="proton_intersection_fraction"):
+        bias_curve_generator._prepare_bias_curve_plot({}, {}, {"title": "Bias"})
+
+
+@pytest.mark.parametrize(
+    ("extra_args", "expected"),
+    [([], 0.1), (["--proton_intersection_fraction", "0.25"], 0.25)],
+)
+def test_cli_proton_intersection_fraction(extra_args, expected, tmp_test_directory):
+    parser = CommandLineParser()
+    parser.add_argument_definitions(derive_bias_curves._ARGUMENTS)
+    args = parser.parse_args(["--event_data_directory", str(tmp_test_directory), *extra_args])
+
+    assert args.proton_intersection_fraction == pytest.approx(expected)
