@@ -100,6 +100,43 @@ def _equal_values(base, head):
     return base == head
 
 
+def _mapping_differences(base, head, path, limit):
+    """Describe differences between mapping entries."""
+    differences = []
+    for key in sorted(base.keys() | head.keys(), key=str):
+        field = f"{path}[{key!r}]"
+        if key not in base:
+            differences.append(f"{field}: missing from base")
+        elif key not in head:
+            differences.append(f"{field}: missing from head")
+        elif re.search(r"password|secret|token|api.?key|credential", str(key), re.IGNORECASE):
+            if not _equal_values(base[key], head[key]):
+                differences.append(f"{field}: values differ (redacted)")
+        else:
+            differences.extend(_value_differences(base[key], head[key], field, limit))
+        if len(differences) >= limit:
+            break
+    return differences[:limit]
+
+
+def _value_differences(base, head, path="$", limit=20):
+    """Describe differing leaves in normalized structures, with a bounded report."""
+    if _equal_values(base, head):
+        return []
+    if isinstance(base, dict) and isinstance(head, dict):
+        return _mapping_differences(base, head, path, limit)
+    if isinstance(base, list) and isinstance(head, list):
+        differences = []
+        if len(base) != len(head):
+            differences.append(f"{path}: length {len(base)} != {len(head)}")
+        for index, (left, right) in enumerate(zip(base, head)):
+            differences.extend(_value_differences(left, right, f"{path}[{index}]", limit))
+            if len(differences) >= limit:
+                break
+        return differences[:limit]
+    return [f"{path}: {repr(base)[:300]} != {repr(head)[:300]}"]
+
+
 def _read_table(path):
     """Read an ECSV or FITS table with Astropy."""
     return Table.read(path)
@@ -128,6 +165,7 @@ def _compare_tables(base_path, head_path):
     head_meta = normalize_value(dict(head.meta))
     if not _equal_values(base_meta, head_meta):
         differences.append("table metadata differs")
+        differences.extend(_value_differences(base_meta, head_meta))
     return differences[:20]
 
 
@@ -141,6 +179,10 @@ def _compare_hdf5_attributes(name, item, other):
         right_value = _normalize_hdf5_value(other.attrs[key]) if key in other.attrs else None
         if key not in other.attrs or not _equal_values(left_value, right_value):
             differences.append(f"{name} attribute {key!r} differs")
+            if key in other.attrs and not re.search(
+                r"password|secret|token|api.?key|credential", str(key), re.IGNORECASE
+            ):
+                differences.extend(_value_differences(left_value, right_value))
     return differences
 
 
@@ -171,8 +213,11 @@ def _compare_hdf5_dataset(name, item, other):
         equal = np.all(np.isclose(left, right, rtol=1e-12, atol=0, equal_nan=True))
         differences = [] if equal else [f"{name}: numeric values differ"]
     else:
-        equal = _equal_values(_normalize_hdf5_value(left), _normalize_hdf5_value(right))
-        differences = [] if equal else [f"{name}: values differ"]
+        base_value, head_value = _normalize_hdf5_value(left), _normalize_hdf5_value(right)
+        differences = []
+        if not _equal_values(base_value, head_value):
+            differences = [f"{name}: values differ"]
+            differences.extend(_value_differences(base_value, head_value))
     return differences
 
 
@@ -211,13 +256,17 @@ def _compare_file(base_path, head_path):
             normalize_value(json.loads(base_path.read_text())),
             normalize_value(json.loads(head_path.read_text())),
         )
-        return [] if _equal_values(base, head) else ["JSON structures differ"]
+        if _equal_values(base, head):
+            return []
+        return ["JSON structures differ", *_value_differences(base, head)]
     if suffix in {".yaml", ".yml"}:
         base, head = (
             normalize_value(yaml.safe_load(base_path.read_text())),
             normalize_value(yaml.safe_load(head_path.read_text())),
         )
-        return [] if _equal_values(base, head) else ["YAML structures differ"]
+        if _equal_values(base, head):
+            return []
+        return ["YAML structures differ", *_value_differences(base, head)]
     base_lines = normalize_text(base_path.read_text(errors="replace")).splitlines()
     head_lines = normalize_text(head_path.read_text(errors="replace")).splitlines()
     return [
