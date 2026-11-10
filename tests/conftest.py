@@ -13,6 +13,12 @@ from simtools.testing import options
 pytest_plugins = ("resource_benchmark",)
 
 SIMTOOLS_ROOT_PATH = Path(__file__).resolve().parent.parent
+DOTENV_PATHS_TO_VALIDATE = frozenset(
+    {
+        "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH",
+        "SIMTOOLS_TESTS_PATH",
+    }
+)
 
 
 def _is_integration_test_argument(argument):
@@ -29,7 +35,7 @@ def _is_integration_test_argument(argument):
 
 def _missing_dotenv_path(name, value):
     """Return a description when a configured path does not exist."""
-    if not name.endswith(("_PATH", "_DIR")):
+    if name not in DOTENV_PATHS_TO_VALIDATE:
         return None
     configured_path = os.environ.get(name, value)
     if not configured_path:
