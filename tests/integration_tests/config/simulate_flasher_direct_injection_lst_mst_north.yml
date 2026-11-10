@@ -2,7 +2,7 @@
 applications:
 - application: simtools-simulate-flasher
   docs:
-    title: Inject flasher signals into North cameras
+    title: Inject flasher signals into North LST and MST cameras
     summary: >-
       Generate flat-fielding events by injecting calibration signals directly into North-site LST
       and MST cameras.
@@ -11,7 +11,7 @@ applications:
     telescopes:
     - LSTN-01
     - MSTN-03
-    label: test-flasher-direct-injection-lst-north
+    label: test-flasher-direct-injection-lst-mst-north
     light_source_type: flat_fielding
     log_level: DEBUG
     model_version: 7.0.0
@@ -28,6 +28,6 @@ applications:
       validations:
       - type: simtel
         event_type: direct_injection
-  test_name: direction_injection_lstn
+  test_name: direct_injection_lst_mst_north
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

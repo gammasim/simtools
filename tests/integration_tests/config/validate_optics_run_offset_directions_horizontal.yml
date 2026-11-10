@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-validate-optics
+  docs:
+    title: Validate LST optics for horizontal offset directions
+    summary: >-
+      Ray-trace eastward and westward source offsets for LSTN-01 and export the ray-tracing
+      results and effective focal length.
   configuration:
     max_offset: 1.5
     offset_step: 0.5
