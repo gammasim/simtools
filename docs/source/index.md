@@ -77,7 +77,8 @@ Changelog <changelog>
 Learn how to get started as a user.
 This guide will cover how to install simtools,
 and introduce the main functionalities.
-+++
+
+````{card-footer}
 
 ```{button-ref} user-guide/index
 :expand:
@@ -86,6 +87,7 @@ and introduce the main functionalities.
 :class: sd-mt-auto
 To the user guide
 ```
+````
 :::
 
 :::{grid-item-card} {fas}`puzzle-piece;pst-color-primary` Components
@@ -95,7 +97,8 @@ To the user guide
 
 Learn about the main components working together with simtools:
 simulation software and data bases.
-+++
+
+````{card-footer}
 
 ```{button-ref} components/index
 :expand:
@@ -104,6 +107,7 @@ simulation software and data bases.
 :class: sd-mt-auto
 To the components guide
 ```
+````
 :::
 
 :::{grid-item-card} {fas}`diagram-project;pst-color-primary` Data Model
@@ -113,7 +117,8 @@ To the components guide
 
 Learn about the data model used by simtools for its input,
 simulation model parameters, and output.
-+++
+
+````{card-footer}
 
 ```{button-ref} data-model/index
 :expand:
@@ -122,6 +127,7 @@ simulation model parameters, and output.
 :class: sd-mt-auto
 To the data model guide
 ```
+````
 :::
 
 
@@ -133,7 +139,9 @@ To the data model guide
 Learn how to contribute to simtools.
 This guide will cover how to set up a development environment,
 how to add code, and how to run tests.
-+++
+
+````{card-footer}
+
 ```{button-ref} developer-guide/index
 :expand:
 :color: primary
@@ -141,6 +149,7 @@ how to add code, and how to run tests.
 
 To the developer guide
 ```
+````
 :::
 
 :::{grid-item-card} {fas}`book;pst-color-primary` API Reference
@@ -150,7 +159,9 @@ To the developer guide
 
 Learn about the details of the simtools API, its functions,
 classes, and methods.
-+++
+
+````{card-footer}
+
 ```{button-ref} api-reference/index
 :expand:
 :color: primary
@@ -158,6 +169,7 @@ classes, and methods.
 
 To the API docs
 ```
+````
 :::
 
 :::{grid-item-card} {fas}`hammer;pst-color-primary` Changelog
@@ -166,13 +178,16 @@ To the API docs
 :class-card: sd-d-flex-column
 
 Learn what has changed in simtools.
-+++
+
+````{card-footer}
+
 ```{button-ref} changelog
 :expand:
 :color: primary
 :click-parent:
 To the changelog
 ```
+````
 :::
 
 ::::
