@@ -142,7 +142,7 @@ run_number (int, optional)
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: simulate_flasher_direct_injection_lst_north.yml
+    :file: simulate_flasher_direct_injection_lst_mst_north.yml
 ```
 
 ```{eval-rst}
