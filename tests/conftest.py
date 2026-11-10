@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 import pytest
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
 from simtools import version as versioning
 from simtools.model_repository import dependency_versions
@@ -27,10 +27,39 @@ def _is_integration_test_argument(argument):
     return True
 
 
+def _missing_dotenv_path(name, value):
+    """Return a description when a configured path does not exist."""
+    if not name.endswith(("_PATH", "_DIR")):
+        return None
+    configured_path = os.environ.get(name, value)
+    if not configured_path:
+        return None
+    path = Path(configured_path).expanduser()
+    if path.exists():
+        return None
+    return f"  {name}: {path}"
+
+
+def _validate_dotenv_paths(values):
+    """Raise a pytest usage error when configured paths do not exist."""
+    missing = [
+        path_description
+        for name, value in values.items()
+        if (path_description := _missing_dotenv_path(name, value))
+    ]
+    if missing:
+        raise pytest.UsageError("Configured paths in .env do not exist:\n" + "\n".join(missing))
+
+
 def _load_integration_environment(config):
-    """Load the repository .env before integration test collection."""
+    """Load and validate repository path settings before integration collection."""
     if any(_is_integration_test_argument(argument) for argument in config.args):
-        load_dotenv(SIMTOOLS_ROOT_PATH / ".env")
+        env_file = SIMTOOLS_ROOT_PATH / ".env"
+        values = dotenv_values(env_file)
+        for name, value in values.items():
+            if value is not None:
+                os.environ.setdefault(name, value)
+        _validate_dotenv_paths(values)
 
 
 def _versioned_test_resources_path(config, version, integration_test_run=False):
