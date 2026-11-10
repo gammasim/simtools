@@ -223,6 +223,27 @@ def test_labeled_run_isolates_data_and_reports(campaign, successful_workflow):
     assert results_by_id(second)["derive.north"][STATUS] == result[STATUS]
 
 
+def test_labeled_run_uses_and_signs_release_workflow_override(campaign, successful_workflow):
+    catalogue = yaml.safe_load(
+        (campaign["template_dir"] / "catalogue.yml").read_text(encoding=ENCODING)
+    )
+    workflow = catalogue["tests"][DERIVE]["workflow"]
+    template = campaign["template_dir"] / workflow
+    override = campaign[RELEASE_DIR] / workflow
+    override.parent.mkdir(parents=True, exist_ok=True)
+    override.write_text(template.read_text(encoding=ENCODING), encoding=ENCODING)
+    args = {"run_label": "variant"}
+    bundle = defs.load_release(**campaign)
+    labeled = campaign_runner._apply_run_label(bundle, args["run_label"])
+    assert defs.test_definition(labeled, DERIVE)["workflow_path"] == override
+    campaign_runner.run_release(**campaign, sites=[NORTH], tests=[DERIVE], application_args=args)
+    override.write_text(override.read_text(encoding=ENCODING) + "\n# updated\n", encoding=ENCODING)
+    second = campaign_runner.run_release(
+        **campaign, sites=[SOUTH], tests=[DERIVE], application_args=args
+    )
+    assert "derive.north" not in results_by_id(second)
+
+
 @pytest.mark.parametrize("label", ["", "../escape", ".", "a/b"])
 def test_run_rejects_invalid_label(campaign, label):
     with pytest.raises(ValueError, match=r"run_label.*filename-safe"):

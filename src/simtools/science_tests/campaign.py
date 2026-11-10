@@ -136,11 +136,13 @@ def _apply_run_label(bundle, label):
     if not isinstance(label, str) or not defs.VALID_NAME.fullmatch(label):
         raise ValueError(f"run_label must be a filename-safe label: {label!r}")
     candidate_path = Path(bundle.context[defs.CANDIDATE_PATH]) / "variants" / label
-    return replace(
+    labeled = replace(
         bundle,
         release_dir=bundle.release_dir / "variants" / label,
         context=bundle.context | {defs.CANDIDATE_PATH: str(candidate_path)},
     )
+    labeled.workflow_release_dir = bundle.release_dir
+    return labeled
 
 
 def _site_tests(bundle, site, selected_tests):
