@@ -134,7 +134,8 @@ def plot_1d(data, **kwargs):
     **kwargs:
         Plot options (palette, big_plot, title, no_legend, legend_fontsize, no_markers,
         empty_markers, plot_ratio, plot_difference, xscale, yscale, xlim, ylim, xtitle,
-        ytitle, error_type, error_label) and any kwargs accepted by plt.plot.
+        ytitle, error_type, error_label, figsize) and any kwargs accepted by plt.plot.
+        ``series_options`` maps data labels to plot keyword overrides for the main panel.
 
     Returns
     -------
@@ -158,16 +159,12 @@ def plot_1d(data, **kwargs):
     set_style(kwargs.get("palette", "default"), kwargs.get("big_plot", False))
     plot_args = {k: v for k, v in kwargs.items() if k in _PLOT_KWARGS}
 
-    fig, gs = _create_figure(ratio)
+    fig, gs = _create_figure(ratio, kwargs.get("figsize"))
     plt.subplot(gs[0])
     ax1 = plt.gca()
 
     for label, data_now in data.items():
-        x_col, y_col, x_err_col, y_err_col = _get_data_columns(data_now)
-        x_title_unit = _add_unit(kwargs.get("xtitle") or x_col, data_now[x_col])
-        y_title_unit = _add_unit(kwargs.get("ytitle") or y_col, data_now[y_col])
-        (line,) = plt.plot(data_now[x_col], data_now[y_col], label=label, **plot_args)
-        _plot_error_plots(kwargs, data_now, x_col, y_col, x_err_col, y_err_col, line.get_color())
+        x_title_unit, y_title_unit = _plot_data_series(label, data_now, kwargs)
 
     _decorate_plot(data, kwargs, ratio, x_title_unit, y_title_unit)
 
@@ -176,6 +173,26 @@ def plot_1d(data, **kwargs):
     else:
         plt.tight_layout()
     return fig
+
+
+def _plot_data_series(label, data, options):
+    """Draw one tabular series with its styles and optional uncertainties."""
+    plot_options = {key: value for key, value in options.items() if key in _PLOT_KWARGS}
+    plot_options.update(
+        {
+            key: value
+            for key, value in options.get("series_options", {}).get(label, {}).items()
+            if key in _PLOT_KWARGS
+        }
+    )
+    plot_options.setdefault("label", label)
+    x_col, y_col, x_err_col, y_err_col = _get_data_columns(data)
+    (line,) = plt.plot(data[x_col], data[y_col], **plot_options)
+    _plot_error_plots(options, data, x_col, y_col, x_err_col, y_err_col, line.get_color())
+    return (
+        _add_unit(options.get("xtitle") or x_col, data[x_col]),
+        _add_unit(options.get("ytitle") or y_col, data[y_col]),
+    )
 
 
 def _apply_marker_options(kwargs):
@@ -187,15 +204,15 @@ def _apply_marker_options(kwargs):
         kwargs["markerfacecolor"] = "None"
 
 
-def _create_figure(ratio):
+def _create_figure(ratio, figsize=None):
     """Return the figure and grid spec, with a ratio panel below the main panel if requested."""
     if ratio:
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
-        fig = plt.figure(figsize=(8, 8))
+        fig = plt.figure(figsize=figsize or (8, 8))
         gs.update(hspace=0.02)
     else:
         gs = gridspec.GridSpec(1, 1)
-        fig = plt.figure(figsize=(8, 6))
+        fig = plt.figure(figsize=figsize or (8, 6))
     return fig, gs
 
 

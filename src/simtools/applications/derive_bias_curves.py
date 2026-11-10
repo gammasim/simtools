@@ -6,7 +6,9 @@ from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.simtel.bias_curve_generator import generate_bias_curves
+from simtools.simtel.bias_curve_generator import (
+    generate_bias_curves,
+)
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -24,6 +26,12 @@ _ARGUMENTS = (
         type=float,
         default=1.35,
         help="Scaling factor to account for ions we didn't simulate.",
+    ),
+    cli.ArgumentDefinition(
+        "proton_intersection_fraction",
+        type=float,
+        default=0.1,
+        help="Fraction of the scaled proton rate used for the NSB-rate intersection.",
     ),
     cli.ArgumentDefinition(
         "figure_file",

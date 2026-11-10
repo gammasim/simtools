@@ -17,7 +17,7 @@ from simtools.simtel.nsb_trigger_calculator import (
     extract_threshold,
 )
 from simtools.simtel.telescope_trigger_rates import telescope_trigger_rates
-from simtools.visualization import plot_tables
+from simtools.visualization import visualize
 
 _logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def generate_bias_curves(args, context=None):
         _write_proton_ecsv(proton_stats, args["proton_table_file"])
         _logger.info(f"Proton table written to {args['proton_table_file']}")
 
-    plot_output_path = plot_tables.resolve_plot_output_path(args["figure_file"])
+    plot_output_path = _resolve_plot_output_path(args["figure_file"])
     bias_curve_table_output = plot_output_path.with_suffix(".ecsv")
     trigger_threshold = _calculate_trigger_threshold(args, nsb_stats, proton_stats)
 
@@ -51,11 +51,12 @@ def generate_bias_curves(args, context=None):
     _logger.info("Trigger threshold calculation data:")
     thresholds = sorted(set(nsb_stats.keys()) | set(proton_stats.keys()))
     scaling_factor = args.get("scaling_factor", 1.35)
+    intersection_fraction = args["proton_intersection_fraction"]
     for thresh in thresholds:
         nsb_rate = nsb_stats[thresh]["rate_hz"] if thresh in nsb_stats else None
         proton_rate = proton_stats[thresh]["rate_hz"] if thresh in proton_stats else None
         scaled_proton = (
-            scaling_factor * plot_tables.PROTON_INTERSECTION_FRACTION * proton_rate
+            scaling_factor * intersection_fraction * proton_rate
             if proton_rate is not None
             else None
         )
@@ -65,7 +66,7 @@ def generate_bias_curves(args, context=None):
         )
 
     _logger.info("Plotting bias curves...")
-    plot_tables.plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path, trigger_threshold)
+    _plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path, trigger_threshold)
     _write_bias_curve_ecsv(nsb_stats, proton_stats, bias_curve_table_output)
     _export_trigger_threshold_as_model_parameter(args, trigger_threshold, context=context)
 
@@ -367,13 +368,40 @@ def _write_bias_curve_ecsv(nsb_stats, proton_stats, output_file):
     table.write(output_file, format="ascii.ecsv", overwrite=True)
 
 
+def fit_bias_curve(thresholds, rates):
+    """
+    Fit log10(rate) as a linear function of threshold.
+
+    Parameters
+    ----------
+    thresholds : array-like
+        Trigger thresholds.
+    rates : array-like
+        Trigger rates; only finite positive values are used.
+
+    Returns
+    -------
+    tuple or None
+        Valid thresholds and fit coefficients (slope, intercept), or None if
+        fewer than two distinct finite thresholds have corresponding finite,
+        positive rates.
+    """
+    thresholds = np.asarray(thresholds, dtype=float)
+    rates = np.asarray(rates, dtype=float)
+    valid = np.isfinite(thresholds) & np.isfinite(rates) & (rates > 0)
+    fit_thresholds = thresholds[valid]
+    if len(np.unique(fit_thresholds)) < 2:
+        return None
+    return fit_thresholds, np.polyfit(fit_thresholds, np.log10(rates[valid]), 1)
+
+
 def _calculate_trigger_threshold(args, nsb_stats, proton_stats):
     """
     Calculate trigger threshold from bias curve intersection.
 
     Trigger threshold is the intersection of log-linear fits to the NSB and
-    proton rates (scaled by the scaling factor and then multiplied by 0.1),
-    within their shared threshold range.
+    proton rates, multiplied by the scaling factor and the configured proton
+    intersection fraction.
 
     Parameters
     ----------
@@ -395,13 +423,14 @@ def _calculate_trigger_threshold(args, nsb_stats, proton_stats):
         If no valid threshold points exist or intersection cannot be found.
     """
     scaling_factor = args.get("scaling_factor", 1.35)
+    intersection_fraction = args["proton_intersection_fraction"]
     fits = []
     for stats, scale in (
         (nsb_stats, 1.0),
-        (proton_stats, scaling_factor * plot_tables.PROTON_INTERSECTION_FRACTION),
+        (proton_stats, scaling_factor * intersection_fraction),
     ):
         thresholds = sorted(stats)
-        fit = plot_tables.fit_bias_curve(
+        fit = fit_bias_curve(
             thresholds, [scale * stats[threshold]["rate_hz"] for threshold in thresholds]
         )
         if fit is None:
@@ -485,3 +514,115 @@ def _export_trigger_threshold_as_model_parameter(args, trigger_threshold, contex
 
     except (OSError, ValueError, KeyError) as exc:
         _logger.warning(f"Failed to export trigger threshold as model parameter: {exc}")
+
+
+def _resolve_plot_output_path(output):
+    """Resolve an explicit figure file or the default bias-curve file in a directory."""
+    output = Path(output)
+    return output if output.suffix else output / "bias_curve.png"
+
+
+def _plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_threshold=None):
+    """Render prepared bias-curve tables using the generic renderer."""
+    data, plot_config = _prepare_bias_curve_plot(nsb_stats, proton_stats, config, trigger_threshold)
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    visualize.save_figure(
+        visualize.plot_1d(data, **plot_config),
+        output_path.with_suffix(""),
+        figure_format=[output_path.suffix[1:]],
+        dpi=200,
+        close=True,
+    )
+
+
+def _prepare_bias_curve_plot(nsb_stats, proton_stats, config, trigger_threshold=None):
+    """Prepare rates, fitted curves and the threshold marker as x/y series."""
+    scale = config.get("scaling_factor", 1.35)
+    intersection_fraction = config["proton_intersection_fraction"]
+    data, styles = {}, {}
+    for stats, factor, label, marker, color in (
+        (nsb_stats, 1, "NSB", "o", "tab:blue"),
+        (proton_stats, 1, "Proton", "s", "tab:orange"),
+        (proton_stats, scale, f"{scale} x Proton", "^", "tab:red"),
+        (
+            proton_stats,
+            scale * intersection_fraction,
+            f"{intersection_fraction} x {scale} x Proton",
+            "v",
+            "tab:green",
+        ),
+    ):
+        if stats:
+            _add_bias_curve_series(data, styles, stats, factor, label, marker, color)
+    positive_rates = [
+        rate
+        for label, table in data.items()
+        if not label.startswith("_")
+        for rate in table["rate"]
+        if np.isfinite(rate) and rate > 0
+    ]
+    ylim = (config.get("ymin", 1), config.get("ymax", 1e6))
+    if positive_rates:
+        ylim = (min(positive_rates) * 0.9, max(positive_rates) * 1.1)
+    if not data:
+        _logger.warning("No NSB or proton rates found; writing empty bias-curve plot")
+        data["_empty"] = np.empty(0, dtype=[("threshold", float), ("rate", float)])
+    if trigger_threshold is not None:
+        label = f"Trigger Threshold: {trigger_threshold:.1f}"
+        data[label] = np.array(
+            [(trigger_threshold, ylim[0]), (trigger_threshold, ylim[1])],
+            dtype=[("threshold", float), ("rate", float)],
+        )
+        styles[label] = {
+            "color": "grey",
+            "linestyle": "--",
+            "linewidth": 1.5,
+            "alpha": 0.5,
+            "marker": "None",
+        }
+    return data, {
+        "title": config["title"],
+        "xtitle": "Threshold",
+        "ytitle": "Trigger Rate [Hz]",
+        "yscale": "log",
+        "ylim": ylim,
+        "error_type": "errorbar",
+        "legend_fontsize": 11,
+        "no_legend": not nsb_stats and not proton_stats and trigger_threshold is None,
+        "figsize": (10, 7),
+        "series_options": styles,
+    }
+
+
+def _add_bias_curve_series(data, styles, stats, scale, label, marker, color):
+    """Add scaled measured rates, uncertainties and a sampled log-linear fit."""
+    thresholds = sorted(stats)
+    rates = [scale * stats[t]["rate_hz"] for t in thresholds]
+    errors = [scale * stats[t]["error_hz"] for t in thresholds]
+    data[label] = np.array(
+        list(zip(thresholds, rates, errors)),
+        dtype=[("threshold", float), ("rate", float), ("error", float)],
+    )
+    styles[label] = {"color": color, "marker": marker, "linestyle": "None"}
+    fit = fit_bias_curve(thresholds, rates)
+    if fit is None:
+        _logger.info(
+            "Skipping log-linear fit: need at least two distinct thresholds with "
+            "finite, positive rates."
+        )
+        return
+    fit_thresholds, coefficients = fit
+    x_fit = np.linspace(min(fit_thresholds), max(fit_thresholds), 100)
+    y_fit = 10 ** (coefficients[0] * x_fit + coefficients[1])
+    fit_label = f"_{label} fit"
+    data[fit_label] = np.array(
+        list(zip(x_fit, y_fit)), dtype=[("threshold", float), ("rate", float)]
+    )
+    styles[fit_label] = {
+        "color": color,
+        "linestyle": "--",
+        "alpha": 0.5,
+        "linewidth": 1,
+        "marker": "None",
+    }
