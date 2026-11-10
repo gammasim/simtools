@@ -23,7 +23,7 @@ applications:
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path
-      file: direct_injection_run000010_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north.simtel.zst
+      file: direct_injection_run000010_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-mst-north.simtel.zst
       output_sub_path: sim_telarray/run000010
       validations:
       - type: simtel
