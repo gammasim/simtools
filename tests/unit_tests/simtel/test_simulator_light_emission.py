@@ -970,7 +970,10 @@ def test_make_run_command_with_traced_light(simulator_instance, mirror_class, by
     simulator_instance.telescope_model.get_parameter_value.return_value = mirror_class
     simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2156 * u.m
     simulator_instance.site_model.get_parameter_value.return_value = ATM_TRANS_DAT
-    simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: ILLUMINATOR}
+    simulator_instance.light_emission_config = {
+        LIGHT_SOURCE_TYPE: ILLUMINATOR,
+        "max_photoelectrons": 12345,
+    }
     simulator_instance.runner_service.get_file_name.return_value = Path("/out/photons.iact.gz")
     with (
         patch.object(simulator_instance, "_backend", return_value=_tracing_backend()),
@@ -989,6 +992,7 @@ def test_make_run_command_with_traced_light(simulator_instance, mirror_class, by
     assert "-C telescope_theta=0.0" in script
     assert "-C telescope_phi=0.0" in script
     assert "-C random_seed=5,3" in script
+    assert "MAX_PHOTOELECTRONS=12345 " in script
 
 
 def test_prepare_run_writes_camera_photons(simulator_instance, tmp_test_directory):

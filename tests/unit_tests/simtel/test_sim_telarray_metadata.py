@@ -39,7 +39,8 @@ def test_get_ctao_simtel_metadata_creates_north_product():
     assert metadata["PDGID"] == 22
     assert metadata["MSNGR"] == "photon"
     assert metadata[_SIMPROD] == "production-42"
-    assert metadata["MODELVER"] == sim_telarray_metadata.PRODUCT_MODEL_VERSION
+    assert metadata["CTAOMETA"] == "2.2.0"
+    assert metadata["MODELVER"] == "2.2.0"
     assert metadata["ACTID"] == _BASE_ARGS["activity_id"]
     assert "primary" not in metadata
     assert math.isclose(metadata["SIMZEN"], 20.0)

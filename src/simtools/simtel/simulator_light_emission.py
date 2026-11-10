@@ -663,7 +663,11 @@ class SimulatorLightEmission(SimtelRunner):
             self.light_emission_config.get(RUN_NUMBER, 1),
             log_file=log_file,
         )
-        return sim_telarray_env_as_string() + shlex.join(command) + "\n"
+        environment = sim_telarray_env_as_string()
+        max_photoelectrons = self.light_emission_config.get("max_photoelectrons")
+        if max_photoelectrons is not None:
+            environment += f"MAX_PHOTOELECTRONS={shlex.quote(str(max_photoelectrons))} "
+        return environment + shlex.join(command) + "\n"
 
     def calculate_distance_focal_plane_calibration_device(self):
         """
