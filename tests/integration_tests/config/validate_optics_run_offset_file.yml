@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-validate-optics
+  docs:
+    title: Validate LST optics with an offset file
+    summary: >-
+      Read source offsets from an ECSV file, ray-trace LSTN-01, and export the ray-tracing
+      results and effective focal length.
   configuration:
     offset_file: ${static:validate_optics_offsets_xy.ecsv}
     model_version: 7.0.0
