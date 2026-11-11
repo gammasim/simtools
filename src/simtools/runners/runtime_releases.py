@@ -29,7 +29,18 @@ def _simtools_repository():
 
 
 def latest_models_commit(catalog):
-    """Return the commit of the latest stable release from the catalog repository."""
+    """Return the commit of the latest stable model release.
+
+    Parameters
+    ----------
+    catalog : dict
+        Dependency catalog containing the simulation-model repository URL.
+
+    Returns
+    -------
+    str
+        Full Git commit ID of the latest published stable release.
+    """
     repository = urlsplit(catalog["model-repository"]["repository-url"])
     if repository.scheme != "https" or not repository.netloc:
         raise ValueError("The model repository URL must be an HTTPS GitLab URL.")
@@ -48,7 +59,18 @@ def latest_models_commit(catalog):
 
 
 def latest_simtools_image(catalog):
-    """Resolve the latest simtools release using its catalog and configured image registry."""
+    """Resolve the latest simtools production image.
+
+    Parameters
+    ----------
+    catalog : dict
+        Dependency catalog containing the configured image registry.
+
+    Returns
+    -------
+    str
+        Multi-platform production image reference pinned by digest.
+    """
     repository = _simtools_repository()
     release_url = f"https://api.github.com/repos/{repository}/releases/latest"
     release = json.loads(_read_url(release_url))["tag_name"]

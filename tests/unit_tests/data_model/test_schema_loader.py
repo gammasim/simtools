@@ -1,10 +1,11 @@
 import logging
 from pathlib import Path
 
+import jsonschema
 import pytest
 import yaml
 
-from simtools.data_model import schema_loader
+from simtools.data_model import schema, schema_loader
 from simtools.io import ascii_handler
 
 
@@ -15,6 +16,17 @@ def test_runtime_schema_preserves_both_versions():
     assert old["schema_version"] == "0.1.0"
     assert old["definitions"]["RunTimeEnvironmentFile"]["required"] == ["runtime_environment"]
     assert current["schema_version"] == "0.2.0"
+
+
+def test_legacy_runtime_schema_rejects_new_model_settings():
+    data = {
+        "runtime_environment": {"image": "example", "simulation_models": {"git_revision": "v1"}}
+    }
+    old = schema_loader.load_schema("run_time_environment.schema.yml", "0.1.0")
+    current = schema_loader.load_schema("run_time_environment.schema.yml", "0.2.0")
+    with pytest.raises(jsonschema.ValidationError, match="simulation_models"):
+        schema.validate_dict_using_schema(data, json_schema=old, offline=True)
+    schema.validate_dict_using_schema(data, json_schema=current, offline=True)
 
 
 DUMMY_FILE = "dummy_file.yml"

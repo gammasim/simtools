@@ -40,6 +40,6 @@ definitions:
     additionalProperties: false
     properties:
       runtime_environment:
-        $ref: 'common_definitions.schema.yml#/$defs/run_time_environment'
+        $ref: 'common_definitions.schema.yml#/$defs/run_time_environment_legacy'
     required:
       - runtime_environment
