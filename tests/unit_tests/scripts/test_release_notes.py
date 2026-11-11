@@ -1,4 +1,5 @@
 import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
@@ -41,3 +42,37 @@ def test_release_notes_fail_when_changelog_section_or_image_missing():
         )
     with pytest.raises(ValueError, match="No production image tags found"):
         RELEASE_NOTES.render_release_notes("v1.0.0", "## [v1.0.0](url)\n", "{{ changelog }}", [])
+
+
+def test_release_notes_cli_writes_rendered_file(tmp_test_directory, monkeypatch):
+    directory = Path(tmp_test_directory)
+    changelog = directory / "changelog.md"
+    template = directory / "template.md"
+    image_tags = directory / "image-tags.json"
+    output = directory / "release-notes.md"
+    changelog.write_text("## [v1.2.3](url)\n\nRelease text.\n", encoding="utf-8")
+    template.write_text("Changes:\n{{ changelog }}\nImages:\n{{ images }}", encoding="utf-8")
+    image_tags.write_text('["v1.2.3-v1-g2-generic", "v1.2.2-old"]', encoding="utf-8")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            str(SCRIPT_PATH),
+            "v1.2.3",
+            "--changelog",
+            str(changelog),
+            "--template",
+            str(template),
+            "--image-tags",
+            str(image_tags),
+            "--output",
+            str(output),
+        ],
+    )
+
+    RELEASE_NOTES.main()
+
+    assert output.read_text(encoding="utf-8") == (
+        "Changes:\n## [v1.2.3](url)\n\nRelease text.\nImages:\n"
+        "- `ghcr.io/gammasim/simtools-prod:v1.2.3-v1-g2-generic`\n"
+    )
