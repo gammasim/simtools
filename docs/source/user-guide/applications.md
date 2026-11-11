@@ -105,7 +105,7 @@ simtools-production-derive-corsika-limits <applications/simtools-production-deri
 simtools-production-derive-monte-carlo-statistics <applications/simtools-production-derive-monte-carlo-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-select-files <applications/simtools-production-select-files>
-simtools-resources-test-generate <applications/simtools-resources-test-generate>
+simtools-generate-test-resources <applications/simtools-generate-test-resources>
 simtools-run-application <applications/simtools-run-application>
 simtools-run-science-tests <applications/simtools-run-science-tests>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
