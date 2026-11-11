@@ -32,7 +32,7 @@ on:
         type: string
         default: ''
       corsika_image:
-        description: "Override CORSIKA image, e.g. ghcr.io/gammasim/corsika7:v78010-generic"
+        description: "Override CORSIKA image; select its matching CPU variant in avx_flag"
         required: false
         type: string
         default: ''
@@ -85,7 +85,7 @@ jobs:
 
           # Print the build id (image tag, Docker-tag-safe) of an image reference; exit 1 if invalid.
           image_build_id() {
-            local name="$1" image="$2" last="${2##*/}" tag
+            local name="$1" image="$2" last="${2##*/}" tag digest
             if [[ "${image}" =~ [[:space:]] ]]; then
               echo "::error::${name} '${image}' must not contain whitespace" >&2
               exit 1
@@ -99,8 +99,14 @@ jobs:
               exit 1
             fi
             tag="${image##*:}"
-            printf '%s' "${tag//[^A-Za-z0-9_.-]/-}"
+            digest=$(printf '%s' "${image}" | sha256sum)
+            printf '%s-override-%s' "${tag//[^A-Za-z0-9_.-]/-}" "${digest:0:16}"
           }
+
+          if [[ -n "${CORSIKA_IMAGE_OVERRIDE}" && "${AVX_FLAG}" == "all" ]]; then
+            echo "::error::A CORSIKA override requires selecting its matching CPU variant in avx_flag" >&2
+            exit 1
+          fi
 
           bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output > dependency-output
