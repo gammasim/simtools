@@ -106,10 +106,7 @@ def read_overwrite_model_parameter_dict(overwrite_model_parameters=None, context
     Parameters
     ----------
     overwrite_model_parameters: dict or str, optional
-        An override dictionary, a JSON string, or a JSON/YAML file path. Files may
-        also contain a model parameter document with ``instrument``, ``parameter``
-        and ``value`` fields. Only its value is overridden; parameter validation
-        is performed when the model applies the override.
+        Either a dictionary with model parameters to overwrite, or a file path.
 
     Returns
     -------
