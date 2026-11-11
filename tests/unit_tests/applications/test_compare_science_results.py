@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 import yaml
 from astropy.table import Table
 
@@ -39,6 +40,7 @@ def run_main(mocker, output, **overrides):
         "candidate_path": None,
         "baseline_label": "v1",
         "candidate_label": "v2",
+        "comparison_type": "telescope_throughput",
         "telescopes": [],
         "compare_by": [],
         "tolerance": [["cam_eff=0.1"]],
@@ -109,3 +111,70 @@ def test_main_reports_missing_telescopes_and_input_errors(tmp_test_directory, mo
     assert failed[STATUS] == INCOMPLETE
     assert failed[COMPARISONS] == {}
     assert np.size(failed[DIAGNOSTICS]) == 1
+
+
+def test_main_compares_bias_curves(tmp_test_directory, mocker):
+    root = Path(tmp_test_directory) / "bias-curves"
+    curve = {
+        "threshold": [10, 20, 30],
+        "NSB rate (Hz)": [100.0, 50.0, 20.0],
+        "NSB error (Hz)": [1.0, 1.0, 1.0],
+        "Proton rate (Hz)": [10.0, 5.0, 2.0],
+        "Proton error (Hz)": [1.0, 1.0, 1.0],
+    }
+    candidate_curve = {
+        **curve,
+        "NSB rate (Hz)": [90.0, 45.0, 18.0],
+        "Proton rate (Hz)": [9.0, 4.5, 1.8],
+    }
+    for release, values in (("baseline", curve), ("candidate", candidate_curve)):
+        path = root / release / TELESCOPE / "bias_curve.ecsv"
+        path.parent.mkdir(parents=True)
+        Table(values).write(path, format="ascii.ecsv")
+
+    result = run_main(
+        mocker,
+        root / "comparison",
+        baseline_path=root / "baseline",
+        candidate_path=root / "candidate",
+        comparison_type="bias_curves",
+        tolerance=[["NSB rate (Hz)=0.05", "Proton rate (Hz)=0.05"]],
+    )
+
+    comparison = result[COMPARISONS][TELESCOPE]
+    assert result[STATUS] == "complete"
+    assert comparison["changes"]["NSB rate (Hz)"]["max_relative_deviation"] == pytest.approx(0.1)
+    assert comparison["changes"]["NSB rate (Hz)"]["advisory"] is True
+    assert (root / "comparison" / "report.pdf").stat().st_size > 0
+
+
+def test_main_reports_selected_bias_curve_missing_from_both_inputs(tmp_test_directory, mocker):
+    root = Path(tmp_test_directory) / "selected-bias-curves"
+    curve = Table(
+        {
+            "threshold": [10, 20],
+            "NSB rate (Hz)": [100.0, 50.0],
+            "NSB error (Hz)": [1.0, 1.0],
+            "Proton rate (Hz)": [10.0, 5.0],
+            "Proton error (Hz)": [1.0, 1.0],
+        }
+    )
+    for release in ("baseline", "candidate"):
+        path = root / release / TELESCOPE / "bias_curve.ecsv"
+        path.parent.mkdir(parents=True)
+        curve.write(path, format="ascii.ecsv")
+
+    result = run_main(
+        mocker,
+        root / "comparison",
+        baseline_path=root / "baseline",
+        candidate_path=root / "candidate",
+        comparison_type="bias_curves",
+        telescopes=[TELESCOPE, "MSTN-01"],
+    )
+
+    assert result[STATUS] == INCOMPLETE
+    assert result[COMPARISONS]["MSTN-01"][DIAGNOSTICS] == [
+        "Missing baseline or candidate bias curve."
+    ]
+    assert any(item.startswith("MSTN-01:") for item in result[DIAGNOSTICS])
