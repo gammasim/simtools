@@ -23,18 +23,25 @@ from simtools.io import ascii_handler
 from simtools.io.file_type import product_filename
 from simtools.job_execution import execution
 from simtools.job_execution.execution import JobExecutionError
+from simtools.model_repository import dependency_versions as model_dependencies
 from simtools.runtime import dependencies
 from simtools.utils import value_conversion
 
 logger = logging.getLogger(__name__)
 _SIMULATION_MODELS_PATH = "simulation_models_path"
 _SIMULATION_MODELS_GIT_PATH = "simulation_models_git_path"
+_SIMULATION_MODELS_GIT_REVISION = "simulation_models_git_revision"
 _IGNORE_EXISTING_PARAMETER_VERSION = "ignore_existing_parameter_version"
 _MODEL_SOURCE_OPTIONS = (
     _SIMULATION_MODELS_PATH,
     _SIMULATION_MODELS_GIT_PATH,
-    "simulation_models_git_revision",
+    _SIMULATION_MODELS_GIT_REVISION,
 )
+# Keys of a runtime environment's simulation_models block mapped to model-source options.
+_RUNTIME_MODEL_SOURCE_OPTIONS = {
+    "git_path": _SIMULATION_MODELS_GIT_PATH,
+    "git_revision": _SIMULATION_MODELS_GIT_REVISION,
+}
 _SCIENCE_PLACEHOLDER = re.compile(r"__[A-Z][A-Z0-9_]+__")
 
 
@@ -88,12 +95,16 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
     model_parameter_metadata_files = []
-    source_options = model_source_options(args_dict)
+    effective_runtime = None if args_dict["ignore_runtime_environment"] else runtime_environment
+    explicit_source_options = model_source_options(args_dict)
+    source_options = {
+        **_runtime_model_source_options(effective_runtime, explicit_source_options),
+        **explicit_source_options,
+    }
 
     apply_execution_overrides(
         configurations, args_dict, source_options, get_explicit_env_file(args_dict)
     )
-    effective_runtime = None if args_dict["ignore_runtime_environment"] else runtime_environment
     _write_resolved_workflow(
         args_dict["config_file"],
         configurations,
@@ -110,6 +121,8 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
     log_file.parent.mkdir(parents=True, exist_ok=True)
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
+        file.write(_runtime_environment_header(effective_runtime, source_options))
+        file.write(_model_provenance(configurations, source_options))
         try:
             versions = dependencies.get_version_string(
                 run_time, include_software_versions=True, context=context
@@ -364,6 +377,91 @@ def _find_collection_files(pattern, source_directories):
 def model_source_options(args_dict):
     """Return configured model-source options for child applications."""
     return {key: args_dict[key] for key in _MODEL_SOURCE_OPTIONS if args_dict.get(key) is not None}
+
+
+def _runtime_model_source_options(runtime_environment, explicit_options):
+    """Return model-source options from a runtime's simulation_models block.
+
+    Options given explicitly (for example on the command line) take precedence. A
+    simulation-models path given explicitly excludes the runtime's git path.
+    """
+    models = (runtime_environment or {}).get("simulation_models") or {}
+    options = {
+        option: models[key]
+        for key, option in _RUNTIME_MODEL_SOURCE_OPTIONS.items()
+        if key in models and option not in explicit_options
+    }
+    if _SIMULATION_MODELS_PATH in explicit_options:
+        options.pop(_SIMULATION_MODELS_GIT_PATH, None)
+    return options
+
+
+def _runtime_environment_header(runtime_environment, source_options):
+    """Describe the selected runtime and model source without implying a resolved revision."""
+    runtime = runtime_environment or {}
+    return (
+        f"Runtime environment: {runtime.get('image')}\n"
+        f"Simulation models source options: {source_options}\n"
+    )
+
+
+def _model_provenance(configurations, source_options):
+    """Record accessible model sources used by the selected workflow steps."""
+    sources = set()
+    for config in configurations:
+        if not config.get("run_application"):
+            continue
+        values = dict(source_options)
+        values.update(
+            {
+                key: value
+                for key, value in config.get("configuration", {}).items()
+                if key in _MODEL_SOURCE_OPTIONS and value is not None
+            }
+        )
+        if not values.get(_SIMULATION_MODELS_PATH) and not values.get(_SIMULATION_MODELS_GIT_PATH):
+            for key in _MODEL_SOURCE_OPTIONS:
+                value = os.getenv(f"SIMTOOLS_{key.upper()}")
+                if value:
+                    values[key] = value
+        sources.add(tuple(values.get(key) for key in _MODEL_SOURCE_OPTIONS))
+    return "".join(_model_source_provenance(*source) for source in sorted(sources, key=str))
+
+
+def _model_source_provenance(checkout, repository, revision):
+    """Resolve a model source to a commit and report checkout modifications."""
+    repository = checkout or repository
+    if not repository:
+        return "Simulation models commit: unavailable (no model source selected)\n"
+    if checkout:
+        revision = "HEAD"
+    elif not revision:
+        revision = model_dependencies.model_repository_revision(
+            model_dependencies.load_dependency_catalog()
+        )
+    try:
+        commit = subprocess.run(
+            ["git", "-C", str(repository), "rev-parse", "--verify", f"{revision}^{{commit}}"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        result = (
+            f"Simulation models commit: {commit} (source: {repository}, revision: {revision})\n"
+        )
+        if checkout:
+            status = subprocess.run(
+                ["git", "-C", str(repository), "status", "--porcelain", "--untracked-files=normal"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+            result += f"Simulation models checkout: {'modified' if status else 'clean'}\n"
+        return result
+    except OSError, subprocess.SubprocessError:
+        return (
+            f"Simulation models commit: unavailable (source: {repository}, revision: {revision})\n"
+        )
 
 
 def _application_argument_names(application):

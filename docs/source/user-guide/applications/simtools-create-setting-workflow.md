@@ -39,10 +39,19 @@ Identical inputs reuse their workflow; conflicting values, descriptions, contact
 definitions require a new parameter version. Retrying a prepared workflow uses the same
 activity output directory. No additional execution or provenance directories are created.
 
-An optional `--runtime_environment_file runtime.yml` copies the validated runtime definition into
-the new workflow as `runtime.yml`, without starting a container during preparation. When `--run`
-is used, the generated runtime file is selected automatically. Use an image digest for OCI images
-and ensure paths in the definition are available from the repository root.
+Each new workflow receives a `runtime.yml` copied from the repository's `runtime.default.yml`
+in the repository root (or from `--workflow_runtime_file`, if given). The file holds the simtools
+image (by digest) and the simulation-models revision used for the workflow, for example:
+
+```yaml
+runtime_environment:
+  image: ghcr.io/gammasim/simtools-prod@sha256:IMAGE_DIGEST
+  simulation_models:
+    git_revision: 1.2.3
+```
+
+Preparation fails if neither `runtime.default.yml` nor `--workflow_runtime_file` is available.
+No container is started during preparation. With `--run`, the workflow's `runtime.yml` is used.
 File and structured parameters use the existing derivation/submission applications.
 
 ## Command line arguments

@@ -11,13 +11,19 @@ from simtools.runners import setting_workflow
 
 @pytest.fixture
 def setting_args(tmp_test_directory):
+    output_path = Path(tmp_test_directory) / "settings"
+    output_path.mkdir(parents=True)
+    ascii_handler.write_data_to_file(
+        {"runtime_environment": {"image": "default@sha256:abc"}},
+        output_path / "runtime.default.yml",
+    )
     return {
         "instrument": "LSTN-design",
         "parameter": "min_photons",
         "value": "120",
         "parameter_version": "2.0.1",
         "description": "Updated photon threshold",
-        "output_path": tmp_test_directory / "settings",
+        "output_path": output_path,
     }
 
 
@@ -93,7 +99,7 @@ def test_invalid_inputs_leave_no_workflow(setting_args, setting_writer, change, 
     setting_args.update(change)
     with pytest.raises(ValueError, match=message):
         setting_workflow.create_setting_workflow(setting_args)
-    assert not setting_args["output_path"].exists()
+    assert not (setting_args["output_path"] / "input").exists()
 
 
 @pytest.mark.parametrize("parameter_type", ["file", "dict"])
@@ -101,7 +107,7 @@ def test_reject_file_or_structured_parameter(setting_args, setting_writer, param
     setting_writer.get_parameter_type_for_schema.return_value = parameter_type
     with pytest.raises(ValueError, match="existing derivation workflow"):
         setting_workflow.create_setting_workflow(setting_args)
-    assert not setting_args["output_path"].exists()
+    assert not (setting_args["output_path"] / "input").exists()
 
 
 def test_run_uses_workflow_runtime_file(setting_args, setting_writer, mocker):
@@ -123,3 +129,38 @@ def test_run_uses_workflow_runtime_file(setting_args, setting_writer, mocker):
     prepare.assert_called_once_with(config_file.with_name("runtime.yml"))
     assert run.call_args.args[0]["runtime_environment"] == {"image": "example@sha256:123"}
     assert run.call_args.kwargs["run_time"] == ["runtime"]
+
+
+def test_default_runtime_file_is_copied_to_workflow(setting_args, setting_writer):
+    config_file = setting_workflow.create_setting_workflow(setting_args)
+    runtime = ascii_handler.collect_data_from_file(config_file.with_name("runtime.yml"))
+    assert runtime == {"runtime_environment": {"image": "default@sha256:abc"}}
+
+
+def test_explicit_runtime_file_overrides_default(setting_args, setting_writer, tmp_test_directory):
+    explicit = Path(tmp_test_directory) / "explicit-runtime.yml"
+    ascii_handler.write_data_to_file(
+        {"runtime_environment": {"image": "explicit@sha256:def"}}, explicit
+    )
+    setting_args["workflow_runtime_file"] = explicit
+    config_file = setting_workflow.create_setting_workflow(setting_args)
+    runtime = ascii_handler.collect_data_from_file(config_file.with_name("runtime.yml"))
+    assert runtime == {"runtime_environment": {"image": "explicit@sha256:def"}}
+
+
+def test_missing_default_runtime_file_raises(setting_args, setting_writer):
+    (setting_args["output_path"] / "runtime.default.yml").unlink()
+    with pytest.raises(FileNotFoundError, match=r"runtime\.default\.yml.*--workflow_runtime_file"):
+        setting_workflow.create_setting_workflow(setting_args)
+    assert not (setting_args["output_path"] / "input").exists()
+
+
+def test_inline_runtime_and_runtime_file_conflict(setting_args, setting_writer, mocker):
+    config_file = setting_workflow.create_setting_workflow(setting_args)
+    config = ascii_handler.collect_data_from_file(config_file)
+    config["runtime_environment"] = {"image": "inline@sha256:123"}
+    ascii_handler.write_data_to_file(config, config_file)
+    run = mocker.patch.object(setting_workflow.simtools_runner, "run_applications")
+    with pytest.raises(ValueError, match=r"runtime_environment block.*runtime\.yml"):
+        setting_workflow.run_setting_workflow(config_file, {})
+    run.assert_not_called()

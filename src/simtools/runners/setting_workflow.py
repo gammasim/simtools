@@ -15,6 +15,8 @@ from simtools.version import is_valid_semantic_version
 _SUBMIT_APPLICATION = "simtools-submit-model-parameter-from-external"
 _INPUT_PATH = "input/__SETTING_WORKFLOW__"
 _OUTPUT_PATH = "output/__SETTING_WORKFLOW__"
+_RUNTIME_FILE = "runtime.yml"
+_DEFAULT_RUNTIME_FILE = "runtime.default.yml"
 
 
 def create_setting_workflow(args, model_reader=None, context=None):
@@ -143,7 +145,7 @@ def _runtime_configuration(args):
     """Return the validated runtime configuration selected for a new workflow."""
     runtime_file = args.get("workflow_runtime_file")
     if runtime_file is None:
-        return None
+        runtime_file = _default_runtime_file(args)
     runtime = ascii_handler.collect_data_from_file(runtime_file)
     schema.validate_dict_using_schema(
         runtime, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
@@ -151,11 +153,21 @@ def _runtime_configuration(args):
     return runtime
 
 
+def _default_runtime_file(args):
+    """Return the repository's default runtime file, or raise if it is missing."""
+    root = Path(args.get("output_path") or Path.cwd()).resolve()
+    default_file = root / _DEFAULT_RUNTIME_FILE
+    if not default_file.is_file():
+        raise FileNotFoundError(
+            f"No {_DEFAULT_RUNTIME_FILE} found in repository root {root}. Add "
+            f"{_DEFAULT_RUNTIME_FILE} at the repository root or pass --workflow_runtime_file."
+        )
+    return default_file
+
+
 def _write_runtime_file(runtime, workflow_directory):
     """Copy a validated runtime configuration into a new workflow directory."""
-    if runtime is None:
-        return
-    ascii_handler.write_data_to_file(runtime, workflow_directory / "runtime.yml", sort_keys=False)
+    ascii_handler.write_data_to_file(runtime, workflow_directory / _RUNTIME_FILE, sort_keys=False)
 
 
 def _input_metadata(args, context):
@@ -233,6 +245,16 @@ def _setting_metadata(metadata):
     return metadata
 
 
+def _check_single_runtime_source(config_file, runtime_file):
+    """Reject a workflow that defines its runtime both inline and in a sibling runtime file."""
+    config = ascii_handler.collect_data_from_file(config_file)
+    if "runtime_environment" in config:
+        raise ValueError(
+            f"{config_file} contains a runtime_environment block and {runtime_file.name} "
+            f"exists beside it. Define the runtime in {runtime_file.name} only."
+        )
+
+
 def run_setting_workflow(config_file, args, context=None):
     """Execute a prepared setting in its activity output directory.
 
@@ -259,8 +281,10 @@ def run_setting_workflow(config_file, args, context=None):
         "ignore_runtime_environment": args.get("ignore_runtime_environment", False),
         "provenance_path": False,
     }
-    runtime_file = config_file.with_name("runtime.yml")
+    runtime_file = config_file.with_name(_RUNTIME_FILE)
     run_time = None
+    if runtime_file.is_file():
+        _check_single_runtime_source(config_file, runtime_file)
     if runtime_file.is_file() and not runner_args["ignore_runtime_environment"]:
         runtime_environment, run_time = simtools_runner.prepare_runtime_environment(runtime_file)
         runner_args["runtime_environment"] = runtime_environment

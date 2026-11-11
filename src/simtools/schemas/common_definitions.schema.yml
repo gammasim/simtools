@@ -66,6 +66,19 @@ $defs:
         items:
           type: string
           minLength: 1
+      simulation_models:
+        type: object
+        description: Simulation-model repository used by the applications in the runtime.
+        additionalProperties: false
+        properties:
+          git_path:
+            type: string
+            minLength: 1
+            description: Path to the simulation-models Git repository as seen inside the container.
+          git_revision:
+            type: string
+            minLength: 1
+            description: Git tag or commit of the simulation-models repository.
     required:
       - image
 
