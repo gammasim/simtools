@@ -124,7 +124,7 @@ Versioned resource bundles are archived in
 [`gammasim/simtools-tests`](https://github.com/gammasim/simtools-tests). Use
 the resource applications to create and synchronize these bundles:
 
-- [`simtools-resources-test-generate`](../user-guide/applications/simtools-resources-test-generate.md)
+- [`simtools-generate-test-resources`](../user-guide/applications/simtools-generate-test-resources.md)
   generates versioned test resources and validates configured static files.
 The resource generation and release workflow is documented in
 [Test resources](testing_resources.md).

@@ -85,6 +85,7 @@ simtools-generate-corsika-histograms <applications/simtools-generate-corsika-his
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
+simtools-generate-test-resources <applications/simtools-generate-test-resources>
 simtools-get-array-layout <applications/simtools-get-array-layout>
 simtools-get-model-parameter <applications/simtools-get-model-parameter>
 simtools-inspect-file <applications/simtools-inspect-file>
@@ -105,7 +106,6 @@ simtools-production-derive-corsika-limits <applications/simtools-production-deri
 simtools-production-derive-monte-carlo-statistics <applications/simtools-production-derive-monte-carlo-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-select-files <applications/simtools-production-select-files>
-simtools-resources-test-generate <applications/simtools-resources-test-generate>
 simtools-run-application <applications/simtools-run-application>
 simtools-run-science-tests <applications/simtools-run-science-tests>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
