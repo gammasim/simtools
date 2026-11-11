@@ -79,7 +79,7 @@ The documentation is built into the [CI-docs.yml](.github/workflows/CI-docs.yml)
 
 Binary builds are done in two ways:
 
-- containers for CORSIKA and sim_telarray are built in the GitLab CI of the sim_telarray and corsika7-config repositories
+- containers for CORSIKA and sim_telarray are built in the GitLab CI of the [simulation-containers](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/simulation-containers) repository
 - containers for simtools production, see [build-simtools-prod.yml](.github/workflows/build-simtools-prod.yml)
 - containers for simtools development, see [build-simtools-dev.yml](.github/workflows/build-simtools-dev.yml)
 

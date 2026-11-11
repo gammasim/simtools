@@ -84,18 +84,14 @@ jobs:
           set -euo pipefail
 
           # Print the build id (image tag, Docker-tag-safe) of an image reference; exit 1 if invalid.
+          # A valid reference is [host[:port]/]path[/path]...:tag (lower-case names, one tag, no digest).
           image_build_id() {
-            local name="$1" image="$2" last="${2##*/}" tag digest
-            if [[ "${image}" =~ [[:space:]] ]]; then
-              echo "::error::${name} '${image}' must not contain whitespace" >&2
-              exit 1
-            fi
-            if [[ ! "${image}" =~ ^[A-Za-z0-9._:/@-]+$ ]]; then
-              echo "::error::${name} '${image}' contains characters outside [A-Za-z0-9._:/@-]" >&2
-              exit 1
-            fi
-            if [[ "${last}" != *:* || "${last}" == *@* || -z "${last##*:}" ]]; then
-              echo "::error::${name} '${image}' has no tag (name:tag; digests are not supported)" >&2
+            local name="$1" image="$2" tag digest
+            local component='[a-z0-9]+([._-]+[a-z0-9]+)*'
+            local host='[a-z0-9]+([.-][a-z0-9]+)*(:[0-9]+)?'
+            local tag_pattern='[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}'
+            if [[ ! "${image}" =~ ^(${host}/)?${component}(/${component})*:${tag_pattern}$ ]]; then
+              echo "::error::${name} '${image}' is not a valid name:tag image reference (digests are not supported)" >&2
               exit 1
             fi
             tag="${image##*:}"

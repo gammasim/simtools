@@ -988,3 +988,15 @@ def test_required_catalog_keys_come_from_the_schema():
     # An unknown version falls back to the newest schema.
     assert required("9.9.9") == required("0.9.0")
     assert required(None) == required("0.9.0")
+
+
+@pytest.mark.parametrize("suffix", ["-\u00e9", "-gl\u0661", "gl1", "-", "-gl 1"])
+def test_image_tag_suffix_rejects_non_ascii_and_malformed(suffix):
+    """The tag suffix pattern accepts only ASCII characters, as the schema does."""
+    assert dependency_versions.IMAGE_TAG_SUFFIX_PATTERN.fullmatch(suffix) is None
+
+
+@pytest.mark.parametrize("suffix", ["", "-gl1", "-r2.1_a"])
+def test_image_tag_suffix_accepts_ascii(suffix):
+    """Valid ASCII suffixes pass."""
+    assert dependency_versions.IMAGE_TAG_SUFFIX_PATTERN.fullmatch(suffix) is not None

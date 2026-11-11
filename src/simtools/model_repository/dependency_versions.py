@@ -34,7 +34,7 @@ CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
 SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
 IMAGE_REGISTRY = "ghcr.io/gammasim"
 IMAGE_REGISTRY_PATTERN = re.compile(r"^[a-z0-9.-]+(/[a-z0-9._-]+)*$")
-IMAGE_TAG_SUFFIX_PATTERN = re.compile(r"^(-\w[A-Za-z0-9_.]*)?$")
+IMAGE_TAG_SUFFIX_PATTERN = re.compile(r"^(-\w[A-Za-z0-9_.]*)?$", re.ASCII)
 
 
 @cache
