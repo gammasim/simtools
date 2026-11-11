@@ -157,6 +157,57 @@ def test_default_runtime_file_is_copied_to_workflow(setting_args, setting_writer
     assert runtime == {"runtime_environment": {"image": "default@sha256:abc"}}
 
 
+def test_default_runtime_resolves_unset_releases(setting_args, setting_writer, mocker):
+    default_file = setting_args["output_path"] / "runtime.default.yml"
+    ascii_handler.write_data_to_file(
+        {"runtime_environment": {"image": None, "simulation_models": {"git_revision": None}}},
+        default_file,
+    )
+    mocker.patch.object(
+        setting_workflow.runtime_releases, "latest_simtools_image", return_value="image@sha256:123"
+    )
+    mocker.patch.object(
+        setting_workflow.runtime_releases, "latest_models_commit", return_value="abc123"
+    )
+    config_file = setting_workflow.create_setting_workflow(setting_args)
+    runtime = ascii_handler.collect_data_from_file(config_file.with_name("runtime.yml"))
+    assert runtime == {
+        "runtime_environment": {
+            "image": "image@sha256:123",
+            "simulation_models": {"git_revision": "abc123"},
+        }
+    }
+    assert (
+        ascii_handler.collect_data_from_file(default_file)["runtime_environment"]["image"] is None
+    )
+
+
+def test_empty_default_resolves_both_releases(mocker):
+    image = mocker.patch.object(
+        setting_workflow.runtime_releases, "latest_simtools_image", return_value="image@sha256:123"
+    )
+    models = mocker.patch.object(
+        setting_workflow.runtime_releases, "latest_models_commit", return_value="abc123"
+    )
+    runtime = {"runtime_environment": {}}
+    setting_workflow._resolve_default_releases(runtime)
+    assert runtime["runtime_environment"]["simulation_models"]["git_revision"] == "abc123"
+    image.assert_called_once()
+    models.assert_called_once()
+
+
+def test_release_lookup_failure_explains_how_to_proceed(setting_args, setting_writer, mocker):
+    ascii_handler.write_data_to_file(
+        {"runtime_environment": {"image": None}},
+        setting_args["output_path"] / "runtime.default.yml",
+    )
+    mocker.patch.object(
+        setting_workflow.runtime_releases, "latest_simtools_image", side_effect=OSError("offline")
+    )
+    with pytest.raises(ValueError, match="Check network access or set"):
+        setting_workflow.create_setting_workflow(setting_args)
+
+
 def test_explicit_runtime_file_overrides_default(setting_args, setting_writer, tmp_test_directory):
     explicit = Path(tmp_test_directory) / "explicit-runtime.yml"
     ascii_handler.write_data_to_file(

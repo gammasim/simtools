@@ -3,12 +3,15 @@
 from copy import deepcopy
 from pathlib import Path
 
+import yaml
+
 from simtools.constants import METADATA_JSON_SCHEMA, RUN_TIME_ENVIRONMENT_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler
-from simtools.runners import simtools_runner
+from simtools.model_repository import dependency_versions
+from simtools.runners import runtime_releases, simtools_runner
 from simtools.utils import general, names, value_conversion
 from simtools.version import is_valid_semantic_version
 
@@ -147,10 +150,35 @@ def _runtime_configuration(args):
     if runtime_file is None:
         runtime_file = _default_runtime_file(args)
     runtime = ascii_handler.collect_data_from_file(runtime_file)
+    if args.get("workflow_runtime_file") is None:
+        try:
+            _resolve_default_releases(runtime)
+        except (OSError, ValueError, KeyError, yaml.YAMLError) as exc:
+            raise ValueError(
+                "Could not resolve the latest runtime releases. Check network access or set "
+                "the image and simulation-models revision in runtime.default.yml."
+            ) from exc
     schema.validate_dict_using_schema(
         runtime, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
     )
     return runtime
+
+
+def _resolve_default_releases(runtime):
+    """Fill empty default runtime values with immutable current release references."""
+    environment = runtime.get("runtime_environment", {})
+    image_missing = environment.get("image") is None
+    models = environment.get("simulation_models")
+    if models is None and image_missing:
+        models = environment["simulation_models"] = {}
+    models_missing = models is not None and models.get("git_revision") is None
+    if not image_missing and not models_missing:
+        return
+    catalog = dependency_versions.load_dependency_catalog()
+    if image_missing:
+        environment["image"] = runtime_releases.latest_simtools_image(catalog)
+    if models_missing:
+        models["git_revision"] = runtime_releases.latest_models_commit(catalog)
 
 
 def _default_runtime_file(args):

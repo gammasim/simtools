@@ -39,9 +39,19 @@ Identical inputs reuse their workflow; conflicting values, descriptions, contact
 definitions require a new parameter version. Retrying a prepared workflow uses the same
 activity output directory. No additional execution or provenance directories are created.
 
-Each new workflow receives a `runtime.yml` copied from the repository's `runtime.default.yml`
-in the repository root (or from `--workflow_runtime_file`, if given). The file holds the simtools
-image (by digest) and the simulation-models revision used for the workflow, for example:
+Each new workflow receives a `runtime.yml` based on the repository's `runtime.default.yml`
+(or on `--workflow_runtime_file`, if given). When the default leaves the image or model revision
+empty, workflow creation selects the latest stable simtools or simulation-models release and
+records its image digest or Git commit. This lookup requires network access. Explicit values are
+preserved, and an explicitly supplied runtime file must contain concrete values. The generated
+file holds the resolved runtime.
+
+The image lookup uses the release's first production combination and its generic CPU variant.
+The latest releases are selected independently; specify a tested pair in the default when needed.
+The model repository and image registry are taken from the installed dependency catalog.
+To reuse a workflow after the defaults or releases change, pass its existing `runtime.yml` with
+`--workflow_runtime_file`.
+For example, a resolved file can contain:
 
 ```yaml
 runtime_environment:
