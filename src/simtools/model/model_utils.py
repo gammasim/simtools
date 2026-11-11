@@ -106,7 +106,10 @@ def read_overwrite_model_parameter_dict(overwrite_model_parameters=None, context
     Parameters
     ----------
     overwrite_model_parameters: dict or str, optional
-        Either a dictionary with model parameters to overwrite, or a file path.
+        An override dictionary, a JSON string, or a JSON/YAML file path. Files may
+        also contain a model parameter document with ``instrument``, ``parameter``
+        and ``value`` fields. Only its value is overridden; parameter validation
+        is performed when the model applies the override.
 
     Returns
     -------
@@ -146,6 +149,8 @@ def _extract_changes_from_string(overwrite_str):
 
     data = ascii_handler.collect_data_from_file(file_name=overwrite_str)
     if isinstance(data, dict):
+        if {"instrument", "parameter", "value"}.issubset(data):
+            return {data["instrument"]: {data["parameter"]: {"value": data["value"]}}}
         return _extract_changes_from_dict(data)
     return {}
 
