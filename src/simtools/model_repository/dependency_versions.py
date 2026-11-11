@@ -35,21 +35,6 @@ SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
 IMAGE_REGISTRY = "ghcr.io/gammasim"
 IMAGE_REGISTRY_PATTERN = re.compile(r"^[a-z0-9.-]+(/[a-z0-9._-]+)*$")
 IMAGE_TAG_SUFFIX_PATTERN = re.compile(r"^(-\w[A-Za-z0-9_.]*)?$")
-IMAGE_CATALOG_VERSION = (0, 9, 0)
-COMMON_CATALOG_KEYS = frozenset(
-    {
-        "schema_version",
-        "python",
-        "apptainer",
-        "cpu-variants",
-        "base-image",
-        "corsika-interaction-tables",
-        "model-repository",
-        "production-combinations",
-        "corsika",
-        "sim-telarray",
-    }
-)
 
 
 @cache
@@ -76,15 +61,9 @@ def _requires_model_range(schema_version):
 
 
 def _uses_image_catalog(schema_version):
-    """Return whether the catalog names images through its ``images`` section.
-
-    Versions that cannot be parsed as dotted integers are not image catalogs.
-    """
-    try:
-        parts = tuple(int(part) for part in str(schema_version).split("."))
-    except ValueError:
-        return False
-    return parts >= IMAGE_CATALOG_VERSION
+    """Return whether the schema of this version names images through an ``images`` section."""
+    schema = _dependency_schemas().get(schema_version)
+    return schema is not None and "images" in schema["required"]
 
 
 def _source_snapshot_image(package, digest, revisions):
@@ -313,8 +292,6 @@ def validate_dependency_catalog(catalog):
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
     if schema_version not in set(_dependency_schemas()):
         raise ValueError(f"Unsupported dependency catalog schema version: {schema_version}")
-    if schema_version != "0.1.0" and "simtools-tests" not in catalog:
-        raise ValueError("Missing dependency catalog keys: simtools-tests")
     _validate_optional_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
     _validate_optional_digest(catalog["base-image"].get("build-digest"), "build base image")
     if _uses_image_catalog(schema_version):
@@ -328,10 +305,15 @@ def validate_dependency_catalog(catalog):
 
 
 def _required_catalog_keys(schema_version):
-    """Return the top-level keys required by a catalog of the given schema version."""
-    if _uses_image_catalog(schema_version):
-        return COMMON_CATALOG_KEYS | {"images"}
-    return COMMON_CATALOG_KEYS | {"archives"}
+    """Return the top-level keys required by the schema of a catalog version.
+
+    An unknown version falls back to the newest schema, so that an incomplete catalog reports its
+    missing keys before the unsupported version is reported.
+    """
+    schemas = _dependency_schemas()
+    if schema_version not in schemas:
+        schema_version = max(schemas, key=lambda version: tuple(map(int, version.split("."))))
+    return set(schemas[schema_version]["required"])
 
 
 def _validate_images(images):

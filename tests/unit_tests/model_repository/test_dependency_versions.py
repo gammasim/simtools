@@ -837,13 +837,13 @@ def test_legacy_catalog_rejects_invalid_pins(mutator, error):
     [
         ("0.8.0", False),
         ("0.9.0", True),
-        ("0.10.0", True),
+        ("0.10.0", False),
         ("latest", False),
         (None, False),
     ],
 )
-def test_uses_image_catalog_compares_schema_versions_numerically(version, expected):
-    """Select the image catalog format from numeric schema versions."""
+def test_uses_image_catalog_follows_the_schema(version, expected):
+    """Select the image catalog format from the required keys of the version's schema."""
     assert dependency_versions._uses_image_catalog(version) is expected  # pylint: disable=protected-access
 
 
@@ -976,3 +976,15 @@ def test_image_catalog_schema_accepts_default_suffix(simtools_root_path):
     jsonschema.validate(catalog, _schema_documents()["0.9.0"])
     entry = dependency_versions.build_workflow_matrices(catalog)["production_matrix"][0]
     assert entry["corsika_image"] == "ghcr.io/gammasim/corsika7:v78010-generic"
+
+
+def test_required_catalog_keys_come_from_the_schema():
+    """Required top-level keys are read from the schema of the catalog version."""
+    required = dependency_versions._required_catalog_keys  # pylint: disable=protected-access
+    assert "images" in required("0.9.0")
+    assert "archives" not in required("0.9.0")
+    assert "archives" in required("0.8.0")
+    assert "simtools-tests" not in required("0.1.0")
+    # An unknown version falls back to the newest schema.
+    assert required("9.9.9") == required("0.9.0")
+    assert required(None) == required("0.9.0")
