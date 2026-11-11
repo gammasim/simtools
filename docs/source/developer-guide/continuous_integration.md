@@ -83,7 +83,7 @@ Binary builds are done in two ways:
 - containers for simtools production, see [build-simtools-prod.yml](.github/workflows/build-simtools-prod.yml)
 - containers for simtools development, see [build-simtools-dev.yml](.github/workflows/build-simtools-dev.yml)
 
-Builds are done for the platforms: linux/amd64,linux/arm64/v8 (the latter only for non-vector-optimized builds).
+Builds are done for the platform linux/amd64.
 
 ## Deployment
 

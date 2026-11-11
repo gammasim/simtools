@@ -233,7 +233,8 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7
         with:
           context: .
-          platforms: ${{ matrix.avx_flag == 'generic' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          # arm64 is paused: the sim_telarray and CORSIKA component images are amd64 only
+          platforms: linux/amd64
           build-args: |
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
             CORSIKA_IMAGE=${{ matrix.corsika_image }}
@@ -257,6 +258,7 @@ jobs:
       simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
       simtools_tests_branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
       model_versions: '["7.0.0"]'
-      runner_labels: '["ubuntu-24.04","ubuntu-24.04-arm"]'
+      # arm64 is paused: the sim_telarray and CORSIKA component images are amd64 only
+      runner_labels: '["ubuntu-24.04"]'
     secrets:
       CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}

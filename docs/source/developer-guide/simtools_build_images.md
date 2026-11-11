@@ -18,15 +18,24 @@ simtools-dependency-versions --format github-output
 ## Scientific component images
 
 The sim_telarray (including hessio and stdtools) and CORSIKA images are built in the GitLab CI of
-the sim_telarray and corsika7-config repositories. They are published as
-`ghcr.io/gammasim/sim_telarray` and `ghcr.io/gammasim/corsika7`. The simtools images consume them
-through the `SIMTEL_IMAGE` and `CORSIKA_IMAGE` build arguments.
+the `simulation-containers` repository, which pins every source version in its `versions.yml`.
+They are published as `ghcr.io/gammasim/sim_telarray` and `ghcr.io/gammasim/corsika7`. The simtools
+images consume them through the `SIMTEL_IMAGE` and `CORSIKA_IMAGE` build arguments.
 
-To build simtools-prod images with a custom sim_telarray or CORSIKA image, set the `simtel_image`
-and/or `corsika_image` inputs of the manual `build-simtools-prod` dispatch, for example
-`simtel_image=ghcr.io/gammasim/sim_telarray:lst-saturation` with `avx_flag=generic`. The image is
-pushed as `simtools-prod` with the build id taken from the image tag. Such images are built in the
-simulation-containers GitLab repository (web pipeline with `PACKAGE=sim_telarray` and `SOURCE_REF=<branch>`).
+### Images with a sim_telarray development branch
+
+To build a simtools-prod image with sim_telarray code from a branch (for example `lst-saturation`):
+
+1. In the `simulation-containers` GitLab project, run a web pipeline with the variables
+   `PACKAGE=sim_telarray` and `SOURCE_REF=lst-saturation`. It builds only sim_telarray and publishes
+   `ghcr.io/gammasim/sim_telarray:lst-saturation`; CORSIKA is not rebuilt. hessio and stdtools are
+   built from their `master` branches; set the variables `HESSIO_REF` and `STDTOOLS_REF` to use
+   other branches or tags.
+2. In the simtools GitHub repository, run the `build-simtools-prod` workflow manually with
+   `simtel_image=ghcr.io/gammasim/sim_telarray:lst-saturation` and, for a single image,
+   `avx_flag=generic`. Set `corsika_image` as well to also replace the CORSIKA image.
+
+The resulting simtools-prod image tag uses the tag of the overriding image as its build identifier.
 
 ## Production and development images
 
