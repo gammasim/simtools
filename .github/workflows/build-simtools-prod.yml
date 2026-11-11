@@ -268,3 +268,34 @@ jobs:
       runner_labels: '["ubuntu-24.04"]'
     secrets:
       CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
+
+  update-release-notes:
+    if: ${{ github.event_name == 'release' && github.event.release.prerelease == false }}
+    runs-on: ubuntu-24.04
+    needs: test-simtools-prod
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - name: Checkout release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Collect published production image tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate --slurp \
+            "orgs/gammasim/packages/container/simtools-prod/versions?per_page=100" \
+            | jq -c '[.[][] | .metadata.container.tags[]?] | unique' > image-tags.json
+
+      - name: Render release notes
+        run: |
+          python .github/scripts/release_notes.py "${GITHUB_REF_NAME}" \
+            --image-tags image-tags.json --output release-notes.md
+
+      - name: Update GitHub release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${GITHUB_REF_NAME}" --notes-file release-notes.md

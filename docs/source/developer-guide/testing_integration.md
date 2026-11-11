@@ -92,7 +92,7 @@ one of these repository sources.
 
 Tests resolve resources from `SIMTOOLS_TESTS_PATH` and the `resource-version`
 in `dependency_versions.yml`. The environment variable identifies the local
-`simtools-tests` checkout; the catalog selects the versioned resource directory
+`simtools-tests` checkout or its parent directory; the catalog selects the versioned resource directory
 below it and records the Git ref used to obtain the repository. The corresponding
 command-line option is `--simtools_tests_path`.
 
