@@ -44,6 +44,9 @@ def _normalize_test_path(value):
 def normalize_value(value, path=()):
     """Normalize strings recursively while preserving structured values."""
     if isinstance(value, str):
+        value = value.replace(
+            "/base-simtools-tests/simtools-tests/", "/simtools-tests/simtools-tests/"
+        )
         if path[:1] == ("cta",):
             value = _normalize_test_path(value)
         return normalize_text(value)

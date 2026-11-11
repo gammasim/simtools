@@ -51,6 +51,39 @@ def test_normalize_generated_metadata_preserves_scientific_changes():
     assert base != DIFFERENTIAL_OUTPUTS.normalize_value(metadata("/tmp/head", "two", 2))
 
 
+def test_resource_paths_normalize_checkout_only():
+    base = "/workspace/base-simtools-tests/simtools-tests/v0.40.0/integration_tests/input.ecsv"
+    head = "/workspace/simtools-tests/simtools-tests/v0.40.0/integration_tests/input.ecsv"
+    normalized = DIFFERENTIAL_OUTPUTS.normalize_value({"corsika_limits": base})
+    assert normalized == DIFFERENTIAL_OUTPUTS.normalize_value({"corsika_limits": head})
+    assert normalized != DIFFERENTIAL_OUTPUTS.normalize_value(
+        {"corsika_limits": head.replace("v0.40.0", "v0.41.0")}
+    )
+    assert normalized != DIFFERENTIAL_OUTPUTS.normalize_value(
+        {"corsika_limits": head.replace("input.ecsv", "other.ecsv")}
+    )
+    unrelated = "/workspace/base-simtools-tests/other/input.ecsv"
+    assert DIFFERENTIAL_OUTPUTS.normalize_value(unrelated) == unrelated
+
+
+@pytest.mark.parametrize("suffix", [".ecsv", ".yml", ".hdf5"])
+def test_compare_resource_checkout_paths(tmp_test_directory, suffix):
+    root = Path(tmp_test_directory)
+    base, head = root / f"base{suffix}", root / f"head{suffix}"
+    for path, checkout in ((base, "base-simtools-tests"), (head, "simtools-tests")):
+        resource = f"/workspace/{checkout}/simtools-tests/v0.40.0/integration_tests/input.ecsv"
+        metadata = {"cta": {"arguments": {"input": resource}}, "corsika_limits": resource}
+        if suffix == ".ecsv":
+            Table({"value": [1]}, meta=metadata).write(path)
+        elif suffix == ".yml":
+            path.write_text(json.dumps(metadata), encoding="utf-8")
+        else:
+            with h5py.File(path, "w") as output:
+                output.create_dataset("METADATA", data=np.array([json.dumps(metadata).encode()]))
+
+    assert DIFFERENTIAL_OUTPUTS._compare_file(base, head) == []
+
+
 def test_relative_files_excludes_generated_config(tmp_test_directory):
     root = Path(tmp_test_directory)
     (root / "tmp_config.yml").write_text("temporary: true\n")
