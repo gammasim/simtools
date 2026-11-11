@@ -38,7 +38,7 @@ Images are compatible with ARM and x86_64 CPUs.
 ### CORSIKA7
 
 - registry page: [corsika7](https://github.com/gammasim/simtools/pkgs/container/corsika7)
-- Docker file: [Dockerfile-corsika7](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika7)
+- Build: GitLab CI of the corsika7-config repository
 
 | image tag | CORSIKA | high-/low-energy <br>interaction models | compile <br>configuration | optimization <br> patches | IACT/ATMO |
 | --- | --- | --- | --- | --- | --- |
@@ -59,7 +59,7 @@ installation instructions.
 ### sim_telarray Images
 
 - registry page: [sim_telarray](https://github.com/gammasim/simtools/pkgs/container/sim_telarray)
-- Docker file: [Dockerfile-sim_telarray](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtel_array)
+- build: in the GitLab CI of the sim_telarray repository (not part of simtools)
 
 | Image tag | sim_telarray | hessio version | stdtools version |
 | --- | --- | --- | --- |

@@ -13,9 +13,6 @@ The simtools continuous integration tests, lints, and builds code, documentation
 | `CI-test-benchmarks` | - | - | - | main | - | nightly |
 | `CI-schema-validation` | x | `src/simtools/schemas/model_parameters`, `src/simtools/schemas/test_config` | - | - | - | - |
 | `CI-software-update` | - | - | - | - | - | monthly |
-| `Refresh build-input snapshots` | - | - | - | - | - | weekly |
-| `build-corsika7` | x | `docker/Dockerfile-corsika7` | - | - | - | monthly (no deploy) |
-| `build-simtel_array` | x | `docker/Dockerfile-simtel_array` | - | - | - | monthly (no deploy) |
 | `build-simtools-prod` | - | - | - | `main` (path filter), RC tags | x | weekly (no deploy) |
 | `build-simtools-dev` | - | - | - | `main` (path filter), RC tags | x | weekly (no deploy) |
 | `changelog` | x | - | opened, labeled, unlabeled, ready_for_review | - | - | - |
@@ -82,10 +79,8 @@ The documentation is built into the [CI-docs.yml](.github/workflows/CI-docs.yml)
 
 Binary builds are done in two ways:
 
-- containers for CORSIKA, see [build-corsika7.yml](.github/workflows/build-corsika7.yml)
-- containers for sim_telarray, see [build-sim_telarray.yml](.github/workflows/build-sim_telarray.yml)
-- private source snapshots, see [refresh-build-input-snapshots.yml](.github/workflows/refresh-build-input-snapshots.yml)
-- production containers for simtools, see [build-simtools-prod.yml](.github/workflows/build-simtools-prod.yml)
+- containers for CORSIKA and sim_telarray are built in the GitLab CI of the sim_telarray and corsika7-config repositories
+- containers for simtools production, see [build-simtools-prod.yml](.github/workflows/build-simtools-prod.yml)
 - containers for simtools development, see [build-simtools-dev.yml](.github/workflows/build-simtools-dev.yml)
 
 Builds are done for the platforms: linux/amd64,linux/arm64/v8 (the latter only for non-vector-optimized builds).
