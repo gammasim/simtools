@@ -75,7 +75,9 @@ def _versioned_test_resources_path(config, version, integration_test_run=False):
     test_path = options.get_mirrored_option(config, "simtools_tests_path")
     if not test_path or not version:
         return None
-    return Path(test_path).expanduser() / version / "integration_tests"
+    from simtools.constants import _versioned_test_resources_path as resolve_resources_path
+
+    return resolve_resources_path(test_path, version)
 
 
 def _catalog_test_resources_version():
