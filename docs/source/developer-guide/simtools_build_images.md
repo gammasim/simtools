@@ -22,6 +22,12 @@ the sim_telarray and corsika7-config repositories. They are published as
 `ghcr.io/gammasim/sim_telarray` and `ghcr.io/gammasim/corsika7`. The simtools images consume them
 through the `SIMTEL_IMAGE` and `CORSIKA_IMAGE` build arguments.
 
+To build simtools-prod images with a custom sim_telarray or CORSIKA image, set the `simtel_image`
+and/or `corsika_image` inputs of the manual `build-simtools-prod` dispatch, for example
+`simtel_image=ghcr.io/gammasim/sim_telarray:lst-saturation` with `avx_flag=generic`. The image is
+pushed as `simtools-prod` with the build id taken from the image tag. Such images are built in the
+simulation-containers GitLab repository (web pipeline with `PACKAGE=sim_telarray` and `SOURCE_REF=<branch>`).
+
 ## Production and development images
 
 `docker/Dockerfile-simtools-prod` installs the checked-out simtools revision with the compatible

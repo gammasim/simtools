@@ -26,6 +26,16 @@ on:
           - avx2
           - avx512f
           - sse4
+      simtel_image:
+        description: "Override sim_telarray image, e.g. ghcr.io/gammasim/sim_telarray:my-branch"
+        required: false
+        type: string
+        default: ''
+      corsika_image:
+        description: "Override CORSIKA image, e.g. ghcr.io/gammasim/corsika7:v78010-generic"
+        required: false
+        type: string
+        default: ''
   push:
     branches:
       - main
@@ -68,12 +78,58 @@ jobs:
       - id: config
         env:
           AVX_FLAG: ${{ github.event.inputs.avx_flag || 'all' }}
+          SIMTEL_IMAGE_OVERRIDE: ${{ github.event.inputs.simtel_image || '' }}
+          CORSIKA_IMAGE_OVERRIDE: ${{ github.event.inputs.corsika_image || '' }}
         run: |
+          set -euo pipefail
+
+          # Print the build id (image tag, Docker-tag-safe) of an image reference; exit 1 if invalid.
+          image_build_id() {
+            local name="$1" image="$2" last="${2##*/}" tag
+            if [[ "${image}" =~ [[:space:]] ]]; then
+              echo "::error::${name} '${image}' must not contain whitespace" >&2
+              exit 1
+            fi
+            if [[ ! "${image}" =~ ^[A-Za-z0-9._:/@-]+$ ]]; then
+              echo "::error::${name} '${image}' contains characters outside [A-Za-z0-9._:/@-]" >&2
+              exit 1
+            fi
+            if [[ "${last}" != *:* || "${last}" == *@* || -z "${last##*:}" ]]; then
+              echo "::error::${name} '${image}' has no tag (name:tag; digests are not supported)" >&2
+              exit 1
+            fi
+            tag="${image##*:}"
+            printf '%s' "${tag//[^A-Za-z0-9_.-]/-}"
+          }
+
           bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output > dependency-output
           if [[ "${AVX_FLAG}" != "all" ]]; then
             production_matrix=$(sed -n 's/^production_matrix=//p' dependency-output | \
               jq -c --arg avx_flag "${AVX_FLAG}" 'map(select(.avx_flag == $avx_flag))')
+            sed '/^production_matrix=/d' dependency-output > filtered-output
+            printf 'production_matrix=%s\n' "${production_matrix}" >> filtered-output
+            mv filtered-output dependency-output
+          fi
+          if [[ -n "${SIMTEL_IMAGE_OVERRIDE}" || -n "${CORSIKA_IMAGE_OVERRIDE}" ]]; then
+            simtel_build_id=""
+            corsika_build_id=""
+            if [[ -n "${SIMTEL_IMAGE_OVERRIDE}" ]]; then
+              simtel_build_id=$(image_build_id SIMTEL_IMAGE_OVERRIDE "${SIMTEL_IMAGE_OVERRIDE}")
+            fi
+            if [[ -n "${CORSIKA_IMAGE_OVERRIDE}" ]]; then
+              corsika_build_id=$(image_build_id CORSIKA_IMAGE_OVERRIDE "${CORSIKA_IMAGE_OVERRIDE}")
+            fi
+            production_matrix=$(sed -n 's/^production_matrix=//p' dependency-output | \
+              jq -c \
+                --arg simtel_image "${SIMTEL_IMAGE_OVERRIDE}" \
+                --arg simtel_build_id "${simtel_build_id}" \
+                --arg corsika_image "${CORSIKA_IMAGE_OVERRIDE}" \
+                --arg corsika_build_id "${corsika_build_id}" \
+                'map(
+                  if $simtel_image != "" then .simtel_image = $simtel_image | .simtel_build_id = $simtel_build_id | .simtel_tag = $simtel_build_id else . end |
+                  if $corsika_image != "" then .corsika_image = $corsika_image | .corsika_build_id = $corsika_build_id | .corsika_tag = $corsika_build_id else . end
+                ) | unique')
             sed '/^production_matrix=/d' dependency-output > filtered-output
             printf 'production_matrix=%s\n' "${production_matrix}" >> filtered-output
             mv filtered-output dependency-output
