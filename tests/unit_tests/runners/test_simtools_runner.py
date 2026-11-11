@@ -1005,7 +1005,7 @@ def test_prepare_runtime_environment_accepts_simulation_models(tmp_test_director
 
 @pytest.mark.parametrize(
     "simulation_models",
-    [{"git_revision": ""}, {"git_path": "/models", "unknown": "value"}],
+    [{}, {"git_revision": ""}, {"git_path": "/models", "unknown": "value"}],
 )
 def test_prepare_runtime_environment_rejects_invalid_simulation_models(
     tmp_test_directory, simulation_models
@@ -1060,3 +1060,12 @@ def test_model_provenance_records_commit_and_checkout_changes(tmp_test_directory
     assert "unavailable" in simtools_runner._model_source_provenance(
         None, str(repository), "missing"
     )
+
+
+@pytest.mark.parametrize("contents", [None, "invalid: [", "not a mapping"])
+def test_model_provenance_handles_unavailable_catalog(tmp_test_directory, monkeypatch, contents):
+    catalog = Path(tmp_test_directory) / "dependency_versions.yml"
+    if contents is not None:
+        catalog.write_text(contents)
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(catalog))
+    assert "commit: unavailable" in simtools_runner._model_source_provenance(None, "/models", None)

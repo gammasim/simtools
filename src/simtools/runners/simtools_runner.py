@@ -433,13 +433,13 @@ def _model_source_provenance(checkout, repository, revision):
     repository = checkout or repository
     if not repository:
         return "Simulation models commit: unavailable (no model source selected)\n"
-    if checkout:
-        revision = "HEAD"
-    elif not revision:
-        revision = model_dependencies.model_repository_revision(
-            model_dependencies.load_dependency_catalog()
-        )
     try:
+        if checkout:
+            revision = "HEAD"
+        elif not revision:
+            revision = model_dependencies.model_repository_revision(
+                model_dependencies.load_dependency_catalog()
+            )
         commit = subprocess.run(
             ["git", "-C", str(repository), "rev-parse", "--verify", f"{revision}^{{commit}}"],
             check=True,
@@ -458,7 +458,7 @@ def _model_source_provenance(checkout, repository, revision):
             ).stdout
             result += f"Simulation models checkout: {'modified' if status else 'clean'}\n"
         return result
-    except OSError, subprocess.SubprocessError:
+    except OSError, ValueError, yaml.YAMLError, subprocess.SubprocessError:
         source = f"source: {repository}, revision: {revision}"
         return f"Simulation models commit: unavailable ({source})\n"
 

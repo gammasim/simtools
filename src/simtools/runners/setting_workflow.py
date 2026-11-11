@@ -62,7 +62,7 @@ def create_setting_workflow(args, model_reader=None, context=None):
     directory = root / "input" / args["instrument"] / args["parameter"]
     existing = _existing_setting(directory, args)
     if existing is not None:
-        _check_matching_inputs(existing, config, metadata, writer, parameter)
+        _check_matching_inputs(existing, config, metadata, runtime, writer, parameter)
         return existing
 
     writer.check_for_existing_parameter(
@@ -213,7 +213,7 @@ def _existing_setting(directory, args):
     return matches[0] if matches else None
 
 
-def _check_matching_inputs(config_file, config, metadata, writer, parameter):
+def _check_matching_inputs(config_file, config, metadata, runtime, writer, parameter):
     """Reuse only unchanged configuration and scientific/contact metadata."""
     existing = ascii_handler.collect_data_from_file(config_file)
     comparison = deepcopy(config)
@@ -227,7 +227,16 @@ def _check_matching_inputs(config_file, config, metadata, writer, parameter):
     )["cta"]
     expected = metadata["cta"]
     same_metadata = _setting_metadata(existing_metadata) == _setting_metadata(expected)
-    if existing != comparison or previous_parameter != parameter or not same_metadata:
+    runtime_file = config_file.with_name(_RUNTIME_FILE)
+    same_runtime = (
+        runtime_file.is_file() and ascii_handler.collect_data_from_file(runtime_file) == runtime
+    )
+    if (
+        existing != comparison
+        or previous_parameter != parameter
+        or not same_metadata
+        or not same_runtime
+    ):
         raise ValueError(
             f"Conflicting inputs in {config_file}. Use a new parameter version; "
             "existing files are preserved."

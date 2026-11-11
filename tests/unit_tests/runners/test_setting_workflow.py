@@ -77,6 +77,26 @@ def test_new_version_gets_new_workflow(setting_args, setting_writer):
     assert previous.is_file()
 
 
+def test_changed_runtime_cannot_reuse_existing_workflow(setting_args, setting_writer):
+    config_file = setting_workflow.create_setting_workflow(setting_args)
+    runtime_file = config_file.with_name("runtime.yml")
+    original = runtime_file.read_bytes()
+    ascii_handler.write_data_to_file(
+        {"runtime_environment": {"image": "different-image"}},
+        setting_args["output_path"] / "runtime.default.yml",
+    )
+    with pytest.raises(ValueError, match=r"Conflicting inputs.*new parameter version"):
+        setting_workflow.create_setting_workflow(setting_args)
+    assert runtime_file.read_bytes() == original
+
+
+def test_missing_existing_runtime_cannot_reuse_workflow(setting_args, setting_writer):
+    config_file = setting_workflow.create_setting_workflow(setting_args)
+    config_file.with_name("runtime.yml").unlink()
+    with pytest.raises(ValueError, match=r"Conflicting inputs.*new parameter version"):
+        setting_workflow.create_setting_workflow(setting_args)
+
+
 def test_explicit_site_for_shared_instrument(setting_args, setting_writer):
     setting_args.update(instrument="MSTx-NectarCam", site="South")
     config_file = setting_workflow.create_setting_workflow(setting_args)

@@ -7,6 +7,16 @@ import yaml
 from simtools.data_model import schema_loader
 from simtools.io import ascii_handler
 
+
+def test_runtime_schema_preserves_both_versions():
+    schema_file = "run_time_environment.schema.yml"
+    old = schema_loader.load_schema(schema_file, "0.1.0")
+    current = schema_loader.load_schema(schema_file, "0.2.0")
+    assert old["schema_version"] == "0.1.0"
+    assert old["definitions"]["RunTimeEnvironmentFile"]["required"] == ["runtime_environment"]
+    assert current["schema_version"] == "0.2.0"
+
+
 DUMMY_FILE = "dummy_file.yml"
 
 

@@ -68,6 +68,7 @@ $defs:
           minLength: 1
       simulation_models:
         type: object
+        minProperties: 1
         description: Simulation-model repository used by the applications in the runtime.
         additionalProperties: false
         properties:
