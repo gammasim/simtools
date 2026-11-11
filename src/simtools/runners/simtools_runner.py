@@ -459,9 +459,8 @@ def _model_source_provenance(checkout, repository, revision):
             result += f"Simulation models checkout: {'modified' if status else 'clean'}\n"
         return result
     except OSError, subprocess.SubprocessError:
-        return (
-            f"Simulation models commit: unavailable (source: {repository}, revision: {revision})\n"
-        )
+        source = f"source: {repository}, revision: {revision}"
+        return f"Simulation models commit: unavailable ({source})\n"
 
 
 def _application_argument_names(application):

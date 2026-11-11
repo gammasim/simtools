@@ -1,0 +1,3 @@
+---
+runtime_environment:
+  image: example.invalid/simtools:test
