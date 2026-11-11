@@ -66,6 +66,7 @@ class ReleaseDefinition:
     products: dict
     rules: dict
     suites: dict = field(default_factory=dict)
+    workflow_release_dir: Path | None = field(default=None, init=False, repr=False, compare=False)
 
 
 def load_release(release_dir, template_dir=None, context_file=None):
@@ -430,7 +431,7 @@ def resolve_workflow(bundle, workflow):
     path = Path(workflow)
     if path.is_absolute() or ".." in path.parts:
         raise ValueError(f"Workflow must be a relative template path: {workflow}")
-    override = bundle.release_dir / path
+    override = (bundle.workflow_release_dir or bundle.release_dir) / path
     return override if override.is_file() else bundle.template_dir / path
 
 

@@ -51,6 +51,39 @@ def test_normalize_generated_metadata_preserves_scientific_changes():
     assert base != DIFFERENTIAL_OUTPUTS.normalize_value(metadata("/tmp/head", "two", 2))
 
 
+def test_resource_paths_normalize_checkout_only():
+    base = "/workspace/base-simtools-tests/simtools-tests/v0.40.0/integration_tests/input.ecsv"
+    head = "/workspace/simtools-tests/simtools-tests/v0.40.0/integration_tests/input.ecsv"
+    normalized = DIFFERENTIAL_OUTPUTS.normalize_value({"corsika_limits": base})
+    assert normalized == DIFFERENTIAL_OUTPUTS.normalize_value({"corsika_limits": head})
+    assert normalized != DIFFERENTIAL_OUTPUTS.normalize_value(
+        {"corsika_limits": head.replace("v0.40.0", "v0.41.0")}
+    )
+    assert normalized != DIFFERENTIAL_OUTPUTS.normalize_value(
+        {"corsika_limits": head.replace("input.ecsv", "other.ecsv")}
+    )
+    unrelated = "/workspace/base-simtools-tests/other/input.ecsv"
+    assert DIFFERENTIAL_OUTPUTS.normalize_value(unrelated) == unrelated
+
+
+@pytest.mark.parametrize("suffix", [".ecsv", ".yml", ".hdf5"])
+def test_compare_resource_checkout_paths(tmp_test_directory, suffix):
+    root = Path(tmp_test_directory)
+    base, head = root / f"base{suffix}", root / f"head{suffix}"
+    for path, checkout in ((base, "base-simtools-tests"), (head, "simtools-tests")):
+        resource = f"/workspace/{checkout}/simtools-tests/v0.40.0/integration_tests/input.ecsv"
+        metadata = {"cta": {"arguments": {"input": resource}}, "corsika_limits": resource}
+        if suffix == ".ecsv":
+            Table({"value": [1]}, meta=metadata).write(path)
+        elif suffix == ".yml":
+            path.write_text(json.dumps(metadata), encoding="utf-8")
+        else:
+            with h5py.File(path, "w") as output:
+                output.create_dataset("METADATA", data=np.array([json.dumps(metadata).encode()]))
+
+    assert DIFFERENTIAL_OUTPUTS._compare_file(base, head) == []
+
+
 def test_relative_files_excludes_generated_config(tmp_test_directory):
     root = Path(tmp_test_directory)
     (root / "tmp_config.yml").write_text("temporary: true\n")
@@ -120,6 +153,39 @@ def test_compare_hdf5_preserves_meaningful_json_metadata(tmp_test_directory):
             output.create_dataset("METADATA", data=np.array([value.encode()]))
 
     assert "METADATA: values differ" in DIFFERENTIAL_OUTPUTS._hdf5_differences(base, head)
+    assert any("['path']" in item for item in DIFFERENTIAL_OUTPUTS._hdf5_differences(base, head))
+
+
+def test_report_identifies_nested_metadata_differences(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    base, head = root / "base", root / "head"
+    base.mkdir()
+    head.mkdir()
+    for directory, source in ((base, "base-resources"), (head, "head-resources")):
+        metadata = {"cta": {"inputs": [source], "password": source}}
+        Table({"value": [1]}, meta=metadata).write(directory / "result.ecsv")
+        (directory / "result.yml").write_text(json.dumps(metadata), encoding="utf-8")
+        with h5py.File(directory / "result.hdf5", "w") as output:
+            output.create_dataset("METADATA", data=np.array([json.dumps(metadata).encode()]))
+
+    report = root / "report.md"
+    assert DIFFERENTIAL_OUTPUTS.compare_trees(base, head, report) == 1
+    text = report.read_text(encoding="utf-8")
+    assert text.count("['cta']['inputs'][0]") == 3
+    assert "'base-resources' != 'head-resources'" in text
+    assert "['password']: values differ (redacted)" in text
+
+
+def test_value_differences_reports_missing_keys_lengths_and_limits():
+    base = {"missing_head": 1, "items": [1], "password": "private"}
+    head = {"missing_base": 2, "items": [2, 3], "password": "other"}
+    differences = DIFFERENTIAL_OUTPUTS._value_differences(base, head)
+    assert "$['items']: length 1 != 2" in differences
+    assert "$['items'][0]: 1 != 2" in differences
+    assert "$['missing_head']: missing from head" in differences
+    assert "$['missing_base']: missing from base" in differences
+    assert "$['password']: values differ (redacted)" in differences
+    assert len(DIFFERENTIAL_OUTPUTS._value_differences(base, head, limit=2)) == 2
 
 
 def test_compare_report_exit_code_and_binary_informational(tmp_test_directory):

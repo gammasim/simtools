@@ -1,21 +1,64 @@
 # Dependency versions and provenance
 
 `pyproject.toml` declares Python dependencies. `dependency_versions.yml` declares the supported
-Python version, container base image, external software refs, model compatibility, and build
-inputs. Workflows use this catalog to build images and record the resolved commits in the image
-manifest.
+Python version, the container base image, the simulation model and test references, and the
+CORSIKA and sim_telarray images that simtools consumes. Workflows use this catalog to select
+images and to record the dependency manifest of the images they build.
+
+simtools does not build CORSIKA or sim_telarray. Their images are built in the
+simulation-containers repository, which pins the sources, configuration, and patches used for
+each image. The catalog only names the published images.
+
+## What the catalog declares
+
+| Section | Declares | Used by |
+| --- | --- | --- |
+| `images` | Registry and tag suffix of the CORSIKA and sim_telarray images | Production and development image builds |
+| `corsika`, `sim-telarray` | Component version (`source-ref`), optional `build-id`, optional image digests | Production matrix, development images |
+| `production-combinations` | CORSIKA and sim_telarray versions per production image, optional CPU variants | Production matrix |
+| `base-image`, `python`, `apptainer` | Container base image and tool versions | Image builds, summary export |
+| `corsika-interaction-tables` | Interaction tables reference | Integration test setup |
+| `model-repository` | Simulation model repository, default ref, compatible release range | CI and runtime model checks |
+| `simtools-tests` | Test repository, ref, and resource directory version | CI and runtime test resources |
+| `cpu-variants` | CPU variants of the images | Production matrix |
 
 ## Update dependencies
 
-Change Python requirements in `pyproject.toml` and external software versions in
-`dependency_versions.yml`. Use stable tags for releases; use branches for development. Keep refs
-stable upstream so rebuilding a release resolves to the same source. The catalog supports
-optional Git revisions and OCI digests for explicit pins, and requires SHA-256 checksums for
-downloaded archives.
+Change Python requirements in `pyproject.toml`. Change images in `dependency_versions.yml`:
 
-`simtools-tests.resource-version` selects a resource directory inside the test repository; it is
-separate from the repository Git ref. CORSIKA and sim_telarray refs that cannot be used in image
-tags need a `build-id`.
+- `images.registry` and `images.tag-suffix` set where the images are published and the suffix
+  added to their tags.
+- `corsika` and `sim-telarray` list one entry per component version. The `source-ref` is the
+  version identity used by `production-combinations`.
+- `production-combinations` pairs one CORSIKA and one sim_telarray version per production image.
+
+For example, this catalog fragment:
+
+```yaml
+images:
+  registry: ghcr.io/gammasim
+  tag-suffix: -gl1
+corsika:
+- source-ref: v7.8010
+sim-telarray:
+- source-ref: v2025-11-30-rc
+```
+
+resolves to these image references for the `avx2` CPU variant:
+
+```text
+ghcr.io/gammasim/corsika7:v78010-avx2-gl1
+ghcr.io/gammasim/sim_telarray:v2025-11-30-rc-gl1
+```
+
+Image tags use the build ID of each component. A CORSIKA `source-ref` of the form
+`v<major>.<minor>` gives the build ID by removing the `v` and the dot (`v7.8010` gives `78010`).
+A sim_telarray `source-ref` that is not a valid image tag, for example one containing a slash,
+requires an explicit `build-id`. Build IDs in the production matrix do not include the tag suffix.
+
+An image digest pins an image instead of its tag. `image-digests` (per CPU variant) applies to
+CORSIKA and `image-digest` applies to sim_telarray. A declared digest replaces the tag in the
+image reference, and the tag suffix does not apply to digest references.
 
 Install the supported environment and validate catalog values with:
 
@@ -61,8 +104,8 @@ resource directory is selected independently by `resource-version`.
 
 ## Model compatibility
 
-Starting with catalog schema `0.8.0`, `model-repository.compatible-versions` defines accepted
-stable model releases. `default-ref` is the recommended release and must satisfy this range:
+`model-repository.compatible-versions` defines the accepted stable model releases.
+`default-ref` is the recommended release and must satisfy this range:
 
 ```yaml
 model-repository:
@@ -72,8 +115,8 @@ model-repository:
 ```
 
 Use packaging specifiers such as `>=0.18.0,<0.19.0`; expand the range only after confirming the
-admitted releases are compatible. Catalogs without a range accept only their declared default.
-This lets a newer submission controller validate against an older image's bundled catalog.
+admitted releases are compatible. This lets a newer submission controller validate against an
+older image's bundled catalog.
 
 At runtime, simtools checks that the selected Git checkout has exactly one stable release tag and
 that its version is allowed by the running installation's catalog. Use
@@ -81,3 +124,9 @@ that its version is allowed by the running installation's catalog. Use
 switch refs or validate local edits and model contents. A directory without Git release metadata
 cannot be checked. `--test` permits development inputs with a warning; they are not qualified for
 production.
+
+## Catalog schema
+
+`schema_version` selects the schema document in `src/simtools/schemas/dependency_versions.schema.yml`.
+Each schema version is a separate YAML document in that file, and the validator accepts every
+listed version.

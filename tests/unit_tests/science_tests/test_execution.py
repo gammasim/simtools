@@ -4,6 +4,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from simtools.configuration.arguments import SIMULATION_MODELS_GIT_PATH, SIMULATION_MODELS_PATH
+from simtools.configuration.configurator import Configurator
 from simtools.science_tests import definitions as defs
 from simtools.science_tests import execution
 
@@ -61,6 +63,21 @@ def test_prepare_test_plans_without_runtime(bundle):
     assert test.result[RUNTIME] == "host (no container)"
     assert test.result["output_paths"] == [str(test.work)]
     assert test.work.parts[-2:] == (NORTH, DERIVE)
+
+
+def test_prepare_uses_labeled_candidate_path(bundle):
+    bundle.context[defs.CANDIDATE_PATH] = str(
+        Path(bundle.context[defs.CANDIDATE_PATH]) / "variants" / "non-linear"
+    )
+    write_workflow(
+        bundle,
+        WORKFLOW_YML,
+        {APPLICATION: VALIDATOR, CONFIGURATION: {OUTPUT_PATH: f"{defs.CANDIDATE_SITE_PATH}/scan"}},
+    )
+    test = prepare(bundle)
+    assert test.workflow[APPLICATIONS][0][CONFIGURATION][OUTPUT_PATH].endswith(
+        "variants/non-linear/north/scan"
+    )
 
 
 def test_prepare_test_expands_telescopes_and_applies_overrides(bundle):
@@ -221,11 +238,23 @@ def test_derived_products_are_reused_only_when_current(bundle, successful_workfl
 def test_selected_model_source_environment_hides_inactive_source(monkeypatch):
     monkeypatch.setenv(MODELS_PATH_ENV, MODELS)
     with execution._selected_model_source_environment({defs.MODELS_GIT_PATH: "/git"}):
-        assert os.environ[MODELS_PATH_ENV] == ""
+        assert (
+            Configurator()._source_value(
+                SIMULATION_MODELS_PATH, os.environ[MODELS_PATH_ENV], "environment"
+            )
+            is None
+        )
     assert os.environ[MODELS_PATH_ENV] == MODELS
     monkeypatch.delenv(SIMTOOLS_SIMULATION_MODELS_GIT_PATH, raising=False)
     with execution._selected_model_source_environment({defs.MODELS_PATH: MODELS}):
-        assert os.environ[SIMTOOLS_SIMULATION_MODELS_GIT_PATH] == ""
+        assert (
+            Configurator()._source_value(
+                SIMULATION_MODELS_GIT_PATH,
+                os.environ[SIMTOOLS_SIMULATION_MODELS_GIT_PATH],
+                "environment",
+            )
+            is None
+        )
     assert SIMTOOLS_SIMULATION_MODELS_GIT_PATH not in os.environ
     with execution._selected_model_source_environment({}):
         assert os.environ[MODELS_PATH_ENV] == MODELS

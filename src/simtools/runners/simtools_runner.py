@@ -509,6 +509,7 @@ def _submit_application_and_collect_metadata(
         stderr=None,
         configuration=app_configuration,
         runtime_environment=runtime_environment,
+        capture_output=True,
     )
 
     if metadata_file is None:

@@ -2,6 +2,7 @@
 
 import logging
 import re
+from dataclasses import replace
 from pathlib import Path
 
 import yaml
@@ -94,6 +95,8 @@ def run_release(
     defs.validate_context(
         bundle, any(defs.test_definition(bundle, test_id)["uses_baseline"] for _, test_id in pairs)
     )
+    preflight_bundle = bundle
+    bundle = _apply_run_label(bundle, (application_args or {}).get("run_label"))
     application_args = defs.model_source_arguments(application_args, bundle)
     run_id = get_uuid()
     prepared = [
@@ -105,7 +108,7 @@ def run_release(
         results = [test.result for test in prepared]
     else:
         if production:
-            _preflight(bundle, prepared, preflight)
+            _preflight(preflight_bundle, prepared, preflight)
         results = execute_tests(prepared, bundle.catalogue, bundle.release_dir, run_id, overwrite)
     model_source = {
         key: str(application_args[key])
@@ -124,6 +127,22 @@ def run_release(
         )
         raise RuntimeError(f"Science tests failed: {details}")
     return summary
+
+
+def _apply_run_label(bundle, label):
+    """Redirect release reports and candidate products to ``variants/<label>``."""
+    if label is None:
+        return bundle
+    if not isinstance(label, str) or not defs.VALID_NAME.fullmatch(label):
+        raise ValueError(f"run_label must be a filename-safe label: {label!r}")
+    candidate_path = Path(bundle.context[defs.CANDIDATE_PATH]) / "variants" / label
+    labeled = replace(
+        bundle,
+        release_dir=bundle.release_dir / "variants" / label,
+        context=bundle.context | {defs.CANDIDATE_PATH: str(candidate_path)},
+    )
+    labeled.workflow_release_dir = bundle.release_dir
+    return labeled
 
 
 def _site_tests(bundle, site, selected_tests):
