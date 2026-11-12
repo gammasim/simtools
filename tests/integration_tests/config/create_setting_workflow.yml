@@ -8,6 +8,8 @@ applications:
     value: 121
     description: Example photon threshold for workflow creation
     output_path: setting-repository
+    workflow_runtime_file: tests/integration_tests/setting_workflow_runtime.yaml
+    ignore_runtime_environment: true
     run: true
     disable_log_file: true
   docs:

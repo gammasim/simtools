@@ -42,12 +42,17 @@ def test_setting_workflow_round_trip(
         "https://example.org/measurement",
         "--output_path",
         str(root),
+        "--workflow_runtime_file",
+        str(Path(simtools_root_path) / "tests/integration_tests/setting_workflow_runtime.yaml"),
+        "--ignore_runtime_environment",
         *model_source,
         "--disable_log_file",
     ]
     subprocess.run(command, capture_output=True, text=True, check=True)
     (config_file,) = (root / "input").rglob("config.yml")
     metadata_file = config_file.with_name("input.meta.yml")
+    runtime = ascii_handler.collect_data_from_file(config_file.with_name("runtime.yml"))
+    assert runtime["runtime_environment"]["image"] == "example.invalid/simtools:test"
     original_inputs = (config_file.read_bytes(), metadata_file.read_bytes())
     assert not (root / "output").exists()
     schema.validate_dict_using_schema(
