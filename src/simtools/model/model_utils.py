@@ -132,6 +132,12 @@ def _extract_changes_from_dict(overwrite_dict):
     """Extract changes from a dictionary."""
     if "changes" in overwrite_dict:
         return overwrite_dict["changes"]
+    if {"instrument", "parameter", "value"}.issubset(overwrite_dict):
+        return {
+            overwrite_dict["instrument"]: {
+                overwrite_dict["parameter"]: {"value": overwrite_dict["value"]}
+            }
+        }
     return overwrite_dict
 
 
@@ -146,8 +152,6 @@ def _extract_changes_from_string(overwrite_str):
 
     data = ascii_handler.collect_data_from_file(file_name=overwrite_str)
     if isinstance(data, dict):
-        if {"instrument", "parameter", "value"}.issubset(data):
-            return {data["instrument"]: {data["parameter"]: {"value": data["value"]}}}
         return _extract_changes_from_dict(data)
     return {}
 

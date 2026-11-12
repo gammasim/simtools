@@ -69,6 +69,22 @@ def test_read_overwrite_model_parameter_dict_with_json_string():
     assert result == {"param1": "value1"}
 
 
+@pytest.mark.parametrize("inline_json", [False, True])
+@pytest.mark.parametrize("value", [12, [0.0075, 0.22, 0.022], {"value": [1, 2]}])
+def test_read_overwrite_model_parameter_document_inline(inline_json, value):
+    document = {
+        "instrument": "LSTN-01",
+        "parameter": "mirror_reflection_random_angle",
+        "value": value,
+        "parameter_version": "3.0.0",
+    }
+    overrides = json.dumps(document) if inline_json else document
+
+    result = model_utils.read_overwrite_model_parameter_dict(overrides)
+
+    assert result == {"LSTN-01": {"mirror_reflection_random_angle": {"value": value}}}
+
+
 @pytest.mark.parametrize("value", [12, [0.0075, 0.22, 0.022], {"value": [1, 2]}])
 def test_read_overwrite_model_parameter_document(tmp_test_directory, value):
     output_file = tmp_test_directory / "parameter.json"
