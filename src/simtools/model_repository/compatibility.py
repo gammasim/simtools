@@ -61,7 +61,16 @@ def validate_release(path, catalog, revision=None, development=False):
     result = {**contract, SOURCE_KEY: source, STATUS_KEY: DEVELOPMENT_STATUS}
     try:
         tags = subprocess.run(
-            ["git", "-C", source, "tag", "--points-at", revision or "HEAD"],
+            [
+                "git",
+                "-c",
+                f"safe.directory={source}",
+                "-C",
+                source,
+                "tag",
+                "--points-at",
+                revision or "HEAD",
+            ],
             check=True,
             capture_output=True,
             text=True,

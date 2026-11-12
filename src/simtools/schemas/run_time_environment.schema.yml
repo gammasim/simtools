@@ -23,6 +23,7 @@ definitions:
     anyOf:
       - required: [runtime_environment]
       - required: [runtime_environments]
+
 ---
 $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/RunTimeEnvironmentFile'
@@ -39,6 +40,6 @@ definitions:
     additionalProperties: false
     properties:
       runtime_environment:
-        $ref: 'common_definitions.schema.yml#/$defs/run_time_environment'
+        $ref: 'common_definitions.schema.yml#/$defs/run_time_environment_legacy'
     required:
       - runtime_environment
