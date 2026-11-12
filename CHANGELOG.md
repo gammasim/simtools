@@ -7,6 +7,12 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.39.1-rc](https://github.com/gammasim/simtools/releases/tag/v0.39.1-rc) - 2026-11-12
+
+### Bugfixes
+
+- Disable git repository ownership check also in `simtools.model_repository.compatibility.validate_release`. ([#2793](https://github.com/gammasim/simtools/pull/2793))
+
 ## [v0.39.0](https://github.com/gammasim/simtools/releases/tag/v0.39.0) - 2026-11-05
 
 ### New features
