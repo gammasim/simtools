@@ -35,6 +35,12 @@ definitions:
         items:
           type: string
           minLength: 1
+      telescope_configuration_overrides:
+        type: object
+        additionalProperties:
+          type: object
+          additionalProperties:
+            type: object
       replacements:
         type: object
     required: [site, required_tests, array_layout_name]

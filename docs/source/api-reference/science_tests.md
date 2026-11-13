@@ -19,6 +19,13 @@ their reports.
    :members:
 ```
 
+## bias_curve_comparison
+
+```{eval-rst}
+.. automodule:: science_tests.bias_curve_comparison
+   :members:
+```
+
 ## definitions
 
 ```{eval-rst}

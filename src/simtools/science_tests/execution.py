@@ -126,7 +126,7 @@ def prepare_test(bundle, site, test_id, application_args, run_id):
         _LOG_FILE: str(work / EXECUTION_LOG),
         _PROVENANCE_PATH: str(work / WORKFLOW_RECORD),
     }
-    workflow = _resolve_workflow(bundle, site, definition, replacements, args)
+    workflow = _resolve_workflow(bundle, site, test_id, definition, replacements, args)
     runtime = None if args[_IGNORE_RUNTIME] else workflow.get(_RUNTIME_ENVIRONMENT)
     output_paths = [app[_CONFIGURATION].get("output_path") for app in workflow[_APPLICATIONS]]
     result = {
@@ -304,14 +304,15 @@ def _execute(test, overwrite):
     return evaluated
 
 
-def _resolve_workflow(bundle, site, definition, replacements, args):
+def _resolve_workflow(bundle, site, test_id, definition, replacements, args):
     """Expand, resolve, override, and validate one test workflow."""
     workflow = defs.load_yaml(definition[_WORKFLOW_PATH])
     telescopes = bundle.suites[site].get(_TELESCOPES_KEY, [])
+    overrides = bundle.suites[site].get("telescope_configuration_overrides", {}).get(test_id, {})
     workflow[_APPLICATIONS] = [
         expanded
         for application in workflow.get(_APPLICATIONS, [])
-        for expanded in _expand_telescopes(application, telescopes)
+        for expanded in _expand_telescopes(application, telescopes, overrides)
     ]
     workflow = replace_placeholders_recursively(workflow, replacements)
     allowed_changes = set(bundle.release.get("expected_changes", []))
@@ -337,18 +338,22 @@ def _resolve_workflow(bundle, site, definition, replacements, args):
     return workflow
 
 
-def _expand_telescopes(application, telescopes):
+def _expand_telescopes(application, telescopes, overrides):
     """Repeat an application for each telescope if it references the telescope placeholder."""
     if defs.TELESCOPE not in json.dumps(application):
         return [application]
     if not telescopes:
         raise ValueError(f"Workflow uses {defs.TELESCOPE}; set {_TELESCOPES_KEY} for the site.")
-    return [
-        replace_placeholders_recursively(
+    expanded = []
+    for telescope in telescopes:
+        if overrides and telescope not in overrides:
+            raise ValueError(f"Missing telescope configuration override for {telescope}.")
+        item = replace_placeholders_recursively(
             application, {defs.TELESCOPE: names.validate_array_element_name(telescope)}
         )
-        for telescope in telescopes
-    ]
+        item.setdefault(_CONFIGURATION, {}).update(overrides.get(telescope, {}))
+        expanded.append(item)
+    return expanded
 
 
 def _runtime_description(runtime):

@@ -83,6 +83,7 @@ modify files: inspect the diff and rerun the complete pre-commit suite afterward
 
 ## Code And Domain
 
+- Never start filenames with an underscore.
 - Use `pathlib` for paths, double quotes for strings and docstrings, f-strings for
   formatting, and `astropy.units` for physical quantities.
 - Use library logging for user and developer messages; do not use `print` in library
