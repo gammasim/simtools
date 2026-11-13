@@ -107,6 +107,29 @@ def test_prepare_test_expands_telescopes_and_applies_overrides(bundle):
     assert all(app[CONFIGURATION][FIGURE_FORMAT] == ["pdf"] for app in applications)
 
 
+def test_prepare_test_applies_telescope_settings_only_to_selected_test(bundle):
+    bundle.suites[NORTH]["camera_telescopes"] = [LSTN_01, MSTN_01]
+    bundle.suites[NORTH]["telescope_configuration_overrides"] = {
+        DERIVE: {
+            LSTN_01: {"core_scatter": "10 1000 m"},
+            MSTN_01: {"core_scatter": "10 2000 m"},
+        }
+    }
+    write_workflow(
+        bundle,
+        WORKFLOW_YML,
+        {
+            APPLICATION: VALIDATOR,
+            CONFIGURATION: {TELESCOPE: defs.TELESCOPE, "core_scatter": "10 1900 m"},
+        },
+    )
+    apps = prepare(bundle).workflow[APPLICATIONS]
+    assert [app[CONFIGURATION]["core_scatter"] for app in apps] == ["10 1000 m", "10 2000 m"]
+    del bundle.suites[NORTH]["telescope_configuration_overrides"][DERIVE][MSTN_01]
+    with pytest.raises(ValueError, match="Missing telescope configuration override for MSTN-01"):
+        prepare(bundle)
+
+
 def test_prepare_test_requires_telescopes_and_declared_changes(bundle):
     write_workflow(
         bundle, WORKFLOW_YML, {APPLICATION: VALIDATOR, CONFIGURATION: {"t": defs.TELESCOPE}}
