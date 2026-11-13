@@ -124,7 +124,7 @@ _STORES = weakref.WeakSet()
 
 def _reset_locks_after_fork():
     """Give each store in a forked child a free lock (the owning thread does not exist there)."""
-    for store in list(_STORES):
+    for store in _STORES:
         store._lock = threading.Lock()  # pylint: disable=protected-access
 
 
@@ -259,7 +259,7 @@ class GitCommandObjectStore(GitObjectStore):
             return "submodule", b""  # a gitlink has no object content here
         try:
             kind, size = fields[1].decode("ascii"), int(fields[2])
-        except (IndexError, ValueError, UnicodeDecodeError) as exc:
+        except (IndexError, ValueError) as exc:
             raise _GitProtocolError(f"Unexpected Git response: {header[:100]!r}") from exc
         content = self._process.stdout.read(size + 1)
         if len(content) != size + 1 or not content.endswith(b"\n"):

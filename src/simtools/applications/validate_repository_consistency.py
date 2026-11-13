@@ -55,7 +55,8 @@ def _tracked_files(repository):
     try:
         entries = run_git(repository, "ls-files", "-z")
     except subprocess.CalledProcessError as exc:
-        detail = (exc.stderr or b"").decode("utf-8", errors="replace").strip()
+        stderr = exc.stderr or b""
+        detail = stderr.decode("utf-8", errors="replace").strip()
         raise ValueError(f"Not a readable Git repository: {repository}: {detail}") from exc
     return {Path(entry) for entry in split_nul(entries)}
 
