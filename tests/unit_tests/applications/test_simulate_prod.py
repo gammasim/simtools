@@ -393,6 +393,7 @@ def test_main_uses_explicit_application_definition(mock_application_start, mock_
 @patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_class):
     _mock_application_context(mock_application_start, label="myprod")
+    mock_application_start.return_value.args["job_grid_file"] = "grid.ecsv"
     mock_simulator = MagicMock()
     mock_simulator_class.return_value = mock_simulator
 

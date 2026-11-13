@@ -42,7 +42,10 @@ APPLICATION = ApplicationDefinition.for_module(
             "workflow_runtime_file",
             aliases=("runtime_environment_file",),
             type=Path,
-            help="Runtime YAML to embed in the generated workflow.",
+            help=(
+                "Runtime YAML copied to the workflow as runtime.yml; "
+                "default: runtime.default.yml in the repository root."
+            ),
         ),
         cli.ArgumentDefinition("run", action="store_true", help="Run the prepared workflow."),
     ),

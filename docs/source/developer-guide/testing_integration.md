@@ -92,7 +92,7 @@ one of these repository sources.
 
 Tests resolve resources from `SIMTOOLS_TESTS_PATH` and the `resource-version`
 in `dependency_versions.yml`. The environment variable identifies the local
-`simtools-tests` checkout; the catalog selects the versioned resource directory
+`simtools-tests` checkout or its parent directory; the catalog selects the versioned resource directory
 below it and records the Git ref used to obtain the repository. The corresponding
 command-line option is `--simtools_tests_path`.
 
@@ -124,7 +124,7 @@ Versioned resource bundles are archived in
 [`gammasim/simtools-tests`](https://github.com/gammasim/simtools-tests). Use
 the resource applications to create and synchronize these bundles:
 
-- [`simtools-resources-test-generate`](../user-guide/applications/simtools-resources-test-generate.md)
+- [`simtools-generate-test-resources`](../user-guide/applications/simtools-generate-test-resources.md)
   generates versioned test resources and validates configured static files.
 The resource generation and release workflow is documented in
 [Test resources](testing_resources.md).

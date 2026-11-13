@@ -37,9 +37,9 @@ _ARGUMENTS = (
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
+    needs=(),
     arguments=(*_ARGUMENTS, cli.IGNORE_EXISTING_PARAMETER_VERSION),
     usage="simtools-run-application --config_file config_file_name",
-    needs=("model",),
 )
 
 

@@ -1,7 +1,12 @@
 #!/usr/bin/python3
 
-import pytest
+import json
 
+import pytest
+from astropy import units as u
+from astropy.tests.helper import assert_quantity_allclose
+
+from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.model import model_utils
 
 
@@ -64,6 +69,132 @@ def test_read_overwrite_model_parameter_dict_with_json_string():
     result = model_utils.read_overwrite_model_parameter_dict(overwrite_str)
 
     assert result == {"param1": "value1"}
+
+
+@pytest.mark.parametrize("inline_json", [False, True])
+@pytest.mark.parametrize("value", [12, [0.0075, 0.22, 0.022], {"value": [1, 2]}])
+def test_read_overwrite_model_parameter_document_inline(inline_json, value):
+    document = {
+        "instrument": "LSTN-01",
+        "parameter": "mirror_reflection_random_angle",
+        "value": value,
+        "parameter_version": "3.0.0",
+    }
+    overrides = json.dumps(document) if inline_json else document
+
+    result = model_utils.read_overwrite_model_parameter_dict(overrides)
+
+    assert result == {"LSTN-01": {"mirror_reflection_random_angle": {"value": value}}}
+
+
+@pytest.mark.parametrize("inline_json", [False, True])
+@pytest.mark.parametrize("unit", [None, "m", ["deg", "dimensionless", "deg"]])
+def test_read_overwrite_model_parameter_document_unit(inline_json, unit):
+    document = {
+        "instrument": "LSTN-01",
+        "parameter": "mirror_reflection_random_angle",
+        "value": [0.0075, 0.22, 0.022],
+        "unit": unit,
+    }
+    overrides = json.dumps(document) if inline_json else document
+
+    result = model_utils.read_overwrite_model_parameter_dict(overrides)
+
+    assert result == {
+        "LSTN-01": {"mirror_reflection_random_angle": {"value": document["value"], "unit": unit}}
+    }
+
+
+@pytest.mark.parametrize("value", [12, [0.0075, 0.22, 0.022], {"value": [1, 2]}])
+def test_read_overwrite_model_parameter_document(tmp_test_directory, value):
+    output_file = tmp_test_directory / "parameter.json"
+    ModelDataWriter.write_model_parameter_json(
+        {
+            "instrument": "LSTN-01",
+            "parameter": "mirror_reflection_random_angle",
+            "value": value,
+            "unit": ["deg", "dimensionless", "deg"],
+            "parameter_version": "3.0.0",
+            "schema_version": "0.4.0",
+            "file": False,
+        },
+        output_file,
+    )
+
+    result = model_utils.read_overwrite_model_parameter_dict(str(output_file))
+
+    assert result == {
+        "LSTN-01": {
+            "mirror_reflection_random_angle": {
+                "value": value,
+                "unit": ["deg", "dimensionless", "deg"],
+            }
+        }
+    }
+
+
+@pytest.mark.parametrize("wrapped", [False, True])
+def test_read_overwrite_model_parameter_mapping_file(tmp_test_directory, wrapped):
+    overrides = {"LSTN-01": {"mirror_reflection_random_angle": [0.0075, 0.22, 0.022]}}
+    data = {"changes": overrides} if wrapped else overrides
+    output_file = tmp_test_directory / "overrides.json"
+    output_file.write_text(json.dumps(data), encoding="utf-8")
+
+    assert model_utils.read_overwrite_model_parameter_dict(str(output_file)) == overrides
+
+
+def test_model_parameter_document_applied_to_model(tmp_test_directory, model_version, run_context):
+    output_file = tmp_test_directory / "parameter.json"
+    ModelDataWriter.write_model_parameter_json(
+        {
+            "instrument": "LSTN-01",
+            "parameter": "num_gains",
+            "value": 1,
+            "parameter_version": "99.0.0",
+        },
+        output_file,
+    )
+    overrides = model_utils.read_overwrite_model_parameter_dict(str(output_file))
+
+    model = model_utils.TelescopeModel(
+        site="North",
+        telescope_name="LSTN-01",
+        model_version=model_version,
+        overwrite_model_parameter_dict=overrides,
+        context=run_context,
+    )
+
+    assert model.parameters["num_gains"]["value"] == 1
+    assert model.parameters["num_gains"]["parameter_version"] != "99.0.0"
+
+
+@pytest.mark.parametrize(
+    ("unit_fields", "expected"), [({}, 2.0 * u.cm), ({"unit": "m"}, 2.0 * u.m)]
+)
+def test_model_parameter_document_unit_applied_to_model(
+    tmp_test_directory, model_version, run_context, unit_fields, expected
+):
+    output_file = tmp_test_directory / "parameter.json"
+    ModelDataWriter.write_model_parameter_json(
+        {
+            "instrument": "LSTN-01",
+            "parameter": "mirror_focal_length",
+            "value": 2.0,
+            **unit_fields,
+        },
+        output_file,
+    )
+    overrides = model_utils.read_overwrite_model_parameter_dict(str(output_file))
+
+    model = model_utils.TelescopeModel(
+        site="North",
+        telescope_name="LSTN-01",
+        model_version=model_version,
+        overwrite_model_parameter_dict=overrides,
+        context=run_context,
+    )
+
+    assert_quantity_allclose(model.get_parameter_value_with_unit("mirror_focal_length"), expected)
 
 
 def test_read_overwrite_model_parameter_dict_with_file_no_changes_key(mocker):

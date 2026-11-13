@@ -28,9 +28,10 @@ The input files can be generated using `simtools-generate-bias-curve-submissions
 ### Notes
 
 - The trigger threshold is the intersection of the log-linear fits shown on the plot
-  for NSB and proton rates scaled by `0.1 * scaling_factor`. Each fit uses its finite,
-  positive rates and requires at least two distinct thresholds. The intersection
-  must fall within the threshold range shared by both fits.
+  for NSB and proton rates scaled by
+  `proton_intersection_fraction * scaling_factor`. Each fit uses its finite,
+  positive rates and requires at least two distinct thresholds. The fitted intersection
+  can lie outside the sampled threshold range.
 - Thresholds are read from per-telescope values in HDF5 `SIMULATION_METADATA`.
   `default_trigger` selects `asum_threshold`, `dsum_threshold`, or
   `discriminator_threshold`. Files with missing, invalid, or inconsistent threshold metadata are
