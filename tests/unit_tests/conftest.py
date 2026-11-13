@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import struct
+import subprocess
 import tarfile
 import urllib.error
 import zlib
@@ -806,3 +807,26 @@ def simtel_mirror_list_test_file(tmp_test_directory):
         encoding="utf-8",
     )
     return test_file_path
+
+
+@pytest.fixture
+def make_git_repository():
+    """Return a factory creating a one-commit Git repository from a mapping of file contents."""
+
+    def _make(root, files):
+        root = Path(root)
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+        for relative, content in files.items():
+            file_path = root / relative
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_bytes(content)
+        subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+        identity = ["-c", "user.name=Test", "-c", "user.email=test@example.invalid"]
+        subprocess.run(
+            ["git", "-C", str(root), *identity, "commit", "-qm", "fixture"],
+            check=True,
+        )
+        commit = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True)
+        return root, commit.strip()
+
+    return _make

@@ -2,14 +2,15 @@
 """Validate cross-file invariants in a simtools data repository."""
 
 import hashlib
+import subprocess
 from pathlib import Path
 
-import pygit2
 import yaml
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.io import ascii_handler
+from simtools.model_repository.git_backend import run_git, split_nul
 
 _DEFAULT_METADATA_ROOTS = (Path("input"), Path("output"))
 _SKIP_MARKER = "SKIP_WORKFLOW_CI"
@@ -52,10 +53,12 @@ APPLICATION = ApplicationDefinition.for_module(
 def _tracked_files(repository):
     """Return paths tracked by the Git index."""
     try:
-        git_repository = pygit2.Repository(str(repository))
-    except (KeyError, OSError, ValueError, pygit2.GitError) as exc:
-        raise ValueError(f"Not a readable Git repository: {repository}") from exc
-    return {Path(entry.path) for entry in git_repository.index}
+        entries = run_git(repository, "ls-files", "-z")
+    except subprocess.CalledProcessError as exc:
+        stderr = exc.stderr or b""
+        detail = stderr.decode("utf-8", errors="replace").strip()
+        raise ValueError(f"Not a readable Git repository: {repository}: {detail}") from exc
+    return {Path(entry) for entry in split_nul(entries)}
 
 
 def _file_digest(file_path):

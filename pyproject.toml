@@ -39,7 +39,6 @@ dependencies = [
   "packaging",
   "particle",
   "pillow",
-  "pygit2>=1.19",
   "pyproj",
   "python-dotenv",
   "pyyaml",
