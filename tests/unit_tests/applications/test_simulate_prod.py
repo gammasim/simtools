@@ -391,8 +391,9 @@ def test_main_uses_explicit_application_definition(mock_application_start, mock_
 
 @patch("simtools.applications.simulate_prod.Simulator")
 @patch("simtools.application.definition.ApplicationDefinition.start")
-def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_class):
+def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_class, caplog):
     _mock_application_context(mock_application_start, label="myprod")
+    mock_application_start.return_value.args["job_grid_file"] = "grid.ecsv"
     mock_simulator = MagicMock()
     mock_simulator_class.return_value = mock_simulator
 
@@ -406,6 +407,7 @@ def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_
     mock_simulator.validate_simulations.assert_called_once()
     mock_simulator.report.assert_called_once()
     mock_write_metadata.assert_called_once()
+    assert "Job grid file detected but _job_grid_rows not set" not in caplog.text
 
 
 @patch("simtools.applications.simulate_prod.write_data_to_file")
