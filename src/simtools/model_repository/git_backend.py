@@ -128,7 +128,8 @@ def _reset_locks_after_fork():
         store._lock = threading.Lock()  # pylint: disable=protected-access
 
 
-os.register_at_fork(after_in_child=_reset_locks_after_fork)
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(after_in_child=_reset_locks_after_fork)
 
 
 class _BlobStream(io.RawIOBase):
