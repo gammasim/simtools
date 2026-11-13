@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import pygit2
 import pytest
 
 from simtools.model_repository.storage import DirectoryStorage, GitStorage, MemoryStorage
@@ -14,23 +13,8 @@ FILES = {
 }
 
 
-def _make_git_repository(root, files):
-    """Create a one-commit repository containing the provided model files."""
-    repository = pygit2.init_repository(root)
-    for relative, content in files.items():
-        file_path = root / relative
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.write_bytes(content)
-        repository.index.add(relative)
-    repository.index.write()
-    tree = repository.index.write_tree()
-    signature = pygit2.Signature("Test", "test@example.invalid")
-    commit = repository.create_commit("HEAD", signature, signature, "model fixture", tree, [])
-    return repository, str(commit)
-
-
 @pytest.fixture(params=["directory", "git", "memory"])
-def storage(request, tmp_test_directory):
+def storage(request, tmp_test_directory, make_git_repository):
     """Provide each storage with identical generated file content."""
     if request.param == "directory":
         root = Path(tmp_test_directory) / "directory-model"
@@ -42,7 +26,7 @@ def storage(request, tmp_test_directory):
     if request.param == "git":
         root = Path(tmp_test_directory) / "git-model"
         root.mkdir()
-        _, commit = _make_git_repository(root, FILES)
+        _, commit = make_git_repository(root, FILES)
         return GitStorage(root, commit)
     return MemoryStorage(FILES)
 
