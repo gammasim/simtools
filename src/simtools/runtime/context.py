@@ -156,7 +156,10 @@ class SimulationSoftware:
             self.corsika_interaction_table_root
             and Path(self.corsika_interaction_table_root).is_dir()
         ):
-            return Path(self.corsika_interaction_table_root)
+            path = Path(self.corsika_interaction_table_root)
+            if (path / "interaction-tables").is_dir():
+                return path / "interaction-tables"
+            return path
         raise FileNotFoundError(
             f"CORSIKA interaction table path not found: {self.corsika_interaction_table_root}"
         )

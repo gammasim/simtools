@@ -1,7 +1,7 @@
-# simtools-resources-test-generate
+# simtools-generate-test-resources
 
 ```{eval-rst}
-.. automodule:: simtools.applications.resources_test_generate
+.. automodule:: simtools.applications.generate_test_resources
    :members:
    :exclude-members: main
 ```
@@ -13,6 +13,6 @@ configuration file directory in the `simtools-tests` repository.
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :application: resources_test_generate
+   :application: generate_test_resources
    :no-heading:
 ```

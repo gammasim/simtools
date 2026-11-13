@@ -9,20 +9,21 @@
 ## Overview
 
 The application reads the dependency catalog from the root-level `dependency_versions.yml` file.
-It validates the catalog and exports the declared Python version, component
-releases, optional revisions or digests, archive checksums, and image-build matrices.
+It validates the catalog and exports the declared Python version, the CORSIKA and sim_telarray
+image references, optional image digests, and the production image matrix. Component sources are
+pinned in the simulation-containers repository, not in this catalog.
 
 Use `--format github-output` in GitHub Actions or local image-build scripts. Use `--format env`
 to emit catalog-managed runtime values as dotenv/GitHub Environment assignments; local paths and
 credentials are not emitted. Use `--format summary` for a compact view of the values that will be
-passed to Docker. The catalog represents intended build inputs; use
+passed to Docker. The catalog declares the intended images; use
 `simtools-dependency-manifest` to inspect the versions actually present in an image.
 
 ## Output formats and schemas
 
 | Format | Schema | Purpose |
 | --- | --- | --- |
-| `catalog` | `dependency_versions.schema` 0.1.0 | Validated catalog as formatted JSON. |
+| `catalog` | `dependency_versions.schema`, version given by `schema_version` | Validated catalog as formatted JSON. |
 | `summary` | None; derived JSON object | Stable scalar values for image builds. |
 | `env` | None; dotenv/GitHub Environment assignments | Catalog-managed runtime values. |
 | `github-output` | None; GitHub Actions key-value assignments | Build scalars and JSON-encoded matrices. |

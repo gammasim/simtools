@@ -451,12 +451,15 @@ def test_write_tel_config_adds_response_table_metadata(
         {
             "fadc_pulse_shape": {
                 "value": "fadc_pulse_shape-3.0.0.ecsv",
+                "instrument": "LSTN-01",
                 "model_parameter_schema_version": "0.4.0",
             }
         },
         telescope_name="LSTN-01",
     )
     lines = config_file.read_text(encoding="utf-8").splitlines()
+    assert "fadc_pulse_shape = fadc_pulse_shape-3.0.0-LSTN-01.dat" in lines
+    assert (Path(tmp_test_directory) / "fadc_pulse_shape-3.0.0-LSTN-01.dat").is_file()
     assert "metaparam telescope add fadc_hg_response_table" in lines
     assert "metaparam telescope add fadc_lg_response_table" in lines
 

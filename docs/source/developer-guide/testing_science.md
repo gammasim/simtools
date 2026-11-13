@@ -100,6 +100,9 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
+Use `--run_label non-linear` to isolate candidate products and reports under `variants/non-linear/`.
+Use the same label for dependent tests and collection; explicitly configured paths are not redirected.
+
 Workflows reference release and site values through placeholders such as
 `__SCIENCE_CANDIDATE_SITE_PATH__`, `__SCIENCE_BASELINE_SITE_PATH__`, `__SCIENCE_REPORT_PATH__`,
 `__SCIENCE_RELEASE_LABEL__`, `__SCIENCE_BASELINE_LABEL__`, and `__SCIENCE_MODEL_VERSION__`.

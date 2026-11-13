@@ -90,3 +90,10 @@ simulation chains.
 .. automodule:: runners.setting_workflow
    :members:
 ```
+
+## runtime_releases
+
+```{eval-rst}
+.. automodule:: runners.runtime_releases
+   :members:
+```

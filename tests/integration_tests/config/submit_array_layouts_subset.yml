@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-submit-array-layouts
+  docs:
+    title: Prepare a subset of a South array layout
+    summary: >-
+      Select two telescopes from the South hyper-array and write the subset as versioned
+      array-layout model parameters.
   configuration:
     array_element_list:
     - MSTS-01

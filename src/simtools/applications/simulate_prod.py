@@ -3,7 +3,6 @@
 """Generate simulation configuration and run simulations."""
 
 import argparse
-import logging
 import sys
 from pathlib import Path
 
@@ -26,8 +25,6 @@ from simtools.production_configuration.production_file_selection import (
 )
 from simtools.production_configuration.production_metadata import build_production_job_manifest
 from simtools.runners.simulator import Simulator
-
-logger = logging.getLogger(__name__)
 
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
 
@@ -239,11 +236,6 @@ def main():
     if app_context.args.get("job_grid_file") and app_context.args.get("_job_grid_rows") is not None:
         _execute_job_grid(app_context.args)
         return
-    if app_context.args.get("job_grid_file"):
-        # Job grid file but not parameter scan - this shouldn't happen with our logic
-        # Fall back to single row processing
-        logger.warning("Job grid file detected but _job_grid_rows not set")
-
     simulator = Simulator(label=app_context.args.get("label"), context=app_context)
 
     simulator.simulate()

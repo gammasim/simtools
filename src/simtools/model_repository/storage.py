@@ -4,7 +4,7 @@ import io
 from pathlib import Path, PurePosixPath
 from typing import BinaryIO, Protocol
 
-from simtools.model_repository.git_backend import Pygit2ObjectStore
+from simtools.model_repository.git_backend import GitCommandObjectStore
 
 
 class ModelStorage(Protocol):
@@ -78,7 +78,7 @@ class GitStorage:
     def __init__(self, repository, revision, object_store=None):
         """Create storage for one revision of a local repository."""
         self.repository = Path(repository).expanduser().resolve()
-        self.object_store = object_store or Pygit2ObjectStore(self.repository)
+        self.object_store = object_store or GitCommandObjectStore(self.repository)
         self.revision = self.object_store.resolve_revision(revision)
         self.name = f"{self.repository}@{self.revision}"
         self.config = {
@@ -86,6 +86,10 @@ class GitStorage:
             "repository": str(self.repository),
             "commit": self.revision,
         }
+
+    def close(self):
+        """Release the object store's resources."""
+        self.object_store.close()
 
     def read_bytes(self, path):
         """Read a repository-relative file as bytes."""

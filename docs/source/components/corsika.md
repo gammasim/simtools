@@ -61,7 +61,7 @@ For efficiency, interaction tables are distributed separately from the executabl
 
 Tables are provided by the CTAO repository: [CTAO corsika7-interaction-tables repository](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-interaction-tables).
 
-The environment variable `$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH` must point to the interaction-tables subdirectory. Follow the repository instructions for download and installation.
+Set `$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH` to the checkout or its `interaction-tables` subdirectory. Follow the repository instructions for download and installation.
 
 ## Hadronic transition energy
 

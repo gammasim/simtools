@@ -2,10 +2,12 @@
 
 """Generate and check versioned integration-test resources for a simtools release."""
 
+import os
 from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import bounded_int
 from simtools.testing import resource_generation
 
 _ARGUMENTS = (
@@ -38,6 +40,12 @@ _ARGUMENTS = (
         help="Test static files in the simtools-tests repository.",
     ),
     cli.ArgumentDefinition(
+        "n_workers",
+        type=bounded_int(1, os.cpu_count() or 1),
+        default=1,
+        help="Number of workflows to run in parallel.",
+    ),
+    cli.ArgumentDefinition(
         "config_file",
         type=Path,
         help="Run only the selected workflow config file from integration_tests/config_files.",
@@ -49,7 +57,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
     arguments=(*_ARGUMENTS,),
-    needs=(),
+    needs=("corsika",),
 )
 
 

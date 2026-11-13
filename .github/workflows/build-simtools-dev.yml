@@ -92,7 +92,8 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7
         with:
           context: .
-          platforms: linux/amd64,linux/arm64/v8
+          # arm64 is paused: the sim_telarray and CORSIKA component images are amd64 only
+          platforms: linux/amd64
           build-args: |
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
             CORSIKA_IMAGE=${{ needs.dependency-config.outputs.dev_corsika_image }}

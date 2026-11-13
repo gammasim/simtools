@@ -32,6 +32,9 @@ SOURCE_REF_PATTERN = re.compile(
 IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
 SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
+IMAGE_REGISTRY = "ghcr.io/gammasim"
+IMAGE_REGISTRY_PATTERN = re.compile(r"^[a-z0-9.-]+(/[a-z0-9._-]+)*$")
+IMAGE_TAG_SUFFIX_PATTERN = re.compile(r"^(-\w[A-Za-z0-9_.]*)?$", re.ASCII)
 
 
 @cache
@@ -57,6 +60,12 @@ def _requires_model_range(schema_version):
     return RANGE_KEY in model_schema.get("required", [])
 
 
+def _uses_image_catalog(schema_version):
+    """Return whether the schema of this version names images through an ``images`` section."""
+    schema = _dependency_schemas().get(schema_version)
+    return schema is not None and "images" in schema["required"]
+
+
 def _source_snapshot_image(package, digest, revisions):
     """Return an immutable private source-snapshot image reference."""
     if not digest or not all(revisions):
@@ -64,27 +73,11 @@ def _source_snapshot_image(package, digest, revisions):
     return f"{SOURCE_SNAPSHOT_REGISTRY}/{package}@{digest}"
 
 
-def update_dependency_source_revisions(catalog_path, updates):
-    """Update resolved source revisions and snapshot digests in a dependency catalog.
-
-    Parameters
-    ----------
-    catalog_path : pathlib.Path
-        Dependency catalog to update.
-    updates : dict
-        Resolved source revisions and immutable snapshot digests keyed by source reference.
-    """
-    catalog_path = Path(catalog_path)
-    catalog = yaml.safe_load(catalog_path.read_text(encoding="utf-8"))
-    for section in ("corsika", "sim-telarray"):
-        if not catalog.get(section):
-            raise ValueError(f"Missing dependency catalog section: {section}")
-        components = {component["source-ref"]: component for component in catalog[section]}
-        for source_ref, values in updates[section].items():
-            components[source_ref].update(values)
-    catalog_path.write_text(
-        yaml.safe_dump(catalog, sort_keys=False, explicit_start=True), encoding="utf-8"
-    )
+def _image_settings(catalog):
+    """Return the image registry and tag suffix used for component images."""
+    if _uses_image_catalog(catalog["schema_version"]):
+        return catalog["images"]["registry"], catalog["images"].get("tag-suffix", "")
+    return IMAGE_REGISTRY, ""
 
 
 def _corsika_tag(component):
@@ -293,33 +286,66 @@ def validate_dependency_catalog(catalog):
             raise ValueError("Catalog declares both legacy and current model dependency keys.")
         catalog = dict(catalog)
         catalog[MODEL_KEY] = catalog.pop(LEGACY_MODEL_KEY)
-    required = {
-        "schema_version",
-        "python",
-        "apptainer",
-        "cpu-variants",
-        "base-image",
-        "corsika-interaction-tables",
-        "archives",
-        "model-repository",
-        "production-combinations",
-        "corsika",
-        "sim-telarray",
-    }
-    missing = sorted(required - catalog.keys())
+    schema_version = catalog.get("schema_version")
+    missing = sorted(_required_catalog_keys(schema_version) - catalog.keys())
     if missing:
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
-    schema_version = catalog["schema_version"]
     if schema_version not in set(_dependency_schemas()):
         raise ValueError(f"Unsupported dependency catalog schema version: {schema_version}")
-    if schema_version != "0.1.0" and "simtools-tests" not in catalog:
-        raise ValueError("Missing dependency catalog keys: simtools-tests")
     _validate_optional_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
     _validate_optional_digest(catalog["base-image"].get("build-digest"), "build base image")
-    _validate_archive_checksums(catalog["archives"])
-    _validate_components(catalog, schema_version)
+    if _uses_image_catalog(schema_version):
+        _validate_images(catalog["images"])
+        _validate_image_components(catalog)
+    else:
+        _validate_archive_checksums(catalog["archives"])
+        _validate_components(catalog, schema_version)
     _validate_production_combinations(catalog)
     return catalog
+
+
+def _required_catalog_keys(schema_version):
+    """Return the top-level keys required by the schema of a catalog version.
+
+    An unknown version falls back to the newest schema, so that an incomplete catalog reports its
+    missing keys before the unsupported version is reported.
+    """
+    schemas = _dependency_schemas()
+    if schema_version not in schemas:
+        schema_version = max(schemas, key=lambda version: tuple(map(int, version.split("."))))
+    return set(schemas[schema_version]["required"])
+
+
+def _validate_images(images):
+    """Validate the registry and tag suffix that name catalog-managed images."""
+    if not isinstance(images, dict):
+        raise ValueError("Image catalog section must be a mapping: images")
+    unknown = sorted(set(images) - {"registry", "tag-suffix"})
+    if unknown:
+        raise ValueError(f"Unknown image catalog keys: {', '.join(unknown)}")
+    registry = images.get("registry")
+    if not isinstance(registry, str) or IMAGE_REGISTRY_PATTERN.fullmatch(registry) is None:
+        raise ValueError(f"Invalid image registry: {registry!r}")
+    suffix = images.get("tag-suffix", "")
+    if not isinstance(suffix, str) or IMAGE_TAG_SUFFIX_PATTERN.fullmatch(suffix) is None:
+        raise ValueError(f"Invalid image tag suffix: {suffix!r}")
+
+
+def _validate_image_components(catalog):
+    """Validate source refs, image identifiers, and digests of an image-based catalog."""
+    _validate_source_ref(
+        catalog["corsika-interaction-tables"]["ref"], CORSIKA_INTERACTION_TABLES_LABEL
+    )
+    for component in catalog["corsika"]:
+        _validate_source_ref(component["source-ref"], "CORSIKA source")
+        _corsika_build_id(component)
+        for variant, digest in component.get("image-digests", {}).items():
+            _validate_digest(digest, f"CORSIKA {component['source-ref']} {variant}")
+    for component in catalog["sim-telarray"]:
+        _validate_source_ref(component["source-ref"], "sim_telarray")
+        _simtel_build_id(component)
+        _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
+    _validate_model_and_test_components(catalog, catalog["schema_version"])
 
 
 def _validate_components(catalog, schema_version):
@@ -606,14 +632,39 @@ def validate_env_template(template_path):
 
 
 def build_workflow_matrices(catalog):
-    """Build GitHub Actions matrices from the dependency catalog."""
+    """Build GitHub Actions matrices from the dependency catalog.
+
+    Image catalogs export only the production matrix. Catalogs that pin component sources
+    also export the source-build matrices.
+    """
+    production_matrix = _production_matrix(catalog)
+    if _uses_image_catalog(catalog["schema_version"]):
+        return {"production_matrix": production_matrix}
+    return {**_source_build_matrices(catalog), "production_matrix": production_matrix}
+
+
+def _production_matrix(catalog):
+    """Build one production image matrix entry per combination and CPU variant."""
+    variants = catalog["cpu-variants"]
+    corsika_components = {_corsika_reference(item): item for item in catalog["corsika"]}
+    simtel_components = {_simtel_tag(item): item for item in catalog["sim-telarray"]}
+    images = _image_settings(catalog)
+    return [
+        _production_matrix_entry(
+            corsika_components, simtel_components, combination, variant, images
+        )
+        for combination in catalog["production-combinations"]
+        for variant in combination.get("cpu-variants", variants)
+    ]
+
+
+def _source_build_matrices(catalog):
+    """Build the source-build matrices of catalogs that pin component sources."""
     variants = catalog["cpu-variants"]
     platform_matrix = [
         {"platform": "linux/amd64", "arch": "amd64", "runner": "ubuntu-24.04"},
         {"platform": "linux/arm64/v8", "arch": "arm64", "runner": "ubuntu-24.04-arm"},
     ]
-    corsika_components = {_corsika_reference(item): item for item in catalog["corsika"]}
-    simtel_components = {_simtel_tag(item): item for item in catalog["sim-telarray"]}
     corsika_matrix = [
         {
             "corsika_tag": _corsika_tag(corsika),
@@ -643,11 +694,6 @@ def build_workflow_matrices(catalog):
         }
         for corsika in catalog["corsika"]
         for variant in variants
-    ]
-    production_matrix = [
-        _production_matrix_entry(corsika_components, simtel_components, combination, variant)
-        for combination in catalog["production-combinations"]
-        for variant in combination.get("cpu-variants", variants)
     ]
     simtel_matrix = [
         {
@@ -724,12 +770,16 @@ def build_workflow_matrices(catalog):
         "simtel_build_matrix": [
             {**item, **platform} for item in simtel_matrix for platform in platform_matrix
         ],
-        "production_matrix": production_matrix,
     }
 
 
-def _production_matrix_entry(corsika_components, simtel_components, combination, variant):
-    """Build one production image matrix entry."""
+def _production_matrix_entry(corsika_components, simtel_components, combination, variant, images):
+    """Build one production image matrix entry.
+
+    ``images`` is the (registry, tag suffix) pair. Build IDs and tags in the entry do not
+    include the suffix; only image references do.
+    """
+    registry, suffix = images
     corsika = corsika_components[combination["corsika"]]
     simtel = simtel_components[combination["sim-telarray"]]
     production_corsika = _corsika_tag(corsika) or f"v{_corsika_build_id(corsika)}"
@@ -737,15 +787,15 @@ def _production_matrix_entry(corsika_components, simtel_components, combination,
         "corsika_tag": production_corsika,
         "corsika_build_id": _corsika_build_id(corsika),
         "corsika_image": _image_reference(
-            "ghcr.io/gammasim/corsika7",
-            f"v{_corsika_build_id(corsika)}-{variant}",
+            f"{registry}/corsika7",
+            f"v{_corsika_build_id(corsika)}-{variant}{suffix}",
             corsika.get("image-digests", {}).get(variant),
         ),
         "simtel_tag": _simtel_tag(simtel),
         "simtel_build_id": _simtel_build_id(simtel),
         "simtel_image": _image_reference(
-            "ghcr.io/gammasim/sim_telarray",
-            _simtel_build_id(simtel),
+            f"{registry}/sim_telarray",
+            f"{_simtel_build_id(simtel)}{suffix}",
             simtel.get("image-digest"),
         ),
         "avx_flag": variant,
@@ -758,21 +808,58 @@ def _image_reference(name, tag, digest=None):
 
 
 def dependency_catalog_summary(catalog):
-    """Return stable scalar build values used by Docker workflows."""
+    """Return stable scalar build values used by Docker workflows.
+
+    Image catalogs omit the values that only source builds use.
+    """
     base = catalog["base-image"]
     default_corsika = catalog["corsika"][0]
     default_simtel = catalog["sim-telarray"][0]
     test_resources = catalog.get("simtools-tests", {})
-    return {
+    registry, suffix = _image_settings(catalog)
+    summary = {
         "python_version": catalog["python"],
         "apptainer_version": catalog["apptainer"],
         "base_image": _image_reference(
             base["name"], base["runtime-version"], base.get("runtime-digest")
         ),
+        "almalinux_version": base["runtime-version"].removesuffix("-minimal"),
+        "corsika_tables_ref": _dependency_tag(
+            catalog["corsika-interaction-tables"], "ref", "tag", "version"
+        ),
+        "corsika_tables_revision": catalog["corsika-interaction-tables"].get("revision", ""),
+        "model_repository": catalog["model-repository"].get("repository-url", ""),
+        "model_repository_revision": model_repository_revision(catalog),
+        "simtools_tests_repository": test_resources.get("repository", ""),
+        "simtools_tests_url": test_resources.get("source-url", ""),
+        "simtools_tests_ref": _tests_ref(test_resources) or _tests_tag(test_resources),
+        "simtools_tests_resource_version": _tests_resource_version(test_resources),
+        "simtools_tests_revision": test_resources.get("revision", ""),
+        "dev_corsika_image": _image_reference(
+            f"{registry}/corsika7",
+            f"v{_corsika_build_id(default_corsika)}-generic{suffix}",
+            default_corsika.get("image-digests", {}).get("generic"),
+        ),
+        "dev_simtel_image": _image_reference(
+            f"{registry}/sim_telarray",
+            f"{_simtel_build_id(default_simtel)}{suffix}",
+            default_simtel.get("image-digest"),
+        ),
+    }
+    if _uses_image_catalog(catalog["schema_version"]):
+        return summary
+    return {**summary, **_source_build_summary(catalog)}
+
+
+def _source_build_summary(catalog):
+    """Return summary values that only source builds use."""
+    base = catalog["base-image"]
+    default_corsika = catalog["corsika"][0]
+    default_simtel = catalog["sim-telarray"][0]
+    return {
         "build_base_image": _image_reference(
             base["name"], base["build-version"], base.get("build-digest")
         ),
-        "almalinux_version": base["runtime-version"].removesuffix("-minimal"),
         "autoconf_version": catalog["archives"]["autoconf"]["version"],
         "autoconf_sha256": catalog["archives"]["autoconf"].get("sha256", ""),
         "default_corsika_source_snapshot": _source_snapshot_image(
@@ -794,27 +881,6 @@ def dependency_catalog_summary(catalog):
                 default_simtel.get("hessio-revision", ""),
                 default_simtel.get("stdtools-revision", ""),
             ),
-        ),
-        "corsika_tables_ref": _dependency_tag(
-            catalog["corsika-interaction-tables"], "ref", "tag", "version"
-        ),
-        "corsika_tables_revision": catalog["corsika-interaction-tables"].get("revision", ""),
-        "model_repository": catalog["model-repository"].get("repository-url", ""),
-        "model_repository_revision": model_repository_revision(catalog),
-        "simtools_tests_repository": test_resources.get("repository", ""),
-        "simtools_tests_url": test_resources.get("source-url", ""),
-        "simtools_tests_ref": _tests_ref(test_resources) or _tests_tag(test_resources),
-        "simtools_tests_resource_version": _tests_resource_version(test_resources),
-        "simtools_tests_revision": test_resources.get("revision", ""),
-        "dev_corsika_image": _image_reference(
-            "ghcr.io/gammasim/corsika7",
-            f"v{_corsika_build_id(default_corsika)}-generic",
-            default_corsika.get("image-digests", {}).get("generic"),
-        ),
-        "dev_simtel_image": _image_reference(
-            "ghcr.io/gammasim/sim_telarray",
-            _simtel_build_id(default_simtel),
-            default_simtel.get("image-digest"),
         ),
     }
 

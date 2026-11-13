@@ -124,7 +124,9 @@ The following environment variables must be set for simtools applications to fin
 ## Simulation-model repository
 
 Simulation-model parameters and referenced files are read from a local checkout or a local
-normal, bare, or mirror Git repository. Applications that use model parameters accept
+normal, bare, or mirror Git repository. Reading a Git repository requires the `git`
+executable; repository ownership checks are disabled for the configured path. Applications
+that use model parameters accept
 
 - a local checkout of the simulation-model repository, use `--simulation_models_path`
 - a local Git repository, use `--simulation_models_git_path` and

@@ -3,15 +3,20 @@
 import hashlib
 import logging
 import shutil
+import threading
+import time
 import urllib.error
 import urllib.request
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from pathlib import Path
 
 from simtools.io import ascii_handler
 from simtools.runners import simtools_runner
 
 logger = logging.getLogger(__name__)
+_WORKFLOW_THREAD = threading.local()
 STATIC_MANIFEST = "static_manifest.yml"
 _PRESERVED_INTEGRATION_TEST_DIRECTORIES = {
     "config_files",
@@ -122,41 +127,192 @@ def run_configured_applications(
         Placeholders replaced recursively in each workflow configuration.
     unique_tmp_directories : bool
         Use a fresh temporary subtree for each workflow invocation.
+
+    Raises
+    ------
+    ValueError
+        If parallel workflows share a config name.
+    RuntimeError
+        If workflows run in parallel (``args_dict["n_workers"] > 1``) and one or more fail.
+        All workflows are run before the error is raised.
     """
     config_dir = Path(config_dir)
     log_dir = Path(log_dir)
-    for workflow_config in _get_selected_config_files(config_dir, args_dict.get("config_file")):
-        logger.info("Executing applications configured in %s", workflow_config)
-        workflow_replacements = replacements
-        if unique_tmp_directories:
-            workflow_tmp = (
-                Path((replacements or {})["__INTEGRATION_TESTS_DIRECTORY__"])
-                / "tmp"
-                / f"{workflow_config.stem}-{uuid.uuid4().hex}"
-            )
-            workflow_replacements = {
-                **(replacements or {}),
-                "__INTEGRATION_TESTS_DIRECTORY__/tmp/": f"{workflow_tmp}/",
-            }
-        tmp_args_dict = {
-            "config_file": str(workflow_config),
-            "log_file": str(log_dir / f"{workflow_config.name.removesuffix('.config.yml')}.log"),
-            "steps": None,
-            "ignore_runtime_environment": args_dict.get("ignore_runtime_environment", False),
-            "overwrite_collection_files": args_dict.get("overwrite_collection_files", False),
-        }
-        for key in (
-            "simulation_models_path",
-            "simulation_models_git_path",
-            "simulation_models_git_revision",
-        ):
-            if args_dict.get(key) is not None:
-                tmp_args_dict[key] = args_dict[key]
-        if "runtime_environment" in args_dict:
-            tmp_args_dict["runtime_environment"] = args_dict["runtime_environment"]
-        simtools_runner.run_applications(
-            tmp_args_dict, run_time=run_time, replacements=workflow_replacements, context=context
+    workflow_configs = _get_selected_config_files(config_dir, args_dict.get("config_file"))
+
+    n_workers_requested = args_dict.get("n_workers") or 1
+
+    def run_workflow(workflow_config):
+        _run_workflow(
+            args_dict,
+            workflow_config,
+            log_dir,
+            run_time,
+            replacements,
+            unique_tmp_directories,
+            context,
+            unique_provenance=n_workers_requested > 1,
         )
+
+    n_workers = min(n_workers_requested, len(workflow_configs))
+    if n_workers <= 1:
+        for workflow_config in workflow_configs:
+            run_workflow(workflow_config)
+        return
+    _check_unique_workflow_names(workflow_configs)
+    _run_workflows_in_parallel(workflow_configs, run_workflow, n_workers)
+
+
+def _check_unique_workflow_names(workflow_configs):
+    """Raise an error if workflows share a name, as logs and provenance files would collide."""
+    names = [config.name.removesuffix(".config.yml") for config in workflow_configs]
+    duplicates = sorted({name for name in names if names.count(name) > 1})
+    if duplicates:
+        raise ValueError(
+            "Workflow config names must be unique to run workflows in parallel: "
+            + ", ".join(duplicates)
+        )
+
+
+class _WorkflowProgress:
+    """Thread-safe progress reporting for workflows running in parallel."""
+
+    def __init__(self, total):
+        self.total = total
+        self.running = 0
+        self.finished = 0
+        self.failed = 0
+        self._lock = threading.Lock()
+
+    def _status(self):
+        pending = self.total - self.running - self.finished
+        return (
+            f"running {self.running}, pending {pending}, "
+            f"finished {self.finished}/{self.total} ({self.failed} failed)"
+        )
+
+    def started(self, name):
+        """Log the start of a workflow."""
+        with self._lock:
+            self.running += 1
+            logger.info("Started %s (%s)", name, self._status())
+
+    def completed(self, name, duration, success):
+        """Log the end of a workflow."""
+        with self._lock:
+            self.running -= 1
+            self.finished += 1
+            self.failed += 0 if success else 1
+            logger.info(
+                "%s %s after %.0f s (%s)",
+                "Finished" if success else "FAILED",
+                name,
+                duration,
+                self._status(),
+            )
+
+
+@contextmanager
+def _workflow_log_prefix():
+    """Prefix log records emitted from workflow threads with the workflow name."""
+    factory = logging.getLogRecordFactory()
+
+    def record_factory(*args, **kwargs):
+        record = factory(*args, **kwargs)
+        name = getattr(_WORKFLOW_THREAD, "name", None)
+        if name:
+            record.msg = f"[{name.replace('%', '%%')}] {record.msg}"
+        return record
+
+    logging.setLogRecordFactory(record_factory)
+    try:
+        yield
+    finally:
+        logging.setLogRecordFactory(factory)
+
+
+def _run_workflows_in_parallel(workflow_configs, run_workflow, n_workers):
+    """Run all workflows in a thread pool and raise one error listing all failures."""
+    progress = _WorkflowProgress(len(workflow_configs))
+    logger.info("Running %d workflows with %d workers", len(workflow_configs), n_workers)
+
+    def run_tracked(workflow_config):
+        name = workflow_config.name.removesuffix(".config.yml")
+        progress.started(name)
+        start = time.monotonic()
+        success = False
+        _WORKFLOW_THREAD.name = name
+        try:
+            run_workflow(workflow_config)
+            success = True
+        finally:
+            _WORKFLOW_THREAD.name = None
+            progress.completed(name, time.monotonic() - start, success)
+
+    with _workflow_log_prefix(), ThreadPoolExecutor(max_workers=n_workers) as executor:
+        futures = {executor.submit(run_tracked, config): config for config in workflow_configs}
+    failures = [
+        f"{workflow_config.name}: {future.exception()}"
+        for future, workflow_config in futures.items()
+        if future.exception() is not None
+    ]
+    if failures:
+        raise RuntimeError(
+            f"{len(failures)} of {len(workflow_configs)} workflows failed:\n- "
+            + "\n- ".join(failures)
+        )
+
+
+def _run_workflow(
+    args_dict,
+    workflow_config,
+    log_dir,
+    run_time,
+    replacements,
+    unique_tmp_directories,
+    context,
+    unique_provenance=False,
+):
+    """Run a single resource-generation workflow.
+
+    With ``unique_provenance``, the resolved workflow is written to a file specific to this
+    workflow instead of the shared default location below the output directory.
+    """
+    logger.info("Executing applications configured in %s", workflow_config)
+    workflow_replacements = replacements
+    if unique_tmp_directories:
+        workflow_tmp = (
+            Path((replacements or {})["__INTEGRATION_TESTS_DIRECTORY__"])
+            / "tmp"
+            / f"{workflow_config.stem}-{uuid.uuid4().hex}"
+        )
+        workflow_replacements = {
+            **(replacements or {}),
+            "__INTEGRATION_TESTS_DIRECTORY__/tmp/": f"{workflow_tmp}/",
+        }
+    tmp_args_dict = {
+        "config_file": str(workflow_config),
+        "log_file": str(log_dir / f"{workflow_config.name.removesuffix('.config.yml')}.log"),
+        "steps": None,
+        "ignore_runtime_environment": args_dict.get("ignore_runtime_environment", False),
+        "overwrite_collection_files": args_dict.get("overwrite_collection_files", False),
+    }
+    if unique_provenance:
+        tmp_args_dict["provenance_path"] = str(
+            log_dir / "provenance" / f"{workflow_config.name.removesuffix('.config.yml')}.yml"
+        )
+    for key in (
+        "simulation_models_path",
+        "simulation_models_git_path",
+        "simulation_models_git_revision",
+    ):
+        if args_dict.get(key) is not None:
+            tmp_args_dict[key] = args_dict[key]
+    if "runtime_environment" in args_dict:
+        tmp_args_dict["runtime_environment"] = args_dict["runtime_environment"]
+    simtools_runner.run_applications(
+        tmp_args_dict, run_time=run_time, replacements=workflow_replacements, context=context
+    )
 
 
 def _get_selected_config_files(config_dir, config_file=None):

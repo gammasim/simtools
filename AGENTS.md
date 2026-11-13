@@ -125,6 +125,9 @@ modify files: inspect the diff and rerun the complete pre-commit suite afterward
 ## Tests And CI
 
 - Plain pytest functions cover meaningful success, error, and boundary behavior.
+  Test the current behavioral contract, not the absence of removed implementation
+  details or obsolete log messages. Negative assertions are useful when they verify
+  behavior that must not occur.
   Add a specific `match` pattern to `pytest.raises` for broad exception types such as
   `ValueError` or `RuntimeError`, so the test checks the expected failure.
 - Follow `python:S1244`: use `pytest.approx()` for float comparisons. Use

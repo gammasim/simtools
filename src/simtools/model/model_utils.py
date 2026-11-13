@@ -132,6 +132,11 @@ def _extract_changes_from_dict(overwrite_dict):
     """Extract changes from a dictionary."""
     if "changes" in overwrite_dict:
         return overwrite_dict["changes"]
+    if {"instrument", "parameter", "value"}.issubset(overwrite_dict):
+        entry = {"value": overwrite_dict["value"]}
+        if "unit" in overwrite_dict:
+            entry["unit"] = overwrite_dict["unit"]
+        return {overwrite_dict["instrument"]: {overwrite_dict["parameter"]: entry}}
     return overwrite_dict
 
 

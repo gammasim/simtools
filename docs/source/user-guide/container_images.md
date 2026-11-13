@@ -18,7 +18,7 @@ development images use Python 3.14.
 | --- | --- | --- | --- | --- |
 | v0.27.0-v78010-v2025-11-30-rc-[generic](ghcr.io/gammasim/simtools-prod:v0.27.0-generic), [avx2](ghcr.io/gammasim/simtools-prod:v0.27.0-v78010-v2025-11-30-rc-avx2), [avx512f](ghcr.io/gammasim/simtools-prod:v0.27.0-v78010-v2025-11-30-rc-avx512f), [sse4](ghcr.io/gammasim/simtools-prod:v0.27.0-v78010-v2025-11-30-rc-sse4) | v0.27.0 | v78010 | v2025-11-30-rc | no QGSJet2/3 tables included |
 
-The generic image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
+The images are built for linux/amd64.
 
 No separate Apptainer images are published. To use an image with Apptainer, pull the matching
 OCI image from the GitHub Container Registry with `apptainer pull docker://...` and run the
@@ -33,18 +33,18 @@ resulting local SIF file.
 | --- | --- | --- | --- | --- |
 | [v0.27.0](ghcr.io/gammasim/simtools-dev:0.27.0) | v0.27.0 | v7.8010 | v2025-11-30-rc | includes QGSJet3 tables |
 
-Images are compatible with ARM and x86_64 CPUs.
+The images are built for linux/amd64.
 
 ### CORSIKA7
 
 - registry page: [corsika7](https://github.com/gammasim/simtools/pkgs/container/corsika7)
-- Docker file: [Dockerfile-corsika7](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika7)
+- Build: GitLab CI of the [simulation-containers](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/simulation-containers) repository
 
 | image tag | CORSIKA | high-/low-energy <br>interaction models | compile <br>configuration | optimization <br> patches | IACT/ATMO |
 | --- | --- | --- | --- | --- | --- |
-| v78010-[generic](ghcr.io/gammasim/corsika7:v78010-generic), [avx2](ghcr.io/gammasim/corsika7:v78010-avx2), [avx512f](ghcr.io/gammasim/corsika7:v78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:v78010-sse4) | v7.8010 | QGSJet-II/URQMD; QGSJet-III/URQMD; EPOS/URQMD | [CTAO corsika7-config](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
+| `v78010-generic-gl1`, `v78010-avx2-gl1`, `v78010-avx512f-gl1`, `v78010-sse4-gl1` | v7.8010 | QGSJet-II/URQMD; QGSJet-III/URQMD; EPOS/URQMD | [CTAO corsika7-config](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
 
-The `generic` image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
+The images are built for linux/amd64.
 
 The CORSIKA images include QGSJet-II/URQMD executables for flat and curved atmospheres. Select
 QGSJet-II with `corsika_he_interaction=qgs2` (for example, with
@@ -59,10 +59,10 @@ installation instructions.
 ### sim_telarray Images
 
 - registry page: [sim_telarray](https://github.com/gammasim/simtools/pkgs/container/sim_telarray)
-- Docker file: [Dockerfile-sim_telarray](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtel_array)
+- build: GitLab CI of the [simulation-containers](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/simulation-containers) repository (not part of simtools)
 
 | Image tag | sim_telarray | hessio version | stdtools version |
 | --- | --- | --- | --- |
-| [v2025-11-30-rc](ghcr.io/gammasim/sim_telarray:v2025-11-30-rc) | [v2025-11-30-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray/-/releases/v2025-11-30-rc)) | [v2025-12-01-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio/-/releases/v2025-12-01-rc) | [v2025-06-16-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools/-/releases/v2025-06-16-rc) |
+| `v2025-11-30-rc-gl1` | [v2025-11-30-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray/-/releases/v2025-11-30-rc)) | [v2025-12-01-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio/-/releases/v2025-12-01-rc) | [v2025-06-16-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools/-/releases/v2025-06-16-rc) |
 
 Note: Version names should be replaced with actual version numbers when releases are available.

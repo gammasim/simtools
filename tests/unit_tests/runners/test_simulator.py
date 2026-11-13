@@ -710,7 +710,19 @@ def test_overwrite_flasher_photons_for_direct_injection_noop_without_value(mocke
     calib.overwrite_model_parameter.assert_not_called()
 
 
-def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker, run_context):
+@pytest.fixture
+def mock_direct_injection_init(mocker):
+    def initialize(simulator, label=None, context=None):
+        simulator.context = context
+        simulator.run_number = context.args["run_number"]
+        simulator.logger = logging.getLogger(__name__)
+
+    return mocker.patch.object(Simulator, "__init__", autospec=True, side_effect=initialize)
+
+
+def test_simulate_direct_injection_sequence_reloads_config_per_run(
+    mocker, run_context, mock_direct_injection_init
+):
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -720,7 +732,7 @@ def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker, run_c
 
     context = run_context.replace(args=base_args)
 
-    mock_init = mocker.patch.object(Simulator, "__init__", return_value=None)
+    mock_init = mock_direct_injection_init
     mock_simulate = mocker.patch.object(Simulator, "simulate")
     mock_validate = mocker.patch.object(Simulator, "validate_simulations")
 
@@ -746,7 +758,7 @@ def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker, run_c
 
 
 def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_missing(
-    mocker, run_context
+    mocker, run_context, mock_direct_injection_init
 ):
     base_args = {
         "run_mode": "direct_injection",
@@ -757,7 +769,7 @@ def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_mis
 
     context = run_context.replace(args=base_args)
 
-    mock_init = mocker.patch.object(Simulator, "__init__", return_value=None)
+    mock_init = mock_direct_injection_init
     mocker.patch.object(Simulator, "simulate")
     mocker.patch.object(Simulator, "validate_simulations")
 
@@ -770,7 +782,7 @@ def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_mis
 
 
 def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_photon_runs(
-    mocker, run_context
+    mocker, run_context, mock_direct_injection_init
 ):
     base_args = {
         "run_mode": "direct_injection",
@@ -781,7 +793,7 @@ def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_ph
 
     context = run_context.replace(args=base_args)
 
-    mock_init = mocker.patch.object(Simulator, "__init__", return_value=None)
+    mock_init = mock_direct_injection_init
     mocker.patch.object(Simulator, "simulate")
     mocker.patch.object(Simulator, "validate_simulations")
 
@@ -816,7 +828,9 @@ def test_simulate_direct_injection_sequence_raises_for_invalid_list_length(
         Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
 
 
-def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker, run_context):
+def test_simulate_direct_injection_sequence_restores_config_after_failure(
+    mocker, run_context, mock_direct_injection_init
+):
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -826,13 +840,46 @@ def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker
 
     context = run_context.replace(args=base_args)
 
-    mocker.patch.object(Simulator, "__init__", return_value=None)
     mocker.patch.object(Simulator, "simulate", side_effect=RuntimeError("boom"))
 
     with pytest.raises(RuntimeError, match="boom"):
         Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
 
     assert context.args == base_args
+
+
+@pytest.mark.parametrize("max_workers", [True, 0, -1, 1.5, "2"])
+def test_direct_injection_rejects_invalid_worker_counts(run_context, max_workers):
+    context = run_context.replace(args={"max_workers": max_workers})
+    with pytest.raises(ValueError, match="max_workers must be a positive integer"):
+        Simulator.simulate_direct_injection_sequence(context=context)
+
+
+def test_direct_injection_parallel_runs(run_context, caplog):
+    completed = []
+
+    class RecordingSimulator(Simulator):
+        def __init__(self, label=None, context=None):
+            self.context = context
+            self.run_number = context.args["run_number"]
+            self.logger = logging.getLogger(__name__)
+
+        def simulate(self):
+            completed.append((self.run_number, self.context.args["flasher_photons"]))
+
+        def validate_simulations(self):
+            completed.append((self.run_number, "validated"))
+
+    context = run_context.replace(
+        args={"run_number": 10, "flasher_photons": [100, 200], "max_workers": 4}
+    )
+    with caplog.at_level(logging.INFO):
+        RecordingSimulator.simulate_direct_injection_sequence(context=context)
+
+    assert sorted(completed, key=str) == sorted(
+        [(10, 100), (10, "validated"), (11, 200), (11, "validated")], key=str
+    )
+    assert "Running 2 direct-injection runs with up to 2 workers" in caplog.text
 
 
 def test_report(array_simulator, mocker, caplog):

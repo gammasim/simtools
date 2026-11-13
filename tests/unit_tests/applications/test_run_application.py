@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Tests for workflow context and command-line replacements."""
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -43,3 +46,51 @@ def test_main_forwards_context(mocker):
     execute.assert_called_once_with(
         context.args, run_time=[], replacements={"__VALUE__": "value"}, context=context
     )
+
+
+def test_runtime_model_source_does_not_require_a_host_reader(
+    tmp_test_directory, simtools_root_path
+):
+    root = Path(tmp_test_directory)
+    engine = root / "fake-container-engine"
+    engine.write_text("#!/bin/sh\nexit 0\n")
+    engine.chmod(0o755)
+    config = root / "workflow.yml"
+    config.write_text(
+        yaml.safe_dump(
+            {
+                "applications": [{"application": "echo", "run_application": False}],
+                "runtime_environment": {
+                    "container_engine": str(engine),
+                    "image": "example-image",
+                    "simulation_models": {"git_path": "/only/in/container", "git_revision": "v1"},
+                },
+            }
+        )
+    )
+    env_file = root / "empty.env"
+    env_file.write_text("")
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.startswith("SIMTOOLS_SIMULATION_MODELS_")
+    }
+    env["PYTHONPATH"] = str(Path(simtools_root_path) / "src")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "simtools.applications.run_application",
+            "--config_file",
+            str(config),
+            "--env_file",
+            str(env_file),
+            "--disable_log_file",
+        ],
+        cwd=root,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr

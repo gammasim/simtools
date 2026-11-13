@@ -38,6 +38,37 @@ $defs:
     type: string
     description: Name of the schema.
 
+  run_time_environment_legacy:
+    type: object
+    description: Container runtime configuration used to execute simtools applications.
+    additionalProperties: false
+    properties:
+      container_engine:
+        type: string
+        minLength: 1
+        description: Container engine executable, for example docker or podman.
+        default: docker
+      image:
+        type: string
+        minLength: 1
+        description: Container image used for the runtime environment.
+      network:
+        type: string
+        minLength: 1
+        description: Container network name.
+      environment_file:
+        type: string
+        minLength: 1
+        description: Environment file passed to the container engine.
+      options:
+        type: array
+        description: Additional container-engine options.
+        items:
+          type: string
+          minLength: 1
+    required:
+      - image
+
   run_time_environment:
     type: object
     description: Container runtime configuration used to execute simtools applications.
@@ -66,6 +97,20 @@ $defs:
         items:
           type: string
           minLength: 1
+      simulation_models:
+        type: object
+        minProperties: 1
+        description: Simulation-model repository used by the applications in the runtime.
+        additionalProperties: false
+        properties:
+          git_path:
+            type: string
+            minLength: 1
+            description: Path to the simulation-models Git repository as seen inside the container.
+          git_revision:
+            type: string
+            minLength: 1
+            description: Git tag or commit of the simulation-models repository.
     required:
       - image
 

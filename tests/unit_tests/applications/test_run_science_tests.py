@@ -54,6 +54,15 @@ def test_parser_allows_setup_release_settings(monkeypatch):
     assert args[MODEL_REVISION_KEY] == PARSED_MODEL_REVISION
 
 
+def test_parser_accepts_run_label(monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["run_science_tests.py", "--release_dir", RELEASE_PATH, "--run_label", "non-linear"],
+    )
+    assert run_science_tests.APPLICATION._parse()["run_label"] == "non-linear"
+
+
 def test_setup_forwards_release_settings(mocker):
     args = {
         RELEASE_DIR: RELEASE_PATH,

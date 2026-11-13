@@ -486,3 +486,54 @@ def test_save_figure_uses_configured_figure_output(tmp_test_directory):
     finally:
         visualize.configure_figure_output({})
         plt.close("all")
+
+
+def test_plot_1d_per_series_styles():
+    measured = np.array([(1, 10, 2), (2, 20, 3)], dtype=[("x", float), ("y", float), ("dy", float)])
+    fitted = np.array([(1, 10), (2, 20)], dtype=[("x", float), ("y", float)])
+    options = {
+        "measured": {"color": "blue", "marker": "s", "linestyle": "None"},
+        "_fit": {"color": "blue", "marker": "None", "linestyle": "--"},
+    }
+    fig = visualize.plot_1d(
+        {"measured": measured, "_fit": fitted, "reference": fitted},
+        series_options=options,
+        color="red",
+        linewidth=3,
+        error_type="errorbar",
+        figsize=(10, 7),
+    )
+    try:
+        axis = fig.axes[0]
+        lines = {line.get_label(): line for line in axis.lines}
+        assert lines["measured"].get_color() == "blue"
+        assert lines["measured"].get_marker() == "s"
+        assert lines["measured"].get_linestyle() == "None"
+        assert lines["_fit"].get_linestyle() == "--"
+        assert lines["_fit"].get_linewidth() == 3
+        assert lines["reference"].get_color() == "red"
+        assert len(axis.containers) == 1
+        segments = axis.containers[0].lines[2][0].get_segments()
+        np.testing.assert_allclose(segments, [[[1, 8], [1, 12]], [[2, 17], [2, 23]]])
+        assert [text.get_text() for text in axis.get_legend().get_texts()] == [
+            "measured",
+            "reference",
+        ]
+        assert fig.get_size_inches() == pytest.approx([10, 7])
+        assert "linewidth" not in options["measured"]
+    finally:
+        plt.close(fig)
+
+
+@pytest.mark.parametrize("panel", ["plot_ratio", "plot_difference"])
+@pytest.mark.parametrize("figsize", [None, (10, 7)])
+def test_plot_1d_comparison_panel_figure_size(panel, figsize):
+    table = np.array([(1, 10), (2, 20)], dtype=[("x", float), ("y", float)])
+    fig = visualize.plot_1d(
+        {"reference": table, "comparison": table}, **{panel: True}, figsize=figsize
+    )
+    try:
+        assert len(fig.axes) == 2
+        assert fig.get_size_inches() == pytest.approx(figsize or (8, 8))
+    finally:
+        plt.close(fig)

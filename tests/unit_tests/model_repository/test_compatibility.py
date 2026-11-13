@@ -1,5 +1,8 @@
 """Model releases must satisfy the runtime's catalog constraint."""
 
+import os
+import subprocess
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -14,6 +17,38 @@ INVALID_CONTRACT = "Invalid|nonempty|not a supported stable release"
 LEGACY_DEFAULT = "v0.17.1"
 CATALOG = {models.LEGACY_MODEL_KEY: {"default-tag": LEGACY_DEFAULT}}
 RANGE = ">=0.17.1,<0.18.0"
+
+
+def test_release_in_repository_with_different_owner(monkeypatch, tmp_test_directory):
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    source = str(Path(tmp_test_directory).resolve())
+    git = ["git", "-C", source]
+    subprocess.run([*git, "init"], check=True, capture_output=True)
+    subprocess.run(
+        [
+            *git,
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "commit",
+            "--allow-empty",
+            "-m",
+            "model fixture",
+        ],
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run([*git, "tag", LEGACY_DEFAULT], check=True, capture_output=True)
+    monkeypatch.setenv("GIT_TEST_ASSUME_DIFFERENT_OWNER", "1")
+    untrusted = subprocess.run([*git, "tag", "--points-at", "HEAD"], capture_output=True)
+    assert untrusted.returncode != 0
+    assert b"dubious ownership" in untrusted.stderr
+
+    result = models.validate_release(tmp_test_directory, CATALOG)
+    assert result[models.STATUS_KEY] == "compatible"
+    assert result[models.VERSION_KEY] == "0.17.1"
 
 
 @pytest.mark.parametrize(("tag", "accepted"), [(LEGACY_DEFAULT, True), ("v0.17.2", False)])

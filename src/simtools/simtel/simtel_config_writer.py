@@ -46,6 +46,13 @@ _SKIPPED_PARAMETERS = (
 )
 
 
+def _write_numeric_columns(output_path, columns):
+    """Write equally long numeric columns as whitespace-separated rows."""
+    with output_path.open("w", encoding="utf-8") as file:
+        for row in zip(*columns, strict=True):
+            file.write(" ".join(f"{value:.12g}" for value in row) + "\n")
+
+
 def _dimensionless_values(column):
     """Return a table column as dimensionless values, honoring any unit."""
     return u.Quantity(column, unit=column.unit or u.dimensionless_unscaled).to_value(
@@ -210,7 +217,8 @@ class SimtelConfigWriter:
         destination = Path(config_file_path).parent
         suffix = Path(config_file_path).stem
         outputs = {
-            "fadc_pulse_shape": f"fadc_pulse_shape-{suffix}.dat",
+            "fadc_pulse_shape": get_simtel_table_file_name(parameter_data)
+            or f"fadc_pulse_shape-{suffix}.dat",
             "fadc_hg_response_table": f"fadc_hg_response_table-{suffix}.dat",
             "fadc_lg_response_table": f"fadc_lg_response_table-{suffix}.dat",
         }
@@ -241,9 +249,7 @@ class SimtelConfigWriter:
             _dimensionless_values(high["amplitude"]),
             _dimensionless_values(low["amplitude"]),
         )
-        with output_path.open("w", encoding="utf-8") as file:
-            for row in zip(*columns, strict=True):
-                file.write(" ".join(f"{value:.12g}" for value in row) + "\n")
+        _write_numeric_columns(output_path, columns)
 
     @staticmethod
     def _write_fadc_gain_response(table, gain, output_path):
@@ -259,9 +265,7 @@ class SimtelConfigWriter:
             u.Quantity(selected["time"], unit=selected["time"].unit or u.ns).to_value(u.ns),
             _dimensionless_values(selected["amplitude"]),
         )
-        with output_path.open("w", encoding="utf-8") as file:
-            for row in zip(*columns, strict=True):
-                file.write(" ".join(f"{value:.12g}" for value in row) + "\n")
+        _write_numeric_columns(output_path, columns)
 
     def _write_camera_file(self, parameters, config_file_path, telescope_name=None):
         """Write a sim_telarray camera file from independent camera parameters."""

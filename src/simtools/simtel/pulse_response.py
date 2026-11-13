@@ -324,11 +324,11 @@ def _read_scan_file(
 def _event_waveforms(event, tel_id, pixels, pedestal):
     """Yield pedestal-subtracted raw gain channels for the selected pixels."""
     adc = np.asarray(event[TELESCOPE_EVENTS][tel_id].get("adc_samples"), dtype=float)
-    if adc.ndim != 3 or adc.shape[0] != 2 or max(pixels) >= adc.shape[1]:
-        raise ValueError("Expected two raw gain channels and valid selected pixels")
+    if adc.ndim != 3 or adc.shape[0] not in (1, len(GAINS)) or max(pixels) >= adc.shape[1]:
+        raise ValueError("Expected one or two raw gain channels and valid selected pixels")
     baselines = _pedestals(event, tel_id, adc.shape[:2], pedestal)
     for pixel in pixels:
-        for gain_index, gain in enumerate(GAINS):
+        for gain_index, gain in enumerate(GAINS[: adc.shape[0]]):
             yield pixel, gain, adc[gain_index, pixel] - baselines[gain_index, pixel]
 
 

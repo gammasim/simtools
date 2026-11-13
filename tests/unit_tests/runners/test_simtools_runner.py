@@ -287,10 +287,11 @@ def test_model_source_options_are_applied_per_application():
 def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     mock_configurations = [
         {
-            "application": f"app{i}",
+            "application": "simtools-simulate-flasher" if i == 1 else f"app{i}",
             "run_application": run,
             "configuration": {
                 "key": f"value{i}",
+                "max_workers": 2,
                 "activity_id": f"cfg-id-{i}",
                 "output_path": str(tmp_test_directory),
             },
@@ -302,7 +303,8 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
 
     submit_calls = []
 
-    def mock_submit(app, stdout, stderr, configuration=None, runtime_environment=None):
+    def mock_submit(app, stdout, stderr, configuration=None, runtime_environment=None, **kwargs):
+        assert kwargs["capture_output"] is True
         submit_calls.append({"app": app, "configuration": configuration})
         result_mock = mock.Mock()
         result_mock.output = f"{app}_stdout"
@@ -320,11 +322,11 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     content = log_file_path.read_text(encoding="utf-8")
     assert "Running simtools applications" in content
     assert "simtools version: 1.2.3" in content
-    assert "STDOUT:\napp1_stdout" in content
+    assert "STDOUT:\nsimtools-simulate-flasher_stdout" in content
     assert "STDERR:\napp3_stderr" in content
     assert "Application: app2" not in content  # skipped
 
-    assert [c["app"] for c in submit_calls] == ["app1", "app3"]
+    assert [c["app"] for c in submit_calls] == ["simtools-simulate-flasher", "app3"]
     for call, activity in zip(submit_calls, ("cfg-id-1", "cfg-id-3"), strict=True):
         configuration = call["configuration"]
         assert configuration["activity_id"] == activity
@@ -509,7 +511,10 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
 
 
 def test_run_applications_propagates_job_execution_error(monkeypatch, tmp_test_directory):
-    def mock_submit_failure(app, stdout, stderr, configuration=None, runtime_environment=None):
+    def mock_submit_failure(
+        app, stdout, stderr, configuration=None, runtime_environment=None, **kwargs
+    ):
+        assert kwargs["capture_output"] is True
         raise JobExecutionError("Job failed")
 
     _patch_run_dependencies(
@@ -906,3 +911,161 @@ def test_collection_from_metadata_directory(
         },
     )
     assert (destination / "visibility.ecsv").read_text(encoding="utf-8") == "table"
+
+
+RUNTIME_IMAGE = "simtools-container@sha256:abc"
+RUNTIME_WITH_MODELS = {
+    "image": RUNTIME_IMAGE,
+    "simulation_models": {"git_path": "/models.git", "git_revision": "v1.0.0"},
+}
+
+
+def _run_with_runtime(monkeypatch, tmp_test_directory, runtime, args_extra=None, ignore=False):
+    """Run one application with a runtime environment and return its configuration and log."""
+    tmp_test_directory = Path(tmp_test_directory)
+    submit_mock = mock.Mock(return_value=mock.Mock(stdout="", stderr=""))
+    configurations = [
+        {
+            "application": TELESCOPE_THROUGHPUT_APPLICATION,
+            "run_application": True,
+            "configuration": {"output_path": str(tmp_test_directory)},
+        }
+    ]
+    log_file = tmp_test_directory / "simtools.log"
+    _patch_run_dependencies(monkeypatch, configurations, log_file, submit_mock=submit_mock)
+    monkeypatch.setattr(
+        simtools_runner,
+        "_read_application_configuration",
+        mock.Mock(return_value=(configurations, runtime, log_file, "wf-activity-id", None)),
+    )
+    monkeypatch.setattr(
+        "simtools.runtime.dependencies.get_dependency_manifest",
+        mock.Mock(return_value={}),
+    )
+    args = {
+        "config_file": str(tmp_test_directory / "workflow.yml"),
+        "steps": None,
+        "ignore_runtime_environment": ignore,
+        "provenance_path": False,
+        **(args_extra or {}),
+    }
+    simtools_runner.run_applications(args, run_time=[])
+    return submit_mock.call_args.kwargs["configuration"], log_file.read_text(encoding="utf-8")
+
+
+def test_runtime_simulation_models_are_passed_to_applications(monkeypatch, tmp_test_directory):
+    configuration, log = _run_with_runtime(monkeypatch, tmp_test_directory, RUNTIME_WITH_MODELS)
+    assert configuration[SIMULATION_MODELS_GIT_PATH] == "/models.git"
+    assert configuration[SIMULATION_MODELS_GIT_REVISION] == "v1.0.0"
+    assert f"Runtime environment: {RUNTIME_IMAGE}" in log
+    assert "v1.0.0" in log
+
+
+def test_explicit_model_revision_takes_precedence_over_runtime(monkeypatch, tmp_test_directory):
+    configuration, log = _run_with_runtime(
+        monkeypatch,
+        tmp_test_directory,
+        RUNTIME_WITH_MODELS,
+        args_extra={SIMULATION_MODELS_GIT_REVISION: "cli-rev"},
+    )
+    assert configuration[SIMULATION_MODELS_GIT_REVISION] == "cli-rev"
+    assert "cli-rev" in log
+    assert "v1.0.0" not in log
+    assert configuration[SIMULATION_MODELS_GIT_PATH] == "/models.git"
+
+
+def test_runtime_git_path_not_used_with_explicit_models_path(monkeypatch, tmp_test_directory):
+    configuration, _ = _run_with_runtime(
+        monkeypatch,
+        tmp_test_directory,
+        RUNTIME_WITH_MODELS,
+        args_extra={SIMULATION_MODELS_PATH: "/models"},
+    )
+    assert configuration[SIMULATION_MODELS_PATH] == "/models"
+    assert SIMULATION_MODELS_GIT_PATH not in configuration
+
+
+def test_ignored_runtime_adds_no_model_options(monkeypatch, tmp_test_directory):
+    configuration, log = _run_with_runtime(
+        monkeypatch, tmp_test_directory, RUNTIME_WITH_MODELS, ignore=True
+    )
+    assert SIMULATION_MODELS_GIT_PATH not in configuration
+    assert SIMULATION_MODELS_GIT_REVISION not in configuration
+    assert "Runtime environment: None" in log
+    assert "Simulation models source options: {}" in log
+
+
+def test_prepare_runtime_environment_accepts_simulation_models(tmp_test_directory, monkeypatch):
+    runtime_file = Path(tmp_test_directory) / "runtime.yml"
+    runtime_file.write_text(yaml.safe_dump({"runtime_environment": RUNTIME_WITH_MODELS}))
+    monkeypatch.setattr(simtools_runner, "read_runtime_environment", lambda config: ["runtime"])
+    runtime_environment, _ = simtools_runner.prepare_runtime_environment(runtime_file)
+    assert runtime_environment["simulation_models"] == RUNTIME_WITH_MODELS["simulation_models"]
+
+
+@pytest.mark.parametrize(
+    "simulation_models",
+    [{}, {"git_revision": ""}, {"git_path": "/models", "unknown": "value"}],
+)
+def test_prepare_runtime_environment_rejects_invalid_simulation_models(
+    tmp_test_directory, simulation_models
+):
+    runtime_file = Path(tmp_test_directory) / "runtime.yml"
+    runtime_file.write_text(
+        yaml.safe_dump(
+            {"runtime_environment": {"image": "test-image", "simulation_models": simulation_models}}
+        )
+    )
+    with pytest.raises(jsonschema.ValidationError):
+        simtools_runner.prepare_runtime_environment(runtime_file)
+
+
+def test_model_provenance_records_commit_and_checkout_changes(tmp_test_directory):
+    import subprocess
+
+    repository = Path(tmp_test_directory)
+    subprocess.run(["git", "init", "-q", str(repository)], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repository),
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.org",
+            "commit",
+            "--allow-empty",
+            "-qm",
+            "test",
+        ],
+        check=True,
+    )
+    commit = subprocess.run(
+        ["git", "-C", str(repository), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    clean = simtools_runner._model_source_provenance(str(repository), None, None)
+    assert commit in clean
+    assert "checkout: clean" in clean
+    (repository / "new-file").write_text("change")
+    dirty = simtools_runner._model_source_provenance(str(repository), None, None)
+    assert commit in dirty
+    assert "checkout: modified" in dirty
+    selected = simtools_runner._model_source_provenance(None, str(repository), commit)
+    assert commit in selected
+    assert "checkout:" not in selected
+    assert "unavailable" in simtools_runner._model_source_provenance(
+        None, str(repository), "missing"
+    )
+
+
+@pytest.mark.parametrize("contents", [None, "invalid: [", "not a mapping"])
+def test_model_provenance_handles_unavailable_catalog(tmp_test_directory, monkeypatch, contents):
+    catalog = Path(tmp_test_directory) / "dependency_versions.yml"
+    if contents is not None:
+        catalog.write_text(contents)
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(catalog))
+    assert "commit: unavailable" in simtools_runner._model_source_provenance(None, "/models", None)

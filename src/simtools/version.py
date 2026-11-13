@@ -31,7 +31,13 @@ except Exception:  # pylint: disable=broad-except
     version = "0.0.0"  # pylint: disable=invalid-name
 
 __version__ = version
-is_development_build = is_development_build or Version(__version__).is_devrelease
+# A build is a clean release only without a dev suffix and without a local "+g<hash>" suffix,
+# the latter marking a build from an untagged or modified checkout.
+is_development_build = (
+    is_development_build
+    or Version(__version__).is_devrelease
+    or Version(__version__).local is not None
+)
 
 
 def resolve_version_to_latest_patch(partial_version, available_versions):

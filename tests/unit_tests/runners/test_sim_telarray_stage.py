@@ -92,6 +92,15 @@ def test_output_file_environment_resources(sim_telarray_stage):
     assert sim_telarray_stage.get_resources(runtime=1.5)["runtime"] == pytest.approx(1.5)
 
 
+def test_environment_includes_photoelectron_override(sim_telarray_stage):
+    simulator = sim_telarray_stage.simulator_array
+    simulator.context = simulator.context.replace(args={"max_photoelectrons": 12345})
+    assert sim_telarray_stage.environment() == {
+        "SIM_TELARRAY_CONFIG_PATH": "",
+        "MAX_PHOTOELECTRONS": "12345",
+    }
+
+
 @pytest.mark.parametrize("mode", ["stream", "disk"])
 def test_instances_configure_shower_routing(corsika_config_mock_array_model, mode):
     from dataclasses import replace

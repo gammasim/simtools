@@ -10,7 +10,10 @@ import pytest
 from astropy import units as u
 from astropy.table import Table
 
+from simtools.applications import derive_bias_curves
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.simtel import bias_curve_generator
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 PARAMETER_NAME = "parameter_name"
 
@@ -23,6 +26,7 @@ def _base_args(tmp_path):
         "model_version": "7.0.0",
         "telescope": "LSTN-01",
         "scaling_factor": 1.35,
+        "proton_intersection_fraction": 0.1,
         "parameter_version": "test",
         "overwrite_model_parameters": False,
         "title": "Trigger Rate Bias Curves",
@@ -319,10 +323,10 @@ def test_generate_bias_curves_raises_when_no_nsb_inputs_exist(tmp_path):
         patch("simtools.simtel.bias_curve_generator._extract_nsb_rates", return_value={}),
         patch("simtools.simtel.bias_curve_generator._extract_proton_rates") as mock_extract_proton,
         patch(
-            "simtools.simtel.bias_curve_generator.plot_tables.resolve_plot_output_path",
+            "simtools.simtel.bias_curve_generator._resolve_plot_output_path",
             return_value=tmp_path / "bias.png",
         ),
-        patch("simtools.simtel.bias_curve_generator.plot_tables.plot_bias_curves") as mock_plot,
+        patch("simtools.simtel.bias_curve_generator._plot_bias_curves") as mock_plot,
         patch("simtools.simtel.bias_curve_generator._write_bias_curve_ecsv") as mock_write_bias,
     ):
         with pytest.raises(FileNotFoundError, match="No NSB input files found"):
@@ -343,7 +347,7 @@ def test_generate_bias_curves_raises_when_no_proton_inputs_exist(tmp_path):
             return_value={220: {"rate_hz": 100.0}},
         ),
         patch("simtools.simtel.bias_curve_generator._extract_proton_rates", return_value={}),
-        patch("simtools.simtel.bias_curve_generator.plot_tables.plot_bias_curves") as mock_plot,
+        patch("simtools.simtel.bias_curve_generator._plot_bias_curves") as mock_plot,
         patch("simtools.simtel.bias_curve_generator._write_bias_curve_ecsv") as mock_write_bias,
     ):
         with pytest.raises(FileNotFoundError, match="No proton input files found"):
@@ -369,14 +373,14 @@ def test_calculate_trigger_threshold_success():
         280: {"rate_hz": 3700.0, "error_hz": 15.0},
     }
 
-    args = {"scaling_factor": 1.35}
+    args = {"scaling_factor": 1.35, "proton_intersection_fraction": 0.1}
     threshold = bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
     assert threshold == pytest.approx(231.81755150982445)
 
 
 def test_calculate_trigger_threshold_no_valid_points():
     """Test that ValueError is raised when no valid threshold points exist."""
-    args = {"scaling_factor": 1.35}
+    args = {"scaling_factor": 1.35, "proton_intersection_fraction": 0.1}
     nsb_stats = {}
     proton_stats = {}
 
@@ -386,7 +390,7 @@ def test_calculate_trigger_threshold_no_valid_points():
 
 def test_calculate_trigger_threshold_no_intersection():
     """Test that ValueError is raised when curves don't intersect."""
-    args = {"scaling_factor": 1.35}
+    args = {"scaling_factor": 1.35, "proton_intersection_fraction": 0.1}
     # NSB rates are always higher than 1.35*proton rates
     nsb_stats = {
         220: {"rate_hz": 1000.0, "error_hz": 50.0},
@@ -419,7 +423,7 @@ def test_calculate_trigger_threshold_with_nan_values():
     }
 
     # Should work with the valid points (250, 280) and find intersection
-    args = {"scaling_factor": 1.35}
+    args = {"scaling_factor": 1.35, "proton_intersection_fraction": 0.1}
     threshold = bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
 
     assert threshold is not None
@@ -564,10 +568,10 @@ def test_generate_bias_curves_runs_full_pipeline(tmp_path):
         ),
         patch("simtools.simtel.bias_curve_generator._write_proton_ecsv") as mock_write_proton,
         patch(
-            "simtools.simtel.bias_curve_generator.plot_tables.resolve_plot_output_path",
+            "simtools.simtel.bias_curve_generator._resolve_plot_output_path",
             return_value=tmp_path / "bias.png",
         ),
-        patch("simtools.simtel.bias_curve_generator.plot_tables.plot_bias_curves") as mock_plot,
+        patch("simtools.simtel.bias_curve_generator._plot_bias_curves") as mock_plot,
         patch("simtools.simtel.bias_curve_generator._write_bias_curve_ecsv") as mock_write_bias,
         patch(
             "simtools.simtel.bias_curve_generator._calculate_trigger_threshold", return_value=250.0
@@ -678,7 +682,7 @@ def test_trigger_threshold_matches_scaled_fitted_curves(scaling_factor):
     nsb = {t: {"rate_hz": 100 * 10 ** (-(t - 7))} for t in (7, 7.2, 7.4, 8, 9)}
     proton = {t: {"rate_hz": 100.0} for t in (7.1, 7.3, 8.1, 9.1)}
     threshold = bias_curve_generator._calculate_trigger_threshold(
-        {"scaling_factor": scaling_factor}, nsb, proton
+        {"scaling_factor": scaling_factor, "proton_intersection_fraction": 0.1}, nsb, proton
     )
     assert threshold == pytest.approx(8 - np.log10(scaling_factor))
 
@@ -697,10 +701,136 @@ def test_group_proton_files_preserves_decimal_thresholds(tmp_test_directory):
 
 def test_trigger_threshold_extrapolates_intersection_outside_data_range():
     nsb = {220: {"rate_hz": 1000}, 230: {"rate_hz": 100}}
-    proton_rate = 10 / (1.35 * bias_curve_generator.plot_tables.PROTON_INTERSECTION_FRACTION)
+    proton_rate = 10 / (1.35 * 0.1)
     proton = {220: {"rate_hz": proton_rate}, 230: {"rate_hz": proton_rate}}
 
-    threshold = bias_curve_generator._calculate_trigger_threshold({}, nsb, proton)
+    threshold = bias_curve_generator._calculate_trigger_threshold(
+        {"proton_intersection_fraction": 0.1}, nsb, proton
+    )
 
     assert threshold == pytest.approx(240)
     assert threshold > 230
+
+
+@pytest.mark.parametrize(
+    ("thresholds", "rates"), [([7], [10]), ([7, 7], [10, 20]), ([7, 8], [0, -1])]
+)
+def test_fit_bias_curve_insufficient_points(thresholds, rates):
+    assert bias_curve_generator.fit_bias_curve(thresholds, rates) is None
+
+
+def test_fit_bias_curve_filters_invalid_points():
+    thresholds, coefficients = bias_curve_generator.fit_bias_curve(
+        [7, 7.2, 8, 9, 10, np.inf], [100, 0, 10, np.nan, np.inf, 1]
+    )
+    assert thresholds == pytest.approx([7, 8])
+    assert coefficients == pytest.approx([-1, 9])
+
+
+@pytest.mark.parametrize("scale", [1.0, 1.35, 2.0])
+@pytest.mark.parametrize("fraction", [0.1, 0.25])
+def test_prepare_bias_curve_plot(scale, fraction):
+    nsb = {8: {"rate_hz": 10, "error_hz": 1}, 7: {"rate_hz": 100, "error_hz": 2}}
+    proton = {7: {"rate_hz": 20, "error_hz": 3}, 8: {"rate_hz": 10, "error_hz": 1}}
+    threshold = bias_curve_generator._calculate_trigger_threshold(
+        {"scaling_factor": scale, "proton_intersection_fraction": fraction}, nsb, proton
+    )
+    data, config = bias_curve_generator._prepare_bias_curve_plot(
+        nsb,
+        proton,
+        {"title": "Bias", "scaling_factor": scale, "proton_intersection_fraction": fraction},
+        threshold,
+    )
+    assert len(data) == 9
+    for label, factor in (
+        ("Proton", 1),
+        (f"{scale} x Proton", scale),
+        (f"{fraction} x {scale} x Proton", fraction * scale),
+    ):
+        assert data[label]["threshold"] == pytest.approx([7, 8])
+        assert data[label]["rate"] == pytest.approx(np.array([20, 10]) * factor)
+        assert data[label]["error"] == pytest.approx(np.array([3, 1]) * factor)
+        fitted = data[f"_{label} fit"]
+        assert len(fitted) == 100
+        assert fitted["rate"][[0, -1]] == pytest.approx(np.array([20, 10]) * factor)
+    assert data["_NSB fit"]["rate"][[0, -1]] == pytest.approx([100, 10])
+    marker = data[f"Trigger Threshold: {threshold:.1f}"]
+    assert marker["threshold"] == pytest.approx([threshold, threshold])
+    assert marker["rate"] == pytest.approx(config["ylim"])
+    assert config["ylim"] == pytest.approx([9 * fraction * scale, 110])
+    assert config["yscale"] == "log"
+    assert config["series_options"]["NSB"]["linestyle"] == "None"
+    assert config["series_options"]["_NSB fit"]["linestyle"] == "--"
+
+
+@pytest.mark.parametrize("threshold", [None, 0.0])
+def test_prepare_bias_curve_plot_empty(threshold, caplog):
+    data, config = bias_curve_generator._prepare_bias_curve_plot(
+        {},
+        {},
+        {"title": "Empty", "ymin": 2, "ymax": 200, "proton_intersection_fraction": 0.1},
+        threshold,
+    )
+    assert len(data["_empty"]) == 0
+    assert config["ylim"] == (2, 200)
+    assert config["no_legend"] == (threshold is None)
+    assert "writing empty bias-curve plot" in caplog.text
+
+
+@pytest.mark.parametrize("rates", [[100], [0, np.nan]])
+def test_prepare_bias_curve_plot_without_fit(rates):
+    data, _ = bias_curve_generator._prepare_bias_curve_plot(
+        {index: {"rate_hz": rate, "error_hz": 0} for index, rate in enumerate(rates)},
+        {},
+        {"title": "Insufficient data", "proton_intersection_fraction": 0.1},
+    )
+    assert list(data) == ["NSB"]
+    np.testing.assert_allclose(data["NSB"]["rate"], rates)
+
+
+@pytest.mark.parametrize("empty", [False, True])
+def test_plot_bias_curves_writes_figure(tmp_test_directory, empty):
+    stats = {} if empty else {7: {"rate_hz": 100, "error_hz": 2}, 8: {"rate_hz": 10, "error_hz": 1}}
+    output = Path(tmp_test_directory) / "nested" / "bias.png"
+    figures_before = plt.get_fignums()
+    bias_curve_generator._plot_bias_curves(
+        stats, stats, {"title": "Bias", "proton_intersection_fraction": 0.1}, output, 7.5
+    )
+    assert output.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+    assert plt.get_fignums() == figures_before
+    assert bias_curve_generator._resolve_plot_output_path(output) == output
+    assert bias_curve_generator._resolve_plot_output_path(output.parent) == (
+        output.parent / "bias_curve.png"
+    )
+
+
+@pytest.mark.parametrize("fraction", [0.1, 0.25, 0.5])
+def test_trigger_threshold_uses_configured_proton_fraction(fraction):
+    nsb = {0: {"rate_hz": 100}, 1: {"rate_hz": 10}}
+    proton = {0: {"rate_hz": 100}, 1: {"rate_hz": 100}}
+    threshold = bias_curve_generator._calculate_trigger_threshold(
+        {"scaling_factor": 1, "proton_intersection_fraction": fraction}, nsb, proton
+    )
+    assert threshold == pytest.approx(-np.log10(fraction))
+
+
+def test_trigger_threshold_requires_proton_intersection_fraction():
+    with pytest.raises(KeyError, match="proton_intersection_fraction"):
+        bias_curve_generator._calculate_trigger_threshold({}, {}, {})
+
+
+def test_bias_curve_plot_requires_proton_intersection_fraction():
+    with pytest.raises(KeyError, match="proton_intersection_fraction"):
+        bias_curve_generator._prepare_bias_curve_plot({}, {}, {"title": "Bias"})
+
+
+@pytest.mark.parametrize(
+    ("extra_args", "expected"),
+    [([], 0.1), (["--proton_intersection_fraction", "0.25"], 0.25)],
+)
+def test_cli_proton_intersection_fraction(extra_args, expected, tmp_test_directory):
+    parser = CommandLineParser()
+    parser.add_argument_definitions(derive_bias_curves._ARGUMENTS)
+    args = parser.parse_args(["--event_data_directory", str(tmp_test_directory), *extra_args])
+
+    assert args.proton_intersection_fraction == pytest.approx(expected)
