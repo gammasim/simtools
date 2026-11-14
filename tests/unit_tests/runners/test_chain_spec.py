@@ -156,3 +156,39 @@ def test_applied_factors_depend_on_stage_options(fake_stages):
     with pytest.raises(ValueError, match="twice"):
         spec.chain()
     assert chain_spec.ChainSpec("ok", spec.stages).chain().stages == spec.stages
+
+
+@pytest.mark.parametrize("preset", ["obdeect", "obdeect_flasher", "obdeect_illuminator"])
+def test_obdeect_presets_are_valid_chains(preset):
+    spec = chain_spec.load_chain_spec(preset)
+
+    assert spec.chain().stages == spec.stages
+    assert spec.stage_options("sim_telarray") == {"bypass_optics": 3}
+
+
+@pytest.mark.parametrize("mode", [0, 1, 2])
+def test_obdeect_chain_with_sim_telarray_optics_applies_a_factor_twice(mode):
+    spec = chain_spec.ChainSpec(
+        "twice",
+        chain_spec.load_chain_spec("obdeect").stages,
+        {"sim_telarray": {"bypass_optics": mode}},
+    )
+
+    with pytest.raises(ValueError, match="twice"):
+        spec.chain()
+
+
+def test_obdeect_presets_load_no_obdeect_module():
+    code = (
+        "import sys\n"
+        "from simtools.runners import chain_spec\n"
+        "for name in ('obdeect', 'obdeect_flasher', 'obdeect_illuminator'):\n"
+        "    chain_spec.load_chain_spec(name).chain()\n"
+        "loaded = sorted(m for m in sys.modules if m.split('.')[0] == 'obdeect')\n"
+        "assert not loaded, loaded\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True, check=False
+    )
+
+    assert result.returncode == 0, result.stderr

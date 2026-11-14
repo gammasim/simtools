@@ -158,3 +158,33 @@ def _spec_from_file(path):
 
 
 register_preset(LEGACY_PRESET, ("corsika", "sim_telarray"))
+
+# Chains of the optional obdeect simulation programs. sim_telarray simulates only the camera
+# (Bypass_Optics 3), so that no factor is applied by both programs.
+_CAMERA_ONLY = {"sim_telarray": {"bypass_optics": 3}}
+register_preset(
+    "obdeect",
+    (
+        "corsika",
+        "corsika_to_stream",
+        "obdeect_atmosphere",
+        "obdeect_optics",
+        "stream_to_simtel",
+        "sim_telarray",
+    ),
+    _CAMERA_ONLY,
+)
+register_preset(
+    "obdeect_flasher", ("obdeect_flasher", "stream_to_simtel", "sim_telarray"), _CAMERA_ONLY
+)
+register_preset(
+    "obdeect_illuminator",
+    (
+        "obdeect_illuminator",
+        "obdeect_atmosphere",
+        "obdeect_optics",
+        "stream_to_simtel",
+        "sim_telarray",
+    ),
+    _CAMERA_ONLY,
+)
