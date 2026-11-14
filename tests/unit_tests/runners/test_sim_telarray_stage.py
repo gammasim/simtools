@@ -1,9 +1,35 @@
 """Tests for the sim_telarray simulation stage."""
 
+from types import SimpleNamespace
+
 import pytest
 
+from simtools.photon_chain.products import CAMERA_PHOTONS_IACT, CHERENKOV_PHOTONS
+from simtools.runners import stages
+from simtools.runners.chain_spec import (
+    ATMOSPHERIC_EXTINCTION,
+    MIRROR_REFLECTIVITY,
+    QUANTUM_EFFICIENCY,
+    TELESCOPE_TRANSMISSION,
+    ChainSpec,
+)
 from simtools.runners.sim_telarray_stage import SimTelArrayStage
 from simtools.runners.stages import STDIN, StageInputs, StreamTo
+
+ALL_FACTORS = frozenset(
+    {ATMOSPHERIC_EXTINCTION, MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION, QUANTUM_EFFICIENCY}
+)
+
+
+class _Telescope:
+    """Telescope model with the mirror class of the bypass level."""
+
+    def __init__(self, mirror_class):
+        self._mirror_class = mirror_class
+
+    def get_parameter_value(self, name):
+        assert name == "mirror_class"
+        return self._mirror_class
 
 
 @pytest.fixture
@@ -137,3 +163,214 @@ def test_instances_reject_invalid_shower_route_mode(corsika_config_mock_array_mo
     )
     with pytest.raises(ValueError, match="Invalid shower route mode"):
         SimTelArrayStage.instances(inputs)
+
+
+def test_consumes_corsika_or_camera_photons(sim_telarray_stage):
+    assert SimTelArrayStage.consumes == (CHERENKOV_PHOTONS, CAMERA_PHOTONS_IACT)
+    assert sim_telarray_stage.bypass_optics is None
+
+
+def test_legacy_prepare_has_no_bypass_option(sim_telarray_stage):
+    lines = sim_telarray_stage.prepare(run_number=1, input_file=STDIN)
+
+    assert "Bypass_Optics" not in lines[0]
+
+
+def test_prepare_sets_bypass_optics_before_show_all(corsika_config_mock_array_model):
+    config = corsika_config_mock_array_model
+    stage = SimTelArrayStage(
+        simulation_parameters=config.simulation_parameters,
+        array_model=config.array_model,
+        label="test-bypass",
+        context=config.context,
+        bypass_optics=2,
+    )
+
+    lines = stage.prepare(run_number=1, input_file=STDIN)
+
+    assert "-C Bypass_Optics=2 -C show=all -" in lines[0]
+
+
+@pytest.mark.parametrize(
+    ("options", "expected"),
+    [
+        ({}, ALL_FACTORS),
+        ({"bypass_optics": 0}, ALL_FACTORS),
+        ({"bypass_optics": 1}, {QUANTUM_EFFICIENCY, ATMOSPHERIC_EXTINCTION}),
+        ({"bypass_optics": 2}, {QUANTUM_EFFICIENCY, ATMOSPHERIC_EXTINCTION}),
+        ({"bypass_optics": 3}, {QUANTUM_EFFICIENCY}),
+    ],
+)
+def test_applied_factors_by_bypass_mode(options, expected):
+    assert SimTelArrayStage.applied_factors(options) == frozenset(expected)
+
+
+def test_applied_factors_rejects_unknown_mode():
+    with pytest.raises(ValueError, match=r"Invalid bypass_optics option: 4"):
+        SimTelArrayStage.applied_factors({"bypass_optics": 4})
+
+
+def test_neutral_atmosphere_option_is_rejected():
+    with pytest.raises(
+        ValueError, match=r"Unknown sim_telarray stage option\(s\): neutral_atmosphere"
+    ):
+        SimTelArrayStage.applied_factors({"bypass_optics": 2, "neutral_atmosphere": True})
+
+
+def _release_output(release):
+    """Return a fake result of ``sim_telarray --version`` printing a release."""
+    return SimpleNamespace(stdout=f"Release: {release} from 2024-09-27\n", stderr="")
+
+
+def _bypass_inputs(config, options):
+    return StageInputs(
+        array_models=(config.array_model,),
+        simulation_parameters=(config.simulation_parameters,),
+        shower_configurations=(),
+        args={},
+        context=config.context,
+        chain_options={"sim_telarray": options},
+    )
+
+
+def test_legacy_chain_does_not_probe_sim_telarray(corsika_config_mock_array_model, mocker):
+    run = mocker.patch(
+        "simtools.runtime.dependencies.subprocess.run", return_value=_release_output("2024.271.0")
+    )
+    config = corsika_config_mock_array_model
+    config.array_model.telescope_models = {"tel-0": _Telescope(2)}
+
+    (stage,) = SimTelArrayStage.instances(_bypass_inputs(config, {}))
+    SimTelArrayStage.instances(_bypass_inputs(config, {"bypass_optics": 2}))
+
+    run.assert_not_called()
+    assert stage.bypass_optics is None
+
+
+def test_mode_3_refused_by_installed_release(corsika_config_mock_array_model, mocker, monkeypatch):
+    monkeypatch.delenv("SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX", raising=False)
+    run = mocker.patch(
+        "simtools.runtime.dependencies.subprocess.run", return_value=_release_output("2024.271.0")
+    )
+    config = corsika_config_mock_array_model
+
+    with pytest.raises(ValueError, match=r"Bypass_Optics=3 is not supported.*2024\.271\.0") as exc:
+        SimTelArrayStage.instances(_bypass_inputs(config, {"bypass_optics": 3}))
+
+    assert "SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX" in str(exc.value)
+    run.assert_called_once()
+
+
+def test_mode_3_accepted_with_override_without_probe(
+    corsika_config_mock_array_model, mocker, monkeypatch
+):
+    monkeypatch.setenv("SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX", "3")
+    run = mocker.patch("simtools.runtime.dependencies.subprocess.run")
+    config = corsika_config_mock_array_model
+
+    (stage,) = SimTelArrayStage.instances(_bypass_inputs(config, {"bypass_optics": 3}))
+
+    run.assert_not_called()
+    assert stage.bypass_optics == 3
+
+
+def test_mode_3_accepted_by_release_table(corsika_config_mock_array_model, mocker, monkeypatch):
+    monkeypatch.delenv("SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX", raising=False)
+    monkeypatch.setattr(
+        "simtools.simtel.sim_telarray_capabilities.BYPASS_OPTICS_MODE_3_MIN_VERSION", "2026.300.0"
+    )
+    mocker.patch(
+        "simtools.runtime.dependencies.subprocess.run", return_value=_release_output("2026.301.0")
+    )
+    config = corsika_config_mock_array_model
+
+    (stage,) = SimTelArrayStage.instances(_bypass_inputs(config, {"bypass_optics": 3}))
+
+    assert stage.bypass_optics == 3
+
+
+@pytest.mark.parametrize(
+    ("mode", "telescopes", "expected"),
+    [
+        (0, (1, 2), None),
+        (1, (1, 1), 1),
+        (2, (2, 2), 2),
+        (3, (1, 1), 3),
+    ],
+)
+def test_instances_bypass_level_from_mode(
+    corsika_config_mock_array_model, mode, telescopes, expected, monkeypatch
+):
+    # Mode 3 is gated by the sim_telarray capability; the override avoids running sim_telarray.
+    monkeypatch.setenv("SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX", "3")
+    config = corsika_config_mock_array_model
+    config.array_model.telescope_models = {
+        f"tel-{index}": _Telescope(mirror_class) for index, mirror_class in enumerate(telescopes)
+    }
+    inputs = StageInputs(
+        array_models=(config.array_model,),
+        simulation_parameters=(config.simulation_parameters,),
+        shower_configurations=(),
+        args={},
+        context=config.context,
+        chain_options={"sim_telarray": {"bypass_optics": mode}},
+    )
+
+    (stage,) = SimTelArrayStage.instances(inputs)
+
+    assert stage.bypass_optics == expected
+
+
+def test_instances_bypass_rejects_mixed_mirror_classes(corsika_config_mock_array_model):
+    config = corsika_config_mock_array_model
+    config.array_model.telescope_models = {"single": _Telescope(1), "dual": _Telescope(2)}
+    inputs = StageInputs(
+        array_models=(config.array_model,),
+        simulation_parameters=(config.simulation_parameters,),
+        shower_configurations=(),
+        args={},
+        context=config.context,
+        chain_options={"sim_telarray": {"bypass_optics": 1}},
+    )
+
+    with pytest.raises(ValueError, match="needs telescopes of one mirror class"):
+        SimTelArrayStage.instances(inputs)
+
+
+def test_instances_reject_invalid_bypass_option(corsika_config_mock_array_model):
+    config = corsika_config_mock_array_model
+    inputs = StageInputs(
+        array_models=(config.array_model,),
+        simulation_parameters=(config.simulation_parameters,),
+        shower_configurations=(),
+        args={},
+        context=config.context,
+        chain_options={"sim_telarray": {"bypass_optics": "yes"}},
+    )
+
+    with pytest.raises(ValueError, match="Invalid bypass_optics option"):
+        SimTelArrayStage.instances(inputs)
+
+
+@pytest.fixture
+def fake_photon_stage(monkeypatch):
+    """Register a stage that applies quantum efficiency upstream of sim_telarray."""
+
+    class FakeStage:
+        name = "fake_qe"
+        consumes = None
+        produces = CHERENKOV_PHOTONS
+        streams = True
+
+        @classmethod
+        def applied_factors(cls, options):
+            return frozenset({QUANTUM_EFFICIENCY})
+
+    monkeypatch.setitem(stages.STAGES, "fake_qe", lambda: FakeStage)
+
+
+def test_chain_rejects_quantum_efficiency_applied_twice(fake_photon_stage):
+    spec = ChainSpec("double-qe", ("fake_qe", "sim_telarray"))
+
+    with pytest.raises(ValueError, match="applies 'quantum_efficiency' twice"):
+        spec.chain()
