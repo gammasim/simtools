@@ -112,9 +112,10 @@ STAGES = {name: _lazy_stage(entry["class"]) for name, entry in stage_catalog().i
 STAGE_SOFTWARE = {
     name: frozenset(entry.get("software", ())) for name, entry in stage_catalog().items()
 }
+STAGE_CONVERTERS = {name for name, entry in stage_catalog().items() if entry.get("converter")}
 
 
-def register_stage(name, factory, software=()):
+def register_stage(name, factory, software=(), converter=False):
     """
     Register a stage under a name, replacing any stage already registered under it.
 
@@ -126,9 +127,15 @@ def register_stage(name, factory, software=()):
         Function without arguments returning the stage class.
     software : iterable of str
         Software the stage needs (names of the ``simulation_software`` of the model parameters).
+    converter : bool
+        The stage only converts one data product into another; it is inserted between stages
+        whose products do not match (see :func:`insert_converters`).
     """
     STAGES[name] = factory
     STAGE_SOFTWARE[name] = frozenset(software)
+    STAGE_CONVERTERS.discard(name)
+    if converter:
+        STAGE_CONVERTERS.add(name)
 
 
 def stages_software(names):
@@ -163,6 +170,75 @@ def _as_tuple(consumed):
     if consumed is None:
         return ()
     return (consumed,) if isinstance(consumed, str) else tuple(consumed)
+
+
+def _converter_paths(produced, accepted):
+    """
+    Return the shortest converter sequences from a product to one of the accepted products.
+
+    A sequence is a tuple of converter names. The search is breadth first over the products:
+    a converter leads from each product it consumes to the product it produces.
+    """
+    accepted = set(accepted)
+    paths = {produced: [()]}
+    frontier = [produced]
+    while frontier:
+        found = [path for product in frontier if product in accepted for path in paths[product]]
+        if found:
+            return found
+        reached = {}
+        for product in frontier:
+            for name in sorted(STAGE_CONVERTERS):
+                converter = get_stage_class(name)
+                if product in _as_tuple(converter.consumes) and converter.produces not in paths:
+                    reached.setdefault(converter.produces, []).extend(
+                        (*path, name) for path in paths[product]
+                    )
+        paths.update(reached)
+        frontier = list(reached)
+    return []
+
+
+def insert_converters(names):
+    """
+    Return the stage names with the converters inserted where two stages do not match.
+
+    Where a stage produces a product that the next stage does not consume, the shortest
+    sequence of converter stages from the one product to the other is inserted. Stages that match
+    are left as they are, and so are converters listed explicitly. If there is no such sequence
+    the chain is left as it is, and the chain validation reports the mismatch.
+
+    Parameters
+    ----------
+    names : iterable of str
+        Stage names in chain order.
+
+    Returns
+    -------
+    tuple of str
+        Stage names with the converters inserted.
+
+    Raises
+    ------
+    ValueError
+        If two different converter sequences of the same length connect two stages.
+    """
+    names = tuple(names)
+    resolved = list(names[:1])
+    for downstream in names[1:]:
+        upstream_class = get_stage_class(resolved[-1])
+        accepted = _as_tuple(get_stage_class(downstream).consumes)
+        if upstream_class.produces not in accepted:
+            paths = _converter_paths(upstream_class.produces, accepted)
+            if len(paths) > 1:
+                options = "; ".join(" -> ".join(path) for path in paths)
+                raise ValueError(
+                    f"Several converters connect {resolved[-1]!r} and {downstream!r}: {options}. "
+                    "List the converter that should be used in the chain."
+                )
+            resolved.extend(paths[0] if paths else ())
+        resolved.append(downstream)
+    return tuple(resolved)
 
 
 def get_stage_class(name) -> type[SimulationStage]:

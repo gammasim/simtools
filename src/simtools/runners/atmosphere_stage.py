@@ -2,8 +2,7 @@
 
 In a chain::
 
-    simulation_chain: [corsika, corsika_to_stream, obdeect_atmosphere, obdeect_optics,
-                       stream_to_simtel, sim_telarray]
+    simulation_chain: [corsika, obdeect_atmosphere, obdeect_optics, "sim_telarray:bypass_optics=3"]
 
 The command is built in ``simtools.simulation_chain.obdeect.atmosphere``.
 """

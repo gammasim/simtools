@@ -40,16 +40,19 @@ the software they need are declared in `resources/simulation_stages.yml`. obdeec
 Air showers through obdeect atmosphere and optics, with sim_telarray simulating only the camera:
 
 ```bash
-simtools-simulate-prod --simulation_chain corsika corsika_to_stream obdeect_atmosphere \
-  obdeect_optics stream_to_simtel sim_telarray:bypass_optics=3 ...
+simtools-simulate-prod --simulation_chain corsika obdeect_atmosphere obdeect_optics \
+  sim_telarray:bypass_optics=3 ...
 ```
 
-Stages are connected by the data products they consume and produce, and a chain in which two
-stages apply the same efficiency factor (for example the atmosphere in obdeect and in
-sim_telarray) is rejected. `Bypass_Optics=3` makes sim_telarray simulate the camera only. simtools
-checks that the installed sim_telarray release supports it before any job is written; for a
-locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3` states the highest supported
-level. The calibration applications select obdeect with `--ray_tracing_backend` (next section).
+Stages are connected by the data products they consume and produce. `corsika_to_stream` and
+`stream_to_simtel` are converters: where two neighbouring stages do not match, the converters
+between their products are inserted (the chain above runs both), and the chain that runs is
+logged. A chain in which two stages apply the same efficiency factor (for example the atmosphere
+in obdeect and in sim_telarray) is rejected. `Bypass_Optics=3` makes sim_telarray simulate the
+camera only. simtools checks that the installed sim_telarray release supports it before any job is
+written; for a locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3` states the
+highest supported level. The calibration applications select obdeect with `--ray_tracing_backend`
+(next section).
 
 The programs of a stage are located through `resources/simulation_programs.yml`; a further
 software package adds its stages and programs there, and its command builders in a sibling of

@@ -179,6 +179,41 @@ def test_simulation_chain_options_reach_stage_inputs(make_simulator, mocker):
     assert stage_inputs.call_args.kwargs["stages"] == ("corsika", "sim_telarray")
 
 
+def test_simulation_chain_inserts_converters_and_logs_them(make_simulator, mocker, caplog):
+    stage_inputs = mocker.patch("simtools.runners.simulator.StageInputs", wraps=StageInputs)
+    items = ["corsika", "obdeect_atmosphere", "obdeect_optics", "sim_telarray:bypass_optics=3"]
+
+    with caplog.at_level("INFO", logger="simtools.runners.simulator"):
+        simulator = make_simulator(items, "test-chain-converters")
+
+    resolved = (
+        "corsika",
+        "corsika_to_stream",
+        "obdeect_atmosphere",
+        "obdeect_optics",
+        "stream_to_simtel",
+        "sim_telarray",
+    )
+    assert simulator.chain_spec.stages == (
+        "corsika",
+        "obdeect_atmosphere",
+        "obdeect_optics",
+        "sim_telarray",
+    )
+    assert simulator.chain.stages == resolved
+    assert stage_inputs.call_args.kwargs["stages"] == resolved
+    assert stage_inputs.call_args.kwargs["chain_options"] == {"sim_telarray": {"bypass_optics": 3}}
+    assert "converters inserted: corsika_to_stream, stream_to_simtel" in caplog.text
+
+
+def test_simulation_chain_without_mismatch_logs_no_converters(make_simulator, caplog):
+    with caplog.at_level("INFO", logger="simtools.runners.simulator"):
+        make_simulator(["corsika", "sim_telarray"], "test-chain-no-converters")
+
+    assert "Simulation chain: corsika -> sim_telarray" in caplog.text
+    assert "converters inserted" not in caplog.text
+
+
 def test_simulation_chain_unknown_stage(make_simulator):
     with pytest.raises(ValueError, match="Unknown simulation stage 'no_such_stage'"):
         make_simulator(["corsika", "no_such_stage"], "test-unknown-stage")

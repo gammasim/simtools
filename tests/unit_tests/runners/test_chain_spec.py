@@ -15,6 +15,8 @@ OBDEECT_CHAIN = (
     "stream_to_simtel",
     "sim_telarray",
 )
+# The same chain without the converters, which are inserted.
+SHORT_OBDEECT_CHAIN = ["corsika", "obdeect_atmosphere", "obdeect_optics"]
 
 
 def _register(name, consumes, produces, applies=()):
@@ -144,7 +146,11 @@ def test_applied_factors_depend_on_stage_options(fake_stages):
 
 @pytest.mark.parametrize(
     "items",
-    [["corsika", "sim_telarray"], [*OBDEECT_CHAIN[:-1], "sim_telarray:bypass_optics=3"]],
+    [
+        ["corsika", "sim_telarray"],
+        [*OBDEECT_CHAIN[:-1], "sim_telarray:bypass_optics=3"],
+        [*SHORT_OBDEECT_CHAIN, "sim_telarray:bypass_optics=3"],
+    ],
 )
 def test_chains_load_no_obdeect_module(items):
     code = (
@@ -159,3 +165,33 @@ def test_chains_load_no_obdeect_module(items):
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_resolved_stages_insert_the_converters():
+    spec = chain_spec.parse_chain([*SHORT_OBDEECT_CHAIN, "sim_telarray:bypass_optics=3"])
+
+    assert spec.stages == ("corsika", "obdeect_atmosphere", "obdeect_optics", "sim_telarray")
+    assert spec.resolved_stages == OBDEECT_CHAIN
+    assert spec.chain().stages == OBDEECT_CHAIN
+    assert spec.stage_options("sim_telarray") == {"bypass_optics": 3}
+
+
+def test_resolved_stages_of_a_chain_without_mismatch_are_the_listed_stages():
+    spec = chain_spec.parse_chain(["corsika", "sim_telarray"])
+
+    assert spec.resolved_stages == spec.stages == ("corsika", "sim_telarray")
+
+
+def test_software_includes_the_programs_of_the_inserted_converters():
+    spec = chain_spec.parse_chain(["obdeect_flasher", "sim_telarray:bypass_optics=3"])
+
+    assert spec.resolved_stages == ("obdeect_flasher", "stream_to_simtel", "sim_telarray")
+    assert spec.software == {"obdeect", "sim_telarray"}
+
+
+@pytest.mark.parametrize("mode", [0, 1, 2])
+def test_short_obdeect_chain_with_sim_telarray_optics_applies_a_factor_twice(mode):
+    spec = chain_spec.parse_chain([*SHORT_OBDEECT_CHAIN, f"sim_telarray:bypass_optics={mode}"])
+
+    with pytest.raises(ValueError, match="twice"):
+        spec.chain()

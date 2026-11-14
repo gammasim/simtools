@@ -6,14 +6,18 @@ command line (``--simulation_chain corsika sim_telarray``) and in configuration 
 
     simulation_chain:
       - corsika
-      - corsika_to_stream
       - obdeect_atmosphere
       - obdeect_optics
-      - stream_to_simtel
       - sim_telarray:bypass_optics=3
 
 Option values are read as YAML scalars (``3`` is an integer, ``true`` a boolean). A stage is
 listed at most once.
+
+Where two neighbouring stages do not match (a stage produces a data product that the next one
+does not consume), the converter stages between the two products are inserted (see
+:func:`simtools.runners.stages.insert_converters`); in the example, ``corsika_to_stream`` after
+``corsika`` and ``stream_to_simtel`` before ``sim_telarray``. The chain that runs is
+``ChainSpec.resolved_stages``. Converters can also be listed explicitly.
 
 A stage class may define ``applied_factors(options)``, returning the efficiency factors it
 applies to the photons (e.g. ``"mirror_reflectivity"``). A chain in which two stages apply the
@@ -25,7 +29,12 @@ from dataclasses import dataclass, field
 
 import yaml
 
-from simtools.runners.stages import SimulationChain, get_stage_class, stages_software
+from simtools.runners.stages import (
+    SimulationChain,
+    get_stage_class,
+    insert_converters,
+    stages_software,
+)
 
 #: Efficiency factors that can be applied by more than one program of a chain.
 ATMOSPHERIC_EXTINCTION = "atmospheric_extinction"
@@ -54,16 +63,21 @@ class ChainSpec:
     stages: tuple[str, ...]
     options: Mapping = field(default_factory=dict, hash=False, compare=False)
 
+    @property
+    def resolved_stages(self):
+        """Return the stages with the converters inserted where neighbouring stages differ."""
+        return insert_converters(self.stages)
+
     def chain(self):
         """Return the ``SimulationChain``; raise if two stages apply the same factor."""
-        chain = SimulationChain(self.stages)
+        chain = SimulationChain(self.resolved_stages)
         self.check_applied_factors()
         return chain
 
     @property
     def software(self):
-        """Return the software needed by the stages (without loading the stage classes)."""
-        return stages_software(self.stages)
+        """Return the software needed by the stages, converters included."""
+        return stages_software(self.resolved_stages)
 
     def stage_options(self, stage):
         """Return the options of a stage (empty if there are none)."""
@@ -72,7 +86,7 @@ class ChainSpec:
     def applied_factors(self):
         """Return the efficiency factors applied by each stage: a list of (stage, factors)."""
         applied = []
-        for stage in self.stages:
+        for stage in self.resolved_stages:
             method = getattr(get_stage_class(stage), "applied_factors", None)
             factors = frozenset(method(self.stage_options(stage))) if method else frozenset()
             applied.append((stage, factors))

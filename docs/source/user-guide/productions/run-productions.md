@@ -15,8 +15,8 @@ The `simulation_chain` lists the stages that are executed (default: `corsika sim
 - `corsika`: run shower simulations only
 - `sim_telarray`: run detector simulation using an existing CORSIKA input file
 - `corsika sim_telarray`: run the CORSIKA to sim_telarray chain using multipipe execution
-- stages of the obdeect chain, e.g. `corsika corsika_to_stream obdeect_atmosphere obdeect_optics
-  stream_to_simtel sim_telarray`
+- stages of the obdeect chain, e.g. `corsika obdeect_atmosphere obdeect_optics
+  sim_telarray:bypass_optics=3` (converters between the stages are inserted)
 
 The stage names and options are described in
 [simtools-simulate-prod](../applications/simtools-simulate-prod).

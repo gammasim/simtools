@@ -5,6 +5,9 @@
 # names of the software of the model-parameter schemas ("simulation_software": corsika,
 # sim_telarray, obdeect) and any further program a stage runs.
 #
+# A stage with `converter: true` only converts one data product into another. Converters are
+# inserted between two stages of a chain when the products do not match.
+#
 # A new stage is an entry here; no code changes in the registry or the chain specification.
 ---
 stages:
@@ -17,9 +20,11 @@ stages:
   corsika_to_stream:
     class: simtools.runners.adapter_stages:CorsikaToStreamStage
     software: [obdeect]
+    converter: true
   stream_to_simtel:
     class: simtools.runners.adapter_stages:StreamToSimtelStage
     software: [obdeect]
+    converter: true
   obdeect_atmosphere:
     class: simtools.runners.atmosphere_stage:ObdeectAtmosphereStage
     software: [obdeect]

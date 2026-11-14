@@ -79,9 +79,13 @@ produces. Examples:
 ```bash
 --simulation_chain sim_telarray        # sim_telarray only, e.g. from a CORSIKA input file
 --simulation_chain corsika             # CORSIKA only
---simulation_chain corsika corsika_to_stream obdeect_atmosphere obdeect_optics \
-    stream_to_simtel sim_telarray:bypass_optics=3
+--simulation_chain corsika obdeect_atmosphere obdeect_optics sim_telarray:bypass_optics=3
 ```
+
+Where two neighbouring stages do not match (a stage produces a data product the next one does not
+consume), the converter stages between the two products are inserted. The last example runs
+`corsika`, `corsika_to_stream`, `obdeect_atmosphere`, `obdeect_optics`, `stream_to_simtel` and
+`sim_telarray`; the chain that runs is logged. Converters can also be listed explicitly.
 
 The same list is used in configuration files:
 

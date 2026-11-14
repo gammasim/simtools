@@ -9,9 +9,9 @@ instrument (mirror errors). The translation of the telescope models into the opt
 
 Stage options are given after the stage name in the chain::
 
-    simulation_chain: [corsika, corsika_to_stream, obdeect_atmosphere,
+    simulation_chain: [corsika, obdeect_atmosphere,
                        "obdeect_optics:telescope_transmission=full,threads=4",
-                       stream_to_simtel, sim_telarray]
+                       "sim_telarray:bypass_optics=3"]
 
 ``telescope_transmission`` is ``full`` (the only mode); ``threads`` is the number of tracing
 threads of each instance (default: the usable cores divided among the instances).
