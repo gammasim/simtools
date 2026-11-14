@@ -1,6 +1,7 @@
 """Tests for the generic execution facade."""
 
 import logging
+import operator
 import pickle
 import sys
 import types
@@ -99,7 +100,8 @@ def test_run_command_captures_error_output_and_reads_stdin_path(tmp_test_directo
 
 
 def test_map_ordered_returns_input_order():
-    assert map_ordered(_square, [3, 1, 2], max_workers=2) == [9, 1, 4]
+    # Pool workers import the function by name, so it must not live in the test package.
+    assert map_ordered(operator.neg, [3, 1, 2], max_workers=2) == [-3, -1, -2]
 
 
 def test_map_ordered_serializes_runtime_for_remote_jobs(mocker, run_context):
