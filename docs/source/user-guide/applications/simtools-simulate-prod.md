@@ -68,6 +68,21 @@ Telescope height convention: the height of each telescope in the 1201 object is 
 height above the observation level, as in sim_telarray. The reference-point altitude of the site
 (16 m South, 21 m North) is not added to it.
 
+## Simulation chain
+
+`--simulation_chain` selects the simulation chain: a preset name (`legacy`) or the path of a
+chain-spec YAML file listing the stages in order, with optional per-stage options:
+
+```yaml
+stages:
+  - stage: corsika
+  - stage: sim_telarray
+```
+
+Without `--simulation_chain`, the chain follows `--simulation_software` (default
+`corsika_sim_telarray`, the same chain as `legacy`). The two options cannot be combined when
+`--simulation_software` is not the default.
+
 ## Command line arguments
 
 ```{eval-rst}
