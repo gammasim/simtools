@@ -42,6 +42,7 @@ class StageInputs:
     context: object = None
     chain_options: dict = field(default_factory=dict, hash=False, compare=False)
     stages: tuple = ()
+    calibration: object = None
 
     def options_of(self, stage):
         """Return the options of a stage given in the chain spec (empty if there are none)."""
