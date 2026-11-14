@@ -212,7 +212,7 @@ def test_illuminator_prepare_writes_position_file(light_source_context):
     inputs = _inputs(light_source_context, light_source=_ILLUMINATOR, wavelength=355.0 * u.nm)
     (stage,) = IlluminatorSourceStage.instances(inputs)
     tokens = shlex.split(stage.prepare(2)[0])
-    assert tokens[0] == "obdeect-sources-point-source"
+    assert tokens[0].endswith("obdeect-sources-point-source")
     position_file = tokens[tokens.index("--telpos-file") + 1]
     assert len(Path(position_file).read_text(encoding="utf-8").split()) == 4
 

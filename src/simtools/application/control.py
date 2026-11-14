@@ -13,6 +13,7 @@ from simtools.corsika.build_options import with_installed_build_variants
 from simtools.io.output_paths import OutputPaths
 from simtools.model_repository import dependency_versions
 from simtools.model_repository.compatibility import validate_release
+from simtools.runners import chain_spec
 from simtools.runners.simtools_runner import prepare_runtime_environment
 from simtools.runtime import dependencies
 from simtools.runtime.context import RunContext
@@ -198,8 +199,10 @@ def initialize_runtime(
         context = context.replace(software=with_installed_build_variants(context.software))
     validate_simulation_dependencies = "sim_telarray" in needs
     if validate_simulation_dependencies and not args_dict.get(_DEFER_SIMULATION_VALIDATION, False):
-        simulation_software = args_dict.get("simulation_software", "sim_telarray")
-        dependencies.validate_simulation_dependencies(simulation_software, context=context)
+        software = chain_spec.parse_chain(
+            args_dict.get("simulation_chain", ["sim_telarray"])
+        ).software
+        dependencies.validate_simulation_dependencies(software, context=context)
 
     logger = setup_logging(
         log_level=args_dict["log_level"],

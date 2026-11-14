@@ -23,6 +23,38 @@ If the telescope model describes the telescope structure
 is not applied to the effective area. sim_telarray does not simulate the
 structure.
 
+## Simulation chain
+
+A simulation is an ordered list of stages, `--simulation_chain` (default
+`corsika sim_telarray`). Each stage is written `STAGE` or `STAGE:KEY=VALUE,...`; the stages and
+the software they need are declared in `resources/simulation_stages.yml`. obdeect provides:
+
+| Stage | Task |
+| --- | --- |
+| `corsika_to_stream` | CORSIKA photon bunches to a photon stream |
+| `obdeect_atmosphere` | extinction of the atmosphere along the light path |
+| `obdeect_optics` | mirrors, shadowing and telescope transmission, one process per telescope |
+| `stream_to_simtel` | photon stream to the sim_telarray photon-bunch input |
+| `obdeect_flasher`, `obdeect_illuminator` | calibration light; the flasher light is traced through the telescope structure |
+
+Air showers through obdeect atmosphere and optics, with sim_telarray simulating only the camera:
+
+```bash
+simtools-simulate-prod --simulation_chain corsika corsika_to_stream obdeect_atmosphere \
+  obdeect_optics stream_to_simtel sim_telarray:bypass_optics=3 ...
+```
+
+Stages are connected by the data products they consume and produce, and a chain in which two
+stages apply the same efficiency factor (for example the atmosphere in obdeect and in
+sim_telarray) is rejected. `Bypass_Optics=3` makes sim_telarray simulate the camera only. simtools
+checks that the installed sim_telarray release supports it before any job is written; for a
+locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3` states the highest supported
+level. The calibration applications select obdeect with `--ray_tracing_backend` (next section).
+
+The programs of a stage are located through `resources/simulation_programs.yml`; a further
+software package adds its stages and programs there, and its command builders in a sibling of
+`simulation_chain/obdeect/`.
+
 ## Flashers and illuminators
 
 With `--ray_tracing_backend obdeect`, `simtools-simulate-flasher --run_mode

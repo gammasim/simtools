@@ -165,7 +165,7 @@ def test_corsika_to_stream_requires_input(corsika_to_stream):
 def test_corsika_to_stream_reports_missing_program(corsika_to_stream, monkeypatch):
     monkeypatch.setattr(importlib.util, "find_spec", lambda name: None)
 
-    with pytest.raises(ValueError, match="of the obdeect package not found"):
+    with pytest.raises(ValueError, match="install the package 'obdeect'"):
         corsika_to_stream.prepare(run_number=1, input_file=STDIN, output=StreamTo(("x -",)))
 
 
@@ -175,7 +175,7 @@ def test_corsika_to_stream_reports_missing_program_in_installed_package(
     package_location = SimpleNamespace(submodule_search_locations=[str(tmp_test_directory)])
     monkeypatch.setattr(importlib.util, "find_spec", lambda name: package_location)
 
-    with pytest.raises(ValueError, match="of the obdeect package not found"):
+    with pytest.raises(ValueError, match="install the package 'obdeect'"):
         corsika_to_stream.prepare(run_number=1, input_file=STDIN, output=StreamTo(("x -",)))
 
 
@@ -276,7 +276,7 @@ _OBDEECT_CHAIN = (
 
 
 def test_obdeect_chain_with_bypass_mode_3_is_valid(fake_atmosphere_and_optics):
-    spec = ChainSpec("obdeect", _OBDEECT_CHAIN, {"sim_telarray": {"bypass_optics": 3}})
+    spec = ChainSpec(_OBDEECT_CHAIN, {"sim_telarray": {"bypass_optics": 3}})
 
     chain = spec.chain()
 
@@ -285,7 +285,7 @@ def test_obdeect_chain_with_bypass_mode_3_is_valid(fake_atmosphere_and_optics):
 
 @pytest.mark.parametrize("mode", [1, 2])
 def test_obdeect_chain_rejects_atmosphere_applied_twice(fake_atmosphere_and_optics, mode):
-    spec = ChainSpec("obdeect", _OBDEECT_CHAIN, {"sim_telarray": {"bypass_optics": mode}})
+    spec = ChainSpec(_OBDEECT_CHAIN, {"sim_telarray": {"bypass_optics": mode}})
 
     with pytest.raises(ValueError, match="applies 'atmospheric_extinction' twice"):
         spec.chain()

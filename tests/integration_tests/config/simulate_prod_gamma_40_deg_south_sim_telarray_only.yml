@@ -18,7 +18,8 @@ applications:
     instrument_seed: 1745
     simulation_seed:
     - 290
-    simulation_software: sim_telarray
+    simulation_chain:
+    - sim_telarray
     site: South
   integration_tests:
   - test_outputs:

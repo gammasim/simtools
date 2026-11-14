@@ -70,18 +70,26 @@ height above the observation level, as in sim_telarray. The reference-point alti
 
 ## Simulation chain
 
-`--simulation_chain` selects the simulation chain: a preset name (`legacy`) or the path of a
-chain-spec YAML file listing the stages in order, with optional per-stage options:
+`--simulation_chain` lists the stages of the simulation in order, each as
+`STAGE` or `STAGE:KEY=VALUE,...`. The default is `corsika sim_telarray`: showers with CORSIKA,
+telescopes and cameras with sim_telarray. The stages are defined in
+`src/simtools/resources/simulation_stages.yml`; a stage must consume what the previous stage
+produces. Examples:
 
-```yaml
-stages:
-  - stage: corsika
-  - stage: sim_telarray
+```bash
+--simulation_chain sim_telarray        # sim_telarray only, e.g. from a CORSIKA input file
+--simulation_chain corsika             # CORSIKA only
+--simulation_chain corsika corsika_to_stream obdeect_atmosphere obdeect_optics \
+    stream_to_simtel sim_telarray:bypass_optics=3
 ```
 
-Without `--simulation_chain`, the chain follows `--simulation_software` (default
-`corsika_sim_telarray`, the same chain as `legacy`). The two options cannot be combined when
-`--simulation_software` is not the default.
+The same list is used in configuration files:
+
+```yaml
+simulation_chain:
+  - corsika
+  - sim_telarray
+```
 
 ## Command line arguments
 

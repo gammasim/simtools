@@ -8,21 +8,25 @@ from simtools.runners.sim_telarray_stage import SimTelArrayStage
 
 
 @pytest.mark.parametrize(
-    ("software", "expected"),
+    ("names", "software"),
     [
-        ("corsika", ("corsika",)),
-        ("sim_telarray", ("sim_telarray",)),
-        ("corsika_sim_telarray", ("corsika", "sim_telarray")),
+        (("corsika",), {"corsika"}),
+        (("sim_telarray",), {"sim_telarray"}),
+        (("corsika", "sim_telarray"), {"corsika", "sim_telarray"}),
+        (
+            ("corsika", "corsika_to_stream", "obdeect_optics", "stream_to_simtel", "sim_telarray"),
+            {"corsika", "obdeect", "sim_telarray"},
+        ),
     ],
 )
-def test_chain_from_software(software, expected):
-    chain = stages.SimulationChain.from_software(software)
+def test_chain_software_and_first_stage(names, software):
+    chain = stages.SimulationChain(names)
 
-    assert chain.stages == expected
+    assert chain.stages == names
     assert chain.software == software
-    assert chain.starts_with_showers == (expected[0] == "corsika")
-    assert chain.reads_input_file == (expected[0] != "corsika")
-    assert all(chain.has(name) for name in expected)
+    assert chain.starts_with_showers == (names[0] == "corsika")
+    assert chain.reads_input_file == (names[0] != "corsika")
+    assert all(chain.has(name) for name in names)
 
 
 def test_chain_stage_classes():
@@ -47,11 +51,10 @@ def test_register_stage_extends_chains():
         assert chain.has("fake_stage")
     finally:
         stages.STAGES.pop("fake_stage")
+        stages.STAGE_SOFTWARE.pop("fake_stage")
 
 
-def test_chain_rejects_unknown_software_and_stage():
-    with pytest.raises(ValueError, match="Invalid simulation software"):
-        stages.SimulationChain.from_software("unknown")
+def test_chain_rejects_unknown_stage_and_empty_chain():
     with pytest.raises(ValueError, match="Unknown simulation stage 'unknown'"):
         stages.SimulationChain(("unknown",))
     with pytest.raises(ValueError, match="at least one stage"):
@@ -101,3 +104,28 @@ def test_stage_inputs_options_of_stage():
 
     assert inputs.options_of("obdeect_optics") == {"threads": 2}
     assert inputs.options_of("sim_telarray") == {}
+
+
+def test_register_stage_declares_software():
+    stages.register_stage("fake_stage", lambda: None, software=["fake_program"])
+    try:
+        assert stages.stages_software(["corsika", "fake_stage"]) == {"corsika", "fake_program"}
+    finally:
+        stages.STAGES.pop("fake_stage")
+        stages.STAGE_SOFTWARE.pop("fake_stage")
+
+
+def test_stages_software_rejects_unknown_stage():
+    with pytest.raises(ValueError, match="Unknown simulation stage 'unknown'"):
+        stages.stages_software(["corsika", "unknown"])
+
+
+def teststage_catalog_declares_consistent_stages():
+    catalog = stages.stage_catalog()
+
+    assert {"corsika", "sim_telarray"} <= set(catalog)
+    for name, entry in catalog.items():
+        stage_class = stages.get_stage_class(name)
+        assert stage_class.name == name
+        assert entry["software"]
+        assert isinstance(stage_class.produces, str)

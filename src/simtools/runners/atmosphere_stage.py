@@ -1,4 +1,12 @@
-"""Atmosphere of the simulation chain as a simulation stage (obdeect propagation)."""
+"""Atmosphere of the simulation chain as a simulation stage (obdeect propagation).
+
+In a chain::
+
+    simulation_chain: [corsika, corsika_to_stream, obdeect_atmosphere, obdeect_optics,
+                       stream_to_simtel, sim_telarray]
+
+The command is built in ``simtools.simulation_chain.obdeect.atmosphere``.
+"""
 
 import shlex
 
@@ -9,9 +17,8 @@ from simtools.simulation_chain.atmosphere import (
     DEFAULT_MODE,
     DEFAULT_SEED,
     build_atmosphere_request,
-    propagation_command,
-    propagation_program,
 )
+from simtools.simulation_chain.obdeect.atmosphere import propagation_command
 from simtools.simulation_chain.products import PHOTONS_GROUND, PHOTONS_SKY
 
 STAGE_OPTIONS = ("seed", "mode", "wavelength_range_nm")
@@ -52,7 +59,7 @@ class ObdeectAtmosphereStage:
         """
         Return one atmosphere stage per array model.
 
-        Stage options (``chain_options`` of the spec): ``seed``, ``mode`` (``thinned`` or
+        Stage options (after the stage name in the chain): ``seed``, ``mode`` (``thinned`` or
         ``weighted``) and ``wavelength_range_nm`` (two values); unknown options are rejected.
         """
         options = inputs.options_of(cls.name)
@@ -111,7 +118,6 @@ class ObdeectAtmosphereStage:
             self.request,
             input_file=input_file,
             output_file=output_file,
-            program=propagation_program(),
         )
         line = shlex.join(command)
         return [line if downstream is None else f"{line} | {downstream}"]

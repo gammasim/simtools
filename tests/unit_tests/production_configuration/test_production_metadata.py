@@ -101,7 +101,7 @@ def test_write_manifests_does_not_mark_incomplete_job_complete(
         "simtools.production_configuration.production_metadata.read_job_grid",
         return_value=(
             [_job_grid_row()],
-            {"site": "North", "simulation_software": "corsika_sim_telarray"},
+            {"site": "North", "simulation_chain": ["corsika", "sim_telarray"]},
         ),
     )
     write_file = mocker.patch(
@@ -140,7 +140,7 @@ def test_write_manifests_supports_zero_based_job_directories(
     (job_directory / "gamma_run000001.simtel.zst").touch()
     mocker.patch(
         "simtools.production_configuration.production_metadata.read_job_grid",
-        return_value=([_job_grid_row()], {"site": "North", "simulation_software": "sim_telarray"}),
+        return_value=([_job_grid_row()], {"site": "North", "simulation_chain": ["sim_telarray"]}),
     )
     write_file = mocker.patch(
         "simtools.production_configuration.production_metadata.write_data_to_file"
@@ -180,7 +180,7 @@ def test_write_manifests_omits_unknown_catalog_and_atmosphere_values(
         "simtools.production_configuration.production_metadata.read_job_grid",
         return_value=(
             [_job_grid_row()],
-            {"site": "North", "simulation_software": "corsika_sim_telarray"},
+            {"site": "North", "simulation_chain": ["corsika", "sim_telarray"]},
         ),
     )
     write_file = mocker.patch(
@@ -245,7 +245,7 @@ def test_required_simulation_job_metadata_arguments_cover_manifest_inputs():
         "model_version",
         "array_layout_name",
         "site",
-        "simulation_software",
+        "simulation_chain",
     )
 
 
@@ -327,7 +327,7 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_chain=["corsika", "sim_telarray"],
             corsika_he_interaction="qgs3",
             corsika_le_interaction="urqmd",
         ),
@@ -335,7 +335,7 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
         output_directory,
     )
 
-    assert manifest["schema_version"] == "1.0.0"
+    assert manifest["schema_version"] == "2.0.0"
     assert manifest["product_type"] == "simulate_prod_job"
     assert manifest["production_id"] == "production-42"
     assert manifest["catalog_metadata"]["runNumber"] == 12
@@ -369,7 +369,7 @@ def test_build_production_job_manifest_uses_resolved_angles_from_input_file(tmp_
             energy_range=(100 * u.GeV, 100 * u.GeV),
             core_scatter=(1, 840 * u.m),
             showers_per_run=None,
-            simulation_software="sim_telarray",
+            simulation_chain=["sim_telarray"],
             corsika_file="showers.dat",
         ),
         simulator,
@@ -392,7 +392,7 @@ def test_build_production_job_manifest_preserves_generated_shower_angle_precisio
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_chain=["corsika", "sim_telarray"],
         ),
         simulator,
         Path(tmp_test_directory),
@@ -416,7 +416,7 @@ def test_build_production_job_manifest_records_reduced_event_counts(tmp_test_dir
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_chain=["corsika", "sim_telarray"],
         ),
         _simulator("MSTS-01", run_number=12),
         output_directory,
@@ -472,7 +472,7 @@ def test_build_production_job_manifest_discovers_all_packaged_outputs(tmp_test_d
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_chain=["corsika", "sim_telarray"],
         ),
         _simulator("MSTS-01", run_number=12),
         output_directory,
@@ -504,7 +504,7 @@ def test_build_production_job_manifest_reads_primary_from_corsika_input(
             core_scatter=(10, 500 * u.m),
             showers_per_run=None,
             primary=None,
-            simulation_software="sim_telarray",
+            simulation_chain=["sim_telarray"],
         ),
         simulator,
         output_directory,
@@ -525,7 +525,7 @@ def test_build_production_job_manifest_preserves_multiple_model_versions(tmp_tes
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
             model_version=["6.0.2", "7.0.0"],
-            simulation_software="sim_telarray",
+            simulation_chain=["sim_telarray"],
         ),
         _simulator("MSTS-01", run_number=12),
         output_directory,
@@ -547,7 +547,7 @@ def test_build_production_job_manifest_preserves_truthful_backfill_metadata(tmp_
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_chain=["corsika", "sim_telarray"],
         ),
         simulator,
         output_directory,
@@ -591,7 +591,7 @@ def test_build_production_job_manifest_records_resolved_overrides_and_atmosphere
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_chain=["corsika", "sim_telarray"],
             curved_atmosphere_min_zenith_angle=70 * u.deg,
             overwrite_model_parameters="/submission/path/overrides.yml",
         ),
@@ -621,7 +621,7 @@ def test_telescope_only_manifest_uses_resolved_atmosphere_parameter(tmp_test_dir
 
     manifest = build_production_job_manifest(
         _args(
-            simulation_software="sim_telarray",
+            simulation_chain=["sim_telarray"],
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
@@ -667,7 +667,7 @@ def test_build_production_job_manifest_keeps_nested_output_paths(tmp_test_direct
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="sim_telarray",
+            simulation_chain=["sim_telarray"],
         ),
         simulator,
         output_directory,

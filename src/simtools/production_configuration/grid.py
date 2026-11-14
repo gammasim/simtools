@@ -747,7 +747,7 @@ def build_job_grid_metadata(args_dict):
     corsika_limits = args_dict.get("corsika_limits")
     return {
         "site": args_dict.get("site"),
-        "simulation_software": args_dict.get("simulation_software"),
+        "simulation_chain": args_dict.get("simulation_chain"),
         "coordinate_system": coordinate_system,
         "direction_grid_density": direction_grid_density,
         "direction_grid_density_unit": "1/deg^2" if direction_grid_density is not None else None,

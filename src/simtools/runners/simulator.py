@@ -20,7 +20,7 @@ from simtools.model.array_model import ArrayModel
 from simtools.model_repository.reader import with_resolved_model_reader
 from simtools.runners import chain_spec
 from simtools.runners.chain_runner import ChainRunner
-from simtools.runners.stages import SimulationChain, StageInputs
+from simtools.runners.stages import StageInputs
 from simtools.runtime.context import RunContext
 from simtools.sim_events import file_info, writer
 from simtools.sim_events.hdf5_output_validation import validate_sim_events
@@ -144,10 +144,10 @@ class Simulator:
 
         self.site = self.context.args.get("site", None)
         self.model_version = self.context.args.get("model_version", None)
-        self.simulation_software = self.context.args.get(
-            "simulation_software", constants.SIMULATION_SOFTWARE_DEFAULT
+        self.chain_spec = chain_spec.parse_chain(
+            self.context.args.get("simulation_chain", constants.SIMULATION_CHAIN_DEFAULT)
         )
-        self._select_chain()
+        self.chain = self.chain_spec.chain()
         self.run_mode = self.context.args.get("run_mode", None)
         self.io_handler = self.context.paths
 
@@ -166,62 +166,6 @@ class Simulator:
             context=self.context,
         )
         self.file_list = self.runner_service.load_files(self.run_number)
-
-    @property
-    def simulation_software(self):
-        """The attribute simulation_software."""
-        return self._simulation_software
-
-    @simulation_software.setter
-    def simulation_software(self, simulation_software):
-        """
-        Set the simulation software.
-
-        Must be one of ``"sim_telarray"``, ``"corsika"`` or ``"corsika_sim_telarray"``
-        (CORSIKA piped directly to sim_telarray). Raises ValueError otherwise.
-        """
-        if simulation_software not in constants.SIMULATION_SOFTWARE_CHOICES:
-            raise ValueError(f"Invalid simulation software: {simulation_software}")
-        self._simulation_software = simulation_software.lower()
-        self.chain = SimulationChain.from_software(self._simulation_software)
-
-    def _chain_spec(self):
-        """
-        Return the chain spec selected by ``simulation_chain``, or None if it is not given.
-
-        Without ``simulation_chain`` the chain is the one of ``simulation_software``
-        (unchanged). With ``simulation_chain`` (a preset name or chain-spec YAML file) the chain
-        and the stage options of that spec are used. The two options cannot be combined: if
-        ``simulation_software`` is not the default, a ValueError is raised. Giving
-        ``simulation_software`` with its default value together with ``simulation_chain`` is
-        accepted, because the default cannot be told apart from an explicit value.
-
-        Raises
-        ------
-        ValueError
-            If ``simulation_chain`` is combined with a non-default ``simulation_software``,
-            or if the selection is neither a preset nor a file.
-        """
-        selection = self.context.args.get("simulation_chain")
-        if selection is None:
-            return None
-        if self.simulation_software != constants.SIMULATION_SOFTWARE_DEFAULT:
-            raise ValueError(
-                f"Use either 'simulation_chain' ({selection}) or 'simulation_software' "
-                f"({self.simulation_software}), not both."
-            )
-        return chain_spec.load_chain_spec(selection)
-
-    def _select_chain(self):
-        """Set the chain from ``simulation_chain`` if given (see ``_chain_spec``)."""
-        spec = self._chain_spec()
-        if spec is not None:
-            self.chain = spec.chain()
-
-    def _chain_options(self):
-        """Return the stage options of the chain spec (empty if ``simulation_chain`` is unset)."""
-        spec = self._chain_spec()
-        return {} if spec is None else dict(spec.options)
 
     def _initialize_from_tool_configuration(self):
         """Initialize run number from the tool configuration."""
@@ -294,7 +238,8 @@ class Simulator:
             shower_configurations=tuple(value_conversion.ensure_list(self.corsika_configurations)),
             args=dict(self.context.args),
             context=self.context,
-            chain_options=self._chain_options(),
+            chain_options=self.chain_spec.options,
+            stages=self.chain.stages,
         )
         return ChainRunner(self.chain, inputs, label=self.label)
 
@@ -423,7 +368,8 @@ class Simulator:
             f"at {self.site} site, using {self.model_version} model."
         )
         self.logger.info(
-            f"Computing for {self.simulation_software} Simulations: {self._make_resources_report()}"
+            f"Computing for {'+'.join(self.chain.stages)} simulations: "
+            f"{self._make_resources_report()}"
         )
 
     def save_file_lists(self):

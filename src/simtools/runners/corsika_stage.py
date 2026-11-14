@@ -5,7 +5,6 @@ import shlex
 import stat
 from pathlib import Path
 
-from simtools.constants import SIMULATION_SOFTWARE_DEFAULT
 from simtools.corsika import build_options
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.job_execution.runner_services import RunnerServices
@@ -67,8 +66,7 @@ class CorsikaStage:
             context=inputs.context,
         )
         if (
-            inputs.args.get("simulation_software", SIMULATION_SOFTWARE_DEFAULT)
-            == "corsika_sim_telarray"
+            "sim_telarray" in inputs.stages
             and inputs.args.get("shower_route_mode", "stream") == "disk"
         ):
             stage.disk_route = bool(

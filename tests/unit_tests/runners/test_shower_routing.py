@@ -207,6 +207,7 @@ def test_chain_writes_routing_at_the_correct_stage(
         simulation_parameters=(config.simulation_parameters,),
         shower_configurations=(config,),
         args={"shower_route_mode": mode},
+        stages=("corsika", "sim_telarray"),
         context=corsika_stage_mock_array_model.context.replace(
             software=SimpleNamespace(
                 **{

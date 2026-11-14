@@ -5,7 +5,6 @@ import subprocess
 import sys
 
 import astropy.units as u
-import numpy as np
 import pytest
 
 from simtools.simulation_chain import light_sources
@@ -17,6 +16,7 @@ from simtools.simulation_chain.light_sources import (
     IlluminatorSource,
     PulseShape,
 )
+from simtools.simulation_chain.obdeect import sources
 
 
 class _Model:
@@ -269,20 +269,10 @@ def test_flasher_request_json_round_trip(tmp_path):
     assert request.photons_per_pulse == (1000, 1000, 2000)
 
 
-def test_flasher_command(tmp_path):
-    tokens = FlasherSource.command(
-        _flasher_request(), tmp_path, output=tmp_path / "f.pst", file_token="_x", executable="py"
-    )
-    assert tokens == [
-        "py",
-        "-m",
-        "simtools.simulation_chain.flasher_stream",
-        *("--request", str(tmp_path / "light_source_request_x.json")),
-        *("--output-path", str(tmp_path)),
-        *("--output", str(tmp_path / "f.pst")),
-    ]
-    assert light_sources.flasher_request_from_json(tokens[4]) == _flasher_request()
-    assert "--output" not in FlasherSource.command(_flasher_request(), tmp_path)
+def test_flasher_source_builds_the_obdeect_command(tmp_path):
+    request = _flasher_request()
+    tokens = FlasherSource.command(request, tmp_path, file_token="_x", executable="py")
+    assert tokens == sources.flasher_command(request, tmp_path, None, "_x", "py")
 
 
 def _illuminator_request(**options):
@@ -307,66 +297,10 @@ def _illuminator_request(**options):
     )
 
 
-def test_illuminator_command_and_tables(tmp_path):
-    tokens = IlluminatorSource.command(
-        _illuminator_request(), tmp_path, output=tmp_path / "i.pst", file_token="_x"
-    )
-    positions = tmp_path / "light_source_telescope_position_x.dat"
-    angular = tmp_path / "light_source_angular_distribution_x.dat"
-    pulse = tmp_path / "light_source_pulse_shape_x.dat"
-    assert tokens == [
-        "obdeect-sources-point-source",
-        *("-R", "3", "-N", "2"),
-        *("-x", "11000", "-y", "0", "-z", "500", "-d", "-1,0,0"),
-        *("-n", "1000000", "-b", "1", "-s", "355"),
-        *("-p", str(pulse), "-a", str(angular), "-h", "2158"),
-        *("--telpos-file", str(positions), "--seed", "8", "-o", str(tmp_path / "i.pst")),
-    ]
-    assert positions.read_text(encoding="utf-8").split() == ["1000", "0", "500", "1200"]
-    angles, intensity = np.loadtxt(angular, unpack=True)
-    assert angles[0] == pytest.approx(0.0)
-    assert angles[-1] == pytest.approx(20.0)
-    assert intensity[0] == pytest.approx(1.0)
-    assert np.all(np.diff(intensity) < 0.0)
-    times, rates = np.loadtxt(pulse, unpack=True)
-    assert np.all(np.diff(times) > 0.0)
-    assert rates.max() > 0.0
-    assert np.all(rates >= 0.0)
-
-
-def test_illuminator_command_with_program_tokens(tmp_path):
-    request = _illuminator_request(
-        angular=AngularDistribution("FilledCone", 2.0), pulse=PulseShape("Exponential", 0.0, 3.0)
-    )
-    tokens = IlluminatorSource.command(request, tmp_path)
-    assert tokens[tokens.index("-a") + 1] == "FilledCone:2"
-    assert tokens[tokens.index("-p") + 1] == "Exp:3"
-    assert "-o" not in tokens
-    assert not (tmp_path / "light_source_angular_distribution.dat").exists()
-
-
-def test_illuminator_tokens_without_tables(tmp_path):
-    assert (
-        light_sources.illuminator_angular_token(AngularDistribution("isotropic", 0.0), tmp_path)
-        == "isotropic"
-    )
-    assert (
-        light_sources.illuminator_angular_token(AngularDistribution("Gauss", 3.0), tmp_path)
-        == "Gauss:3"
-    )
-    assert light_sources.illuminator_pulse_token(PulseShape("TopHat", 2.0, 0.0), tmp_path) == (
-        "Simple:2"
-    )
-    assert light_sources.illuminator_pulse_token(PulseShape("Gauss", 0.0, 0.0), tmp_path) == (
-        "Gauss:0"
-    )
-    # An instantaneous pulse needs no table; an unknown shape with a width has none.
-    assert (
-        light_sources.illuminator_pulse_token(PulseShape("Triangle", 0.0, 0.0), tmp_path)
-        == "Simple:0"
-    )
-    with pytest.raises(ValueError, match="has no tabulated profile"):
-        light_sources.illuminator_pulse_token(PulseShape("Triangle", 1.0, 0.0), tmp_path)
+def test_illuminator_source_builds_the_obdeect_command(tmp_path):
+    request = _illuminator_request()
+    tokens = IlluminatorSource.command(request, tmp_path, output=tmp_path / "i.pst")
+    assert tokens == sources.illuminator_command(request, tmp_path, tmp_path / "i.pst")
 
 
 def test_registry_has_builtin_types():
@@ -403,7 +337,7 @@ def test_new_source_type_without_editing_existing_code(monkeypatch):
     assert light_sources.source_type_of_model("flat_fielding") is FlasherSource
 
 
-def test_legacy_modules_do_not_import_obdeect_through_light_sources():
+def test_source_types_do_not_import_obdeect():
     code = (
         "import sys\n"
         "import simtools.simulation_chain.light_sources as m\n"

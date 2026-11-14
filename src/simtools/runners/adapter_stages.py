@@ -1,20 +1,19 @@
 """Adapter stages of the obdeect chain: CORSIKA photons to photon streams and back to sim_telarray.
 
-The stages run the programs of the obdeect stream component. ``obdeect stream from-corsika``
-converts CORSIKA IACT output to a photon stream; ``obdeect stream to-simtel`` converts a
-camera-frame photon stream to sim_telarray input (see the obdeect command-line documentation).
-The programs are located in the installed obdeect package; the obdeect package is not imported.
+``corsika_to_stream`` converts CORSIKA IACT output to a photon stream; ``stream_to_simtel``
+converts a camera-frame photon stream to sim_telarray input. The commands are built in
+``simtools.simulation_chain.obdeect.streams`` and the programs are located with
+``simtools.simulation_chain.programs``; the obdeect package is not imported. In a chain::
+
+    simulation_chain: [corsika, corsika_to_stream, obdeect_atmosphere, obdeect_optics,
+                       stream_to_simtel, sim_telarray]
 """
 
-import importlib.util
 import shlex
-from pathlib import Path
 
-import astropy.units as u
-
-from simtools.corsika.corsika_config import corsika_telescope_ids
 from simtools.job_execution.runner_services import RunnerServices
 from simtools.runners.stages import StreamTo
+from simtools.simulation_chain.obdeect import streams
 from simtools.simulation_chain.products import (
     CAMERA_PHOTONS_IACT,
     CHERENKOV_PHOTONS,
@@ -22,27 +21,9 @@ from simtools.simulation_chain.products import (
     PHOTONS_GROUND,
 )
 
-OBDEECT_PACKAGE = "obdeect"
-OBDEECT_PROGRAM_DIRECTORY = Path("stream", "bin")
-FROM_CORSIKA_PROGRAM = "obdeect-stream-from-corsika"
-TO_SIMTEL_PROGRAM = "obdeect-stream-to-simtel"
 STREAM_SUFFIX = ".pst"
 CAMERA_MAP_SUFFIX = ".camera_map.txt"
 CAMERA_IACT_SUFFIX = ".camera.iact"
-
-
-def _obdeect_program(name):
-    """Return the path of an obdeect stream program in the installed obdeect package."""
-    spec = importlib.util.find_spec(OBDEECT_PACKAGE)
-    locations = [] if spec is None else list(spec.submodule_search_locations or [])
-    for location in locations:
-        program = Path(location) / OBDEECT_PROGRAM_DIRECTORY / name
-        if program.is_file():
-            return program
-    raise ValueError(
-        f"Program {name!r} of the obdeect package not found; install the obdeect package "
-        "to run the obdeect chain."
-    )
 
 
 def _corsika_runner_service(inputs, label):
@@ -129,7 +110,7 @@ class CorsikaToStreamStage:
         """
         if input_file is None:
             raise ValueError("corsika_to_stream reads the CORSIKA output: give a file or STDIN.")
-        command = shlex.join([str(_obdeect_program(FROM_CORSIKA_PROGRAM)), str(input_file)])
+        command = shlex.join(streams.from_corsika_command(input_file))
         return _connect_output(command, output, self.output_file(run_number))
 
     def output_file(self, run_number):
@@ -217,16 +198,9 @@ class StreamToSimtelStage:
         """
         if input_file is None:
             raise ValueError("stream_to_simtel reads a photon stream: give a file or STDIN.")
-        command = [
-            str(_obdeect_program(TO_SIMTEL_PROGRAM)),
-            "--camera-map",
-            str(self.write_camera_map(run_number)),
-        ]
-        for factor in self.allow_pending:
-            command.extend(["--allow-pending", factor])
-        for factor in self.scaled_factors:
-            command.extend(["--scaled-factor", factor])
-        command.append(str(input_file))
+        command = streams.to_simtel_command(
+            self.write_camera_map(run_number), input_file, self.allow_pending, self.scaled_factors
+        )
         return _connect_output(shlex.join(command), output, self.output_file(run_number))
 
     def camera_map_file(self, run_number):
@@ -240,16 +214,9 @@ class StreamToSimtelStage:
         Each line is ``telescope_id mirror_class camera_rotation_deg``, with the CORSIKA
         telescope id of the telescope.
         """
-        telescope_models = self.array_model.telescope_models
-        ids = corsika_telescope_ids(telescope_models)
-        lines = []
-        for name, telescope in telescope_models.items():
-            mirror_class = telescope.get_parameter_value("mirror_class")
-            rotation_deg = telescope.get_parameter_value_with_unit("camera_rotate").to_value(u.deg)
-            lines.append(f"{ids[name]} {mirror_class} {rotation_deg}")
-        camera_map = self.camera_map_file(run_number)
-        camera_map.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        return camera_map
+        return streams.write_camera_map(
+            self.array_model.telescope_models, self.camera_map_file(run_number)
+        )
 
     def output_file(self, run_number):
         """Return the sim_telarray input file of the run."""

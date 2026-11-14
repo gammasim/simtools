@@ -195,7 +195,7 @@ def _write_job_metadata(args_dict, simulator, output_directory):
     manifest = build_production_job_manifest(args_dict, simulator, output_directory)
     validate_required_production_outputs(
         manifest["files"],
-        manifest["configuration"]["simulation_software"],
+        manifest["configuration"]["simulation_chain"],
         output_directory,
     )
     check_manifest(ProductionManifest(path=manifest_path, data=manifest))
@@ -212,7 +212,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.ARRAY_LAYOUT_NAME(required=False),
-        cli.SIMULATION_SOFTWARE,
         cli.SIMULATION_CHAIN,
         *cli.corsika_configuration_arguments(primary_required=False),
         *cli.SHOWER_ARGUMENTS,

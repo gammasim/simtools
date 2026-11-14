@@ -25,7 +25,7 @@ def _base_args(tmp_test_directory):
         "model_version": "7.0.0",
         "array_layout_name": "LSTN-01",
         "threshold_parameter": "asum_threshold",
-        "simulation_software": "corsika_sim_telarray",
+        "simulation_chain": ["corsika", "sim_telarray"],
         "azimuth_angle": 0.0,
         "zenith_angle": 20.0,
         "showers_per_run": 10000,
@@ -180,7 +180,7 @@ def test_expand_job_grid_with_scan_validates_configuration(tmp_test_directory):
             {
                 "model_parameter_sets": {"set1": {"param": 1}},
                 "site": "South",
-                "simulation_software": "sim_telarray",
+                "simulation_chain": ["sim_telarray"],
                 "job_grid_summary": {"total": 10},
                 "job_grid_format_version": "1.0",
                 "unwanted_key": "should_be_removed",
@@ -188,7 +188,7 @@ def test_expand_job_grid_with_scan_validates_configuration(tmp_test_directory):
             {
                 "model_parameter_sets",
                 "site",
-                "simulation_software",
+                "simulation_chain",
                 "job_grid_summary",
                 "job_grid_format_version",
             },

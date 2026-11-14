@@ -27,7 +27,9 @@ applications:
     output_file: job_grid_ha_dec_density.ecsv
     output_path: simtools-output
     primary: gamma
-    simulation_software: corsika_sim_telarray
+    simulation_chain:
+    - corsika
+    - sim_telarray
     site: North
     view_cone: 0 deg 10 deg
   integration_tests:

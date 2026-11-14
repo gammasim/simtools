@@ -624,22 +624,22 @@ IGNORE_MISSING_DESIGN_MODEL = _argument(
 SIMULATION_SOFTWARE = _argument(
     "simulation_software",
     "simulation software",
-    help="Simulation software workflow.",
+    help="Simulation software of the configuration parameters.",
     type=str,
     choices=list(defaults.SIMULATION_SOFTWARE_CHOICES),
-    default=defaults.SIMULATION_SOFTWARE_DEFAULT,
+    default=None,
 )
 
 SIMULATION_CHAIN = _argument(
     "simulation_chain",
     "simulation software",
     help=(
-        "Simulation chain: a preset name (e.g. 'legacy') or the path of a chain-spec YAML file. "
-        "Default: the chain of 'simulation_software'. Cannot be combined with a non-default "
-        "'simulation_software'."
+        "Stages of the simulation chain in order, each as STAGE or STAGE:KEY=VALUE,... "
+        "(e.g. corsika sim_telarray)."
     ),
     type=str,
-    default=None,
+    nargs="+",
+    default=list(defaults.SIMULATION_CHAIN_DEFAULT),
 )
 
 SIMULATION_FILE_FORMAT = _argument(

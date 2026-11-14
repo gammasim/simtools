@@ -279,7 +279,7 @@ def test_build_job_grid_metadata_includes_job_context():
     metadata = build_job_grid_metadata(
         {
             "site": "North",
-            "simulation_software": "corsika_sim_telarray",
+            "simulation_chain": ["corsika", "sim_telarray"],
             "direction_grid_density": 0.25,
             "axis": [
                 ["ha", "0", "deg", "1", "deg", "2"],
@@ -290,7 +290,7 @@ def test_build_job_grid_metadata_includes_job_context():
     )
 
     assert metadata["site"] == "North"
-    assert metadata["simulation_software"] == "corsika_sim_telarray"
+    assert metadata["simulation_chain"] == ["corsika", "sim_telarray"]
     assert metadata["coordinate_system"] == "ha_dec"
     assert metadata["direction_grid_density"] == pytest.approx(0.25)
     assert metadata["direction_grid_density_unit"] == "1/deg^2"
@@ -303,7 +303,7 @@ def test_build_job_grid_metadata_raises_for_hadec_without_site():
         build_job_grid_metadata(
             {
                 "site": None,
-                "simulation_software": "corsika_sim_telarray",
+                "simulation_chain": ["corsika", "sim_telarray"],
                 "axis": [
                     ["ha", "0", "deg", "1", "deg", "2"],
                     ["dec", "0", "deg", "1", "deg", "2"],
@@ -321,7 +321,7 @@ def test_generate_job_grid_adds_default_metadata_to_ecsv_header(
     default_metadata = {"cta": {"activity": {"name": "production_generate_grid"}}}
     args = {
         "site": "North",
-        "simulation_software": "corsika_sim_telarray",
+        "simulation_chain": ["corsika", "sim_telarray"],
         "axis": [
             ["azimuth", "0", "deg", "1", "deg", "2"],
             ["zenith", "0", "deg", "1", "deg", "2"],
@@ -334,7 +334,7 @@ def test_generate_job_grid_adds_default_metadata_to_ecsv_header(
     assert mock_serialize_job_grid.call_args.kwargs["metadata"] == {
         **default_metadata,
         "site": "North",
-        "simulation_software": "corsika_sim_telarray",
+        "simulation_chain": ["corsika", "sim_telarray"],
         "coordinate_system": "horizontal",
         "direction_grid_density": None,
         "direction_grid_density_unit": None,

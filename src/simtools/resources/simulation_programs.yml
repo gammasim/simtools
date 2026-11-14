@@ -1,0 +1,27 @@
+# Programs run by simulation chains, per software (see simtools.simulation_chain.programs).
+#
+# Each software names the Python package that ships its programs. A program is either
+#   file: a path relative to the package directory, or
+#   command: a console command (resolved next to the Python interpreter, then on PATH, then
+#            by calling the entry point "module:function" in a Python process).
+#
+# A new software is an entry here, a subpackage of simtools.simulation_chain with its command
+# builders, and stage entries in simulation_stages.yml.
+---
+software:
+  obdeect:
+    package: obdeect
+    programs:
+      obdeect:
+        command: obdeect
+        entry_point: obdeect.stream.cli:main
+      obdeect-propagation-run:
+        file: propagation/bin/obdeect-propagation-run
+      obdeect-stream-from-corsika:
+        file: stream/bin/obdeect-stream-from-corsika
+      obdeect-stream-to-simtel:
+        file: stream/bin/obdeect-stream-to-simtel
+      obdeect-sources-point-source:
+        file: sources/bin/obdeect-sources-point-source
+      obdeect-sources-flasher:
+        file: sources/bin/obdeect-sources-flasher

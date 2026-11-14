@@ -4,12 +4,14 @@ The stage traces a photon stream (ground or telescope frame) through the optics 
 telescope of an array model and writes camera-frame photons. The photons of the other telescopes
 are dropped, so a chain runs one instance per telescope and array model, each with its own random
 instrument (mirror errors). The translation of the telescope models into the optics job is in
-``simtools.simulation_chain.optics``.
+``simtools.simulation_chain.optics``; the optical model file and the command are made in
+``simtools.simulation_chain.obdeect.optics``.
 
-Stage options (chain spec)::
+Stage options are given after the stage name in the chain::
 
-    - stage: obdeect_optics
-      options: {telescope_transmission: full, threads: 4}
+    simulation_chain: [corsika, corsika_to_stream, obdeect_atmosphere,
+                       "obdeect_optics:telescope_transmission=full,threads=4",
+                       stream_to_simtel, sim_telarray]
 
 ``telescope_transmission`` is ``full`` (the only mode); ``threads`` is the number of tracing
 threads of each instance (default: the usable cores divided among the instances).
@@ -24,11 +26,10 @@ from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.model_utils import export_model_files
 from simtools.runners.chain_spec import MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION
 from simtools.runners.stages import StreamTo
+from simtools.simulation_chain.obdeect.optics import trace_stream_command, write_optical_model
 from simtools.simulation_chain.optics import (
     TELESCOPE_TRANSMISSION_MODES,
     optics_requests,
-    trace_stream_command,
-    write_optical_model,
 )
 from simtools.simulation_chain.products import PHOTONS_CAMERA, PHOTONS_GROUND, PHOTONS_TELESCOPE
 

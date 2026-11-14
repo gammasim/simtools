@@ -170,7 +170,7 @@ def test_consumes_corsika_or_camera_photons(sim_telarray_stage):
     assert sim_telarray_stage.bypass_optics is None
 
 
-def test_legacy_prepare_has_no_bypass_option(sim_telarray_stage):
+def test_prepare_without_options_has_no_bypass_option(sim_telarray_stage):
     lines = sim_telarray_stage.prepare(run_number=1, input_file=STDIN)
 
     assert "Bypass_Optics" not in lines[0]
@@ -233,7 +233,9 @@ def _bypass_inputs(config, options):
     )
 
 
-def test_legacy_chain_does_not_probe_sim_telarray(corsika_config_mock_array_model, mocker):
+def test_chain_without_bypass_mode_3_does_not_probe_sim_telarray(
+    corsika_config_mock_array_model, mocker
+):
     run = mocker.patch(
         "simtools.runtime.dependencies.subprocess.run", return_value=_release_output("2024.271.0")
     )
@@ -370,7 +372,7 @@ def fake_photon_stage(monkeypatch):
 
 
 def test_chain_rejects_quantum_efficiency_applied_twice(fake_photon_stage):
-    spec = ChainSpec("double-qe", ("fake_qe", "sim_telarray"))
+    spec = ChainSpec(("fake_qe", "sim_telarray"))
 
     with pytest.raises(ValueError, match="applies 'quantum_efficiency' twice"):
         spec.chain()

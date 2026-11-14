@@ -1,19 +1,19 @@
-"""Chain specifications: which stage programs make up a simulation, selected by name or file.
+"""Chain specification: the stages of a simulation and their options, given as a list.
 
-A chain spec is an ordered list of stage names (see ``simtools.runners.stages``) with options
-for each stage. Each stage consumes and produces a named data product; adapters between data
-products are ordinary stages. A spec is either a preset or a YAML file::
+A chain is an ordered list of stage names (see ``simtools.runners.stages``), each with optional
+options, written ``STAGE`` or ``STAGE:KEY=VALUE[,KEY=VALUE...]``. The same list is used on the
+command line (``--simulation_chain corsika sim_telarray``) and in configuration files::
 
-    stages:
-      - stage: corsika
-      - stage: <adapter or atmosphere stage>
-        options: {...}
-      - stage: sim_telarray
+    simulation_chain:
+      - corsika
+      - corsika_to_stream
+      - obdeect_atmosphere
+      - obdeect_optics
+      - stream_to_simtel
+      - sim_telarray:bypass_optics=3
 
-The preset ``legacy`` is CORSIKA piped into sim_telarray, with sim_telarray's own atmosphere,
-optics and light emission. It is the default and is built from no other package. Stages of other
-simulation programs register themselves (``stages.register_stage``) and presets
-(``register_preset``); the spec only refers to them by name.
+Option values are read as YAML scalars (``3`` is an integer, ``true`` a boolean). A stage is
+listed at most once.
 
 A stage class may define ``applied_factors(options)``, returning the efficiency factors it
 applies to the photons (e.g. ``"mirror_reflectivity"``). A chain in which two stages apply the
@@ -22,12 +22,10 @@ same factor is rejected, so that no factor is applied twice.
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from pathlib import Path
 
-from simtools.io import ascii_handler
-from simtools.runners.stages import SimulationChain, get_stage_class
+import yaml
 
-LEGACY_PRESET = "legacy"
+from simtools.runners.stages import SimulationChain, get_stage_class, stages_software
 
 #: Efficiency factors that can be applied by more than one program of a chain.
 ATMOSPHERIC_EXTINCTION = "atmospheric_extinction"
@@ -35,7 +33,9 @@ MIRROR_REFLECTIVITY = "mirror_reflectivity"
 TELESCOPE_TRANSMISSION = "telescope_transmission"
 QUANTUM_EFFICIENCY = "quantum_efficiency"
 
-_PRESETS = {}
+_STAGE_SEPARATOR = ":"
+_OPTION_SEPARATOR = ","
+_VALUE_SEPARATOR = "="
 
 
 @dataclass(frozen=True)
@@ -45,15 +45,12 @@ class ChainSpec:
 
     Parameters
     ----------
-    name : str
-        Preset name, or the file name of a spec file.
     stages : tuple of str
         Stage names in chain order.
     options : dict
         Options of each stage, by stage name.
     """
 
-    name: str
     stages: tuple[str, ...]
     options: Mapping = field(default_factory=dict, hash=False, compare=False)
 
@@ -62,6 +59,11 @@ class ChainSpec:
         chain = SimulationChain(self.stages)
         self.check_applied_factors()
         return chain
+
+    @property
+    def software(self):
+        """Return the software needed by the stages (without loading the stage classes)."""
+        return stages_software(self.stages)
 
     def stage_options(self, stage):
         """Return the options of a stage (empty if there are none)."""
@@ -83,41 +85,20 @@ class ChainSpec:
             for factor in sorted(factors):
                 if factor in seen:
                     raise ValueError(
-                        f"Chain {self.name!r} applies {factor!r} twice: "
+                        f"The chain applies {factor!r} twice: "
                         f"in stage {seen[factor]!r} and in stage {stage!r}."
                     )
                 seen[factor] = stage
 
 
-def register_preset(name, stages, options=None):
+def parse_chain(items):
     """
-    Register a chain preset, replacing any preset of the same name.
+    Return the chain specification of a list of stage items.
 
     Parameters
     ----------
-    name : str
-        Preset name (value of the chain selection).
-    stages : tuple of str
-        Stage names in chain order.
-    options : dict, optional
-        Options of each stage, by stage name.
-    """
-    _PRESETS[name] = ChainSpec(name, tuple(stages), dict(options or {}))
-
-
-def preset_names():
-    """Return the names of the registered presets."""
-    return tuple(_PRESETS)
-
-
-def load_chain_spec(selection=None):
-    """
-    Return the chain spec of a preset name or of a YAML file.
-
-    Parameters
-    ----------
-    selection : str or Path, optional
-        Preset name or spec file; the default is the legacy preset.
+    items : str or list of str
+        Items ``STAGE`` or ``STAGE:KEY=VALUE[,KEY=VALUE...]`` in chain order.
 
     Returns
     -------
@@ -127,64 +108,42 @@ def load_chain_spec(selection=None):
     Raises
     ------
     ValueError
-        If the selection is neither a preset nor an existing file, or the file is malformed.
+        If the list is empty, a stage is listed twice, or an item is malformed.
     """
-    selection = LEGACY_PRESET if selection is None else selection
-    if str(selection) in _PRESETS:
-        return _PRESETS[str(selection)]
-    path = Path(selection)
-    if not path.is_file():
-        raise ValueError(
-            f"Unknown simulation chain {str(selection)!r}: not a preset "
-            f"({', '.join(preset_names())}) and not a file."
-        )
-    return _spec_from_file(path)
-
-
-def _spec_from_file(path):
-    """Read a chain spec file."""
-    entries = ascii_handler.collect_data_from_file(path).get("stages")
-    if not isinstance(entries, list) or not entries:
-        raise ValueError(f"Chain spec {path} needs a non-empty 'stages' list.")
+    items = [items] if isinstance(items, str) else list(items or ())
+    if not items:
+        raise ValueError("A simulation chain needs at least one stage.")
     stages, options = [], {}
-    for entry in entries:
-        name = entry.get("stage") if isinstance(entry, dict) else None
-        if not isinstance(name, str):
-            raise ValueError(f"Chain spec {path}: each entry needs a 'stage' name, got {entry!r}.")
-        stages.append(name)
-        if entry.get("options"):
-            options[name] = dict(entry["options"])
-    return ChainSpec(str(path), tuple(stages), options)
+    for item in items:
+        stage, stage_options = _parse_item(item)
+        if stage in stages:
+            raise ValueError(f"Stage {stage!r} is listed twice in the simulation chain.")
+        stages.append(stage)
+        if stage_options:
+            options[stage] = stage_options
+    return ChainSpec(tuple(stages), options)
 
 
-register_preset(LEGACY_PRESET, ("corsika", "sim_telarray"))
+def _parse_item(item):
+    """Return the stage name and the options of one chain item."""
+    if not isinstance(item, str):
+        raise ValueError(f"Chain item {item!r} must be a string 'STAGE[:KEY=VALUE,...]'.")
+    stage, _, text = item.strip().partition(_STAGE_SEPARATOR)
+    stage = stage.strip()
+    if not stage:
+        raise ValueError(f"Chain item {item!r} has no stage name.")
+    return stage, _parse_options(item, text)
 
-# Chains of the optional obdeect simulation programs. sim_telarray simulates only the camera
-# (Bypass_Optics 3), so that no factor is applied by both programs.
-_CAMERA_ONLY = {"sim_telarray": {"bypass_optics": 3}}
-register_preset(
-    "obdeect",
-    (
-        "corsika",
-        "corsika_to_stream",
-        "obdeect_atmosphere",
-        "obdeect_optics",
-        "stream_to_simtel",
-        "sim_telarray",
-    ),
-    _CAMERA_ONLY,
-)
-register_preset(
-    "obdeect_flasher", ("obdeect_flasher", "stream_to_simtel", "sim_telarray"), _CAMERA_ONLY
-)
-register_preset(
-    "obdeect_illuminator",
-    (
-        "obdeect_illuminator",
-        "obdeect_atmosphere",
-        "obdeect_optics",
-        "stream_to_simtel",
-        "sim_telarray",
-    ),
-    _CAMERA_ONLY,
-)
+
+def _parse_options(item, text):
+    """Return the options ``KEY=VALUE,...`` of a chain item."""
+    options = {}
+    for option in filter(None, (part.strip() for part in text.split(_OPTION_SEPARATOR))):
+        key, separator, value = option.partition(_VALUE_SEPARATOR)
+        key = key.strip()
+        if not separator or not key:
+            raise ValueError(f"Option {option!r} of chain item {item!r} must be KEY=VALUE.")
+        if key in options:
+            raise ValueError(f"Option {key!r} is given twice in chain item {item!r}.")
+        options[key] = yaml.safe_load(value)
+    return options

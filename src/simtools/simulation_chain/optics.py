@@ -1,14 +1,14 @@
-"""Telescope optics of the simulation chain: request of one telescope and its obdeect command.
+"""Telescope optics of the simulation chain: the request of one telescope.
 
 An :class:`OpticsRequest` describes what is traced for one telescope of an array model: the model
 it is built from, the pointing, the seeds and the telescope transmission mode. It does not depend
-on a program. The functions at the end translate a request into the files and the command line of
-``obdeect ray-tracing trace-stream``, which traces a photon stream (ground or telescope frame)
-through the optics to camera-frame photons.
+on a program. The optical model file and the command line of ``obdeect ray-tracing trace-stream``,
+which traces a photon stream (ground or telescope frame) through the optics to camera-frame
+photons, are made in ``simtools.simulation_chain.obdeect.optics``.
 
 Frames: the ground frame is the horizontal plane through the telescope sphere centre (x north,
 y west, z up); the pointing is the telescope zenith and azimuth in that frame. The camera frame is
-the position on the camera entrance, the direction and the time of the photons. obdeect moves
+the position on the camera entrance, the direction and the time of the photons. The tracing moves
 ground-frame photons to an input plane above the incoming obscurers by itself.
 """
 
@@ -16,12 +16,9 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from simtools.ray_tracing.backends.interface import create_shower_tracer
 from simtools.simtel.shower_photons import derive_seed
 
-#: Command that runs obdeect components.
-OBDEECT_COMMAND = ("obdeect",)
-#: Modes of the telescope transmission (``--telescope-transmission`` of obdeect). The mode
+#: Modes of the telescope transmission (option of the tracing program). The mode
 #: ``angular`` is not offered: its on-axis part would stay unapplied in the chain.
 TELESCOPE_TRANSMISSION_MODES = ("full",)
 #: Prefix of the seed string of a seed file, see ``SimtelSeeds``.
@@ -181,35 +178,6 @@ def optics_requests(
     ]
 
 
-def write_optical_model(request, telescope_model, directory=None):
-    """
-    Compile the optical model of a request from its telescope model and write it as a file.
-
-    The model is compiled by the obdeect ray-tracing backend (``optical_model``) for the pointing
-    zenith angle and the instrument seed of the request.
-
-    Parameters
-    ----------
-    request : OpticsRequest
-        Optics job.
-    telescope_model : TelescopeModel
-        Model of the telescope of the request.
-    directory : Path or None
-        Directory of the file; default: the configuration directory of the telescope model.
-
-    Returns
-    -------
-    Path
-        Optical model file.
-    """
-    tracer = create_shower_tracer(telescope_model, name="obdeect")
-    model = tracer.optical_model(request.zenith_deg, request.instrument_seed)
-    path = Path(directory or telescope_model.config_file_directory) / request.model_file_name
-    path.parent.mkdir(parents=True, exist_ok=True)
-    model.save(path)
-    return path
-
-
 def write_telescope_map(requests, path):
     """
     Write the telescopes of the optics requests as a JSON file (documentation of the job).
@@ -241,46 +209,3 @@ def write_telescope_map(requests, path):
     path = Path(path)
     path.write_text(json.dumps(entries, indent=2) + "\n", encoding="utf-8")
     return path
-
-
-def trace_stream_command(request, model_file, input_file="-", output_file="-"):
-    """
-    Return the tokens of the obdeect command tracing a photon stream through the optics.
-
-    Parameters
-    ----------
-    request : OpticsRequest
-        Optics job.
-    model_file : str or Path
-        Optical model file (see :func:`write_optical_model`).
-    input_file, output_file : str or Path
-        Photon stream files; ``-`` is standard input or output.
-
-    Returns
-    -------
-    list of str
-        Command tokens.
-    """
-    return [
-        *OBDEECT_COMMAND,
-        "ray-tracing",
-        "trace-stream",
-        "--model",
-        str(model_file),
-        "--seed",
-        str(request.tracing_seed),
-        "--threads",
-        str(request.threads),
-        "--telescopes",
-        str(request.telescope_id),
-        "--pointing-zenith-deg",
-        str(request.zenith_deg),
-        "--pointing-azimuth-deg",
-        str(request.azimuth_deg),
-        "--telescope-transmission",
-        request.telescope_transmission,
-        "--input",
-        str(input_file),
-        "--output",
-        str(output_file),
-    ]

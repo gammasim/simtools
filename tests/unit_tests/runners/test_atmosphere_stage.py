@@ -9,8 +9,9 @@ from simtools.runners import stages
 from simtools.runners.atmosphere_stage import ObdeectAtmosphereStage
 from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION, ChainSpec
 from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo
-from simtools.simulation_chain.atmosphere import AtmosphereRequest, propagation_program
+from simtools.simulation_chain.atmosphere import AtmosphereRequest
 from simtools.simulation_chain.products import CAMERA_EVENTS, PHOTONS_GROUND, PHOTONS_SKY
+from simtools.simulation_chain.programs import program_command
 
 
 @pytest.fixture
@@ -54,7 +55,7 @@ def test_prepare_reads_stdin_and_writes_file(atmosphere_stage, run_context):
     output = atmosphere_stage.output_file(4)
     assert len(lines) == 1
     assert _tokens(lines[0]) == [
-        propagation_program(),
+        *program_command("obdeect", "obdeect-propagation-run"),
         "--transmission",
         str(atmosphere_stage.request.transmission_file),
         "--site-altitude",
@@ -200,7 +201,7 @@ def test_chain_rejects_upstream_product_it_does_not_consume(fake_stage_factories
 
 
 def test_chain_spec_rejects_two_atmospheres():
-    spec = ChainSpec("two-atmospheres", ("obdeect_atmosphere", "obdeect_atmosphere"))
+    spec = ChainSpec(("obdeect_atmosphere", "obdeect_atmosphere"))
 
     with pytest.raises(ValueError, match=r"applies 'atmospheric_extinction' twice"):
         spec.chain()

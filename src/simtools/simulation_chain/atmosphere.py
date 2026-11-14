@@ -1,14 +1,14 @@
-"""Atmosphere of the simulation chain: model inputs and command line of the obdeect propagation.
+"""Atmosphere of the simulation chain: request and its construction from the models.
 
-The obdeect propagation program applies the atmosphere to a photon stream: it moves photons
-from the sky to the ground frame of each telescope, applies the atmospheric transmission and
-the in-telescope path of each telescope, and thins or weights the photons. This module holds
-the model inputs (:class:`AtmosphereRequest`) and the command line; the shell commands of the
-simulation stage are in ``simtools.runners.atmosphere_stage``.
+The atmosphere applies the atmospheric transmission and the in-telescope path of each telescope
+to a photon stream, moves photons from the sky to the ground frame, and thins or weights the
+photons. This module holds the model inputs (:class:`AtmosphereRequest`) and does not depend on
+a program. The command line of the obdeect program is in
+``simtools.simulation_chain.obdeect.atmosphere``; the simulation stage is in
+``simtools.runners.atmosphere_stage``.
 """
 
 from dataclasses import dataclass, field
-from importlib import resources
 from pathlib import Path
 
 import astropy.units as u
@@ -20,9 +20,6 @@ PLANE_PARALLEL = "plane_parallel"
 MODES = ("thinned", "weighted")
 DEFAULT_SEED = 1
 DEFAULT_MODE = "thinned"
-#: Program of the obdeect propagation component (installed in its package ``bin`` directory).
-PROPAGATION_PROGRAM = "obdeect-propagation-run"
-PROPAGATION_PACKAGE = "obdeect.propagation"
 #: Name of the transmission table exported from an ECSV model parameter.
 TRANSMISSION_FILE_NAME = "atmosphere-transmission.dat"
 #: Stdin and stdout of a command in the shell.
@@ -182,51 +179,3 @@ def build_atmosphere_request(
         wavelength_range_nm=None if wavelength_range_nm is None else tuple(wavelength_range_nm),
         telescope_pathlen_m=pathlengths,
     )
-
-
-def propagation_program():
-    """Return the path of the propagation program installed with the obdeect package."""
-    return str(resources.files(PROPAGATION_PACKAGE) / "bin" / PROPAGATION_PROGRAM)
-
-
-def propagation_command(
-    request, *, input_file=STDIO, output_file=STDIO, program=PROPAGATION_PROGRAM
-):
-    """
-    Return the command-line tokens of the obdeect propagation for an atmosphere request.
-
-    Parameters
-    ----------
-    request : AtmosphereRequest
-        Atmosphere request.
-    input_file : str or Path
-        Input photon stream; ``-`` reads stdin.
-    output_file : str or Path
-        Output photon stream; ``-`` writes stdout.
-    program : str or Path
-        Propagation program.
-
-    Returns
-    -------
-    list[str]
-        Command-line tokens.
-    """
-    command = [
-        str(program),
-        "--transmission",
-        str(request.transmission_file),
-        "--site-altitude",
-        str(request.observation_level_m),
-        "--profile",
-        str(request.profile_file),
-        "--seed",
-        str(request.seed),
-        "--mode",
-        request.mode,
-    ]
-    if request.wavelength_range_nm is not None:
-        low, high = request.wavelength_range_nm
-        command += ["--wavelength-range", str(low), str(high)]
-    for telescope_id, pathlength in request.telescope_pathlen_m.items():
-        command += ["--telescope-pathlen", f"{telescope_id}={pathlength}"]
-    return [*command, "-i", str(input_file), "-o", str(output_file)]

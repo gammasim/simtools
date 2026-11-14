@@ -96,7 +96,7 @@ def test_validate_simulation_dependencies_accepts_manifest(tmp_test_directory, r
     _write_interaction_table_manifest(tmp_test_directory)
     context = _mock_corsika_config(run_context, tmp_test_directory)
 
-    validate_simulation_dependencies("corsika", context=context)
+    validate_simulation_dependencies({"corsika"}, context=context)
 
 
 def test_validate_simulation_dependencies_uses_curved_corsika_executable(
@@ -114,7 +114,7 @@ def test_validate_simulation_dependencies_uses_curved_corsika_executable(
     context.software.corsika_exe_curved = None
 
     with pytest.raises(ValueError, match=r"CORSIKA \(curved\): not configured"):
-        validate_simulation_dependencies("corsika", context=context)
+        validate_simulation_dependencies({"corsika"}, context=context)
 
 
 def test_validate_simulation_dependencies_uses_flat_corsika_executable(
@@ -131,7 +131,7 @@ def test_validate_simulation_dependencies_uses_flat_corsika_executable(
     )
     context.software.corsika_exe_curved = None
 
-    validate_simulation_dependencies("corsika", context=context)
+    validate_simulation_dependencies({"corsika"}, context=context)
 
 
 def test_validate_simulation_dependencies_rejects_missing_and_unhydrated_tables(
@@ -146,7 +146,7 @@ def test_validate_simulation_dependencies_rejects_missing_and_unhydrated_tables(
     (table_path / "qgsdat-III").write_bytes(b"version https://git-lfs.github.com/spec/v1\n")
 
     with pytest.raises(ValueError, match=r"missing file.*common.dat") as error:
-        validate_simulation_dependencies("corsika", context=context)
+        validate_simulation_dependencies({"corsika"}, context=context)
 
     message = str(error.value)
     assert "size mismatch" in message
@@ -162,28 +162,62 @@ def test_validate_simulation_dependencies_rejects_unknown_model_group(
     context.software.corsika_interaction_models = ("qgs2", "urqmd")
 
     with pytest.raises(ValueError, match=r"files\.high_energy\.qgs2"):
-        validate_simulation_dependencies("corsika", context=context)
+        validate_simulation_dependencies({"corsika"}, context=context)
 
 
 def test_validate_simulation_dependencies_only_checks_selected_software(run_context):
     """sim_telarray-only validation does not access CORSIKA settings."""
     context = _dependency_context(run_context, sim_telarray_exe="sim_telarray")
 
-    validate_simulation_dependencies("sim_telarray", context=context)
+    validate_simulation_dependencies({"sim_telarray"}, context=context)
 
 
-def test_validate_simulation_dependencies_requires_both_for_combined_mode(run_context):
-    """Combined simulations report an unavailable sim_telarray executable."""
+def test_validate_simulation_dependencies_requires_both_for_combined_chain(run_context):
+    """Chains with CORSIKA and sim_telarray report an unavailable sim_telarray executable."""
     context = _dependency_context(run_context)
 
     with pytest.raises(ValueError, match="sim_telarray: not configured"):
-        validate_simulation_dependencies("corsika_sim_telarray", context=context)
+        validate_simulation_dependencies({"corsika", "sim_telarray"}, context=context)
 
 
 def test_validate_simulation_dependencies_rejects_unknown_software():
-    """Unknown simulation software selections are rejected explicitly."""
-    with pytest.raises(ValueError, match="Unknown simulation software: unknown"):
-        validate_simulation_dependencies("unknown")
+    """Unknown simulation software is rejected explicitly."""
+    with pytest.raises(ValueError, match=r"Unknown simulation software: unknown$"):
+        validate_simulation_dependencies({"corsika", "unknown"})
+
+
+def test_validate_simulation_dependencies_accepts_installed_obdeect(run_context, mocker):
+    """obdeect-only validation needs only the importable obdeect package."""
+    find_spec = mocker.patch(
+        "simtools.runtime.dependencies.importlib.util.find_spec",
+        return_value=SimpleNamespace(origin="/site-packages/obdeect/__init__.py"),
+    )
+    context = _dependency_context(run_context)
+
+    validate_simulation_dependencies(["obdeect"], context=context)
+
+    find_spec.assert_called_once_with("obdeect")
+
+
+def test_validate_simulation_dependencies_reports_missing_obdeect(run_context, mocker):
+    """A missing obdeect package is reported together with other missing software."""
+    mocker.patch("simtools.runtime.dependencies.importlib.util.find_spec", return_value=None)
+    context = _dependency_context(run_context)
+
+    with pytest.raises(ValueError, match="obdeect: the obdeect package is not installed") as error:
+        validate_simulation_dependencies({"obdeect", "sim_telarray"}, context=context)
+
+    assert "sim_telarray: not configured" in str(error.value)
+
+
+def test_validate_simulation_dependencies_skips_obdeect_when_not_in_chain(run_context, mocker):
+    """The obdeect package is not looked up for chains that do not use it."""
+    find_spec = mocker.patch("simtools.runtime.dependencies.importlib.util.find_spec")
+    context = _dependency_context(run_context, sim_telarray_exe="sim_telarray")
+
+    validate_simulation_dependencies({"sim_telarray"}, context=context)
+
+    find_spec.assert_not_called()
 
 
 @pytest.mark.parametrize("error_type", [FileNotFoundError, PermissionError, TypeError, ValueError])

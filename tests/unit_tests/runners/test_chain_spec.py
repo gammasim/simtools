@@ -1,13 +1,20 @@
-"""Tests for chain specifications and the guarantees of the legacy chain."""
+"""Tests for the chain specification."""
 
 import subprocess
 import sys
-from pathlib import Path
 
 import pytest
-import yaml
 
 from simtools.runners import chain_spec, stages
+
+OBDEECT_CHAIN = (
+    "corsika",
+    "corsika_to_stream",
+    "obdeect_atmosphere",
+    "obdeect_optics",
+    "stream_to_simtel",
+    "sim_telarray",
+)
 
 
 def _register(name, consumes, produces, applies=()):
@@ -36,106 +43,87 @@ def fake_stages():
     yield register
     for name in names:
         stages.STAGES.pop(name)
+        stages.STAGE_SOFTWARE.pop(name)
 
 
-def test_legacy_preset_is_corsika_into_sim_telarray():
-    spec = chain_spec.load_chain_spec()
+def test_parse_chain_of_stage_names():
+    spec = chain_spec.parse_chain(["corsika", "sim_telarray"])
 
-    assert spec.name == chain_spec.LEGACY_PRESET
     assert spec.stages == ("corsika", "sim_telarray")
-    assert spec.chain() == stages.SimulationChain.from_software("corsika_sim_telarray")
-    assert chain_spec.load_chain_spec("legacy") is spec
+    assert spec.options == {}
+    assert spec.chain() == stages.SimulationChain(("corsika", "sim_telarray"))
 
 
-def test_legacy_modules_do_not_load_obdeect():
-    code = (
-        "import sys\n"
-        "from simtools.runners import chain_spec, simulator, sim_telarray_stage, corsika_stage\n"
-        "from simtools.simtel import simulator_light_emission, simulator_array\n"
-        "chain_spec.load_chain_spec().chain()\n"
-        "loaded = sorted(m for m in sys.modules if m.split('.')[0] == 'obdeect')\n"
-        "assert not loaded, loaded\n"
-    )
-    result = subprocess.run(
-        [sys.executable, "-c", code], capture_output=True, text=True, check=False
+@pytest.mark.parametrize("single", ["corsika", ["corsika"], ("corsika",)])
+def test_parse_chain_of_one_stage(single):
+    assert chain_spec.parse_chain(single).stages == ("corsika",)
+
+
+def test_parse_chain_options_are_yaml_scalars():
+    spec = chain_spec.parse_chain(
+        ["corsika", " sim_telarray : bypass_optics=3 , check=true , name=abc "]
     )
 
-    assert result.returncode == 0, result.stderr
-
-
-def test_register_preset_and_load(fake_stages):
-    fake_stages("adapter", stages.CHERENKOV_PHOTONS, "adapted")
-    fake_stages("camera", "adapted", stages.CAMERA_EVENTS)
-    chain_spec.register_preset(
-        "test_preset", ("corsika", "adapter", "camera"), {"camera": {"a": 1}}
-    )
-    try:
-        spec = chain_spec.load_chain_spec("test_preset")
-        assert "test_preset" in chain_spec.preset_names()
-        assert spec.chain().stages == ("corsika", "adapter", "camera")
-        assert spec.stage_options("camera") == {"a": 1}
-        assert spec.stage_options("adapter") == {}
-    finally:
-        chain_spec._PRESETS.pop("test_preset")
-
-
-def test_load_chain_spec_from_file(tmp_test_directory, fake_stages):
-    fake_stages("adapter", stages.CHERENKOV_PHOTONS, "adapted")
-    fake_stages("camera", "adapted", stages.CAMERA_EVENTS)
-    path = Path(tmp_test_directory) / "chain.yml"
-    path.write_text(
-        yaml.safe_dump(
-            {
-                "stages": [
-                    {"stage": "corsika"},
-                    {"stage": "adapter", "options": {"threads": 2}},
-                    {"stage": "camera"},
-                ]
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    spec = chain_spec.load_chain_spec(path)
-
-    assert spec.stages == ("corsika", "adapter", "camera")
-    assert spec.stage_options("adapter") == {"threads": 2}
-    assert spec.chain().stages == spec.stages
+    assert spec.stages == ("corsika", "sim_telarray")
+    assert spec.stage_options("sim_telarray") == {"bypass_optics": 3, "check": True, "name": "abc"}
+    assert spec.stage_options("corsika") == {}
 
 
 @pytest.mark.parametrize(
-    ("content", "match"),
+    ("items", "match"),
     [
-        ({"stages": []}, "non-empty 'stages' list"),
-        ({}, "non-empty 'stages' list"),
-        ({"stages": [{"options": {}}]}, "needs a 'stage' name"),
-        ({"stages": ["corsika"]}, "needs a 'stage' name"),
+        ([], "at least one stage"),
+        (None, "at least one stage"),
+        (["corsika", "corsika"], "'corsika' is listed twice"),
+        ([":a=1"], "has no stage name"),
+        (["  "], "has no stage name"),
+        (["sim_telarray:novalue"], r"Option 'novalue' of chain item .* must be KEY=VALUE"),
+        (["sim_telarray:=3"], r"must be KEY=VALUE"),
+        (["sim_telarray:a=1,a=2"], r"Option 'a' is given twice"),
+        ([3], "must be a string"),
     ],
 )
-def test_load_chain_spec_rejects_malformed_file(tmp_test_directory, content, match):
-    path = Path(tmp_test_directory) / "bad.yml"
-    path.write_text(yaml.safe_dump(content), encoding="utf-8")
-
+def test_parse_chain_rejects_malformed_items(items, match):
     with pytest.raises(ValueError, match=match):
-        chain_spec.load_chain_spec(path)
+        chain_spec.parse_chain(items)
 
 
-def test_load_chain_spec_rejects_unknown_selection():
-    with pytest.raises(ValueError, match=r"Unknown simulation chain 'nothing'.*legacy"):
-        chain_spec.load_chain_spec("nothing")
+def test_software_is_known_without_loading_stage_classes():
+    spec = chain_spec.parse_chain(OBDEECT_CHAIN)
+
+    assert spec.software == {"corsika", "obdeect", "sim_telarray"}
+    with pytest.raises(ValueError, match="Unknown simulation stage 'nothing'"):
+        chain_spec.parse_chain(["corsika", "nothing"]).software
+
+
+def test_obdeect_chain_with_camera_only_sim_telarray_is_valid():
+    items = [*OBDEECT_CHAIN[:-1], "sim_telarray:bypass_optics=3"]
+
+    spec = chain_spec.parse_chain(items)
+
+    assert spec.chain().stages == OBDEECT_CHAIN
+    assert spec.stage_options("sim_telarray") == {"bypass_optics": 3}
+
+
+@pytest.mark.parametrize("mode", [0, 1, 2])
+def test_obdeect_chain_with_sim_telarray_optics_applies_a_factor_twice(mode):
+    spec = chain_spec.parse_chain([*OBDEECT_CHAIN[:-1], f"sim_telarray:bypass_optics={mode}"])
+
+    with pytest.raises(ValueError, match="twice"):
+        spec.chain()
 
 
 def test_chain_rejects_unknown_stage_and_mismatched_products():
     with pytest.raises(ValueError, match="Unknown simulation stage 'nothing'"):
-        chain_spec.ChainSpec("x", ("corsika", "nothing")).chain()
+        chain_spec.parse_chain(["corsika", "nothing"]).chain()
     with pytest.raises(ValueError, match="consumes"):
-        chain_spec.ChainSpec("x", ("sim_telarray", "corsika")).chain()
+        chain_spec.parse_chain(["sim_telarray", "corsika"]).chain()
 
 
 def test_chain_rejects_factor_applied_twice(fake_stages):
     fake_stages("optics_a", stages.CHERENKOV_PHOTONS, "optics_a", {"mirror_reflectivity"})
     fake_stages("optics_b", "optics_a", stages.CAMERA_EVENTS, {"mirror_reflectivity", "qe"})
-    spec = chain_spec.ChainSpec("twice", ("corsika", "optics_a", "optics_b"))
+    spec = chain_spec.parse_chain(["corsika", "optics_a", "optics_b"])
 
     with pytest.raises(
         ValueError, match=r"applies 'mirror_reflectivity' twice.*optics_a.*optics_b"
@@ -146,44 +134,23 @@ def test_chain_rejects_factor_applied_twice(fake_stages):
 def test_applied_factors_depend_on_stage_options(fake_stages):
     fake_stages("optics_a", stages.CHERENKOV_PHOTONS, "optics_a", {"mirror_reflectivity"})
     fake_stages("camera", "optics_a", stages.CAMERA_EVENTS)
-    spec = chain_spec.ChainSpec(
-        "options",
-        ("corsika", "optics_a", "camera"),
-        {"camera": {"extra": ["mirror_reflectivity"]}},
-    )
+    spec = chain_spec.parse_chain(["corsika", "optics_a", "camera:extra=[mirror_reflectivity]"])
 
     assert dict(spec.applied_factors())["camera"] == {"mirror_reflectivity"}
     with pytest.raises(ValueError, match="twice"):
         spec.chain()
-    assert chain_spec.ChainSpec("ok", spec.stages).chain().stages == spec.stages
+    assert chain_spec.parse_chain(["corsika", "optics_a", "camera"]).chain().has("camera")
 
 
-@pytest.mark.parametrize("preset", ["obdeect", "obdeect_flasher", "obdeect_illuminator"])
-def test_obdeect_presets_are_valid_chains(preset):
-    spec = chain_spec.load_chain_spec(preset)
-
-    assert spec.chain().stages == spec.stages
-    assert spec.stage_options("sim_telarray") == {"bypass_optics": 3}
-
-
-@pytest.mark.parametrize("mode", [0, 1, 2])
-def test_obdeect_chain_with_sim_telarray_optics_applies_a_factor_twice(mode):
-    spec = chain_spec.ChainSpec(
-        "twice",
-        chain_spec.load_chain_spec("obdeect").stages,
-        {"sim_telarray": {"bypass_optics": mode}},
-    )
-
-    with pytest.raises(ValueError, match="twice"):
-        spec.chain()
-
-
-def test_obdeect_presets_load_no_obdeect_module():
+@pytest.mark.parametrize(
+    "items",
+    [["corsika", "sim_telarray"], [*OBDEECT_CHAIN[:-1], "sim_telarray:bypass_optics=3"]],
+)
+def test_chains_load_no_obdeect_module(items):
     code = (
         "import sys\n"
         "from simtools.runners import chain_spec\n"
-        "for name in ('obdeect', 'obdeect_flasher', 'obdeect_illuminator'):\n"
-        "    chain_spec.load_chain_spec(name).chain()\n"
+        f"chain_spec.parse_chain({items!r}).chain()\n"
         "loaded = sorted(m for m in sys.modules if m.split('.')[0] == 'obdeect')\n"
         "assert not loaded, loaded\n"
     )

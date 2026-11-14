@@ -10,20 +10,17 @@ Configuration: the stage reads the settings of a light-emission run from ``Stage
 ``light_source``, ``telescope`` or a single entry of ``telescopes``, ``site``,
 ``model_version``, ``number_of_events``, ``flasher_photons``, ``wavelength``,
 ``light_source_position``, ``light_source_pointing``, ``run_number``). Options of the stage in
-the chain spec (``StageInputs.options_of(name)``) take precedence over the arguments::
+the chain (``StageInputs.options_of(name)``) take precedence over the arguments::
 
-    stages:
-      - stage: obdeect_flasher
-        options: {wavelength: 355, number_of_events: 10}
-      - stage: stream_to_simtel
-      - stage: sim_telarray
+    simulation_chain: ["obdeect_flasher:wavelength=355,number_of_events=10",
+                       stream_to_simtel, sim_telarray]
 
 A stage simulates one telescope. The flasher stage traces its light in a separate process
 (``simtools.simulation_chain.flasher_stream``) through the optical model of the telescope, so
-that the structure shadows it; the illuminator stage runs the obdeect point-source program.
-Adding a light source type means a source type in the registry of ``light_sources`` and
-a subclass of
-``LightSourceStage`` registered with ``stages.register_stage``.
+that the structure shadows it; the illuminator stage runs the obdeect point-source program. The
+commands are built in ``simtools.simulation_chain.obdeect.sources``. Adding a light source type
+means a source type in the registry of ``light_sources`` and a subclass of ``LightSourceStage``
+registered with ``stages.register_stage``.
 """
 
 import dataclasses

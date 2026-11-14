@@ -9,6 +9,7 @@ This modules provides two main functionalities:
 """
 
 import hashlib
+import importlib.util
 import json
 import logging
 import os
@@ -23,7 +24,6 @@ from pathlib import Path
 import yaml
 from packaging.requirements import InvalidRequirement, Requirement
 
-from simtools import constants
 from simtools.io import ascii_handler
 from simtools.runtime import context as run_context
 from simtools.utils import general as gen
@@ -55,33 +55,36 @@ LEGACY_BUILD_OPTION_KEYS = {
     "stdtools_version": "stdtools_tag",
 }
 _CORSIKA_TABLE_MANIFEST_SCHEMA_MAJOR = 1
+_SIMULATION_SOFTWARE = frozenset({"corsika", "sim_telarray", "obdeect"})
 _GIT_LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1\n"
 
 
-def validate_simulation_dependencies(simulation_software, context=None):
+def validate_simulation_dependencies(software, context=None):
     """Validate external software and data required by a simulation.
 
     Parameters
     ----------
-    simulation_software : str
-        Simulation software selection: ``sim_telarray``, ``corsika``, or
-        ``corsika_sim_telarray``.
+    software : iterable of str
+        Software needed by the stages of the simulation chain (``corsika``,
+        ``sim_telarray``, ``obdeect``).
 
     Raises
     ------
     ValueError
-        If the selection or CORSIKA interaction-table manifest is invalid, or
-        if a required dependency is unavailable.
+        If the software is unknown, the CORSIKA interaction-table manifest is
+        invalid, or a required dependency is unavailable.
     """
     context = context or run_context.RunContext.from_environment()
-    try:
-        required = constants.SIMULATION_SOFTWARE_DEPENDENCIES[simulation_software]
-    except KeyError as exc:
-        raise ValueError(f"Unknown simulation software: {simulation_software}") from exc
+    required = frozenset(software)
+    unknown = required - _SIMULATION_SOFTWARE
+    if unknown:
+        raise ValueError(f"Unknown simulation software: {', '.join(sorted(unknown))}")
 
     errors = []
     if "sim_telarray" in required:
         _collect_dependency_error(errors, "sim_telarray", lambda: context.software.sim_telarray_exe)
+    if "obdeect" in required:
+        _collect_dependency_error(errors, "obdeect", _obdeect_package)
     if "corsika" in required:
         geometry = "curved" if _uses_curved_atmosphere(context) else "flat"
         _collect_dependency_error(
@@ -95,6 +98,14 @@ def validate_simulation_dependencies(simulation_software, context=None):
 
     if errors:
         raise ValueError("Simulation dependencies are unavailable:\n- " + "\n- ".join(errors))
+
+
+def _obdeect_package():
+    """Return the location of the obdeect package; raise ValueError if it is not installed."""
+    specification = importlib.util.find_spec("obdeect")
+    if specification is None:
+        raise ValueError("the obdeect package is not installed")
+    return specification.origin or next(iter(specification.submodule_search_locations))
 
 
 def _collect_dependency_error(errors, name, getter):

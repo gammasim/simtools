@@ -194,7 +194,7 @@ def test_prepare_streaming_input_to_file(inputs, context):
     (line,) = stage.prepare(5, input_file=STDIN)
 
     tokens = _command_tokens(line)
-    assert tokens[0] == "obdeect"
+    assert tokens[tokens.index("ray-tracing") :][:2] == ["ray-tracing", "trace-stream"]
     assert tokens[tokens.index("--input") + 1] == "-"
     assert tokens[tokens.index("--output") + 1] == str(stage.output_file(5))
     assert tokens[tokens.index("--telescopes") + 1] == "1"
@@ -310,7 +310,7 @@ def fake_chain_stages(monkeypatch):
 def test_chain_is_valid(fake_chain_stages):
     chain = SimulationChain(("fake_to_stream", "obdeect_optics", "fake_camera"))
 
-    ChainSpec("t", chain.stages).check_applied_factors()
+    ChainSpec(chain.stages).check_applied_factors()
     assert chain.has("obdeect_optics")
 
 
@@ -320,7 +320,7 @@ def test_chain_without_converter_is_invalid(fake_chain_stages):
 
 
 def test_factor_applied_twice_is_rejected(fake_chain_stages):
-    spec = ChainSpec("t", ("fake_to_stream", "obdeect_optics", "fake_double"))
+    spec = ChainSpec(("fake_to_stream", "obdeect_optics", "fake_double"))
 
     with pytest.raises(ValueError, match="applies 'mirror_reflectivity' twice"):
         spec.check_applied_factors()
