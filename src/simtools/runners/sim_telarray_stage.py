@@ -4,11 +4,69 @@ import os
 import shlex
 
 from simtools.job_execution.process_accounting import build_accounting_command
+from simtools.photon_chain.products import CAMERA_PHOTONS_IACT
 from simtools.ray_tracing.backends.interface import get_backend
+from simtools.runners.chain_spec import (
+    ATMOSPHERIC_EXTINCTION,
+    MIRROR_REFLECTIVITY,
+    QUANTUM_EFFICIENCY,
+    TELESCOPE_TRANSMISSION,
+)
 from simtools.runners.shower_routing import ShowerRouting, route_threads
 from simtools.runners.stages import CAMERA_EVENTS, CHERENKOV_PHOTONS, STDIN
+from simtools.simtel.photon_bunch_file import bypass_optics_level
+from simtools.simtel.sim_telarray_capabilities import check_bypass_optics
 from simtools.simtel.simtel_runner import SIM_TELARRAY_ENV, sim_telarray_env_as_string
 from simtools.simtel.simulator_array import SimulatorArray
+
+#: Chain option: 0 (default) runs sim_telarray's optics on CORSIKA photons; 1 or 2 gives photons
+#: at the camera entrance (Bypass_Optics from the mirror class of the telescopes); 3 is
+#: Bypass_Optics=3 (only with a sim_telarray build that supports it, see sim_telarray_capabilities).
+BYPASS_OPTICS_OPTION = "bypass_optics"
+_KNOWN_OPTIONS = (BYPASS_OPTICS_OPTION,)
+_BYPASS_MODES = (0, 1, 2, 3)
+_BYPASS_MODE_CAPABILITY_CHECK = 3
+_DUAL_MIRROR_CLASS = 2
+
+
+def _bypass_mode(options):
+    """Return the bypass mode of the stage options (0 if not given)."""
+    unknown = sorted(set(options) - set(_KNOWN_OPTIONS))
+    if unknown:
+        raise ValueError(
+            f"Unknown sim_telarray stage option(s): {', '.join(unknown)}; "
+            f"known options: {', '.join(_KNOWN_OPTIONS)}."
+        )
+    mode = options.get(BYPASS_OPTICS_OPTION, 0)
+    if mode not in _BYPASS_MODES:
+        raise ValueError(
+            f"Invalid {BYPASS_OPTICS_OPTION} option: {mode!r}; choose from "
+            f"{', '.join(str(value) for value in _BYPASS_MODES)}."
+        )
+    return mode
+
+
+def _bypass_level(mode, array_model):
+    """
+    Return sim_telarray's Bypass_Optics value for a bypass mode (None without bypass).
+
+    Modes 1 and 2 take the level from the mirror class of the telescopes of the array, which
+    must be the same for all telescopes (Bypass_Optics is one setting of a sim_telarray run).
+    """
+    if mode == 0:
+        return None
+    if mode == 3:
+        return 3
+    dual_mirror = {
+        telescope.get_parameter_value("mirror_class") == _DUAL_MIRROR_CLASS
+        for telescope in array_model.telescope_models.values()
+    }
+    if len(dual_mirror) != 1:
+        raise ValueError(
+            f"Bypass_Optics needs telescopes of one mirror class in an array; "
+            f"array {array_model.model_version!r} mixes single and dual mirror telescopes."
+        )
+    return bypass_optics_level(dual_mirror.pop())
 
 
 class SimTelArrayStage:
@@ -23,14 +81,18 @@ class SimTelArrayStage:
         Telescope and site models.
     label : str
         Instance label.
+    bypass_optics : int or None
+        Bypass_Optics value of the run (None: sim_telarray applies its optics to CORSIKA photons).
     """
 
     name = "sim_telarray"
-    consumes = CHERENKOV_PHOTONS
+    consumes = (CHERENKOV_PHOTONS, CAMERA_PHOTONS_IACT)
     produces = CAMERA_EVENTS
     streams = True
 
-    def __init__(self, simulation_parameters, array_model, label=None, context=None):
+    def __init__(
+        self, simulation_parameters, array_model, label=None, context=None, bypass_optics=None
+    ):
         """Initialize SimTelArrayStage."""
         self.simulator_array = SimulatorArray(
             simulation_parameters=simulation_parameters,
@@ -39,17 +101,59 @@ class SimTelArrayStage:
             context=context,
         )
         self.array_model = array_model
+        self.bypass_optics = bypass_optics
         self.shower_routing = None
+
+    @classmethod
+    def applied_factors(cls, options):
+        """
+        Return the efficiency factors that sim_telarray applies to the photons it reads.
+
+        Without bypass (mode 0), sim_telarray applies the atmospheric extinction, mirror
+        reflectivity, telescope transmission and quantum efficiency to CORSIKA photons. With
+        bypass modes 1 and 2, the photons are given at the camera entrance and sim_telarray
+        applies its own atmospheric extinction and quantum efficiency; the mirror reflectivity and
+        the telescope transmission are applied upstream. Mode 3 applies only the quantum
+        efficiency.
+
+        Parameters
+        ----------
+        options : dict
+            Stage options of the chain spec (``bypass_optics``).
+
+        Returns
+        -------
+        frozenset of str
+            Efficiency factors applied by sim_telarray.
+        """
+        mode = _bypass_mode(options)
+        if mode == 0:
+            return frozenset(
+                {
+                    ATMOSPHERIC_EXTINCTION,
+                    MIRROR_REFLECTIVITY,
+                    TELESCOPE_TRANSMISSION,
+                    QUANTUM_EFFICIENCY,
+                }
+            )
+        if mode in (1, 2):
+            return frozenset({QUANTUM_EFFICIENCY, ATMOSPHERIC_EXTINCTION})
+        return frozenset({QUANTUM_EFFICIENCY})
 
     @classmethod
     def instances(cls, inputs, label=None):
         """Return one sim_telarray stage per array model."""
+        mode = _bypass_mode(inputs.options_of(cls.name))
+        if mode == _BYPASS_MODE_CAPABILITY_CHECK:
+            # Checked before any stage is built, so no job is written for an unsupported level.
+            check_bypass_optics(mode, inputs.context)
         stages = [
             cls(
                 simulation_parameters=parameters,
                 array_model=array_model,
                 label=label,
                 context=inputs.context,
+                bypass_optics=_bypass_level(mode, array_model),
             )
             for parameters, array_model in zip(inputs.simulation_parameters, inputs.array_models)
         ]
@@ -118,7 +222,7 @@ class SimTelArrayStage:
         if self.shower_routing is not None:
             return self.shower_routing.commands(self.simulator_array, run_number, input_file)
         command = self.simulator_array.make_run_command(
-            run_number=run_number, input_file=input_file
+            run_number=run_number, input_file=input_file, bypass_optics=self.bypass_optics
         )
         resources_file = self.runner_service.get_file_name(
             file_type="sim_telarray_resources", run_number=run_number

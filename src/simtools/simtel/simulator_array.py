@@ -35,7 +35,7 @@ class SimulatorArray(SimtelRunner):
         self.io_handler = self.context.paths
         self._log_file = None
 
-    def make_run_command(self, run_number=None, input_file=None):
+    def make_run_command(self, run_number=None, input_file=None, bypass_optics=None):
         """
         Build and return the command to run sim_telarray.
 
@@ -45,6 +45,9 @@ class SimulatorArray(SimtelRunner):
             Full path of the input CORSIKA file
         run_number: int (optional)
             run number
+        bypass_optics: int (optional)
+            Value of sim_telarray's Bypass_Optics for photons given at the camera entrance;
+            None (default) leaves the option out of the command.
 
         Returns
         -------
@@ -59,8 +62,9 @@ class SimulatorArray(SimtelRunner):
         else:
             command += self._make_run_command_for_shower_simulations()
 
+        bypass = [] if bypass_optics is None else ["-C", f"Bypass_Optics={bypass_optics}"]
         # "-C show=all" should be the last option
-        return [*command, "-C", "show=all", input_file]
+        return [*command, *bypass, "-C", "show=all", input_file]
 
     def _make_run_command_for_shower_simulations(self):
         """
