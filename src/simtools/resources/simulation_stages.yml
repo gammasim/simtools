@@ -17,6 +17,9 @@ stages:
   sim_telarray:
     class: simtools.runners.sim_telarray_stage:SimTelArrayStage
     software: [sim_telarray]
+  light_emission:
+    class: simtools.runners.light_source_stages:LightEmissionStage
+    software: [sim_telarray]
   corsika_to_stream:
     class: simtools.runners.adapter_stages:CorsikaToStreamStage
     software: [obdeect]

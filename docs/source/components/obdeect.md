@@ -36,6 +36,7 @@ the software they need are declared in `resources/simulation_stages.yml`. obdeec
 | `obdeect_optics` | mirrors, shadowing and telescope transmission, one process per telescope |
 | `stream_to_simtel` | photon stream to the sim_telarray photon-bunch input |
 | `obdeect_flasher`, `obdeect_illuminator` | calibration light; the flasher light is traced through the telescope structure |
+| `light_emission` | sim_telarray LightEmission program (`ff-1m`, `xyzls`) as first stage of a calibration chain |
 
 Air showers through obdeect atmosphere and optics, with sim_telarray simulating only the camera:
 
@@ -51,8 +52,21 @@ logged. A chain in which two stages apply the same efficiency factor (for exampl
 in obdeect and in sim_telarray) is rejected. `Bypass_Optics=3` makes sim_telarray simulate the
 camera only. simtools checks that the installed sim_telarray release supports it before any job is
 written; for a locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3` states the
-highest supported level. The calibration applications select obdeect with `--ray_tracing_backend`
-(next section).
+highest supported level.
+
+The calibration applications select obdeect with `--ray_tracing_backend` (next section) or with
+`--simulation_chain` (default `light_emission sim_telarray`), which runs the stages for one
+telescope: a calibration chain starts with `light_emission`, `obdeect_flasher` or
+`obdeect_illuminator` and has no `corsika` stage. The option `bypass_optics` of `sim_telarray` is
+required when the photons come from obdeect (camera-frame photons); after `light_emission` it
+follows the light source type.
+
+```bash
+simtools-simulate-flasher --run_mode full_simulation --simulation_chain obdeect_flasher \
+  sim_telarray:bypass_optics=1 ...
+simtools-simulate-illuminator --simulation_chain obdeect_illuminator obdeect_atmosphere \
+  obdeect_optics sim_telarray:bypass_optics=3 ...
+```
 
 The programs of a stage are located through `resources/simulation_programs.yml`; a further
 software package adds its stages and programs there, and its command builders in a sibling of

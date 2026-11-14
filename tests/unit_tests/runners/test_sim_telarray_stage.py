@@ -1,6 +1,8 @@
 """Tests for the sim_telarray simulation stage."""
 
+from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
@@ -12,7 +14,7 @@ from simtools.runners.chain_spec import (
     TELESCOPE_TRANSMISSION,
     ChainSpec,
 )
-from simtools.runners.sim_telarray_stage import SimTelArrayStage
+from simtools.runners.sim_telarray_stage import LightSimTelArrayStage, SimTelArrayStage
 from simtools.runners.stages import STDIN, StageInputs, StreamTo
 from simtools.simulation_chain.products import CAMERA_PHOTONS_IACT, CHERENKOV_PHOTONS
 
@@ -376,3 +378,99 @@ def test_chain_rejects_quantum_efficiency_applied_twice(fake_photon_stage):
 
     with pytest.raises(ValueError, match="applies 'quantum_efficiency' twice"):
         spec.chain()
+
+
+def _light_inputs(light_simulation, stage_names, options=None):
+    return StageInputs(
+        array_models=(),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=light_simulation.context,
+        chain_options={"sim_telarray": options} if options else {},
+        stages=tuple(stage_names),
+        calibration=light_simulation,
+    )
+
+
+def test_light_instances_replace_array_stages(light_simulation):
+    inputs = _light_inputs(light_simulation, ("light_emission", "sim_telarray"))
+    (stage,) = SimTelArrayStage.instances(inputs)
+    assert isinstance(stage, LightSimTelArrayStage)
+    assert stage.bypass_optics is None
+    assert stage.consumes == SimTelArrayStage.consumes
+    assert stage.streams is False
+
+
+@pytest.mark.parametrize(
+    ("mirror_class", "option", "level"), [(0, 1, 1), (2, 1, 2), (2, 2, 2), (0, 0, 0)]
+)
+def test_light_instances_bypass_level_from_option(light_simulation, mirror_class, option, level):
+    light_simulation.telescope_model.get_parameter_value.return_value = mirror_class
+    inputs = _light_inputs(
+        light_simulation,
+        ("obdeect_flasher", "stream_to_simtel", "sim_telarray"),
+        {"bypass_optics": option},
+    )
+    (stage,) = SimTelArrayStage.instances(inputs)
+    assert stage.bypass_optics == level
+
+
+def test_light_instances_bypass_level_three_checks_capability(light_simulation):
+    inputs = _light_inputs(
+        light_simulation,
+        ("obdeect_illuminator", "stream_to_simtel", "sim_telarray"),
+        {"bypass_optics": 3},
+    )
+    with patch("simtools.runners.sim_telarray_stage.check_bypass_optics") as check:
+        (stage,) = SimTelArrayStage.instances(inputs)
+    check.assert_called_once_with(3, light_simulation.context)
+    assert stage.bypass_optics == 3
+
+
+def test_light_instances_camera_photons_need_bypass_option(light_simulation):
+    inputs = _light_inputs(
+        light_simulation, ("obdeect_flasher", "stream_to_simtel", "sim_telarray")
+    )
+    with pytest.raises(ValueError, match="option 'bypass_optics' of stage 'sim_telarray' is req"):
+        SimTelArrayStage.instances(inputs)
+
+
+def test_light_instances_reject_unknown_option(light_simulation):
+    inputs = _light_inputs(light_simulation, ("light_emission", "sim_telarray"), {"other": 1})
+    with pytest.raises(ValueError, match="Unknown sim_telarray stage option"):
+        SimTelArrayStage.instances(inputs)
+
+
+@pytest.mark.parametrize("light_source_type", ["flat_fielding", "illuminator"])
+def test_light_stage_command_equals_light_emission_script(light_simulation, light_source_type):
+    light_simulation.light_emission_config["light_source_type"] = light_source_type
+    inputs = _light_inputs(light_simulation, ("light_emission", "sim_telarray"))
+    (stage,) = SimTelArrayStage.instances(inputs)
+    iact_file = light_simulation.runner_service.get_file_name("iact_output")
+    with patch.object(light_simulation, "_get_telescope_pointing", return_value=(0.0, 0.0)):
+        lines = stage.prepare(3, input_file=iact_file)
+        script = light_simulation._make_simtel_script()
+    assert lines == [script.rstrip("\n"), f"rm -f '{iact_file}'"]
+    assert (" Bypass_Optics=1" in script) == (light_source_type == "flat_fielding")
+    assert stage.output_file(3) == light_simulation.runner_service.get_file_name(
+        "sim_telarray_output"
+    )
+
+
+def test_light_stage_uses_input_file_of_upstream_stage(light_simulation):
+    stage = LightSimTelArrayStage(light_simulation, bypass_optics=3)
+    (line,) = stage.prepare(1, input_file=Path("/in/camera.iact"))
+    assert "-C input_file=/in/camera.iact" in line
+    assert "-C Bypass_Optics=3" in line
+    assert "rm -f" not in line
+
+
+def test_light_stage_errors(light_simulation):
+    stage = LightSimTelArrayStage(light_simulation)
+    with pytest.raises(ValueError, match="reads a file and writes its file"):
+        stage.prepare(1, input_file=STDIN)
+    with pytest.raises(ValueError, match="reads a file and writes its file"):
+        stage.prepare(1, output=StreamTo(("downstream",)))
+    assert stage.environment() == {}
+    assert stage.get_resources(runtime=1.5) == {"runtime": 1.5}

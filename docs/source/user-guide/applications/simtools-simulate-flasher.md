@@ -17,6 +17,21 @@ the camera, but sets ``Bypass_Optics=1`` in sim_telarray, bypassing telescope op
 Both modes produce sim_telarray events for standard analysis or
 visualization with 'simtools-plot-simtel-events'.
 
+**Simulation chain**
+
+In full-simulation mode, ``--simulation_chain`` lists the stages that simulate one telescope
+(default ``light_emission sim_telarray``: the sim_telarray LightEmission program, then
+sim_telarray). Each stage is ``STAGE`` or ``STAGE:KEY=VALUE,...``; the chain starts with a light
+source stage and has no ``corsika`` stage. The direct-injection run mode accepts only the default.
+
+.. code-block:: console
+
+    simtools-simulate-flasher --run_mode full_simulation --light_source_type flat_fielding \
+    --model_version 7.0.0 --site North --telescopes MSTN-04 \
+    --simulation_chain obdeect_flasher sim_telarray:bypass_optics=1
+
+See :doc:`/components/obdeect` for the stages.
+
 **Photon counts and matching run modes**
 
 The ``flasher_photons`` setting has a different meaning in each run mode:

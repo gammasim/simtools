@@ -664,3 +664,21 @@ def test_load_visibility_from_file_parameter(mock_site_model_class, base_config,
     simulator = MultiIlluminatorSimulator(context=run_context, config=base_config)
     assert simulator.visibility.get_valid_pairs() == [("ILLS-01", "MSTS-01")]
     site_model.get_parameter_table.assert_called_once_with("illuminator_telescope_visibility")
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.SimulatorLightEmission")
+def test_simulate_illuminator_telescope_pair_passes_simulation_chain(mock_sim_class, run_context):
+    chain = ["obdeect_illuminator", "stream_to_simtel", "sim_telarray:bypass_optics=3"]
+    job_spec = {
+        "illuminator": "ILLS-01",
+        "telescope": "MSTS-01",
+        "site": "South",
+        "label": "test",
+        "context": run_context.replace(model_reader=None).to_spec(),
+        "config": {"site": "South", "model_version": "6.0.0", "simulation_chain": chain},
+    }
+
+    assert _simulate_illuminator_telescope_pair(job_spec)["success"] is True
+
+    config = mock_sim_class.call_args[1]["light_emission_config"]
+    assert config["simulation_chain"] == chain
