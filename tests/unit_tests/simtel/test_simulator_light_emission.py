@@ -1171,3 +1171,153 @@ def test_write_camera_photons(
 def test_photons_per_pulse(simulator_instance, photons, events, expected):
     simulator_instance.light_emission_config = {FLASHER_PHOTONS: photons, NUMBER_OF_EVENTS: events}
     assert simulator_instance._photons_per_pulse() == expected
+
+
+def _reference_run_command(simulation):
+    """Run command of the light-emission chain as it was before simulation chains."""
+    iact_output = simulation.runner_service.get_file_name(file_type="iact_output")
+    light_emission = (
+        ""
+        if simulation._backend() is not None
+        else f"{get_light_source_writer(simulation).make_command(iact_output)}\n\n"
+    )
+    return [
+        "#!/usr/bin/env bash\n",
+        "set -e -o pipefail\n",
+        light_emission,
+        (
+            f"[ -s '{iact_output}' ] || "
+            f"{{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }}\n\n"
+        ),
+        f"{simulation._make_simtel_script()}\n\n",
+        f"rm -f '{iact_output}'\n\n",
+    ]
+
+
+@pytest.fixture
+def default_chain_simulator(simulator_instance):
+    simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2156 * u.m
+    simulator_instance.site_model.get_parameter_value.return_value = ATM_TRANS_DAT
+    simulator_instance.telescope_model.config_file_directory = "/mock/config"
+    simulator_instance.telescope_model.config_file_path = "/mock/config/telescope.cfg"
+    simulator_instance.runner_service.get_file_name.side_effect = lambda file_type: Path(
+        f"/out/{file_type}.dat"
+    )
+    return simulator_instance
+
+
+@pytest.mark.parametrize("light_source_type", [FLAT_FIELDING, ILLUMINATOR])
+@pytest.mark.parametrize(
+    "chain",
+    [None, ["light_emission", "sim_telarray"], ("light_emission", "sim_telarray"), []],
+)
+def test_default_chain_runs_unchanged(default_chain_simulator, light_source_type, chain):
+    simulator = default_chain_simulator
+    simulator.light_emission_config = {
+        LIGHT_SOURCE_TYPE: light_source_type,
+        "max_photoelectrons": 5000,
+        "simulation_chain": chain,
+    }
+    with (
+        patch.object(get_light_source_writer(simulator), MAKE_COMMAND_METHOD) as make_command,
+        patch.object(simulator, TELESCOPE_POINTING_METHOD, return_value=(20.0, 30.0)),
+    ):
+        make_command.side_effect = lambda output: f"light-emission-program {output}"
+        assert simulator.simulation_chain() is None
+        lines = simulator.make_run_command()
+        assert lines == _reference_run_command(simulator)
+    assert lines[2] == "light-emission-program /out/iact_output.dat\n\n"
+    assert lines[4].endswith("\n\n")
+    assert lines[5] == "rm -f '/out/iact_output.dat'\n\n"
+
+
+def test_simulation_chain_items(simulator_instance):
+    chain = ["obdeect_flasher", "stream_to_simtel", "sim_telarray:bypass_optics=1"]
+    simulator_instance.light_emission_config = {"simulation_chain": chain}
+    assert simulator_instance.simulation_chain() == chain
+    simulator_instance.light_emission_config = {"simulation_chain": "light_emission"}
+    assert simulator_instance.simulation_chain() == ["light_emission"]
+
+
+def test_make_sim_telarray_command_defaults_equal_simtel_script(default_chain_simulator):
+    simulator = default_chain_simulator
+    simulator.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
+    assert simulator.make_sim_telarray_command() == simulator._make_simtel_script()
+    assert "-C input_file=/out/iact_output.dat" in simulator.make_sim_telarray_command()
+
+
+def test_make_sim_telarray_command_input_and_bypass(default_chain_simulator):
+    simulator = default_chain_simulator
+    simulator.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
+    with patch.object(simulator, TELESCOPE_POINTING_METHOD, return_value=(20.0, 30.0)):
+        command = simulator.make_sim_telarray_command(
+            input_file="/in/photons.iact", bypass_optics=0
+        )
+        assert "-C input_file=/in/photons.iact" in command
+        assert "Bypass_Optics" not in command
+        assert "-C telescope_theta=20.0" in command
+        command = simulator.make_sim_telarray_command(bypass_optics=2)
+    assert "-C Bypass_Optics=2" in command
+    assert "-C telescope_theta=0.0" in command
+
+
+def test_light_emission_command_and_check(default_chain_simulator):
+    with patch.object(
+        get_light_source_writer(default_chain_simulator), MAKE_COMMAND_METHOD, return_value="prog"
+    ) as make_command:
+        assert default_chain_simulator.light_emission_command() == "prog"
+        make_command.assert_called_once_with(Path("/out/iact_output.dat"))
+    assert default_chain_simulator.iact_file_check("/x.iact") == (
+        "[ -s '/x.iact' ] || { echo 'LightEmission did not produce IACT file' >&2; exit 1; }"
+    )
+
+
+def test_prepare_run_with_chain_writes_chain_script(simulator_instance, tmp_test_directory):
+    chain = ["obdeect_flasher", "stream_to_simtel"]
+    simulator_instance.light_emission_config = {"simulation_chain": chain}
+    script_file = tmp_test_directory / "chain.sh"
+    simulator_instance.submission_files.get_file_name.return_value = script_file
+    simulator_instance.runner_service.get_file_name.side_effect = lambda file_type: (
+        tmp_test_directory / f"{file_type}.dat"
+    )
+    runner_module = Mock()
+    runner_module.write_chain_script.side_effect = lambda simulation, items, script: Path(
+        script
+    ).write_text("#!/usr/bin/env bash\nstage-lines\n", encoding=TEXT_ENCODING)
+    with (
+        patch("simtools.simtel.simulator_light_emission.importlib.import_module") as import_module,
+        patch.object(simulator_instance, "_write_camera_photons") as write_photons,
+    ):
+        import_module.return_value = runner_module
+        assert simulator_instance.prepare_run() == script_file
+    import_module.assert_called_once_with("simtools.runners.light_emission_runner")
+    runner_module.write_chain_script.assert_called_once_with(simulator_instance, chain, script_file)
+    write_photons.assert_not_called()
+    assert "stage-lines" in script_file.read_text(encoding=TEXT_ENCODING)
+
+
+def test_default_chain_script_text(default_chain_simulator):
+    """The script of the default chain is fixed text (as written before simulation chains)."""
+    default_chain_simulator.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
+    with patch.object(
+        get_light_source_writer(default_chain_simulator),
+        MAKE_COMMAND_METHOD,
+        return_value="light-emission-program",
+    ):
+        lines = default_chain_simulator.make_run_command()
+    assert lines[:4] == [
+        "#!/usr/bin/env bash\n",
+        "set -e -o pipefail\n",
+        "light-emission-program\n\n",
+        (
+            "[ -s '/out/iact_output.dat' ] || "
+            "{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }\n\n"
+        ),
+    ]
+    assert lines[4].endswith(
+        "-C telescope_theta=0.0 -C telescope_phi=0.0 -C Bypass_Optics=1 -C random_seed=11,13 "
+        "-C power_law=2.68 -C input_file=/out/iact_output.dat "
+        "-C output_file=/out/sim_telarray_output.dat "
+        "-C histogram_file=/out/sim_telarray_histogram.dat\n\n\n"
+    )
+    assert lines[5:] == ["rm -f '/out/iact_output.dat'\n\n"]

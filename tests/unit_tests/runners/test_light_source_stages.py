@@ -6,16 +6,18 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
-from simtools.runners import stages
+from simtools.runners import light_emission_runner, stages
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.light_source_stages import (
     FlasherSourceStage,
     IlluminatorSourceStage,
+    LightEmissionStage,
 )
 from simtools.runners.stages import StageInputs, StreamTo
 from simtools.simulation_chain import light_sources
 from simtools.simulation_chain.products import (
     CAMERA_EVENTS,
+    CHERENKOV_PHOTONS,
     PHOTONS_CAMERA,
     PHOTONS_SKY,
 )
@@ -253,3 +255,80 @@ def test_chain_with_fake_downstream_stage(monkeypatch, light_source_context):
 def test_chain_rejects_mismatching_products():
     with pytest.raises(ValueError, match="consumes None"):
         stages.SimulationChain(("obdeect_illuminator", "obdeect_flasher"))
+
+
+def _calibration_inputs(light_simulation, *chain):
+    return StageInputs(
+        array_models=(),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=light_simulation.context,
+        stages=chain,
+        calibration=light_simulation,
+    )
+
+
+def test_light_emission_stage_registered():
+    assert stages.get_stage_class("light_emission") is LightEmissionStage
+    assert stages.stages_software(["light_emission"]) == {"sim_telarray"}
+    assert LightEmissionStage.consumes is None
+    assert LightEmissionStage.produces == CHERENKOV_PHOTONS
+    assert LightEmissionStage.streams is False
+    assert LightEmissionStage.applied_factors({}) == frozenset()
+
+
+def test_light_emission_stage_lines_are_those_of_the_run_command(light_simulation):
+    (stage,) = LightEmissionStage.instances(_calibration_inputs(light_simulation))
+    lines = stage.prepare(3)
+    run_command = light_simulation.make_run_command()
+    assert [f"{line}\n\n" for line in lines] == run_command[2:4]
+    assert stage.output_file(3) == light_simulation.runner_service.get_file_name("iact_output")
+    assert stage.environment() == {}
+    assert stage.get_resources(runtime=2.0) == {"runtime": 2.0}
+
+
+def test_light_emission_stage_needs_light_emission_simulation(run_context):
+    inputs = StageInputs(
+        array_models=(), simulation_parameters=(), shower_configurations=(), args={}
+    )
+    with pytest.raises(ValueError, match="needs a light-emission simulation"):
+        LightEmissionStage.instances(inputs)
+
+
+def test_light_emission_stage_cannot_stream_or_read(light_simulation):
+    (stage,) = LightEmissionStage.instances(_calibration_inputs(light_simulation))
+    with pytest.raises(ValueError, match="reads no input"):
+        stage.prepare(1, input_file="photons.iact")
+    with pytest.raises(ValueError, match="reads no input"):
+        stage.prepare(1, output=StreamTo(("downstream",)))
+
+
+def test_flasher_chain_through_light_emission_simulation(
+    light_simulation, light_source_context, tmp_test_directory
+):
+    light_simulation.context = light_source_context
+    light_simulation.light_emission_config |= {
+        "site": "North",
+        "model_version": "6.0.2",
+        "light_source": _FLASHER,
+        "number_of_events": 2,
+        "telescope": "LSTN-01",
+    }
+    light_simulation.telescope = "LSTN-01"
+    light_simulation.telescope_model.get_parameter_value_with_unit.side_effect = lambda name: (
+        0.0 * u.deg if name == "camera_rotate" else 2156.0 * u.m
+    )
+    script = tmp_test_directory / "chain.sh"
+    items = ["obdeect_flasher", "stream_to_simtel", "sim_telarray:bypass_optics=1"]
+    light_emission_runner.write_chain_script(light_simulation, items, script)
+    lines = script.read_text(encoding="utf-8").splitlines()
+    iact_file = light_simulation.runner_service.get_file_name("iact_output")
+    camera_iact = f"{iact_file}.camera.iact"
+    assert "simtools.simulation_chain.flasher_stream" in lines[3]
+    assert " | " in lines[3]
+    assert lines[3].endswith(f"> {camera_iact}")
+    assert Path(f"{iact_file}.camera_map.txt").read_text(encoding="utf-8") == "0 0 0.0\n"
+    assert f"-C input_file={camera_iact}" in lines[4]
+    assert "-C Bypass_Optics=1" in lines[4]
+    assert len(lines) == 5

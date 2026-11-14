@@ -21,6 +21,8 @@ from simtools.simulation_chain.products import (
     PHOTONS_GROUND,
 )
 
+CORSIKA_OUTPUT = "corsika_output"
+IACT_OUTPUT = "iact_output"
 STREAM_SUFFIX = ".pst"
 CAMERA_MAP_SUFFIX = ".camera_map.txt"
 CAMERA_IACT_SUFFIX = ".camera.iact"
@@ -28,6 +30,8 @@ CAMERA_IACT_SUFFIX = ".camera.iact"
 
 def _corsika_runner_service(inputs, label):
     """Return the file names of the CORSIKA run (the first shower configuration defines it)."""
+    if inputs.calibration is not None:
+        return inputs.calibration.runner_service
     if not inputs.shower_configurations:
         raise ValueError("The obdeect chain needs a CORSIKA configuration (shower simulations).")
     config = inputs.shower_configurations[0]
@@ -39,9 +43,9 @@ def _corsika_runner_service(inputs, label):
     )
 
 
-def _stream_file(runner_service, run_number, suffix):
+def _stream_file(runner_service, run_number, suffix, file_type=CORSIKA_OUTPUT):
     """Return a file next to the CORSIKA output of a run, with a suffix added to its name."""
-    corsika_output = runner_service.get_file_name("corsika_output", run_number=run_number)
+    corsika_output = runner_service.get_file_name(file_type, run_number=run_number)
     return corsika_output.with_name(f"{corsika_output.name}{suffix}")
 
 
@@ -137,13 +141,15 @@ class StreamToSimtelStage:
     Parameters
     ----------
     runner_service : RunnerServices
-        File names of the CORSIKA run.
+        File names of the CORSIKA run (of the light-emission run for a calibration light source).
     array_model : ArrayModel
         Telescope models of the array.
     allow_pending : tuple of str
         Efficiency factors pending upstream that sim_telarray does not apply (``--allow-pending``).
     scaled_factors : tuple of str
         Efficiency factors whose sim_telarray table holds f/f_env (``--scaled-factor``).
+    file_type : str
+        File type of the run whose name the files of the stage extend.
     """
 
     name = "stream_to_simtel"
@@ -151,9 +157,17 @@ class StreamToSimtelStage:
     produces = CAMERA_PHOTONS_IACT
     streams = True
 
-    def __init__(self, runner_service, array_model, allow_pending=(), scaled_factors=()):
+    def __init__(
+        self,
+        runner_service,
+        array_model,
+        allow_pending=(),
+        scaled_factors=(),
+        file_type=CORSIKA_OUTPUT,
+    ):
         """Initialize StreamToSimtelStage."""
         self.runner_service = runner_service
+        self.file_type = file_type
         self.array_model = array_model
         self.allow_pending = tuple(allow_pending)
         self.scaled_factors = tuple(scaled_factors)
@@ -174,6 +188,7 @@ class StreamToSimtelStage:
                 inputs.array_models[0],
                 allow_pending=_string_list(options, "allow_pending"),
                 scaled_factors=_string_list(options, "scaled_factors"),
+                file_type=CORSIKA_OUTPUT if inputs.calibration is None else IACT_OUTPUT,
             )
         ]
 
@@ -205,7 +220,7 @@ class StreamToSimtelStage:
 
     def camera_map_file(self, run_number):
         """Return the camera map file of the run."""
-        return _stream_file(self.runner_service, run_number, CAMERA_MAP_SUFFIX)
+        return _stream_file(self.runner_service, run_number, CAMERA_MAP_SUFFIX, self.file_type)
 
     def write_camera_map(self, run_number):
         """
@@ -220,7 +235,7 @@ class StreamToSimtelStage:
 
     def output_file(self, run_number):
         """Return the sim_telarray input file of the run."""
-        return _stream_file(self.runner_service, run_number, CAMERA_IACT_SUFFIX)
+        return _stream_file(self.runner_service, run_number, CAMERA_IACT_SUFFIX, self.file_type)
 
     def environment(self):
         """Return the environment variables of the stage (none)."""

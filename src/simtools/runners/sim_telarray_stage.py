@@ -12,7 +12,7 @@ from simtools.runners.chain_spec import (
     TELESCOPE_TRANSMISSION,
 )
 from simtools.runners.shower_routing import ShowerRouting, route_threads
-from simtools.runners.stages import CAMERA_EVENTS, CHERENKOV_PHOTONS, STDIN
+from simtools.runners.stages import CAMERA_EVENTS, CHERENKOV_PHOTONS, STDIN, get_stage_class
 from simtools.simtel.photon_bunch_file import bypass_optics_level
 from simtools.simtel.sim_telarray_capabilities import check_bypass_optics
 from simtools.simtel.simtel_runner import SIM_TELARRAY_ENV, sim_telarray_env_as_string
@@ -142,11 +142,14 @@ class SimTelArrayStage:
 
     @classmethod
     def instances(cls, inputs, label=None):
-        """Return one sim_telarray stage per array model."""
-        mode = _bypass_mode(inputs.options_of(cls.name))
+        """Return one sim_telarray stage per array model (one for a light-emission run)."""
+        options = inputs.options_of(cls.name)
+        mode = _bypass_mode(options)
         if mode == _BYPASS_MODE_CAPABILITY_CHECK:
             # Checked before any stage is built, so no job is written for an unsupported level.
             check_bypass_optics(mode, inputs.context)
+        if inputs.calibration is not None:
+            return [LightSimTelArrayStage(inputs.calibration, _light_bypass_level(inputs, mode))]
         stages = [
             cls(
                 simulation_parameters=parameters,
@@ -275,3 +278,101 @@ class SimTelArrayStage:
     def get_resources(self, runtime=None):
         """Return computing resources used."""
         return self.runner_service.get_resources(runtime=runtime)
+
+
+def _light_bypass_level(inputs, mode):
+    """
+    Return the Bypass_Optics level of a light-emission run (None: derived by the simulation).
+
+    Without the option ``bypass_optics``, the level follows the product of the stage before
+    sim_telarray: photons of the LightEmission program need the level of the light source type;
+    camera-frame photons need the option.
+    """
+    if BYPASS_OPTICS_OPTION in inputs.options_of(SimTelArrayStage.name):
+        if mode in (1, 2):
+            return bypass_optics_level(
+                inputs.calibration.telescope_model.get_parameter_value("mirror_class")
+                == _DUAL_MIRROR_CLASS
+            )
+        return mode
+    position = inputs.stages.index(SimTelArrayStage.name) if inputs.stages else 0
+    if position > 0 and get_stage_class(inputs.stages[position - 1]).produces == (
+        CAMERA_PHOTONS_IACT
+    ):
+        raise ValueError(
+            f"The option {BYPASS_OPTICS_OPTION!r} of stage {SimTelArrayStage.name!r} is required "
+            f"for the camera-frame photons of {inputs.stages[position - 1]!r}: "
+            f"use {SimTelArrayStage.name}:{BYPASS_OPTICS_OPTION}=1 (or 2 or 3)."
+        )
+    return None
+
+
+class LightSimTelArrayStage:
+    """
+    sim_telarray run on the photons of a calibration light source (one telescope).
+
+    The command is that of ``SimulatorLightEmission.make_sim_telarray_command``. The photon
+    file is handed over by the stage before it.
+
+    Parameters
+    ----------
+    calibration : SimulatorLightEmission
+        Light-emission simulation of one telescope and one light source.
+    bypass_optics : int or None
+        Bypass_Optics value (0: none; None: derived by the light-emission simulation).
+    """
+
+    name = SimTelArrayStage.name
+    consumes = SimTelArrayStage.consumes
+    produces = CAMERA_EVENTS
+    streams = False
+
+    def __init__(self, calibration, bypass_optics=None):
+        """Initialize LightSimTelArrayStage."""
+        self.calibration = calibration
+        self.bypass_optics = bypass_optics
+        self.file_list = {}
+
+    def prepare(self, run_number, input_file=None, output=None):
+        """
+        Return the shell lines that run sim_telarray.
+
+        Parameters
+        ----------
+        run_number : int
+            Run number (the file names are those of the light-emission simulation).
+        input_file : str or Path or None
+            Photon file of the stage before (default: the IACT file of the LightEmission
+            program).
+        output : None
+            sim_telarray writes its output file.
+
+        Returns
+        -------
+        list of str
+            Shell lines; the IACT file of the LightEmission program is removed afterwards.
+        """
+        del run_number
+        if output is not None or input_file == STDIN:
+            raise ValueError("sim_telarray of a light source reads a file and writes its file.")
+        iact_output = self.calibration.runner_service.get_file_name(file_type="iact_output")
+        command = self.calibration.make_sim_telarray_command(
+            input_file=input_file, bypass_optics=self.bypass_optics
+        )
+        lines = [command.rstrip("\n")]
+        if input_file is None or str(input_file) == str(iact_output):
+            lines.append(f"rm -f '{iact_output}'")
+        return lines
+
+    def output_file(self, run_number=None):
+        """Return the sim_telarray output file."""
+        del run_number
+        return self.calibration.runner_service.get_file_name(file_type="sim_telarray_output")
+
+    def environment(self):
+        """Return environment variables needed to run the stage (set in the command)."""
+        return {}
+
+    def get_resources(self, runtime=None):
+        """Return the run time."""
+        return {"runtime": runtime}

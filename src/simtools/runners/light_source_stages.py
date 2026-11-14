@@ -21,6 +21,12 @@ that the structure shadows it; the illuminator stage runs the obdeect point-sour
 commands are built in ``simtools.simulation_chain.obdeect.sources``. Adding a light source type
 means a source type in the registry of ``light_sources`` and a subclass of ``LightSourceStage``
 registered with ``stages.register_stage``.
+
+The stage ``light_emission`` wraps the LightEmission program of sim_telarray (``ff-1m`` or
+``xyzls``), which writes an IACT file of the run of one ``SimulatorLightEmission``
+(``StageInputs.calibration``)::
+
+    simulation_chain: [light_emission, sim_telarray]
 """
 
 import dataclasses
@@ -30,7 +36,7 @@ from pathlib import Path
 import astropy.units as u
 
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.runners.stages import StreamTo
+from simtools.runners.stages import CHERENKOV_PHOTONS, StreamTo
 from simtools.simtel.simtel_seeds import instance_seed_pairs
 from simtools.simulation_chain import light_sources
 from simtools.simulation_chain.products import PHOTONS_CAMERA, PHOTONS_SKY
@@ -234,3 +240,87 @@ class IlluminatorSourceStage(LightSourceStage):
     name = "obdeect_illuminator"
     source_name = "illuminator"
     produces = PHOTONS_SKY
+
+
+class LightEmissionStage:
+    """
+    LightEmission program of sim_telarray as the first stage of a chain.
+
+    The stage runs the program of the light source type of a ``SimulatorLightEmission`` and
+    checks the IACT file it writes, which is handed over to the next stage.
+
+    Parameters
+    ----------
+    calibration : SimulatorLightEmission
+        Light-emission simulation of one telescope and one light source.
+    """
+
+    name = "light_emission"
+    consumes = None
+    produces = CHERENKOV_PHOTONS
+    streams = False
+
+    def __init__(self, calibration):
+        """Initialize LightEmissionStage."""
+        self.calibration = calibration
+        self.file_list = {}
+
+    @classmethod
+    def instances(cls, inputs, label=None):
+        """Return the stage of the light-emission simulation of the run."""
+        del label
+        if inputs.calibration is None:
+            raise ValueError(
+                f"Stage {cls.name!r} needs a light-emission simulation "
+                "(simtools-simulate-flasher or simtools-simulate-illuminator)."
+            )
+        return [cls(inputs.calibration)]
+
+    def prepare(self, run_number, input_file=None, output=None):
+        """
+        Return the shell lines that run the LightEmission program and check its output.
+
+        Parameters
+        ----------
+        run_number : int
+            Run number (the file names are those of the light-emission simulation).
+        input_file : None
+            The program reads no input product.
+        output : None
+            The program writes the IACT file (see ``output_file``).
+
+        Returns
+        -------
+        list of str
+            Shell lines.
+        """
+        del run_number
+        if input_file is not None or output is not None:
+            raise ValueError(
+                f"Stage {self.name!r} reads no input and writes its IACT file; "
+                "it cannot be connected by a stream."
+            )
+        iact_output = self.output_file()
+        return [
+            self.calibration.light_emission_command(iact_output),
+            self.calibration.iact_file_check(iact_output),
+        ]
+
+    def output_file(self, run_number=None):
+        """Return the IACT file written by the LightEmission program."""
+        del run_number
+        return self.calibration.runner_service.get_file_name(file_type="iact_output")
+
+    def environment(self):
+        """Return environment variables needed to run the stage (none)."""
+        return {}
+
+    def get_resources(self, runtime=None):
+        """Return the run time."""
+        return {"runtime": runtime}
+
+    @staticmethod
+    def applied_factors(options=None):
+        """Return the efficiency factors applied to the photons (none)."""
+        del options
+        return frozenset()

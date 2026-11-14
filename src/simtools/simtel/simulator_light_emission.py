@@ -1,5 +1,6 @@
 """Light emission simulation (e.g. illuminators or flashers)."""
 
+import importlib
 import logging
 import shlex
 from pathlib import Path
@@ -8,6 +9,7 @@ import astropy.units as u
 import numpy as np
 
 from simtools.atmosphere.transmission import AtmosphericTransmission
+from simtools.constants import LIGHT_EMISSION_CHAIN_DEFAULT
 from simtools.job_execution import execution, runner_services
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.calibration_model import CalibrationModel
@@ -52,6 +54,8 @@ LIGHT_SOURCE_POINTING = "light_source_pointing"
 NUMBER_OF_EVENTS = "number_of_events"
 RUN_NUMBER = "run_number"
 TELESCOPE_SPHERE_RADIUS = "telescope_sphere_radius"
+SIMULATION_CHAIN = "simulation_chain"
+CHAIN_RUNNER_MODULE = "simtools.runners.light_emission_runner"
 
 
 class SimulatorLightEmission(SimtelRunner):
@@ -128,6 +132,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.model_reader = resolve_model_reader(model_reader, self.context)
         self.io_handler = self.context.paths
         telescope = telescope or light_emission_config.get("telescope")
+        self.telescope = telescope
         label = f"{label}_{telescope}" if label else telescope
 
         wavelength = light_emission_config.get("wavelength")
@@ -250,11 +255,37 @@ class SimulatorLightEmission(SimtelRunner):
             raise FileExistsError(
                 f"sim_telarray output file exists, cancelling simulation: {output_file}"
             )
+        if self.simulation_chain() is not None:
+            self.make_run_command()
+            return script_file
         if self._backend() is not None:
             self._write_camera_photons(self.runner_service.get_file_name(file_type="iact_output"))
         lines = self.make_run_command()
         script_file.write_text("".join(lines), encoding="utf-8")
         return script_file
+
+    def simulation_chain(self):
+        """
+        Return the stages (items ``STAGE[:KEY=VALUE,...]``) of a configured simulation chain.
+
+        Returns
+        -------
+        list of str or None
+            None for the default chain (LightEmission program, then sim_telarray), which is run
+            by ``make_run_command``.
+        """
+        items = self.light_emission_config.get(SIMULATION_CHAIN)
+        if isinstance(items, str):
+            items = [items]
+        if not items or tuple(items) == LIGHT_EMISSION_CHAIN_DEFAULT:
+            return None
+        return list(items)
+
+    def _chain_run_command(self, items):
+        """Write the run script of a simulation chain and return its lines."""
+        script_file = self.submission_files.get_file_name(file_type="sub_script")
+        importlib.import_module(CHAIN_RUNNER_MODULE).write_chain_script(self, items, script_file)
+        return Path(script_file).read_text(encoding="utf-8").splitlines(keepends=True)
 
     def _backend(self):
         """Return the ray-tracing backend class if it traces light, else None."""
@@ -266,6 +297,10 @@ class SimulatorLightEmission(SimtelRunner):
         if self._seed_pair is None:
             self._seed_pair = instance_seed_pairs(context=self.context)[0]
         return self._seed_pair
+
+    def simulation_seeds(self):
+        """Return the (instrument seed, simulation seed) of this run."""
+        return self._seeds()
 
     def _dual_mirror(self):
         """Return True for dual-mirror telescopes."""
@@ -399,6 +434,9 @@ class SimulatorLightEmission(SimtelRunner):
 
     def make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
         """Light emission and sim_telarray run command (a backend writes the photons beforehand)."""
+        items = self.simulation_chain()
+        if items is not None:
+            return self._chain_run_command(items)
         iact_output = self.runner_service.get_file_name(file_type="iact_output")
         light_emission = (
             ""
@@ -409,13 +447,27 @@ class SimulatorLightEmission(SimtelRunner):
             "#!/usr/bin/env bash\n",
             "set -e -o pipefail\n",
             light_emission,
-            (
-                f"[ -s '{iact_output}' ] || "
-                f"{{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }}\n\n"
-            ),
+            f"{self.iact_file_check(iact_output)}\n\n",
             f"{self._make_simtel_script()}\n\n",
             f"rm -f '{iact_output}'\n\n",
         ]
+
+    def light_emission_command(self, iact_output=None):
+        """Return the LightEmission program command writing the IACT file of this run."""
+        iact_output = iact_output or self.runner_service.get_file_name(file_type="iact_output")
+        return get_light_source_writer(self).make_command(iact_output)
+
+    @staticmethod
+    def iact_file_check(iact_output):
+        """Return the shell command that stops the script if the IACT file is missing or empty."""
+        return (
+            f"[ -s '{iact_output}' ] || "
+            "{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }"
+        )
+
+    def telescope_pointing(self):
+        """Return (theta, phi) of the telescope pointing in degrees."""
+        return self._get_telescope_pointing()
 
     def _get_telescope_pointing(self):
         """Return (theta, phi) telescope pointing for the light source type and position."""
@@ -604,7 +656,26 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _make_simtel_script(self):
         """Return the command to run sim_telarray on the output of the previous step."""
-        bypass = self._bypass_optics()
+        return self.make_sim_telarray_command()
+
+    def make_sim_telarray_command(self, input_file=None, bypass_optics=None):
+        """
+        Return the command to run sim_telarray on a file of photons.
+
+        Parameters
+        ----------
+        input_file : str or Path, optional
+            Photon file (default: the IACT file of the LightEmission program of this run).
+        bypass_optics : int, optional
+            Bypass_Optics level, 0 for none (default: derived from the light source type, or
+            from the ray-tracing backend).
+
+        Returns
+        -------
+        str
+            Environment and command line, ending with a new line.
+        """
+        bypass = self._bypass_optics() if bypass_optics is None else bypass_optics
         theta, phi = (0.0, 0.0) if bypass else self._get_telescope_pointing()
         simtel_bin = str(self.context.software.sim_telarray_exe)
 
@@ -640,7 +711,7 @@ class SimulatorLightEmission(SimtelRunner):
             options.append(("Bypass_Optics", f"{bypass}"))
         options.append(("random_seed", ",".join(str(seed) for seed in self._seeds())))
 
-        input_file = self.runner_service.get_file_name(file_type="iact_output")
+        input_file = input_file or self.runner_service.get_file_name(file_type="iact_output")
         output_file = self.runner_service.get_file_name(file_type="sim_telarray_output")
         histo_file = self.runner_service.get_file_name(file_type="sim_telarray_histogram")
 

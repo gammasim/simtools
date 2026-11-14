@@ -8,6 +8,7 @@ import sys
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import positive_quantity, scientific_int
+from simtools.constants import LIGHT_EMISSION_CHAIN_DEFAULT
 from simtools.simtel.multi_illuminator_simulator import MultiIlluminatorSimulator
 
 _logger = logging.getLogger(__name__)
@@ -100,6 +101,14 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.INSTRUMENT_SEED,
         cli.SIMULATION_SEED,
         cli.RAY_TRACING_BACKEND,
+        cli.SIMULATION_CHAIN(
+            default=list(LIGHT_EMISSION_CHAIN_DEFAULT),
+            help=(
+                "Stages of the simulation in order, each as STAGE or STAGE:KEY=VALUE,... "
+                "(e.g. obdeect_illuminator obdeect_atmosphere obdeect_optics stream_to_simtel "
+                "sim_telarray:bypass_optics=3)."
+            ),
+        ),
     ),
     post_parse=_validate_pair_selection,
     needs=("model", "sim_telarray", "corsika"),
