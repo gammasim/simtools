@@ -630,6 +630,18 @@ SIMULATION_SOFTWARE = _argument(
     default=defaults.SIMULATION_SOFTWARE_DEFAULT,
 )
 
+SIMULATION_CHAIN = _argument(
+    "simulation_chain",
+    "simulation software",
+    help=(
+        "Simulation chain: a preset name (e.g. 'legacy') or the path of a chain-spec YAML file. "
+        "Default: the chain of 'simulation_software'. Cannot be combined with a non-default "
+        "'simulation_software'."
+    ),
+    type=str,
+    default=None,
+)
+
 SIMULATION_FILE_FORMAT = _argument(
     "simulation_file_format",
     _SIMULATION_CONFIGURATION_GROUP,

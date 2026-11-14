@@ -213,6 +213,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.SITE,
         cli.ARRAY_LAYOUT_NAME(required=False),
         cli.SIMULATION_SOFTWARE,
+        cli.SIMULATION_CHAIN,
         *cli.corsika_configuration_arguments(primary_required=False),
         *cli.SHOWER_ARGUMENTS,
         *cli.CORSIKA_INTERACTION_ARGUMENTS,

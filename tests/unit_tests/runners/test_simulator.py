@@ -5,13 +5,16 @@ import gzip
 import logging
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 from unittest.mock import call
 
 import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.runners import chain_spec, stages
 from simtools.runners.simulator import Simulator
+from simtools.runners.stages import SimulationChain, StageInputs
 from simtools.sim_events import file_info
 from simtools.sim_events.simulation_parameters import SimulationParameters
 from simtools.utils.primary_particle import PrimaryParticle
@@ -153,6 +156,59 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
         ValueError, match="Invalid simulation software: this_simulator_is_not_there"
     ):
         test_array_simulator.simulation_software = "this_simulator_is_not_there"
+
+
+def test_simulation_chain_default_is_chain_of_simulation_software(
+    array_simulator, shower_simulator, shower_array_simulator
+):
+    assert array_simulator.chain == SimulationChain.from_software("sim_telarray")
+    assert shower_simulator.chain == SimulationChain.from_software("corsika")
+    assert shower_array_simulator.chain == SimulationChain.from_software("corsika_sim_telarray")
+
+
+def test_simulation_chain_legacy_preset_matches_software_chain(make_simulator):
+    simulator = make_simulator(
+        "corsika_sim_telarray", "test-legacy-chain", simulation_chain="legacy"
+    )
+    assert simulator.chain == SimulationChain.from_software("corsika_sim_telarray")
+
+
+def test_simulation_chain_preset_options_reach_stage_inputs(make_simulator, mocker):
+    source = SimpleNamespace(
+        name="fake_source", consumes=None, produces="fake_photons", streams=False
+    )
+    sink = SimpleNamespace(
+        name="fake_sink", consumes="fake_photons", produces="fake_events", streams=False
+    )
+    mocker.patch.dict(stages.STAGES, {"fake_source": lambda: source, "fake_sink": lambda: sink})
+    options = {"fake_sink": {"threads": 2}}
+    mocker.patch.dict(
+        "simtools.runners.chain_spec._PRESETS",
+        {"fake_chain": chain_spec.ChainSpec("fake_chain", ("fake_source", "fake_sink"), options)},
+    )
+    stage_inputs = mocker.patch("simtools.runners.simulator.StageInputs", wraps=StageInputs)
+
+    simulator = make_simulator(
+        "corsika_sim_telarray", "test-fake-chain", simulation_chain="fake_chain"
+    )
+
+    assert simulator.chain == SimulationChain(("fake_source", "fake_sink"))
+    assert stage_inputs.call_args.kwargs["chain_options"] == options
+
+
+def test_simulation_chain_conflicts_with_simulation_software(make_simulator):
+    with pytest.raises(
+        ValueError,
+        match=r"Use either 'simulation_chain' \(legacy\) or 'simulation_software' \(corsika\)",
+    ):
+        make_simulator("corsika", "test-chain-conflict", simulation_chain="legacy")
+
+
+def test_simulation_chain_unknown_selection(make_simulator):
+    with pytest.raises(ValueError, match="Unknown simulation chain 'no_such_chain'"):
+        make_simulator(
+            "corsika_sim_telarray", "test-unknown-chain", simulation_chain="no_such_chain"
+        )
 
 
 def test_get_files_returns_empty_list_for_unknown_type(array_simulator):
