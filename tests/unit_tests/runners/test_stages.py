@@ -29,7 +29,8 @@ def test_chain_stage_classes():
     chain = stages.SimulationChain(("corsika", "sim_telarray"))
 
     assert chain.stage_classes == [CorsikaStage, SimTelArrayStage]
-    assert CorsikaStage.produces == SimTelArrayStage.consumes == stages.CHERENKOV_PHOTONS
+    assert CorsikaStage.produces == stages.CHERENKOV_PHOTONS
+    assert CorsikaStage.produces in SimTelArrayStage.consumes
 
 
 def test_register_stage_extends_chains():
@@ -60,3 +61,43 @@ def test_chain_rejects_unknown_software_and_stage():
 def test_chain_rejects_mismatched_data_products():
     with pytest.raises(ValueError, match="'corsika' consumes None, but 'sim_telarray' produces"):
         stages.SimulationChain(("sim_telarray", "corsika"))
+
+
+def test_stage_may_consume_several_products():
+    class FakeStage:
+        name = "fake_stage"
+        consumes = (stages.CHERENKOV_PHOTONS, "other_photons")
+        produces = stages.CAMERA_EVENTS
+        streams = True
+
+    stages.register_stage("fake_stage", lambda: FakeStage)
+    try:
+        assert stages.SimulationChain(("corsika", "fake_stage")).stages == ("corsika", "fake_stage")
+        with pytest.raises(ValueError, match="consumes"):
+            stages.SimulationChain(("fake_stage", "fake_stage"))
+    finally:
+        stages.STAGES.pop("fake_stage")
+
+
+def test_obdeect_stages_are_registered_lazily():
+    assert {
+        "corsika_to_stream",
+        "stream_to_simtel",
+        "obdeect_atmosphere",
+        "obdeect_optics",
+        "obdeect_flasher",
+        "obdeect_illuminator",
+    } <= set(stages.STAGES)
+
+
+def test_stage_inputs_options_of_stage():
+    inputs = stages.StageInputs(
+        array_models=(),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        chain_options={"obdeect_optics": {"threads": 2}},
+    )
+
+    assert inputs.options_of("obdeect_optics") == {"threads": 2}
+    assert inputs.options_of("sim_telarray") == {}

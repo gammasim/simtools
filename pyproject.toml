@@ -387,6 +387,7 @@ root_packages = [
   "simtools.layout",
   "simtools.model",
   "simtools.model_repository",
+  "simtools.photon_chain",
   "simtools.production_configuration",
   "simtools.ray_tracing",
   "simtools.reporting",
@@ -408,6 +409,7 @@ layers = [
   "simtools.applications",
   "simtools.application : simtools.configuration : simtools.testing",
   "simtools.science_tests : simtools.production_configuration : simtools.reporting : simtools.runners",
+  "simtools.photon_chain",
   """\
   simtools.corsika : simtools.simtel : simtools.ray_tracing : simtools.camera : simtools.job_execution : \
   simtools.simulation : simtools.atmosphere\

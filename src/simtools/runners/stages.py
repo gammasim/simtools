@@ -9,13 +9,15 @@ checks that each stage consumes the data product of the stage before it when the
 created.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from importlib import import_module
 from itertools import pairwise
 from typing import Protocol
 
-CHERENKOV_PHOTONS = "cherenkov_photons"
-CAMERA_EVENTS = "camera_events"
+from simtools.photon_chain import products
 
+CHERENKOV_PHOTONS = products.CHERENKOV_PHOTONS
+CAMERA_EVENTS = products.CAMERA_EVENTS
 STDIN = "-"
 
 
@@ -35,13 +37,18 @@ class StageInputs:
     shower_configurations: tuple
     args: dict
     context: object = None
+    chain_options: dict = field(default_factory=dict, hash=False, compare=False)
+
+    def options_of(self, stage):
+        """Return the options of a stage given in the chain spec (empty if there are none)."""
+        return dict(self.chain_options.get(stage, {}))
 
 
 class SimulationStage(Protocol):
     """One program of a simulation chain."""
 
     name: str
-    consumes: str | None
+    consumes: str | tuple[str, ...] | None
     produces: str
     streams: bool
 
@@ -93,7 +100,30 @@ def _sim_telarray_stage():
     return SimTelArrayStage
 
 
-STAGES = {"corsika": _corsika_stage, "sim_telarray": _sim_telarray_stage}
+def _lazy_stage(module, class_name):
+    """Return a factory that imports a stage class when the stage is first used."""
+
+    def factory():
+        return getattr(import_module(module), class_name)
+
+    return factory
+
+
+STAGES = {
+    "corsika": _corsika_stage,
+    "sim_telarray": _sim_telarray_stage,
+    # Stages of the obdeect simulation chain (optional; see docs/source/components/obdeect.md).
+    "corsika_to_stream": _lazy_stage("simtools.runners.adapter_stages", "CorsikaToStreamStage"),
+    "stream_to_simtel": _lazy_stage("simtools.runners.adapter_stages", "StreamToSimtelStage"),
+    "obdeect_atmosphere": _lazy_stage(
+        "simtools.runners.atmosphere_stage", "ObdeectAtmosphereStage"
+    ),
+    "obdeect_optics": _lazy_stage("simtools.runners.optics_stage", "ObdeectOpticsStage"),
+    "obdeect_flasher": _lazy_stage("simtools.runners.light_source_stages", "FlasherSourceStage"),
+    "obdeect_illuminator": _lazy_stage(
+        "simtools.runners.light_source_stages", "IlluminatorSourceStage"
+    ),
+}
 
 
 def register_stage(name, factory):
@@ -117,6 +147,13 @@ _SOFTWARE_CHAINS = {
 }
 
 
+def _as_tuple(consumed):
+    """Return the products a stage consumes as a tuple."""
+    if consumed is None:
+        return ()
+    return (consumed,) if isinstance(consumed, str) else tuple(consumed)
+
+
 def get_stage_class(name) -> type[SimulationStage]:
     """Return the stage class registered under a name."""
     try:
@@ -137,7 +174,7 @@ class SimulationChain:
             raise ValueError("A simulation chain needs at least one stage.")
         classes = [get_stage_class(name) for name in self.stages]
         for upstream, downstream in pairwise(classes):
-            if downstream.consumes != upstream.produces:
+            if upstream.produces not in _as_tuple(downstream.consumes):
                 raise ValueError(
                     f"Stage {downstream.name!r} consumes {downstream.consumes!r}, "
                     f"but {upstream.name!r} produces {upstream.produces!r}."
