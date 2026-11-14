@@ -8,8 +8,8 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-from simtools.photon_chain import light_sources
-from simtools.photon_chain.light_sources import (
+from simtools.simulation_chain import light_sources
+from simtools.simulation_chain.light_sources import (
     AngularDistribution,
     FlasherRequest,
     FlasherSource,
@@ -276,7 +276,7 @@ def test_flasher_command(tmp_path):
     assert tokens == [
         "py",
         "-m",
-        "simtools.photon_chain.flasher_stream",
+        "simtools.simulation_chain.flasher_stream",
         *("--request", str(tmp_path / "light_source_request_x.json")),
         *("--output-path", str(tmp_path)),
         *("--output", str(tmp_path / "f.pst")),
@@ -406,7 +406,7 @@ def test_new_source_type_without_editing_existing_code(monkeypatch):
 def test_legacy_modules_do_not_import_obdeect_through_light_sources():
     code = (
         "import sys\n"
-        "import simtools.photon_chain.light_sources as m\n"
+        "import simtools.simulation_chain.light_sources as m\n"
         "m.get_source_type('flasher'); m.get_source_type('illuminator')\n"
         "assert not any(name.startswith('obdeect') for name in sys.modules)\n"
     )

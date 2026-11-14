@@ -4,7 +4,6 @@ import os
 import shlex
 
 from simtools.job_execution.process_accounting import build_accounting_command
-from simtools.photon_chain.products import CAMERA_PHOTONS_IACT
 from simtools.ray_tracing.backends.interface import get_backend
 from simtools.runners.chain_spec import (
     ATMOSPHERIC_EXTINCTION,
@@ -18,6 +17,7 @@ from simtools.simtel.photon_bunch_file import bypass_optics_level
 from simtools.simtel.sim_telarray_capabilities import check_bypass_optics
 from simtools.simtel.simtel_runner import SIM_TELARRAY_ENV, sim_telarray_env_as_string
 from simtools.simtel.simulator_array import SimulatorArray
+from simtools.simulation_chain.products import CAMERA_PHOTONS_IACT
 
 #: Chain option: 0 (default) runs sim_telarray's optics on CORSIKA photons; 1 or 2 gives photons
 #: at the camera entrance (Bypass_Optics from the mirror class of the telescopes); 3 is

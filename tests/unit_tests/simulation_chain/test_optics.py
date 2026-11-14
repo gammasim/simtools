@@ -1,4 +1,4 @@
-"""Tests for the optics request of the photon chain and its obdeect command."""
+"""Tests for the optics request of the simulation chain and its obdeect command."""
 
 import json
 from dataclasses import replace
@@ -8,9 +8,9 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from simtools.photon_chain import optics
-from simtools.photon_chain.optics import OpticsRequest
 from simtools.simtel.shower_photons import derive_seed
+from simtools.simulation_chain import optics
+from simtools.simulation_chain.optics import OpticsRequest
 
 _MIRROR_LIST = """0 0 100.0 0.0 0
 125 0 100.0 0.0 0

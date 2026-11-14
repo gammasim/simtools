@@ -6,12 +6,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from simtools.photon_chain.products import (
-    CHERENKOV_PHOTONS,
-    PHOTONS_CAMERA,
-    PHOTONS_GROUND,
-    PHOTONS_TELESCOPE,
-)
 from simtools.runners import stages
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.chain_spec import (
@@ -22,6 +16,12 @@ from simtools.runners.chain_spec import (
 from simtools.runners.optics_stage import ObdeectOpticsStage
 from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo, get_stage_class
 from simtools.simtel.shower_photons import derive_seed
+from simtools.simulation_chain.products import (
+    CHERENKOV_PHOTONS,
+    PHOTONS_CAMERA,
+    PHOTONS_GROUND,
+    PHOTONS_TELESCOPE,
+)
 
 _MIRROR_LIST = """0 0 100.0 0.0 0
 125 0 100.0 0.0 0

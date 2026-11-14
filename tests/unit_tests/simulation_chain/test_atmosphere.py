@@ -1,4 +1,4 @@
-"""Tests for the atmosphere of the photon chain (obdeect propagation inputs and command line)."""
+"""Tests for the atmosphere of the simulation chain (obdeect propagation inputs and command line)."""
 
 import math
 from pathlib import Path
@@ -7,7 +7,7 @@ import astropy.units as u
 import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
-from simtools.photon_chain.atmosphere import (
+from simtools.simulation_chain.atmosphere import (
     AtmosphereRequest,
     build_atmosphere_request,
     in_telescope_pathlength_m,

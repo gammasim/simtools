@@ -1,18 +1,18 @@
-"""Atmosphere of the photon chain as a simulation stage (obdeect propagation)."""
+"""Atmosphere of the simulation chain as a simulation stage (obdeect propagation)."""
 
 import shlex
 
-from simtools.photon_chain.atmosphere import (
+from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION
+from simtools.runners.stages import STDIN, StreamTo
+from simtools.runtime.context import RunContext
+from simtools.simulation_chain.atmosphere import (
     DEFAULT_MODE,
     DEFAULT_SEED,
     build_atmosphere_request,
     propagation_command,
     propagation_program,
 )
-from simtools.photon_chain.products import PHOTONS_GROUND, PHOTONS_SKY
-from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION
-from simtools.runners.stages import STDIN, StreamTo
-from simtools.runtime.context import RunContext
+from simtools.simulation_chain.products import PHOTONS_GROUND, PHOTONS_SKY
 
 STAGE_OPTIONS = ("seed", "mode", "wavelength_range_nm")
 OUTPUT_DIRECTORY = "atmosphere"

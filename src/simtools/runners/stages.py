@@ -14,7 +14,7 @@ from importlib import import_module
 from itertools import pairwise
 from typing import Protocol
 
-from simtools.photon_chain import products
+from simtools.simulation_chain import products
 
 CHERENKOV_PHOTONS = products.CHERENKOV_PHOTONS
 CAMERA_EVENTS = products.CAMERA_EVENTS

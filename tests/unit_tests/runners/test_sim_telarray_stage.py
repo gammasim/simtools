@@ -4,7 +4,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from simtools.photon_chain.products import CAMERA_PHOTONS_IACT, CHERENKOV_PHOTONS
 from simtools.runners import stages
 from simtools.runners.chain_spec import (
     ATMOSPHERIC_EXTINCTION,
@@ -15,6 +14,7 @@ from simtools.runners.chain_spec import (
 )
 from simtools.runners.sim_telarray_stage import SimTelArrayStage
 from simtools.runners.stages import STDIN, StageInputs, StreamTo
+from simtools.simulation_chain.products import CAMERA_PHOTONS_IACT, CHERENKOV_PHOTONS
 
 ALL_FACTORS = frozenset(
     {ATMOSPHERIC_EXTINCTION, MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION, QUANTUM_EFFICIENCY}

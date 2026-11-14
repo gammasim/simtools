@@ -6,12 +6,6 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
-from simtools.photon_chain import light_sources
-from simtools.photon_chain.products import (
-    CAMERA_EVENTS,
-    PHOTONS_CAMERA,
-    PHOTONS_SKY,
-)
 from simtools.runners import stages
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.light_source_stages import (
@@ -19,6 +13,12 @@ from simtools.runners.light_source_stages import (
     IlluminatorSourceStage,
 )
 from simtools.runners.stages import StageInputs, StreamTo
+from simtools.simulation_chain import light_sources
+from simtools.simulation_chain.products import (
+    CAMERA_EVENTS,
+    PHOTONS_CAMERA,
+    PHOTONS_SKY,
+)
 
 _FLASHER = "LSFN-design"
 _ILLUMINATOR = "ILLN-01"
@@ -180,7 +180,7 @@ def flasher_stage(light_source_context):
 def test_prepare_writes_file_without_stream(flasher_stage):
     (line,) = flasher_stage.prepare(5)
     tokens = shlex.split(line)
-    assert tokens[1:3] == ["-m", "simtools.photon_chain.flasher_stream"]
+    assert tokens[1:3] == ["-m", "simtools.simulation_chain.flasher_stream"]
     request = light_sources.flasher_request_from_json(tokens[tokens.index("--request") + 1])
     assert request.run_number == 5
     assert (request.telescope, request.site, request.model_version) == (
@@ -246,7 +246,7 @@ def test_chain_with_fake_downstream_stage(monkeypatch, light_source_context):
     script = runner.stages[0][0].work_directory / "run.sh"
     runner.prepare_run(1, script)
     lines = script.read_text(encoding="utf-8").splitlines()
-    assert "simtools.photon_chain.flasher_stream" in lines[-1]
+    assert "simtools.simulation_chain.flasher_stream" in lines[-1]
     assert lines[-1].endswith(" | fake-downstream -")
 
 

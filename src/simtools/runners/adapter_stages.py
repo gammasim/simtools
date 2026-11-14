@@ -14,13 +14,13 @@ import astropy.units as u
 
 from simtools.corsika.corsika_config import corsika_telescope_ids
 from simtools.job_execution.runner_services import RunnerServices
-from simtools.photon_chain.products import (
+from simtools.runners.stages import StreamTo
+from simtools.simulation_chain.products import (
     CAMERA_PHOTONS_IACT,
     CHERENKOV_PHOTONS,
     PHOTONS_CAMERA,
     PHOTONS_GROUND,
 )
-from simtools.runners.stages import StreamTo
 
 OBDEECT_PACKAGE = "obdeect"
 OBDEECT_PROGRAM_DIRECTORY = Path("stream", "bin")

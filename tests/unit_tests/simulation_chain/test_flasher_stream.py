@@ -3,14 +3,14 @@
 import numpy as np
 import pytest
 
-from simtools.photon_chain import flasher_stream
-from simtools.photon_chain.light_sources import (
+from simtools.ray_tracing.backends.obdeect import ObdeectBackend, ObdeectRayTracer
+from simtools.simulation_chain import flasher_stream
+from simtools.simulation_chain.light_sources import (
     AngularDistribution,
     FlasherRequest,
     PulseShape,
     request_to_json,
 )
-from simtools.ray_tracing.backends.obdeect import ObdeectBackend, ObdeectRayTracer
 
 obdeect_stream = pytest.importorskip("obdeect.stream")
 
@@ -182,8 +182,8 @@ def test_main_writes_stream(toy_telescope, tmp_path):
 
 
 def test_create_telescope_model_from_files_reader(mocker):
-    model = mocker.patch("simtools.photon_chain.flasher_stream.TelescopeModel")
-    reader = mocker.patch("simtools.photon_chain.flasher_stream.SimulationModelReader")
+    model = mocker.patch("simtools.simulation_chain.flasher_stream.TelescopeModel")
+    reader = mocker.patch("simtools.simulation_chain.flasher_stream.SimulationModelReader")
     flasher_stream.create_telescope_model(_request(), simulation_models_path="models")
     reader.from_files.assert_called_once_with("models")
     model.assert_called_once_with(

@@ -4,7 +4,7 @@ The stage traces a photon stream (ground or telescope frame) through the optics 
 telescope of an array model and writes camera-frame photons. The photons of the other telescopes
 are dropped, so a chain runs one instance per telescope and array model, each with its own random
 instrument (mirror errors). The translation of the telescope models into the optics job is in
-``simtools.photon_chain.optics``.
+``simtools.simulation_chain.optics``.
 
 Stage options (chain spec)::
 
@@ -22,15 +22,15 @@ from dataclasses import replace
 from simtools.corsika.corsika_config import corsika_telescope_ids
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.model_utils import export_model_files
-from simtools.photon_chain.optics import (
+from simtools.runners.chain_spec import MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION
+from simtools.runners.stages import StreamTo
+from simtools.simulation_chain.optics import (
     TELESCOPE_TRANSMISSION_MODES,
     optics_requests,
     trace_stream_command,
     write_optical_model,
 )
-from simtools.photon_chain.products import PHOTONS_CAMERA, PHOTONS_GROUND, PHOTONS_TELESCOPE
-from simtools.runners.chain_spec import MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION
-from simtools.runners.stages import StreamTo
+from simtools.simulation_chain.products import PHOTONS_CAMERA, PHOTONS_GROUND, PHOTONS_TELESCOPE
 
 STAGE_NAME = "obdeect_optics"
 #: Photon streams number telescopes from 1 (sim_telarray numbering); the IACT ids of the CORSIKA

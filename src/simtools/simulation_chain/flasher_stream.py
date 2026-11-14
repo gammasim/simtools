@@ -6,9 +6,9 @@ structure, shadow the light; the mirrors and the telescope transmission are bypa
 at the camera plane are written as a photon stream (frame C: x and y on the focal-surface plane,
 z implicit; direction, time, weight and wavelength), one event per pulse and telescope id 1.
 
-Run as ``python -m simtools.photon_chain.flasher_stream --request FILE [--output FILE]`` (see
-``simtools.photon_chain.light_sources.FlasherSource.command``); the stream goes to stdout without
-``--output``.
+Run as ``python -m simtools.simulation_chain.flasher_stream --request FILE [--output FILE]``
+(see ``simtools.simulation_chain.light_sources.FlasherSource.command``); the stream goes to
+stdout without ``--output``.
 """
 
 import argparse
@@ -22,10 +22,10 @@ import numpy as np
 from simtools.io.output_paths import OutputPaths
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model_repository.reader import SimulationModelReader, resolve_model_reader
-from simtools.photon_chain.light_sources import flasher_request_from_json
 from simtools.ray_tracing.backends.interface import LightSourceRequest
 from simtools.runtime.context import RunContext
 from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
+from simtools.simulation_chain.light_sources import flasher_request_from_json
 
 PRODUCER = "simtools-flasher"
 TELESCOPE_ID = 1

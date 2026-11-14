@@ -1,6 +1,6 @@
 """Tests for the photon product names."""
 
-from simtools.photon_chain import products
+from simtools.simulation_chain import products
 
 
 def test_product_names_are_unique_strings():

@@ -6,12 +6,6 @@ from types import SimpleNamespace
 import astropy.units as u
 import pytest
 
-from simtools.photon_chain.products import (
-    CAMERA_PHOTONS_IACT,
-    CHERENKOV_PHOTONS,
-    PHOTONS_CAMERA,
-    PHOTONS_GROUND,
-)
 from simtools.runners import stages
 from simtools.runners.adapter_stages import CorsikaToStreamStage, StreamToSimtelStage
 from simtools.runners.chain_spec import (
@@ -21,6 +15,12 @@ from simtools.runners.chain_spec import (
     ChainSpec,
 )
 from simtools.runners.stages import STDIN, StageInputs, StreamTo
+from simtools.simulation_chain.products import (
+    CAMERA_PHOTONS_IACT,
+    CHERENKOV_PHOTONS,
+    PHOTONS_CAMERA,
+    PHOTONS_GROUND,
+)
 
 
 class _Telescope:

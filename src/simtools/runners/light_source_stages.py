@@ -2,7 +2,7 @@
 
 A light-source stage makes the photons of a calibration device (flasher or illuminator) and
 writes them as a photon stream. Which program makes them is defined by the source type of
-``simtools.photon_chain.light_sources`` (registry ``SOURCE_TYPES``); the stage only builds the
+``simtools.simulation_chain.light_sources`` (registry ``SOURCE_TYPES``); the stage only builds the
 request from the models and runs the command of the source type.
 
 Configuration: the stage reads the settings of a light-emission run from ``StageInputs.args``
@@ -19,8 +19,8 @@ the chain spec (``StageInputs.options_of(name)``) take precedence over the argum
       - stage: sim_telarray
 
 A stage simulates one telescope. The flasher stage traces its light in a separate process
-(``simtools.photon_chain.flasher_stream``) through the optical model of the telescope, so that the
-structure shadows it; the illuminator stage runs the obdeect point-source program.
+(``simtools.simulation_chain.flasher_stream``) through the optical model of the telescope, so
+that the structure shadows it; the illuminator stage runs the obdeect point-source program.
 Adding a light source type means a source type in the registry of ``light_sources`` and
 a subclass of
 ``LightSourceStage`` registered with ``stages.register_stage``.
@@ -33,10 +33,10 @@ from pathlib import Path
 import astropy.units as u
 
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.photon_chain import light_sources
-from simtools.photon_chain.products import PHOTONS_CAMERA, PHOTONS_SKY
 from simtools.runners.stages import StreamTo
 from simtools.simtel.simtel_seeds import instance_seed_pairs
+from simtools.simulation_chain import light_sources
+from simtools.simulation_chain.products import PHOTONS_CAMERA, PHOTONS_SKY
 from simtools.utils import value_conversion
 
 LIGHT_EMISSION_DIRECTORY = "light_emission"
@@ -79,7 +79,7 @@ class LightSourceStage:
     Parameters
     ----------
     source_type : type
-        Source-type class (see ``simtools.photon_chain.light_sources``).
+        Source-type class (see ``simtools.simulation_chain.light_sources``).
     request : FlasherRequest or IlluminatorRequest
         Request of the source type.
     work_directory : str or Path

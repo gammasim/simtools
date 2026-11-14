@@ -34,7 +34,7 @@ from simtools.simulation.light_source_profiles import angular_profile, pulse_pro
 from simtools.utils import value_conversion
 from simtools.utils.geometry import fiducial_radius_from_shape
 
-FLASHER_MODULE = "simtools.photon_chain.flasher_stream"
+FLASHER_MODULE = "simtools.simulation_chain.flasher_stream"
 ILLUMINATOR_EXECUTABLE = "obdeect-sources-point-source"
 WAVELENGTH_TOLERANCE_NM = 0.5
 #: Illuminator pointing of the artificial setup with the telescope at the origin.
@@ -567,7 +567,7 @@ class FlasherSource:
         """
         Return the command tokens that make the photons of a flasher request.
 
-        The command runs ``simtools.photon_chain.flasher_stream``, which traces the light of
+        The command runs ``simtools.simulation_chain.flasher_stream``, which traces the light of
         the flasher to the camera plane (obscurers of the telescope tested, mirrors bypassed).
 
         Parameters

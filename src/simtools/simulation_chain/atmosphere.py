@@ -1,4 +1,4 @@
-"""Atmosphere of the photon chain: model inputs and command line of the obdeect propagation.
+"""Atmosphere of the simulation chain: model inputs and command line of the obdeect propagation.
 
 The obdeect propagation program applies the atmosphere to a photon stream: it moves photons
 from the sky to the ground frame of each telescope, applies the atmospheric transmission and

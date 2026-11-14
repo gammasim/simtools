@@ -1,4 +1,4 @@
-"""Telescope optics of the photon chain: request of one telescope and its obdeect command.
+"""Telescope optics of the simulation chain: request of one telescope and its obdeect command.
 
 An :class:`OpticsRequest` describes what is traced for one telescope of an array model: the model
 it is built from, the pointing, the seeds and the telescope transmission mode. It does not depend
