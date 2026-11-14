@@ -18,7 +18,7 @@ import astropy.units as u
 import numpy as np
 from astropy.constants import c as speed_of_light  # pylint: disable=no-name-in-module
 from astropy.table import QTable
-from obdeect.model import DETECTED, OpticalModel
+from obdeect.ray_tracing import DETECTED, OpticalModel
 
 from simtools.model.model_utils import export_model_files
 from simtools.ray_tracing.backends.interface import image_file_name
