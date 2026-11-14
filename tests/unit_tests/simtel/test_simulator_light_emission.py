@@ -1039,6 +1039,47 @@ def test_flasher_request_geometry(simulator_instance):
     assert altitude == pytest.approx(2156.0 + 16.5)
 
 
+@pytest.mark.parametrize(
+    ("flasher_z", "expected_distance", "expected_axis_z"),
+    [
+        # SST: M2 flasher above the focal surface (vertex at 258.88 cm), light travels down.
+        (310.84, 0.5196, -1.0),
+        # Flasher below the focal surface: distance stays positive, light travels up.
+        (200.0, 0.5888, 1.0),
+    ],
+)
+def test_dual_mirror_flasher_distance_and_axis(
+    simulator_instance, flasher_z, expected_distance, expected_axis_z
+):
+    """Dual-mirror: focal-surface vertex (not focal length) sets distance and axis."""
+    parameters = {
+        "focal_length": 215.0 * u.cm,  # Nominal only; not a physical distance.
+        "focal_surface_parameters": [258.88, -0.00471698] * u.cm,
+        "focus_offset": None,
+        "mirror_offset": 0.0 * u.cm,
+        "camera_body_diameter": 0.57 * u.m,
+        "camera_body_shape": 2,
+    }
+    simulator_instance.telescope_model.get_parameter_value.return_value = 2  # mirror_class
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = parameters.get
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
+        0.0 * u.cm,
+        0.0 * u.cm,
+        flasher_z * u.cm,
+        "primary_mirror_frame",
+    ]
+    simulator_instance.light_emission_config = {FLASHER_PHOTONS: [1000], NUMBER_OF_EVENTS: [1]}
+    source = {"angular_profile": "a", "pulse": None, "wavelength_nm": 400.0, "seeds": (5, 3)}
+
+    distance = simulator_instance.calculate_distance_focal_plane_calibration_device()
+    assert distance.to_value(u.m) == pytest.approx(expected_distance, rel=1e-3)
+
+    request, _, _, altitude = simulator_instance._flasher_request(source, 2156.0)
+    assert request.axis == pytest.approx((0.0, 0.0, expected_axis_z))
+    assert request.position_m == pytest.approx((0.0, 0.0, flasher_z / 100.0))
+    assert altitude == pytest.approx(2156.0 + expected_distance, rel=1e-3)
+
+
 @pytest.mark.parametrize("source_height", [1000.0, 0.0])
 def test_illuminator_request_geometry(simulator_instance, source_height):
     """Telescope at its position with axes offsets; the slant-path transmission applied."""
