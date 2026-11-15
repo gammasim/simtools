@@ -9,7 +9,13 @@ from simtools.sim_events.formats.readers import get_reader
 from simtools.utils.primary_particle import PrimaryParticle
 
 CALIBRATION_RUN_MODES = frozenset(
-    {"pedestals", "pedestals_dark", "pedestals_nsb_only", "direct_injection"}
+    {
+        "pedestals",
+        "pedestals_dark",
+        "pedestals_nsb_only",
+        "pedestals_flasher_dc",
+        "direct_injection",
+    }
 )
 ZENITH_ANGLE_PARAMETER = "zenith_angle"
 

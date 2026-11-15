@@ -90,6 +90,7 @@ scripts.simtools-dependency-manifest = "simtools.applications.dependency_manifes
 scripts.simtools-dependency-versions = "simtools.applications.dependency_versions:main"
 scripts.simtools-derive-bias-curves = "simtools.applications.derive_bias_curves:main"
 scripts.simtools-derive-ctao-array-layouts = "simtools.applications.derive_ctao_array_layouts:main"
+scripts.simtools-derive-flasher-dc-pixel-map = "simtools.applications.derive_flasher_dc_pixel_map:main"
 scripts.simtools-derive-incident-angle = "simtools.applications.derive_incident_angle:main"
 scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 scripts.simtools-derive-photon-electron-spectrum = "simtools.applications.derive_photon_electron_spectrum:main"

@@ -194,3 +194,32 @@ run_number (int, optional)
 .. simtools-integration-example::
     :file: simulate_flasher_full_simulation_mst_nectarcam.yml
 ```
+
+```{eval-rst}
+**FlashCam DC flasher example**
+
+A DC flasher run adds ``flasher_dc_pixel_rate`` (GHz) times the relative pixel map to the
+per-pixel NSB rate for each telescope with a configured
+``flat_fielding_dc`` device. Use an array layout whose telescopes all have the intended DC device.
+Use a model version containing the DC device and its pixel map. Run the DC "on" and "off" runs with identical settings. The
+difference isolates the DC light.
+
+.. code-block:: console
+
+    # DC on
+    simtools-simulate-flasher --run_mode dc \\
+        --flasher_dc_pixel_rate 0.1 \\
+        --run_number 10 --number_of_events 1000 \\
+        --array_layout_name your_mst_layout --site North \\
+        --model_version "$MODEL_VERSION" \\
+        --zenith_angle 20 --azimuth_angle 0
+
+    # DC off
+    simtools-simulate-flasher --run_mode dc \\
+        --flasher_dc_pixel_rate 0 \\
+        --run_number 11 --number_of_events 1000 \\
+        --array_layout_name your_mst_layout --site North \\
+        --model_version "$MODEL_VERSION" \\
+        --zenith_angle 20 --azimuth_angle 0
+
+```

@@ -1,0 +1,33 @@
+%YAML 1.2
+---
+title: Schema for flasher_dc_pixel_rate model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: flasher_dc_pixel_rate
+description: |-
+  Mean additional photo-electron rate per pixel produced by the DC flasher
+  (MSF2-FlashCam). The DC light is added to the night-sky background as an extra
+  per-pixel rate: nsb_pixel_rate_i + flasher_dc_pixel_rate * w_i, where w_i
+  is the relative illumination of pixel i (flasher_dc_relative_pixel_map).
+short_description: |-
+  Mean additional photo-electron rate per pixel of the DC flasher.
+data:
+  - type: float64
+    unit: GHz
+    default: 0.1
+    allowed_range:
+      min: 0.
+instrument:
+  class: Calibration
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: simtools
+    version: ">0.27.1"

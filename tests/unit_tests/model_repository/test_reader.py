@@ -509,3 +509,42 @@ def test_with_resolved_model_reader_keeps_existing_or_absent_reader(monkeypatch)
 
     assert reader_module.with_resolved_model_reader(unconfigured) is unconfigured
     assert reader_module.with_resolved_model_reader(existing) is existing
+
+
+def test_reader_resolves_pulsed_flasher_names_to_legacy_model_directory(tmp_test_directory):
+    """MSF1 and bare MSF names read the MSFx model directory; MSF2 uses its own directory."""
+    root = Path(tmp_test_directory) / "models"
+    production = root / "simulation-models" / "productions" / "1.0.0"
+    _write_json(
+        production / "MSFx-FlashCam.json",
+        {
+            "parameters": {"MSFx-FlashCam": {"flasher_wavelength": "1.0.0"}},
+            "model_version": "1.0.0",
+        },
+    )
+    _write_json(
+        production / "MSF2-FlashCam.json",
+        {
+            "parameters": {"MSF2-FlashCam": {"flasher_dc_pixel_rate": "1.0.0"}},
+            "model_version": "1.0.0",
+        },
+    )
+    parameters = root / "simulation-models" / "model_parameters"
+    _write_json(
+        parameters / "MSFx-FlashCam/flasher_wavelength/flasher_wavelength-1.0.0.json",
+        _parameter("MSFx-FlashCam", "flasher_wavelength", "1.0.0", 400.0),
+    )
+    _write_json(
+        parameters / "MSF2-FlashCam/flasher_dc_pixel_rate/flasher_dc_pixel_rate-1.0.0.json",
+        _parameter("MSF2-FlashCam", "flasher_dc_pixel_rate", "1.0.0", 0.1),
+    )
+    reader = SimulationModelReader.from_files(root)
+
+    for name in ("MSFx-FlashCam", "MSF1-FlashCam", "MSF-FlashCam"):
+        pulsed = reader.get_model_parameters("North", name, "calibration_devices", "1.0.0")
+        assert list(pulsed) == ["flasher_wavelength"]
+        assert pulsed["flasher_wavelength"]["value"] == pytest.approx(400.0)
+
+    dc = reader.get_model_parameters("North", "MSF2-FlashCam", "calibration_devices", "1.0.0")
+    assert list(dc) == ["flasher_dc_pixel_rate"]
+    assert dc["flasher_dc_pixel_rate"]["value"] == pytest.approx(0.1)

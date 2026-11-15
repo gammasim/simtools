@@ -8,9 +8,12 @@ from pathlib import Path
 from unittest import mock
 from unittest.mock import call
 
+import numpy as np
 import pytest
+from astropy.table import Table
 
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.runners.simulator import Simulator
 from simtools.sim_events import file_info
 from simtools.sim_events.simulation_parameters import SimulationParameters
@@ -653,12 +656,249 @@ def test_write_reduced_event_lists_rejects_invalid_batch_size(
     [
         ("direct_injection", ["flat_fielding"]),
         ("pedestals_nsb_only", []),
+        ("pedestals_flasher_dc", ["flat_fielding_dc"]),
         ("what_ever", []),
         (None, []),
     ],
 )
 def test_get_calibration_device_types(run_mode, expected_devices):
     assert Simulator._get_calibration_device_types(run_mode) == expected_devices
+
+
+def _dc_simulator(
+    mocker, run_context, run_mode="pedestals_flasher_dc", dc_rate=None, zenith_angle=20.0, **args
+):
+    simulator = Simulator.__new__(Simulator)
+    simulator.context = run_context.replace(args={"flasher_dc_pixel_rate": dc_rate, **args})
+    simulator.run_mode = run_mode
+    simulator.logger = mocker.Mock()
+    simulator.simulation_parameters = [mocker.Mock(zenith_angle=zenith_angle)]
+    return simulator
+
+
+def _dc_models(mocker, nsb_rate, dc_rate=0.1, device_name="CAL01", **telescope_parameters):
+    """Return (array_model, telescope_model, calibration_model) mocks for one telescope."""
+    parameters = {
+        "nsb_pixel_rate": nsb_rate,
+        "nsb_offaxis": [0.0, 0.0, 0.0, 0.0, 0.0],
+        "nsb_autoscale_airmass": None,
+        "camera_pixels": 3,
+        "mirror_degraded_reflection": 1.0,
+        **telescope_parameters,
+    }
+
+    def get_parameter_value(name):
+        if name not in parameters:
+            raise InvalidModelParameterError(f"Parameter {name} not found")
+        return parameters[name]
+
+    telescope_model = mocker.Mock()
+    telescope_model.get_calibration_device_name.return_value = device_name
+    telescope_model.get_parameter_value.side_effect = get_parameter_value
+
+    calibration_model = mocker.Mock()
+    calibration_model.get_parameter_value.return_value = dc_rate
+    # rows deliberately unsorted by pixel_id
+    calibration_model.get_parameter_table.return_value = Table(
+        {"pixel_id": [2, 0, 1], "relative_rate": [1.5, 0.5, 1.0]}
+    )
+
+    array_model = mocker.Mock()
+    array_model.site_model.get_parameter_value.return_value = None
+    array_model.telescope_models = {"LSTN-01": telescope_model}
+    array_model.calibration_models = {"LSTN-01": {device_name: calibration_model}}
+    return array_model, telescope_model, calibration_model
+
+
+def test_apply_flasher_dc_pixel_rate_uses_model_values(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context)
+    array_model, telescope_model, calibration_model = _dc_models(mocker, nsb_rate=0.2)
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    calibration_model.get_parameter_table.assert_called_once_with("flasher_dc_relative_pixel_map")
+    telescope_model.overwrite_model_parameter.assert_called_once()
+    par_name, new_rate = telescope_model.overwrite_model_parameter.call_args.args
+    assert par_name == "nsb_pixel_rate"
+    # Relative map sorted by pixel_id -> [0.5, 1.0, 1.5]; rate 0.1 GHz.
+    assert new_rate == pytest.approx([0.25, 0.3, 0.35])
+
+
+def test_apply_flasher_dc_pixel_rate_cli_override(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context, dc_rate=0.5)
+    array_model, telescope_model, calibration_model = _dc_models(mocker, nsb_rate=0.0)
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    calibration_model.get_parameter_value.assert_not_called()
+    _, new_rate = telescope_model.overwrite_model_parameter.call_args.args
+    assert new_rate == pytest.approx([0.25, 0.5, 0.75])
+
+
+def test_apply_flasher_dc_pixel_rate_list_nsb(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context, dc_rate=1.0)
+    array_model, telescope_model, _ = _dc_models(mocker, nsb_rate=[0.1, 0.2, 0.3])
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    _, new_rate = telescope_model.overwrite_model_parameter.call_args.args
+    assert new_rate == pytest.approx([0.6, 1.2, 1.8])
+
+
+def test_apply_flasher_dc_pixel_rate_compensates_nsb_scaling(mocker, run_context):
+    # zenith 60 deg with autoscale [0.84, 0.29] gives 1.35; mirror degradation 0.8
+    simulator = _dc_simulator(mocker, run_context, dc_rate=1.35 * 0.8, zenith_angle=60.0)
+    array_model, telescope_model, _ = _dc_models(
+        mocker,
+        nsb_rate=0.0,
+        nsb_autoscale_airmass=[0.84, 0.29],
+        mirror_degraded_reflection=0.8,
+    )
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    _, new_rate = telescope_model.overwrite_model_parameter.call_args.args
+    assert new_rate == pytest.approx([0.5, 1.0, 1.5], rel=1e-4)
+
+
+def test_apply_flasher_dc_pixel_rate_compensates_camera_efficiencies(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context, dc_rate=0.2)
+    array_model, telescope_model, _ = _dc_models(
+        mocker,
+        nsb_rate=0.0,
+        camera_degraded_efficiency=0.5,
+        pm_collection_efficiency=0.5,
+    )
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    _, new_rate = telescope_model.overwrite_model_parameter.call_args.args
+    assert new_rate == pytest.approx([0.4, 0.8, 1.2])
+
+
+def test_apply_flasher_dc_pixel_rate_rejects_active_sky_map(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context)
+    array_model, telescope_model, _ = _dc_models(mocker, nsb_rate=0.0)
+    array_model.site_model.get_parameter_value.return_value = "sky-map.ecsv"
+    simulator.array_models = [array_model]
+
+    with pytest.raises(ValueError, match="cannot compensate an active 'nsb_sky_map'"):
+        simulator._apply_flasher_dc_pixel_rate()
+    telescope_model.overwrite_model_parameter.assert_not_called()
+
+
+def test_apply_flasher_dc_pixel_rate_rejects_invalid_map_ids(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context)
+    array_model, telescope_model, calibration_model = _dc_models(mocker, nsb_rate=0.0)
+    calibration_model.get_parameter_table.return_value = Table(
+        {"pixel_id": [0, 0, 2], "relative_rate": [1.0, 1.0, 1.0]}
+    )
+    simulator.array_models = [array_model]
+
+    with pytest.raises(ValueError, match="each pixel_id once"):
+        simulator._apply_flasher_dc_pixel_rate()
+    telescope_model.overwrite_model_parameter.assert_not_called()
+
+
+def test_apply_flasher_dc_pixel_rate_checks_camera_pixel_count(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context)
+    array_model, telescope_model, _ = _dc_models(mocker, nsb_rate=0.0, camera_pixels=4)
+    simulator.array_models = [array_model]
+
+    with pytest.raises(ValueError, match="map has 3 pixels, but the camera has 4"):
+        simulator._apply_flasher_dc_pixel_rate()
+    telescope_model.overwrite_model_parameter.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "relative_rate",
+    [[1.0, np.nan, 1.0], [1.0, -1.0, 1.0], [0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+)
+def test_apply_flasher_dc_pixel_rate_rejects_invalid_map_values(mocker, run_context, relative_rate):
+    simulator = _dc_simulator(mocker, run_context)
+    array_model, telescope_model, calibration_model = _dc_models(mocker, nsb_rate=0.0)
+    calibration_model.get_parameter_table.return_value = Table(
+        {"pixel_id": [0, 1, 2], "relative_rate": relative_rate}
+    )
+    simulator.array_models = [array_model]
+
+    with pytest.raises(ValueError, match="DC relative pixel rates"):
+        simulator._apply_flasher_dc_pixel_rate()
+    telescope_model.overwrite_model_parameter.assert_not_called()
+
+
+def test_apply_flasher_dc_pixel_rate_accepts_rounding_in_mean(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context)
+    array_model, telescope_model, calibration_model = _dc_models(mocker, nsb_rate=0.0)
+    calibration_model.get_parameter_table.return_value = Table(
+        {"pixel_id": [0, 1, 2], "relative_rate": [0.5, 1.0, 1.500001]}
+    )
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    _, new_rate = telescope_model.overwrite_model_parameter.call_args.args
+    assert new_rate == pytest.approx([0.05, 0.1, 0.1500001])
+
+
+def test_apply_flasher_dc_pixel_rate_manual_nsb_scaling(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context, dc_rate=5.0, nsb_scaling_factor=5.0)
+    array_model, telescope_model, _ = _dc_models(mocker, nsb_rate=0.0)
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    _, new_rate = telescope_model.overwrite_model_parameter.call_args.args
+    assert new_rate == pytest.approx([0.5, 1.0, 1.5])
+
+
+def test_apply_flasher_dc_pixel_rate_rejects_offaxis_function(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context)
+    array_model, telescope_model, _ = _dc_models(
+        mocker, nsb_rate=0.2, nsb_offaxis=[1.0, 0.5, 1.0, 2.0, 0.0]
+    )
+    simulator.array_models = [array_model]
+
+    with pytest.raises(ValueError, match="requires a constant 'nsb_offaxis'"):
+        simulator._apply_flasher_dc_pixel_rate()
+    telescope_model.overwrite_model_parameter.assert_not_called()
+
+
+def test_apply_flasher_dc_pixel_rate_length_mismatch(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context)
+    array_model, telescope_model, _ = _dc_models(mocker, nsb_rate=[0.1, 0.2])
+    simulator.array_models = [array_model]
+
+    with pytest.raises(ValueError, match="NSB pixel rate has 2 entries"):
+        simulator._apply_flasher_dc_pixel_rate()
+    telescope_model.overwrite_model_parameter.assert_not_called()
+
+
+def test_apply_flasher_dc_pixel_rate_missing_device(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context)
+    array_model, telescope_model, _ = _dc_models(mocker, nsb_rate=0.2, device_name=None)
+    array_model.calibration_models = {"LSTN-01": {}}
+    simulator.array_models = [array_model]
+
+    with pytest.raises(ValueError, match="LSTN-01 has no 'flat_fielding_dc' calibration device"):
+        simulator._apply_flasher_dc_pixel_rate()
+    telescope_model.overwrite_model_parameter.assert_not_called()
+
+
+@pytest.mark.parametrize("run_mode", ["pedestals", "direct_injection"])
+def test_apply_flasher_dc_pixel_rate_noop_for_other_run_modes(mocker, run_context, run_mode):
+    simulator = _dc_simulator(mocker, run_context, run_mode=run_mode)
+    array_model, telescope_model, _ = _dc_models(mocker, nsb_rate=0.2)
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    telescope_model.overwrite_model_parameter.assert_not_called()
 
 
 def test_overwrite_flasher_photons_for_direct_injection(mocker, run_context):

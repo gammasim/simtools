@@ -124,6 +124,14 @@ def test_invalid_log_files(tmp_path):
             validate_sim_telarray_logs([log_file])
 
 
+def test_rejects_photon_bunch_read_error(tmp_test_directory):
+    log_file = Path(tmp_test_directory) / "simtel.log"
+    log_file.write_text("Finished.\nSim_telarray finished at end\n")
+    log_file.with_suffix(".err").write_text("Too many photon bunches in item type 1205.\n")
+    with pytest.raises(ValueError, match="validation failed"):
+        validate_sim_telarray_logs([log_file])
+
+
 def test_valid_showers_and_energy(tmp_path):
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")

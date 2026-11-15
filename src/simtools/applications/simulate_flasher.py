@@ -23,6 +23,29 @@ def _validate_max_photoelectrons(args_dict, _config_sources, parser):
         _MAX_PHOTOELECTRONS_MIN <= max_photoelectrons < _MAX_PHOTOELECTRONS_MAX
     ):
         parser.error("--max_photoelectrons must be at least 1000 and less than 500000000.")
+    if args_dict.get("run_mode") in ("direct_injection", "full_simulation") and not (
+        args_dict.get("light_source") or args_dict.get("light_source_type")
+    ):
+        parser.error("A light source is required for pulsed flasher runs.")
+    if (
+        args_dict.get("run_mode") == "dc"
+        and len(value_conversion.ensure_list(args_dict.get("number_of_events"))) != 1
+    ):
+        parser.error("DC runs require one number of events.")
+    if args_dict.get("run_mode") == "dc":
+        for option in (
+            "light_source",
+            "light_source_type",
+            "flasher_photons",
+            "max_photoelectrons",
+        ):
+            if args_dict.get(option) is not None:
+                parser.error(
+                    f"--{option} is not used for DC runs; "
+                    "the telescope model selects the DC device."
+                )
+    elif args_dict.get("flasher_dc_pixel_rate") is not None:
+        parser.error("--flasher_dc_pixel_rate requires --run_mode dc.")
 
 
 _ARGUMENTS = (
@@ -30,20 +53,20 @@ _ARGUMENTS = (
         "run_mode",
         help="Flasher simulation run mode",
         type=str,
-        choices=["direct_injection", "full_simulation"],
+        choices=["direct_injection", "full_simulation", "dc"],
         required=True,
     ),
     cli.ArgumentDefinition(
         "light_source",
         exclusive_group=_LIGHT_SOURCE_GROUP,
-        exclusive_group_required=True,
+        exclusive_group_required=False,
         help="Flasher device associated with a specific telescope, i.e. MSFx-FlashCam",
         type=str,
     ),
     cli.ArgumentDefinition(
         "light_source_type",
         exclusive_group=_LIGHT_SOURCE_GROUP,
-        exclusive_group_required=True,
+        exclusive_group_required=False,
         help="Type of the light source (e.g. flat_fielding)",
         type=str,
     ),
@@ -65,6 +88,16 @@ _ARGUMENTS = (
         type=scientific_int,
         nargs="+",
     ),
+    cli.ArgumentDefinition(
+        "flasher_dc_pixel_rate",
+        help="Mean DC rate in GHz; defaults to the model value.",
+        type=float,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "nsb_scaling_factor", type=float, default=1.0, help="NSB scaling factor."
+    ),
+    cli.ArgumentDefinition("stars", type=str, default=None, help="Stars contributing to NSB."),
     cli.ArgumentDefinition(
         "max_workers",
         group="execution",
@@ -93,6 +126,8 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.RUN_NUMBER,
+        cli.AZIMUTH_ANGLE,
+        cli.ZENITH_ANGLE,
         *cli.SIM_TELARRAY_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
@@ -106,6 +141,19 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
+
+    if app_context.args["run_mode"] == "dc":
+        args = dict(app_context.args)
+        args["run_mode"] = "pedestals_flasher_dc"
+        args["number_of_events"] = value_conversion.ensure_list(args["number_of_events"])[0]
+        simulator = Simulator(
+            label=args.get("label"),
+            model_reader=app_context.model_reader,
+            context=app_context.replace(args=args),
+        )
+        simulator.simulate()
+        simulator.validate_simulations()
+        return
 
     tel_string = (
         f"telescope(s) {app_context.args['telescopes']}"

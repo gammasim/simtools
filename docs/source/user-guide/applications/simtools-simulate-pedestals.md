@@ -29,32 +29,7 @@ nominal value. A list of stars can be provided to simulate additional contributi
         --nsb_scaling_factor 2.0
 
 
-**Command Line Arguments**
 
-run_mode (str, required)
-    Run mode, e.g. "pedestals"
-run_number (int, required)
-    Run number for the simulation.
-number_of_events (int, required)
-    Number of calibration events to simulate.
-array_layout_name (str, required)
-    Array layout name, e.g. "alpha".
-site (str, required)
-    Site name.
-model_version (str, optional)
-    Version of the simulation model.
-nsb_scaling_factor (float, optional)
-    Scaling factor for the night-sky background rate. Default is 1.0, which
-    corresponds to the nominal (dark sky) NSB rate.
-stars (str, optional)
-    Path to a file containing a list of stars (azimuth, zenith, weighting factor
-    separated by whitespace). If provided, the stars will be used to simulate
-    additional contributions to the night-sky background. For details on the
-    parameters, see the sim_telarray manual.
-zenith_angle (float, optional)
-    Zenith angle in degrees.
-azimuth_angle (float, optional)
-    Azimuth angle in degrees.
 ```
 
 ## Command line arguments

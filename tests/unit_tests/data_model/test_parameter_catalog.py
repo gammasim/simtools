@@ -39,3 +39,20 @@ def test_metadata_mode_for_missing_and_unmapped_parameter_software():
     with pytest.raises(KeyError, match="Parameter Not_a_parameter without schema definition"):
         catalog.get_simulation_software_meta_parameter_mode("Not_a_parameter")
     assert catalog.get_simulation_software_meta_parameter_mode("focal_length", "unknown") is None
+
+
+@pytest.mark.parametrize(
+    ("parameter_name", "expected_class"),
+    [
+        ("flasher_dc_pixel_rate", "Calibration"),
+        ("flasher_dc_relative_pixel_map", "Calibration"),
+    ],
+)
+def test_dc_flasher_parameters(parameter_name, expected_class):
+    assert catalog.get_collection_name_from_parameter_name(parameter_name) == "calibration_devices"
+    assert catalog.get_simulation_software_name_from_parameter_name(parameter_name) is None
+    assert (
+        catalog.get_simulation_software_name_from_parameter_name(parameter_name, "simtools")
+        == parameter_name
+    )
+    assert catalog.model_parameters()[parameter_name]["instrument"]["class"] == expected_class

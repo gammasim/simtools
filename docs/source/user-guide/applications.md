@@ -67,6 +67,7 @@ simtools-dependency-manifest <applications/simtools-dependency-manifest>
 simtools-dependency-versions <applications/simtools-dependency-versions>
 simtools-derive-bias-curves <applications/simtools-derive-bias-curves>
 simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>
+simtools-derive-flasher-dc-pixel-map <applications/simtools-derive-flasher-dc-pixel-map>
 simtools-derive-incident-angle <applications/simtools-derive-incident-angle>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>

@@ -274,6 +274,44 @@ def test_segmented_dual_mirror_telescope_does_not_write_mirror_list(
     ]
 
 
+def test_write_telescope_config_serializes_nonuniform_nsb_by_pixel(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    config_path = Path(tmp_test_directory) / "telescope.cfg"
+    mocker.patch.object(
+        simtel_config_writer,
+        "_get_parameters_for_sim_telarray",
+        return_value={"nightsky_background": [0.25, 0.3, 0.35]},
+    )
+    mocker.patch.object(simtel_config_writer, "_get_sim_telarray_metadata", return_value=[])
+
+    simtel_config_writer.write_telescope_config_file(config_path, {})
+
+    lines = config_path.read_text().splitlines()
+    assert [line for line in lines if line.startswith("nightsky_background")] == [
+        "nightsky_background = (0-0): 0.25",
+        "nightsky_background = (1-1): 0.3",
+        "nightsky_background = (2-2): 0.35",
+    ]
+
+
+@pytest.mark.parametrize("rates", [[0.2], [0.2, 0.2, 0.2]])
+def test_write_telescope_config_serializes_uniform_nsb_for_all_pixels(
+    simtel_config_writer, tmp_test_directory, mocker, rates
+):
+    config_path = Path(tmp_test_directory) / "telescope.cfg"
+    mocker.patch.object(
+        simtel_config_writer,
+        "_get_parameters_for_sim_telarray",
+        return_value={"nightsky_background": rates},
+    )
+    mocker.patch.object(simtel_config_writer, "_get_sim_telarray_metadata", return_value=[])
+
+    simtel_config_writer.write_telescope_config_file(config_path, {})
+
+    assert "nightsky_background = all: 0.2\n" in config_path.read_text()
+
+
 def test_write_array_config_file(
     simtel_config_writer, telescope_model_lst, io_handler, file_has_text, site_model_north
 ):
