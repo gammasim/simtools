@@ -7,7 +7,7 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: flasher_dc_relative_pixel_map
 description: |-
-  Relative illumination per pixel of the DC flasher (MSF2-FlashCam). Used as weights w_i
+  Relative illumination per pixel of the DC flasher (MSFx-FlashCam-DC). Used as weights w_i
   in the per-pixel rate nsb_pixel_rate_i + flasher_dc_pixel_rate * w_i.
   The mean of relative_rate over all pixels is 1.
 short_description: Relative DC flasher illumination per pixel.

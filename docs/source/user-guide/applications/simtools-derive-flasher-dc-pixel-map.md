@@ -7,7 +7,7 @@
 ```
 
 ```{eval-rst}
-Derive the relative per-pixel illumination map of a DC flat-fielding device (e.g. ``MSF2-FlashCam``)
+Derive the relative per-pixel illumination map of a DC flat-fielding device (e.g. ``MSFx-FlashCam-DC``)
 from a low-intensity flasher simulation. The application sums the true photo-electrons per pixel
 over all events and writes the map normalised to a mean of 1 (ECSV columns: ``pixel_id``,
 ``relative_rate``).

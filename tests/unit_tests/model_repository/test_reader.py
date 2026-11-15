@@ -511,8 +511,8 @@ def test_with_resolved_model_reader_keeps_existing_or_absent_reader(monkeypatch)
     assert reader_module.with_resolved_model_reader(existing) is existing
 
 
-def test_reader_resolves_pulsed_flasher_names_to_legacy_model_directory(tmp_test_directory):
-    """MSF1 and bare MSF names read the MSFx model directory; MSF2 uses its own directory."""
+def test_reader_loads_distinct_flashcam_flasher_models(tmp_test_directory):
+    """Pulsed and DC devices read their respective model directories."""
     root = Path(tmp_test_directory) / "models"
     production = root / "simulation-models" / "productions" / "1.0.0"
     _write_json(
@@ -523,9 +523,9 @@ def test_reader_resolves_pulsed_flasher_names_to_legacy_model_directory(tmp_test
         },
     )
     _write_json(
-        production / "MSF2-FlashCam.json",
+        production / "MSFx-FlashCam-DC.json",
         {
-            "parameters": {"MSF2-FlashCam": {"flasher_dc_pixel_rate": "1.0.0"}},
+            "parameters": {"MSFx-FlashCam-DC": {"flasher_dc_pixel_rate": "1.0.0"}},
             "model_version": "1.0.0",
         },
     )
@@ -535,16 +535,16 @@ def test_reader_resolves_pulsed_flasher_names_to_legacy_model_directory(tmp_test
         _parameter("MSFx-FlashCam", "flasher_wavelength", "1.0.0", 400.0),
     )
     _write_json(
-        parameters / "MSF2-FlashCam/flasher_dc_pixel_rate/flasher_dc_pixel_rate-1.0.0.json",
-        _parameter("MSF2-FlashCam", "flasher_dc_pixel_rate", "1.0.0", 0.1),
+        parameters / "MSFx-FlashCam-DC/flasher_dc_pixel_rate/flasher_dc_pixel_rate-1.0.0.json",
+        _parameter("MSFx-FlashCam-DC", "flasher_dc_pixel_rate", "1.0.0", 0.1),
     )
     reader = SimulationModelReader.from_files(root)
 
-    for name in ("MSFx-FlashCam", "MSF1-FlashCam", "MSF-FlashCam"):
+    for name in ("MSFx-FlashCam", "MSF-FlashCam"):
         pulsed = reader.get_model_parameters("North", name, "calibration_devices", "1.0.0")
         assert list(pulsed) == ["flasher_wavelength"]
         assert pulsed["flasher_wavelength"]["value"] == pytest.approx(400.0)
 
-    dc = reader.get_model_parameters("North", "MSF2-FlashCam", "calibration_devices", "1.0.0")
+    dc = reader.get_model_parameters("North", "MSFx-FlashCam-DC", "calibration_devices", "1.0.0")
     assert list(dc) == ["flasher_dc_pixel_rate"]
     assert dc["flasher_dc_pixel_rate"]["value"] == pytest.approx(0.1)

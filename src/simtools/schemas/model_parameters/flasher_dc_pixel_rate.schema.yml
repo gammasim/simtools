@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: flasher_dc_pixel_rate
 description: |-
   Mean additional photo-electron rate per pixel produced by the DC flasher
-  (MSF2-FlashCam). The DC light is added to the night-sky background as an extra
+  (MSFx-FlashCam-DC). The DC light is added to the night-sky background as an extra
   per-pixel rate: nsb_pixel_rate_i + flasher_dc_pixel_rate * w_i, where w_i
   is the relative illumination of pixel i (flasher_dc_relative_pixel_map).
 short_description: |-

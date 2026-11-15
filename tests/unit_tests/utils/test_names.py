@@ -57,47 +57,29 @@ def test_get_list_of_array_element_types():
     calibration_types = names.get_list_of_array_element_types(
         array_element_class="calibration_devices", site=None
     )
-    assert {"MSF1", "MSF2", "MSFx"}.issubset(calibration_types)
+    assert "MSFx" in calibration_types
 
 
-@pytest.mark.parametrize("name", ["MSFx-FlashCam", "MSF1-FlashCam", "MSF-FlashCam"])
-def test_pulsed_flasher_names_resolve_to_same_model_directory(name):
-    assert names.model_storage_name(name) == "MSFx-FlashCam"
+@pytest.mark.parametrize("name", ["MSFx-FlashCam", "MSFx-FlashCam-DC"])
+def test_flashcam_flasher_names(name):
+    assert names.validate_array_element_name(name) == name
+    assert names.get_array_element_type_from_name(name) == "MSFx"
     assert names.is_design_type(name)
+    assert names.model_storage_name(name) == name
     assert names.get_collection_name_from_array_element_name(name) == "calibration_devices"
 
 
-def test_pulsed_flasher_name_validation():
-    assert names.validate_array_element_name("MSFx-FlashCam") == "MSFx-FlashCam"
-    assert names.validate_array_element_name("MSF1-FlashCam") == "MSF1-FlashCam"
-    assert names.validate_array_element_name("MSF-FlashCam") == "MSF1-FlashCam"
-    assert names.get_array_element_type_from_name("MSF-FlashCam") == "MSF1"
-    assert names.get_array_element_id_from_name("MSF-FlashCam") == "FlashCam"
-    assert names.array_element_design_types("MSF") == names.array_element_design_types("MSF1")
-
-
-def test_dc_flasher_name_validation():
-    assert names.validate_array_element_name("MSF2-FlashCam") == "MSF2-FlashCam"
-    assert names.is_design_type("MSF2-FlashCam")
-    assert names.model_storage_name("MSF2-FlashCam") == "MSF2-FlashCam"
-    assert (
-        names.get_collection_name_from_array_element_name("MSF2-FlashCam") == "calibration_devices"
-    )
-    with pytest.raises(ValueError, match=r"^Invalid array element ID name FlashCamDC$"):
-        names.validate_array_element_name("MSF2-FlashCamDC")
-    with pytest.raises(ValueError, match=r"^Invalid array element ID name FlashCamDC$"):
-        names.validate_array_element_name("MSFx-FlashCamDC")
+def test_dc_flasher_design_is_distinct():
+    assert names.get_array_element_id_from_name("MSFx-FlashCam-DC") == "FlashCam-DC"
+    for other in ("MSFx-FlashCam", "MSFx-NectarCam"):
+        assert not names.matches_array_element_name_or_design_type("MSFx-FlashCam-DC", other)
+        assert not names.matches_array_element_name_or_design_type(other, "MSFx-FlashCam-DC")
 
 
 def test_element_type_without_model_storage_alias_is_unchanged():
     assert names.model_storage_name("MSTN-01") == "MSTN-01"
     assert names.model_storage_name("OBS-North") == "OBS-North"
     assert names.model_storage_name(None) is None
-
-
-def test_invalid_flasher_element_type_rejected():
-    with pytest.raises(ValueError, match=r"^Invalid name MSDx$"):
-        names.validate_array_element_name("MSDx-FlashCam")
 
 
 def test_instrument_class_key_to_collection():

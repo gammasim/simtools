@@ -131,24 +131,12 @@ data:
     observatory: "CTAO"
     site: "South"
     description: "Lightning sensor"
-  MSF1:
-    collection: "calibration_devices"
-    observatory: "CTAO"
-    site: ["North", "South"]
-    design_types: ["FlashCam", "NectarCam", "test"]
-    description: "Flat-fielding device unit 1 (MST, pulsed); stored under the legacy name MSFx"
-  MSF2:
-    collection: "calibration_devices"
-    observatory: "CTAO"
-    site: ["North", "South"]
-    design_types: ["FlashCam", "test"]
-    description: "Flat-fielding device unit 2 (MST, DC flat-fielding as extra NSB)"
   MSFx:
     collection: "calibration_devices"
     observatory: "CTAO"
     site: ["North", "South"]
-    design_types: ["FlashCam", "NectarCam", "test"]
-    description: "Legacy name of MSF1 (MST flat-fielding device, pulsed)"
+    design_types: ["FlashCam", "FlashCam-DC", "NectarCam", "test"]
+    description: "Flat-fielding device (MST)"
   LSFN:
     collection: "calibration_devices"
     observatory: "CTAO"

@@ -27,41 +27,21 @@ from simtools.constants import (
 
 _logger = logging.getLogger(__name__)
 
-# Element type names that resolve to a canonical element type (bare 'MSF' is unit 1).
-_ELEMENT_TYPE_ALIASES = {"MSF": "MSF1"}
-
-# Model repository directory names of element types stored under another name.
-# MSF1 units use the existing MSFx model parameter directories.
-_MODEL_STORAGE_TYPE_NAMES = {"MSF1": "MSFx"}
+# Preserve the historical bare MSF spelling for the pulsed model.
+_ELEMENT_TYPE_ALIASES = {"MSF": "MSFx"}
 
 
 def _canonical_element_type(array_element_type):
-    """Return the canonical element type for an element type name (e.g., 'MSF' -> 'MSF1')."""
+    """Return the canonical element type for a historical alias."""
     return _ELEMENT_TYPE_ALIASES.get(array_element_type, array_element_type)
 
 
 def model_storage_name(array_element_name):
-    """
-    Return the model repository name of an array element.
-
-    Element types stored under another name (MSF1 is stored as MSFx) are mapped to that
-    name. All other names are returned unchanged.
-
-    Parameters
-    ----------
-    array_element_name: str
-        Array element name (e.g., MSF1-FlashCam, MSFx-FlashCam, MSF2-FlashCam).
-
-    Returns
-    -------
-    str
-        Model repository name (e.g., MSFx-FlashCam for MSF1-FlashCam).
-    """
+    """Return the model repository name, resolving historical element type aliases."""
     if array_element_name is None or "-" not in array_element_name:
         return array_element_name
     element_type, _, element_id = array_element_name.partition("-")
-    element_type = _canonical_element_type(element_type)
-    return f"{_MODEL_STORAGE_TYPE_NAMES.get(element_type, element_type)}-{element_id}"
+    return f"{_canonical_element_type(element_type)}-{element_id}"
 
 
 @cache
@@ -196,6 +176,13 @@ def matches_array_element_name_or_design_type(element_name, reference_element_na
     if "-" not in validated_element_name or "-" not in validated_reference_element_name:
         return False
 
+    if (
+        "MSFx-FlashCam-DC" in (validated_element_name, validated_reference_element_name)
+        and is_design_type(validated_element_name)
+        and is_design_type(validated_reference_element_name)
+    ):
+        return False
+
     return is_design_type(validated_element_name) and (
         get_array_element_type_from_name(validated_element_name)
         == get_array_element_type_from_name(validated_reference_element_name)
@@ -322,7 +309,7 @@ def validate_array_element_name(array_element_name):
         Validated name.
     """
     try:
-        _array_element_type, _array_element_id = array_element_name.split("-")
+        _array_element_type, _array_element_id = array_element_name.split("-", maxsplit=1)
     except ValueError as exc:
         msg = f"Invalid name {array_element_name}"
         raise ValueError(msg) from exc
@@ -400,7 +387,8 @@ def get_array_element_id_from_name(array_element_name):
     """
     try:
         return validate_array_element_id_name(
-            array_element_name.split("-")[1], array_element_name.split("-")[0]
+            array_element_name.split("-", maxsplit=1)[1],
+            array_element_name.split("-", maxsplit=1)[0],
         )
     except IndexError as exc:
         raise ValueError(f"Invalid name {array_element_name}") from exc
