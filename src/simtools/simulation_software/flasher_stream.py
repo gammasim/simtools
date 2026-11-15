@@ -6,6 +6,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import astropy.units as u
 import numpy as np
 
 from simtools.io.output_paths import OutputPaths
@@ -19,7 +20,7 @@ from simtools.simulation_software.light_sources import flasher_request_from_json
 PRODUCER = "simtools-flasher"
 TELESCOPE_ID = 1
 MAX_ROWS = 1 << 16
-_STREAM_COLUMNS = ("x", "y", "cx", "cy", "cz", "t", "w", "wavelength")
+_STREAM_COLUMNS = ("x", "y", "cx", "cy", "cz", "t", "w", "wavelength", "zem")
 
 
 def light_source_request(request):
@@ -42,10 +43,15 @@ def light_source_request(request):
     )
 
 
-def stream_columns(block):
-    """Return the float32 stream columns of a block of photons at the camera plane."""
+def stream_columns(block, emission_altitude_m):
+    """
+    Return the float32 stream columns of a block of photons at the camera plane.
+
+    The emission altitude (``zem``) is the same for all photons of the flasher.
+    """
     position, direction = block["position_m"], block["direction"]
     values = {
+        "zem": np.full(len(position), emission_altitude_m),
         "x": position[:, 0],
         "y": position[:, 1],
         "cx": direction[:, 0],
@@ -58,14 +64,14 @@ def stream_columns(block):
     return {name: np.ascontiguousarray(values[name], dtype=np.float32) for name in _STREAM_COLUMNS}
 
 
-def _write_pulse(writer, event_number, blocks):
+def _write_pulse(writer, event_number, blocks, emission_altitude_m):
     """Write one pulse as an event with one telescope."""
     writer.write("event", {"event_number": event_number})
     writer.write("telescope", {"telescope_id": TELESCOPE_ID, "frame": 3})
     first_index = 0
     weight = 0.0
     for block in blocks:
-        columns = stream_columns(block)
+        columns = stream_columns(block, emission_altitude_m)
         for start in range(0, len(columns["x"]), MAX_ROWS):
             chunk = {name: values[start : start + MAX_ROWS] for name, values in columns.items()}
             writer.write_photons(TELESCOPE_ID, "camera", first_index + start, chunk)
@@ -74,6 +80,23 @@ def _write_pulse(writer, event_number, blocks):
     writer.write("telescope_end", {"telescope_id": TELESCOPE_ID, "photons": weight})
     writer.write("event_end", {})
     return first_index
+
+
+def telescope_run_fields(telescope_model):
+    """
+    Return the telescope arrays of the run record (one telescope at the origin).
+
+    The flasher photons are in the camera frame, so the telescope is at the origin (as in the
+    default light-emission chain, ff-1m writes its telescope at the origin). Its radius is the
+    telescope sphere radius of the model, as written to the CORSIKA telescope list.
+    """
+    radius = telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
+    return {
+        "telescope_x_m": [0.0],
+        "telescope_y_m": [0.0],
+        "telescope_z_m": [0.0],
+        "telescope_r_m": [float(radius.to_value(u.m))],
+    }
 
 
 def write_flasher_stream(tracer, request, output):
@@ -97,7 +120,13 @@ def write_flasher_stream(tracer, request, output):
     import obdeect.stream  # pylint: disable=import-outside-toplevel
 
     pulses = tracer.trace_light_source(light_source_request(request))
-    sink = sys.stdout.buffer if str(output) == "-" else str(output)
+    altitude_m = (
+        request.observation_level_m
+        if request.emission_altitude_m is None
+        else request.emission_altitude_m
+    )
+    # obdeect Writer takes a path, as its own stages do for output "-": stdout is /dev/stdout
+    sink = "/dev/stdout" if str(output) == "-" else str(output)
     total = 0
     with obdeect.stream.Writer(sink, PRODUCER) as writer:
         writer.write(
@@ -109,10 +138,11 @@ def write_flasher_stream(tracer, request, output):
                 "wavelength_max_nm": request.wavelength_nm,
                 "n_telescopes": 1,
                 "refraction_applied": 0,
+                **telescope_run_fields(tracer.telescope_model),
             },
         )
         for event_number, blocks in enumerate(pulses, start=1):
-            total += _write_pulse(writer, event_number, blocks)
+            total += _write_pulse(writer, event_number, blocks, altitude_m)
         writer.write("run_end", {})
     return total
 

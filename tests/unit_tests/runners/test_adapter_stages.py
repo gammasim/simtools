@@ -1,12 +1,13 @@
 """Tests for the adapter stages of the obdeect chain."""
 
 import importlib.util
+from pathlib import Path
 from types import SimpleNamespace
 
 import astropy.units as u
 import pytest
 
-from simtools.runners import stages
+from simtools.runners import adapter_stages, stages
 from simtools.runners.adapter_stages import CorsikaToStreamStage, StreamToSimtelStage
 from simtools.runners.chain_spec import (
     ATMOSPHERIC_EXTINCTION,
@@ -87,7 +88,7 @@ def _fake_stage(name, consumes, produces, factors=()):
         streams = True
 
         @classmethod
-        def applied_factors(cls, options):
+        def applied_factors(cls, options, upstream=frozenset()):
             return frozenset(factors)
 
     FakeStage.name = name
@@ -202,7 +203,7 @@ def test_stream_to_simtel_writes_camera_map_of_all_telescopes(stream_to_simtel):
     stream_to_simtel.prepare(run_number=1, input_file=STDIN, output=StreamTo(("x -",)))
 
     assert stream_to_simtel.camera_map_file(1).read_text(encoding="utf-8") == (
-        "0 1 0.0\n1 2 90.0\n"
+        "1 1 0.0\n2 2 90.0\n"
     )
 
 
@@ -232,6 +233,41 @@ def test_stream_to_simtel_single_allow_pending_as_list(corsika_config_mock_array
     lines = stage.prepare(run_number=1, input_file=STDIN, output=StreamTo(("x -",)))
 
     assert "--allow-pending a --allow-pending b -" in lines[0]
+
+
+def test_stream_to_simtel_writes_site_atmprof_for_light_source(stream_to_simtel, monkeypatch):
+    calls = []
+
+    def fake_export(site_model, directory):
+        calls.append((site_model, directory))
+        return Path(directory) / "atmosphere-profile.dat", Path(directory) / "transmission.dat"
+
+    monkeypatch.setattr(adapter_stages, "export_atmosphere_files", fake_export)
+    stream_to_simtel.array_model.site_model = "site"
+    stream_to_simtel.write_atmprof = True
+    lines = stream_to_simtel.prepare(
+        run_number=1, input_file="photons.pst", output=StreamTo(("sim_telarray -",))
+    )
+
+    assert "--atmprof" in lines[0]
+    assert (
+        str(Path(stream_to_simtel.camera_map_file(1)).parent / "atmosphere-profile.dat")
+        in (lines[0])
+    )
+    assert calls[0][0] == "site"
+
+
+def test_stream_to_simtel_without_light_source_has_no_atmprof(stream_to_simtel, monkeypatch):
+    monkeypatch.setattr(
+        adapter_stages,
+        "export_atmosphere_files",
+        lambda *args: pytest.fail("no profile export for CORSIKA streams"),
+    )
+    lines = stream_to_simtel.prepare(
+        run_number=1, input_file="photons.pst", output=StreamTo(("sim_telarray -",))
+    )
+
+    assert "--atmprof" not in lines[0]
 
 
 def test_stream_to_simtel_requires_input(stream_to_simtel):
@@ -284,8 +320,58 @@ def test_obdeect_chain_with_bypass_mode_3_is_valid(fake_atmosphere_and_optics):
 
 
 @pytest.mark.parametrize("mode", [1, 2])
-def test_obdeect_chain_rejects_atmosphere_applied_twice(fake_atmosphere_and_optics, mode):
+def test_obdeect_chain_with_bypass_one_or_two_applies_extinction_once(
+    fake_atmosphere_and_optics, mode
+):
     spec = ChainSpec(_OBDEECT_CHAIN, {"sim_telarray": {"bypass_optics": mode}})
+
+    assert spec.chain().stages == _OBDEECT_CHAIN
+    assert dict(spec.applied_factors())["sim_telarray"] == frozenset({"quantum_efficiency"})
+
+
+def test_obdeect_chain_mode_zero_applies_extinction_twice(fake_atmosphere_and_optics):
+    spec = ChainSpec(_OBDEECT_CHAIN, {"sim_telarray": {"bypass_optics": 0}})
 
     with pytest.raises(ValueError, match="applies 'atmospheric_extinction' twice"):
         spec.chain()
+
+
+@pytest.mark.parametrize(
+    ("stages_of_chain", "options", "expected"),
+    [
+        (("corsika_to_stream", "stream_to_simtel"), {}, ()),
+        (("obdeect_atmosphere", "stream_to_simtel"), {"efficiency_envelope": "qe"}, ("qe",)),
+        (
+            ("obdeect_atmosphere", "stream_to_simtel"),
+            {"efficiency_envelope": "none"},
+            (),
+        ),
+        (
+            ("obdeect_atmosphere", "stream_to_simtel"),
+            {"scaled_factors": ["qe"]},
+            ("qe",),
+        ),
+    ],
+)
+def test_scaled_factors_follow_efficiency_envelope(
+    corsika_config_mock_array_model, stages_of_chain, options, expected
+):
+    config = corsika_config_mock_array_model
+    atmosphere_options = {k: v for k, v in options.items() if k == "efficiency_envelope"}
+    stream_options = {k: v for k, v in options.items() if k == "scaled_factors"}
+    chain_options = {"stream_to_simtel": stream_options}
+    if atmosphere_options:
+        chain_options["obdeect_atmosphere"] = atmosphere_options
+    inputs = StageInputs(
+        array_models=(_array_model(_Telescope(1)),),
+        simulation_parameters=(config.simulation_parameters,),
+        shower_configurations=(config,),
+        args={},
+        context=config.context,
+        chain_options=chain_options,
+        stages=stages_of_chain,
+    )
+
+    (stage,) = StreamToSimtelStage.instances(inputs)
+
+    assert stage.scaled_factors == expected

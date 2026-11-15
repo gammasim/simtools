@@ -3,13 +3,16 @@
 from pathlib import Path
 
 from simtools.simulation_software.atmosphere import STDIO
+from simtools.simulation_software.efficiency import OBDEECT_QE_FACTOR
 from simtools.simulation_software.programs import program_command
 
 SOFTWARE = "obdeect"
 PROPAGATION_PROGRAM = "obdeect-propagation-run"
 
 
-def propagation_command(request, *, input_file=STDIO, output_file=STDIO, program=None):
+def propagation_command(
+    request, *, input_file=STDIO, output_file=STDIO, envelope_file=None, program=None
+):
     """
     Return the command-line tokens of the obdeect propagation for an atmosphere request.
 
@@ -21,6 +24,8 @@ def propagation_command(request, *, input_file=STDIO, output_file=STDIO, program
         Input photon stream; ``-`` reads stdin.
     output_file : str or Path
         Output photon stream; ``-`` writes stdout.
+    envelope_file : str or Path, optional
+        Quantum-efficiency bound (two-column nm, value) thinning the photons (``--envelope qe``).
     program : str, Path or list of str, optional
         Propagation program (command tokens); default: the program of the program catalog.
 
@@ -51,4 +56,6 @@ def propagation_command(request, *, input_file=STDIO, output_file=STDIO, program
         command += ["--wavelength-range", str(low), str(high)]
     for telescope_id, pathlength in request.telescope_pathlen_m.items():
         command += ["--telescope-pathlen", f"{telescope_id}={pathlength}"]
+    if envelope_file is not None:
+        command += ["--envelope", f"{OBDEECT_QE_FACTOR}={envelope_file}"]
     return [*command, "-i", str(input_file), "-o", str(output_file)]

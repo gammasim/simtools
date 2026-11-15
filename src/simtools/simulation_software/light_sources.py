@@ -64,6 +64,9 @@ class FlasherRequest:
         Simulation seed.
     instrument_seed : int
         Seed of the random instrument realisation.
+    emission_altitude_m : float or None
+        Emission altitude of the flasher [m a.s.l.] (sim_telarray ``zem``); None uses the
+        observation level.
     """
 
     position_m: tuple
@@ -80,6 +83,7 @@ class FlasherRequest:
     run_number: int = 1
     seed: int = 1
     instrument_seed: int = 1
+    emission_altitude_m: float | None = None
 
     @property
     def photons_per_pulse(self):
@@ -273,6 +277,34 @@ def _common_settings(calibration_model, site_model, config):
     }
 
 
+def _vertical_focus_offset_m(telescope_model):
+    """Return the vertical focus offset of the telescope [m] (as the light-emission run)."""
+    values = telescope_model.get_parameter_value_with_unit("focus_offset")
+    if values is None:
+        return 0.0
+    values = value_conversion.ensure_list(values)
+    offset = values[0].to_value(u.m)
+    if len(values) < 4 or not (values[2].value and values[3].value):
+        return offset
+    reference = values[1].to_value(u.rad)
+    return offset + (
+        values[2].value * (1.0 - np.cos(reference)) - values[3].value * np.sin(reference)
+    ) * values[0].unit.to(u.m)
+
+
+def _flasher_emission_altitude_m(calibration_model, telescope_model, observation_level_m):
+    """
+    Return the emission altitude of the flasher [m a.s.l.] as the light-emission run.
+
+    The flasher is at the distance focal length + focus offset - flasher z from the focal plane
+    (the distance of the light-emission run), at the observation level plus that distance.
+    """
+    focal_length_m = _meters(telescope_model.get_parameter_value_with_unit("focal_length"))
+    flasher_z_m = _meters(calibration_model.get_parameter_value_with_unit("flasher_position")[2])
+    distance_m = focal_length_m + _vertical_focus_offset_m(telescope_model) - flasher_z_m
+    return observation_level_m + distance_m
+
+
 def flasher_request(calibration_model, telescope_model, site_model, config, seed=1):
     """
     Return the request of a flasher (flat-fielding light source) in a telescope.
@@ -308,6 +340,7 @@ def flasher_request(calibration_model, telescope_model, site_model, config, seed
         telescope_model.get_parameter_value("camera_body_shape"),
     )
     events, photons = _photon_settings(calibration_model, config)
+    common = _common_settings(calibration_model, site_model, config)
     return FlasherRequest(
         position_m=(x_m, y_m, z_m - mirror_offset_m),
         camera_radius_m=camera_radius_m,
@@ -318,7 +351,10 @@ def flasher_request(calibration_model, telescope_model, site_model, config, seed
         model_version=str(config.get("model_version") or ""),
         seed=int(seed),
         instrument_seed=int(config.get("instrument_seed") or 1),
-        **_common_settings(calibration_model, site_model, config),
+        emission_altitude_m=_flasher_emission_altitude_m(
+            calibration_model, telescope_model, common["observation_level_m"]
+        ),
+        **common,
     )
 
 
@@ -389,7 +425,7 @@ def telescope_position_m(telescope_model, illuminator_m, config):
         dtype=float,
     )
     offsets = telescope_model.get_parameter_value_with_unit("axes_offsets")
-    offsets_m = [_meters(offset) for offset in value_conversion.ensure_list(offsets)]
+    offsets_m = [_meters(offset) for offset in offsets[:2]]
     offsets_m = [*offsets_m, 0.0, 0.0][:2]
     if np.allclose(offsets_m, 0.0):
         return telescope
@@ -494,7 +530,15 @@ def source_name_for_model(light_source_type):
     )
 
 
-def source_command(name, request, work_directory, output=None, file_token="", executable=None):
+def source_command(
+    name,
+    request,
+    work_directory,
+    output=None,
+    file_token="",
+    executable=None,
+    simulation_models_path=None,
+):
     """Return command tokens for a source request."""
     from simtools.simulation_software.obdeect import sources  # pylint: disable=C0415
 
@@ -503,4 +547,13 @@ def source_command(name, request, work_directory, output=None, file_token="", ex
         command = commands[name]
     except KeyError as exc:
         raise ValueError(f"Unknown light source type {name!r}; known: {sorted(commands)}") from exc
+    if name == "flasher":
+        return command(
+            request,
+            work_directory,
+            output,
+            file_token,
+            executable,
+            simulation_models_path=simulation_models_path,
+        )
     return command(request, work_directory, output, file_token, executable)

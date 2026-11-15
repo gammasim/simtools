@@ -132,3 +132,36 @@ def test_illuminator_command_executable_override(tmp_path):
     tokens = sources.illuminator_command(_illuminator_request(), tmp_path, executable="my-source")
     assert tokens[0] == "my-source"
     assert tokens[1] == "-R"
+
+
+def test_flasher_command_passes_simulation_models_path(tmp_path):
+    """The flasher subprocess reads the telescope model from the models path of the run."""
+    command = sources.flasher_command(
+        _flasher_request(),
+        tmp_path,
+        output=tmp_path / "out.stream",
+        executable="python",
+        simulation_models_path="/models",
+    )
+
+    index = command.index("--simulation-models-path")
+    assert command[index + 1] == "/models"
+    assert command.index("--output-path") < index
+
+
+def test_flasher_command_without_models_path_has_no_option(tmp_path):
+    command = sources.flasher_command(_flasher_request(), tmp_path, executable="python")
+
+    assert "--simulation-models-path" not in command
+
+
+def test_source_command_passes_models_path_to_flasher_only(tmp_path):
+    flasher = light_sources.source_command(
+        "flasher",
+        _flasher_request(),
+        tmp_path,
+        executable="python",
+        simulation_models_path="/models",
+    )
+
+    assert flasher[flasher.index("--simulation-models-path") + 1] == "/models"

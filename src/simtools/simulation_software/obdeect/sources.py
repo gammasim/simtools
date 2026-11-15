@@ -65,7 +65,14 @@ def _output_tokens(output):
     return [] if output is None else ["-o", str(output)]
 
 
-def flasher_command(request, work_directory, output=None, file_token="", executable=None):
+def flasher_command(
+    request,
+    work_directory,
+    output=None,
+    file_token="",
+    executable=None,
+    simulation_models_path=None,
+):
     """
     Return the command tokens that make the photons of a flasher request.
 
@@ -84,6 +91,9 @@ def flasher_command(request, work_directory, output=None, file_token="", executa
         Suffix of the request file name.
     executable : str, optional
         Python interpreter (default: the running one).
+    simulation_models_path : str or Path, optional
+        Simulation models root of the run. The subprocess reads the telescope model from it
+        (without it the subprocess has no model source).
 
     Returns
     -------
@@ -93,6 +103,11 @@ def flasher_command(request, work_directory, output=None, file_token="", executa
     request_file = request_to_json(
         request, Path(work_directory) / f"light_source_request{file_token}.json"
     )
+    models = (
+        []
+        if simulation_models_path is None
+        else ["--simulation-models-path", str(simulation_models_path)]
+    )
     return [
         executable or sys.executable,
         "-m",
@@ -101,6 +116,7 @@ def flasher_command(request, work_directory, output=None, file_token="", executa
         str(request_file),
         "--output-path",
         str(work_directory),
+        *models,
         *(["--output", str(output)] if output is not None else []),
     ]
 

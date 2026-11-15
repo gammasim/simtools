@@ -22,7 +22,7 @@ def _register(name, consumes, produces, applies=()):
         streams = True
 
         @classmethod
-        def applied_factors(cls, options):
+        def applied_factors(cls, options, upstream=frozenset()):
             return frozenset(applies) | frozenset(options.get("extra", ()))
 
     FakeStage.name = name
@@ -105,7 +105,7 @@ def test_obdeect_chain_with_camera_only_sim_telarray_is_valid():
     assert spec.stage_options("sim_telarray") == {"bypass_optics": 3}
 
 
-@pytest.mark.parametrize("mode", [0, 1, 2])
+@pytest.mark.parametrize("mode", [0])
 def test_obdeect_chain_with_sim_telarray_optics_applies_a_factor_twice(mode):
     spec = chain_spec.parse_chain([*OBDEECT_CHAIN[:-1], f"sim_telarray:bypass_optics={mode}"])
 

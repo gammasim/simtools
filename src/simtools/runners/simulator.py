@@ -18,7 +18,7 @@ from simtools.job_execution.execution import execute_jobs, options_from_args, su
 from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
 from simtools.model_repository.reader import with_resolved_model_reader
-from simtools.runners import chain_spec
+from simtools.runners import chain_spec, sim_telarray_stage
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.stages import StageInputs
 from simtools.runtime.context import RunContext
@@ -702,6 +702,16 @@ class Simulator:
                         "flasher_photons_at_pixel", flasher_photons
                     )
 
+    def _allowed_metadata_changes(self):
+        """Model parameters that sim_telarray may read differently from the model (-C options)."""
+        allowed = ["nsb_scaling_factor", "stars"]
+        if sim_telarray_stage.uses_zero_transmission(
+            self.chain_spec.stages, self.chain_spec.stage_options
+        ):
+            # the zero-depth table replaces the atmospheric transmission of the model
+            allowed.append("atmospheric_transmission")
+        return allowed
+
     def validate_simulations(self):
         """Validate data, log and metadata of CORSIKA, sim_telarray and reduced event lists."""
         parameters = self.simulation_parameters[0]
@@ -720,7 +730,7 @@ class Simulator:
                 expected_mc_events=expected_mc_events,
                 expected_shower_events=expected_shower_events,
                 curved_atmo=parameters.use_curved_atmosphere,
-                allow_for_changes=["nsb_scaling_factor", "stars"],
+                allow_for_changes=self._allowed_metadata_changes(),
             )
         if self.chain.has("corsika"):
             corsika_output_validation.validate_corsika_output(

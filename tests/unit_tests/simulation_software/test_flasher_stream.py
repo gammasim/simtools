@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import astropy.units as u
 import numpy as np
 import pytest
 
@@ -62,6 +63,9 @@ def toy_telescope(tmp_test_directory, mocker):
     telescope.site = "North"
     telescope.model_files_exported = False
     telescope.get_parameter_value.side_effect = lambda name: parameters[name]["value"]
+    telescope.get_parameter_value_with_unit.side_effect = lambda name: {
+        "telescope_sphere_radius": u.Quantity(1.5, "m")
+    }[name]
     return telescope
 
 
@@ -126,6 +130,10 @@ def test_stream_matches_in_process_tracing(toy_telescope, run_context, tmp_path)
     }
     records, photons, columns = _read(output)
 
+    run = next(r for r in records if r["type"] == "run")
+    assert run["metadata"]["telescope_x_m"] == [0.0]
+    assert run["metadata"]["telescope_z_m"] == [0.0]
+    assert run["metadata"]["telescope_r_m"] == pytest.approx([1.5])
     assert total == len(expected["weight"]) > 1000
     assert [r["type"] for r in records if r["type"] != "photons"] == [
         "stream",
@@ -143,6 +151,8 @@ def test_stream_matches_in_process_tracing(toy_telescope, run_context, tmp_path)
     assert np.allclose(columns["t"], expected["time_ns"], rtol=1e-6, atol=1e-4)
     assert np.allclose(columns["w"], expected["weight"], atol=1e-6)
     assert np.allclose(columns["wavelength"], 385.0)
+    # emission altitude: the observation level when the request has none
+    assert np.allclose(columns["zem"], 2158.0)
     # Light of a 2 deg cone from inside the telescope, on the camera: within the camera radius.
     assert np.all(np.hypot(columns["x"], columns["y"]) < 0.3)
     assert np.all(columns["cz"] > 0.0)

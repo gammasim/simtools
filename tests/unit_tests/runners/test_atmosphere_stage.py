@@ -2,16 +2,28 @@
 
 import shlex
 from pathlib import Path
+from types import SimpleNamespace
 
+import astropy.units as u
 import pytest
+from astropy.table import Column, Table
 
 from simtools.runners import stages
 from simtools.runners.atmosphere_stage import ObdeectAtmosphereStage
-from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION, ChainSpec
+from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION, ChainSpec, parse_chain
 from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo
 from simtools.simulation_software.atmosphere import AtmosphereRequest
 from simtools.simulation_software.products import CAMERA_EVENTS, PHOTONS_GROUND, PHOTONS_SKY
 from simtools.simulation_software.programs import program_command
+
+
+@pytest.fixture(autouse=True)
+def pass_transmission_through(monkeypatch):
+    """Instances tests use model tables that are not on disk: keep the table path."""
+    monkeypatch.setattr(
+        "simtools.runners.atmosphere_stage.write_obdeect_transmission",
+        lambda transmission_file, _directory: transmission_file,
+    )
 
 
 @pytest.fixture
@@ -156,6 +168,60 @@ def test_instances_use_stage_options(array_model_north, run_context):
     assert stage.request.wavelength_range_nm == (250.0, 700.0)
 
 
+class _CalibrationModel:
+    """Calibration device model with one monochromatic wavelength (flasher_wavelength)."""
+
+    def get_parameter_value_with_unit(self, name):
+        assert name == "flasher_wavelength"
+        return [300.0 * u.nm]
+
+
+def test_instances_illuminator_range_is_source_wavelength(array_model_north, run_context):
+    inputs = StageInputs(
+        array_models=(array_model_north,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+        calibration=SimpleNamespace(calibration_model=_CalibrationModel()),
+    )
+
+    (stage,) = ObdeectAtmosphereStage.instances(inputs)
+
+    # obdeect needs lo < hi; no photon is drawn from this range (they carry 300 nm)
+    assert stage.request.wavelength_range_nm == pytest.approx((300.0, 301.0))
+
+
+def test_instances_explicit_range_overrides_source_wavelength(array_model_north, run_context):
+    inputs = StageInputs(
+        array_models=(array_model_north,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+        calibration=SimpleNamespace(calibration_model=_CalibrationModel()),
+        chain_options={"obdeect_atmosphere": {"wavelength_range_nm": [250.0, 700.0]}},
+    )
+
+    (stage,) = ObdeectAtmosphereStage.instances(inputs)
+
+    assert stage.request.wavelength_range_nm == (250.0, 700.0)
+
+
+def test_instances_without_light_source_keeps_run_keys(array_model_north, run_context):
+    inputs = StageInputs(
+        array_models=(array_model_north,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+    )
+
+    (stage,) = ObdeectAtmosphereStage.instances(inputs)
+
+    assert stage.request.wavelength_range_nm is None
+
+
 def test_instances_reject_unknown_options(array_model_north, run_context):
     inputs = StageInputs(
         array_models=(array_model_north,),
@@ -205,3 +271,152 @@ def test_chain_spec_rejects_two_atmospheres():
 
     with pytest.raises(ValueError, match=r"applies 'atmospheric_extinction' twice"):
         spec.chain()
+
+
+def test_applied_factors_is_extinction_regardless_of_options():
+    assert ObdeectAtmosphereStage.applied_factors({"seed": 2}, upstream=frozenset()) == (
+        frozenset({ATMOSPHERIC_EXTINCTION})
+    )
+
+
+def test_bypass_one_chain_with_upstream_extinction_applies_extinction_once():
+    spec = parse_chain(
+        ["corsika", "obdeect_atmosphere", "obdeect_optics", "sim_telarray:bypass_optics=1"]
+    )
+
+    spec.check_applied_factors()
+    applied = dict(spec.applied_factors())
+    assert applied["obdeect_atmosphere"] == frozenset({ATMOSPHERIC_EXTINCTION})
+    assert applied["sim_telarray"] == frozenset({"quantum_efficiency"})
+
+
+def test_bypass_one_chain_without_upstream_atmosphere_applies_extinction_in_sim_telarray():
+    spec = parse_chain(["corsika", "obdeect_optics", "sim_telarray:bypass_optics=1"])
+
+    applied = dict(spec.applied_factors())
+    assert applied["sim_telarray"] == frozenset({"quantum_efficiency", ATMOSPHERIC_EXTINCTION})
+
+
+class _EnvelopeTelescope:
+    """Telescope model with a QE table and a QE variation (what the envelope reads)."""
+
+    def __init__(self, name, wavelength, efficiency):
+        self.name = name
+        self.parameters = {"quantum_efficiency": {"value": "qe.ecsv", "instrument": name}}
+        self._table = Table({"wavelength": Column(wavelength, unit="nm"), "efficiency": efficiency})
+
+    def get_parameter_table(self, parameter_name):
+        assert parameter_name == "quantum_efficiency"
+        return self._table
+
+    def get_parameter_value(self, parameter_name):
+        assert parameter_name == "qe_variation"
+        return 0.063
+
+
+@pytest.fixture
+def envelope_model():
+    telescope = _EnvelopeTelescope("LSTN-01", [300.0, 500.0], [0.2, 0.4])
+    return SimpleNamespace(model_version="6.0.0", telescope_models={"LSTN-01": telescope})
+
+
+def test_prepare_with_envelope_writes_bound_and_passes_it(
+    request_for_stage, run_context, envelope_model
+):
+    stage = ObdeectAtmosphereStage(
+        request_for_stage,
+        label="test-atmosphere",
+        context=run_context,
+        envelope_model=envelope_model,
+    )
+
+    lines = stage.prepare(run_number=2, input_file=STDIN)
+
+    tokens = _tokens(lines[0])
+    envelope = Path(tokens[tokens.index("--envelope") + 1].removeprefix("qe="))
+    assert envelope.name == "qe-envelope.dat"
+    assert envelope.parent == run_context.paths.get_output_directory(
+        ["efficiency", "run000002", "6.0.0"]
+    )
+    # two nodes per nm bin on the 100-2000 nm grid
+    assert len(envelope.read_text(encoding="utf-8").splitlines()) == 2 * 1901
+
+
+def test_prepare_without_envelope_has_no_envelope_option(atmosphere_stage):
+    lines = atmosphere_stage.prepare(run_number=1, input_file=STDIN)
+
+    assert "--envelope" not in _tokens(lines[0])
+
+
+def test_instances_envelope_off_by_default(array_model_north, run_context):
+    inputs = StageInputs(
+        array_models=(array_model_north,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+    )
+
+    (stage,) = ObdeectAtmosphereStage.instances(inputs)
+
+    assert stage.envelope_model is None
+
+
+def test_instances_envelope_on_by_default_for_camera_only_chain(array_model_north, run_context):
+    inputs = StageInputs(
+        array_models=(array_model_north,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+        chain_options={"sim_telarray": {"bypass_optics": 3}},
+        stages=("obdeect_atmosphere", "sim_telarray"),
+    )
+
+    (stage,) = ObdeectAtmosphereStage.instances(inputs)
+
+    assert stage.envelope_model is array_model_north
+
+
+def test_instances_envelope_on_by_option(array_model_north, run_context):
+    inputs = StageInputs(
+        array_models=(array_model_north,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+        chain_options={"obdeect_atmosphere": {"efficiency_envelope": "qe"}},
+    )
+
+    (stage,) = ObdeectAtmosphereStage.instances(inputs)
+
+    assert stage.envelope_model is array_model_north
+
+
+def test_instances_envelope_off_by_option(array_model_north, run_context):
+    inputs = StageInputs(
+        array_models=(array_model_north,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+        chain_options={"obdeect_atmosphere": {"efficiency_envelope": "none"}},
+    )
+
+    (stage,) = ObdeectAtmosphereStage.instances(inputs)
+
+    assert stage.envelope_model is None
+
+
+def test_instances_reject_invalid_envelope_option(array_model_north, run_context):
+    inputs = StageInputs(
+        array_models=(array_model_north,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+        chain_options={"obdeect_atmosphere": {"efficiency_envelope": "yes"}},
+    )
+
+    with pytest.raises(ValueError, match=r"Invalid efficiency_envelope option"):
+        ObdeectAtmosphereStage.instances(inputs)

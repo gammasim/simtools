@@ -70,12 +70,20 @@ class LightSourceStage:
     produces = None
     streams = True
 
-    def __init__(self, request, work_directory, file_token="", executable=None):
+    def __init__(
+        self,
+        request,
+        work_directory,
+        file_token="",
+        executable=None,
+        simulation_models_path=None,
+    ):
         """Initialize LightSourceStage."""
         self.request = request
         self.work_directory = Path(work_directory)
         self.file_token = file_token
         self.executable = executable
+        self.simulation_models_path = simulation_models_path
         self.file_list = None
 
     @classmethod
@@ -134,6 +142,7 @@ class LightSourceStage:
                 work_directory,
                 token,
                 executable=config.get("executable"),
+                simulation_models_path=config.get("simulation_models_path"),
             )
         ]
 
@@ -179,6 +188,7 @@ class LightSourceStage:
                 output=target,
                 file_token=self.file_token,
                 executable=self.executable,
+                simulation_models_path=self.simulation_models_path,
             )
         )
         return [f"{command} | {output.commands[0]}"] if streamed else [command]
@@ -194,9 +204,9 @@ class LightSourceStage:
         return {"runtime": runtime, "n_events": int(total)}
 
     @staticmethod
-    def applied_factors(options=None):
+    def applied_factors(options=None, upstream=frozenset()):
         """Return the efficiency factors applied to the photons (none)."""
-        del options
+        del options, upstream
         return frozenset()
 
 
@@ -294,7 +304,7 @@ class LightEmissionStage:
         return {"runtime": runtime}
 
     @staticmethod
-    def applied_factors(options=None):
+    def applied_factors(options=None, upstream=frozenset()):
         """Return the efficiency factors applied to the photons (none)."""
-        del options
+        del options, upstream
         return frozenset()

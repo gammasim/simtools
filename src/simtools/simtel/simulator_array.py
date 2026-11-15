@@ -34,8 +34,15 @@ class SimulatorArray(SimtelRunner):
         self.array_model = array_model
         self.io_handler = self.context.paths
         self._log_file = None
+        # Directories searched before the model directory (e.g. scaled quantum-efficiency tables)
+        self.include_directories = ()
+        # min_photons override (e.g. 0 when an upstream stage thins photons); None: sim_telarray's
+        # default. A telescope event with fewer photons than min_photons is skipped.
+        self.min_photons = None
 
-    def make_run_command(self, run_number=None, input_file=None, bypass_optics=None):
+    def make_run_command(
+        self, run_number=None, input_file=None, bypass_optics=None, atmospheric_transmission=None
+    ):
         """
         Build and return the command to run sim_telarray.
 
@@ -48,6 +55,9 @@ class SimulatorArray(SimtelRunner):
         bypass_optics: int (optional)
             Value of sim_telarray's Bypass_Optics for photons given at the camera entrance;
             None (default) leaves the option out of the command.
+        atmospheric_transmission: str or Path (optional)
+            Transmission table that sim_telarray reads instead of the model's table (e.g. a
+            table with optical depth 0 when an upstream stage applies the extinction).
 
         Returns
         -------
@@ -63,8 +73,15 @@ class SimulatorArray(SimtelRunner):
             command += self._make_run_command_for_shower_simulations()
 
         bypass = [] if bypass_optics is None else ["-C", f"Bypass_Optics={bypass_optics}"]
+        if self.min_photons is not None:
+            bypass += ["-C", f"min_photons={self.min_photons}"]
+        transmission = (
+            []
+            if atmospheric_transmission is None
+            else ["-C", f"atmospheric_transmission={atmospheric_transmission}"]
+        )
         # "-C show=all" should be the last option
-        return [*command, *bypass, "-C", "show=all", input_file]
+        return [*command, *bypass, *transmission, "-C", "show=all", input_file]
 
     def _make_run_command_for_shower_simulations(self):
         """
@@ -135,6 +152,7 @@ class SimulatorArray(SimtelRunner):
             str(self.context.software.sim_telarray_exe),
             "-c",
             str(self.array_model.config_file_path),
+            *[f"-I{directory}" for directory in self.include_directories],
             f"-I{config_dir}",
         ]
         weak_options = {

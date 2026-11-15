@@ -61,6 +61,17 @@ telescope: a calibration chain starts with `light_emission`, `obdeect_flasher` o
 required when the photons come from obdeect (camera-frame photons); after `light_emission` it
 follows the light source type.
 
+The quantum-efficiency envelope (`obdeect_atmosphere:efficiency_envelope=qe`) thins the photons
+by the telescope QE divided by a headroom, and sim_telarray then reads the QE table divided by
+the envelope. It is on by default for a chain ending in `sim_telarray:bypass_optics=3` and off
+otherwise; `efficiency_envelope=none` or `qe` overrides the default.
+
+When an upstream stage thins the photons (`obdeect_atmosphere`, also with
+`efficiency_envelope=qe`), simtools runs sim_telarray with `min_photons=0`. sim_telarray skips
+a telescope event with fewer photons than `min_photons`, and the count is that of the thinned
+photons, so the default cut would drop whole events. `min_photoelectrons` still applies after
+the quantum efficiency. The run log states this ("Upstream obdeect_atmosphere thins photons").
+
 ```bash
 simtools-simulate-flasher --run_mode full_simulation --simulation_software obdeect_flasher stream_to_simtel \
   sim_telarray:bypass_optics=1 ...

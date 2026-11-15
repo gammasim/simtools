@@ -8,9 +8,13 @@ import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.simulation_software.atmosphere import (
+    TRANSMISSION_FILE_NAME,
+    ZERO_TRANSMISSION_FILE_NAME,
     AtmosphereRequest,
     build_atmosphere_request,
     in_telescope_pathlength_m,
+    write_obdeect_transmission,
+    write_zero_transmission,
 )
 
 
@@ -117,3 +121,29 @@ def test_build_request_defaults(site_model_north, telescope_model_lst, tmp_test_
     assert request.seed == 1
     assert request.mode == "thinned"
     assert request.wavelength_range_nm is None
+
+
+def test_write_zero_transmission_zeroes_values_and_keeps_wavelengths(tmp_path):
+    source = tmp_path / "transmission.dat"
+    source.write_text(
+        "# optical depth table\n200 0.5 0.25 0.125\n1000 0.1 0.2 0.3\n", encoding="utf-8"
+    )
+
+    output = write_zero_transmission(source, tmp_path / "out")
+
+    assert output == tmp_path / "out" / ZERO_TRANSMISSION_FILE_NAME
+    assert output.read_text(encoding="utf-8").splitlines() == [
+        "# optical depth table",
+        "200 0 0 0",
+        "1000 0 0 0",
+    ]
+
+
+def test_write_obdeect_transmission_site_keeps_values(tmp_path):
+    source = tmp_path / "transmission.dat"
+    source.write_text("200 0.5 0.25\n1000 0.1 0.2\n", encoding="utf-8")
+
+    output = write_obdeect_transmission(source, tmp_path / "out")
+
+    assert output.name == TRANSMISSION_FILE_NAME
+    assert output.read_text(encoding="utf-8").splitlines() == ["200 0.5 0.25"]

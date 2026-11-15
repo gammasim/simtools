@@ -4,6 +4,8 @@ import shlex
 
 from simtools.job_execution.runner_services import RunnerServices
 from simtools.runners.stages import StreamTo
+from simtools.simulation_software import efficiency
+from simtools.simulation_software.atmosphere import export_atmosphere_files
 from simtools.simulation_software.obdeect import streams
 from simtools.simulation_software.products import (
     CAMERA_PHOTONS_IACT,
@@ -155,10 +157,12 @@ class StreamToSimtelStage:
         allow_pending=(),
         scaled_factors=(),
         file_type=CORSIKA_OUTPUT,
+        write_atmprof=False,
     ):
         """Initialize StreamToSimtelStage."""
         self.runner_service = runner_service
         self.file_type = file_type
+        self.write_atmprof = write_atmprof
         self.array_model = array_model
         self.allow_pending = tuple(allow_pending)
         self.scaled_factors = tuple(scaled_factors)
@@ -173,13 +177,19 @@ class StreamToSimtelStage:
                 f"got {len(inputs.array_models)} array models."
             )
         options = inputs.options_of(cls.name)
+        scaled_factors = _string_list(options, "scaled_factors")
+        if efficiency.chain_envelope_enabled(inputs):
+            # sim_telarray's QE table holds QE / envelope (see simulation_software.efficiency)
+            scaled_factors = tuple(dict.fromkeys((*scaled_factors, efficiency.OBDEECT_QE_FACTOR)))
         return [
             cls(
                 _corsika_runner_service(inputs, label),
                 inputs.array_models[0],
                 allow_pending=_string_list(options, "allow_pending"),
-                scaled_factors=_string_list(options, "scaled_factors"),
+                scaled_factors=scaled_factors,
                 file_type=CORSIKA_OUTPUT if inputs.calibration is None else IACT_OUTPUT,
+                # light-source streams carry no ATMPROF block: the site profile is written
+                write_atmprof=inputs.calibration is not None,
             )
         ]
 
@@ -204,14 +214,26 @@ class StreamToSimtelStage:
         """
         if input_file is None:
             raise ValueError("stream_to_simtel reads a photon stream: give a file or STDIN.")
+        atmprof = self.write_atmprof_file(run_number) if self.write_atmprof else None
         command = streams.to_simtel_command(
-            self.write_camera_map(run_number), input_file, self.allow_pending, self.scaled_factors
+            self.write_camera_map(run_number),
+            input_file,
+            self.allow_pending,
+            self.scaled_factors,
+            atmprof=atmprof,
         )
         return _connect_output(shlex.join(command), output, self.output_file(run_number))
 
     def camera_map_file(self, run_number):
         """Return the camera map file of the run."""
         return _stream_file(self.runner_service, run_number, CAMERA_MAP_SUFFIX, self.file_type)
+
+    def write_atmprof_file(self, run_number):
+        """Write the atmospheric profile of the site (atmprof text) and return its file."""
+        profile, _transmission = export_atmosphere_files(
+            self.array_model.site_model, self.camera_map_file(run_number).parent
+        )
+        return profile
 
     def write_camera_map(self, run_number):
         """

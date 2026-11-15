@@ -84,3 +84,13 @@ def test_propagation_command_program_tokens():
     command = propagation_command(_request(), program=["python", "-c", "code"])
 
     assert command[:4] == ["python", "-c", "code", "--transmission"]
+
+
+def test_propagation_command_envelope_option_before_input():
+    request = _request()
+
+    command = propagation_command(request, envelope_file=Path("qe-envelope.dat"))
+
+    index = command.index("--envelope")
+    assert command[index : index + 2] == ["--envelope", "qe=qe-envelope.dat"]
+    assert command[-4:] == ["-i", "-", "-o", "-"]

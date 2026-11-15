@@ -3,6 +3,7 @@
 import math
 
 import astropy.units as u
+import numpy as np
 import pytest
 
 from simtools.simulation_software import light_sources
@@ -103,6 +104,30 @@ def test_flasher_request(flasher_model, telescope_model, site_model):
     assert (request.run_number, request.seed, request.instrument_seed) == (7, 11, 5)
     assert (request.telescope, request.site, request.model_version) == ("LSTN-01", "North", "6.0.2")
     assert request.photons_per_pulse == (1_000_000,) * 3
+
+
+def test_telescope_position_axes_offsets_as_array(telescope_model):
+    # the axes offsets of a model are one array (as the light-emission run reads them)
+    position = np.array([300.0, 200.0, 50.0])
+    telescope_model.parameters["array_element_position_ground"] = [0.0 * u.m, 0.0 * u.m, 0.0 * u.m]
+    telescope_model.parameters["axes_offsets"] = [0.0 * u.cm, 0.0 * u.cm]
+    origin = light_sources.telescope_position_m(telescope_model, position, {})
+    assert np.allclose(origin, 0.0)
+    telescope_model.parameters["axes_offsets"] = u.Quantity([30.0, 20.0], u.cm)
+    shifted_array = light_sources.telescope_position_m(telescope_model, position, {})
+    telescope_model.parameters["axes_offsets"] = [30.0 * u.cm, 20.0 * u.cm]
+    shifted_list = light_sources.telescope_position_m(telescope_model, position, {})
+    assert np.allclose(shifted_array, shifted_list)
+    assert not np.allclose(shifted_array, 0.0)
+
+
+def test_flasher_request_emission_altitude(flasher_model, telescope_model, site_model):
+    # observation level + focal length + focus offset - flasher z (as the light-emission run)
+    request = light_sources.flasher_request(flasher_model, telescope_model, site_model, {})
+    assert request.emission_altitude_m == pytest.approx(2158.0 + 16.0)
+    flasher_model.parameters["flasher_position"] = [2.0 * u.cm, 0.0 * u.cm, 100.0 * u.cm, None]
+    request = light_sources.flasher_request(flasher_model, telescope_model, site_model, {})
+    assert request.emission_altitude_m == pytest.approx(2158.0 + 15.0)
 
 
 def test_flasher_request_photon_override_and_levels(flasher_model, telescope_model, site_model):

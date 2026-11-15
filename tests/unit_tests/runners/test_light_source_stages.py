@@ -6,7 +6,7 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
-from simtools.runners import light_emission_runner, stages
+from simtools.runners import adapter_stages, light_emission_runner, stages
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.light_source_stages import (
     FlasherSourceStage,
@@ -305,8 +305,13 @@ def test_light_emission_stage_cannot_stream_or_read(light_simulation):
 
 
 def test_flasher_chain_through_light_emission_simulation(
-    light_simulation, light_source_context, tmp_test_directory
+    light_simulation, light_source_context, tmp_test_directory, monkeypatch
 ):
+    monkeypatch.setattr(
+        adapter_stages,
+        "export_atmosphere_files",
+        lambda _site, directory: (Path(directory) / "atmosphere-profile.dat", None),
+    )
     light_simulation.context = light_source_context
     light_simulation.light_emission_config |= {
         "site": "North",
@@ -328,7 +333,8 @@ def test_flasher_chain_through_light_emission_simulation(
     assert "simtools.simulation_software.flasher_stream" in lines[3]
     assert " | " in lines[3]
     assert lines[3].endswith(f"> {camera_iact}")
-    assert Path(f"{iact_file}.camera_map.txt").read_text(encoding="utf-8") == "0 0 0.0\n"
+    assert Path(f"{iact_file}.camera_map.txt").read_text(encoding="utf-8") == "1 1 0.0\n"
+    assert "--atmprof " in lines[3]
     assert f"-C input_file={camera_iact}" in lines[4]
     assert "-C Bypass_Optics=1" in lines[4]
     assert len(lines) == 5

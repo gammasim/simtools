@@ -279,7 +279,7 @@ def _fake_class(name, consumes, produces, factors=(), lines=()):
             return [cls(tag) for tag in lines] or [cls()]
 
         @classmethod
-        def applied_factors(cls, _options):
+        def applied_factors(cls, _options, upstream=frozenset()):
             return set(factors)
 
         def prepare(self, run_number, input_file=None, output=None):

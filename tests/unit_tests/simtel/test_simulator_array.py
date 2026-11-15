@@ -316,3 +316,40 @@ def test_make_run_command_for_calibration_simulations_with_stars(simtel_runner, 
 
     assert isinstance(result, list)
     assert "stars=0" in result
+
+
+def test_common_run_command_puts_include_directories_before_model_directory(simtel_runner, mocker):
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.get_file_name.return_value = "file"
+    simtel_runner.runner_service.load_files.return_value = {}
+    mocker.patch("simtools.simtel.simulator_array.get_model_writer")
+    simtel_runner.include_directories = ("/scaled/qe-table",)
+    mocker.patch.object(simtel_runner, "_determine_pointing_option", return_value=False)
+
+    command = simtel_runner._common_run_command(run_number=1)
+
+    config_dir = str(simtel_runner.array_model.get_config_directory())
+    assert command.index("-I/scaled/qe-table") < command.index(f"-I{config_dir}")
+
+
+def test_include_directories_default_is_empty(simtel_runner):
+    assert simtel_runner.include_directories == ()
+
+
+def test_make_run_command_sets_min_photons_when_overridden(simtel_runner, mocker):
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.load_files.return_value = {}
+    mocker.patch.object(simtel_runner, "_common_run_command", return_value=["sim_telarray"])
+    mocker.patch.object(simtel_runner, "_make_run_command_for_shower_simulations", return_value=[])
+    mocker.patch.object(
+        simtel_runner.simulation_parameters, "is_calibration_run", return_value=False
+    )
+
+    simtel_runner.min_photons = 0
+    command = simtel_runner.make_run_command(run_number=1, input_file="in.dat", bypass_optics=3)
+    assert command[command.index("min_photons=0") - 1] == "-C"
+    assert command[-1] == "in.dat"
+
+    simtel_runner.min_photons = None
+    command = simtel_runner.make_run_command(run_number=1, input_file="in.dat")
+    assert not any("min_photons" in item for item in command)

@@ -22,6 +22,12 @@ DEFAULT_SEED = 1
 DEFAULT_MODE = "thinned"
 #: Name of the transmission table exported from an ECSV model parameter.
 TRANSMISSION_FILE_NAME = "atmosphere-transmission.dat"
+#: Name of the transmission table with optical depth 0 (sim_telarray, bypass 1 or 2).
+ZERO_TRANSMISSION_FILE_NAME = "atmosphere-zero-transmission.dat"
+#: Name of the atmospheric profile exported from an ECSV model parameter (atmprof format).
+PROFILE_FILE_NAME = "atmosphere-profile.dat"
+#: obdeect reads transmission wavelengths that are integers below this value [nm].
+OBDEECT_MAX_WAVELENGTH_NM = 1000
 #: Stdin and stdout of a command in the shell.
 STDIO = "-"
 
@@ -114,11 +120,22 @@ def export_atmosphere_files(site_model, directory=None):
     """
     export_model_files(site_model, update_if_necessary=True)
     config_directory = Path(site_model.config_file_directory)
-    profile_file = config_directory / site_model.get_parameter_value("atmospheric_profile")
+    export_directory = Path(directory or config_directory)
+    profile_name = str(site_model.get_parameter_value("atmospheric_profile"))
+    profile_file = config_directory / profile_name
+    if profile_name.lower().endswith(".ecsv"):
+        # obdeect reads the atmprof text format, not the ECSV model parameter
+        profile_file = export_directory / get_model_writer(
+            site_model
+        ).export_model_parameter_as_simtel_file(
+            "atmospheric_profile",
+            export_directory,
+            table_format="plain",
+            output_name=PROFILE_FILE_NAME,
+        )
     table_name = str(site_model.get_parameter_value("atmospheric_transmission"))
     if not table_name.lower().endswith(".ecsv"):
         return profile_file, config_directory / table_name
-    export_directory = Path(directory or config_directory)
     table_name = get_model_writer(site_model).export_model_parameter_as_simtel_file(
         "atmospheric_transmission",
         export_directory,
@@ -179,3 +196,89 @@ def build_atmosphere_request(
         wavelength_range_nm=None if wavelength_range_nm is None else tuple(wavelength_range_nm),
         telescope_pathlen_m=pathlengths,
     )
+
+
+def _is_number(text):
+    """Return True if the text is a number."""
+    try:
+        float(text)
+    except ValueError:
+        return False
+    return True
+
+
+def _is_integer_below(text, limit):
+    """Return True if the text is an integer in [0, limit)."""
+    try:
+        value = int(text)
+    except ValueError:
+        return False
+    return 0 <= value < limit
+
+
+def write_obdeect_transmission(transmission_file, directory):
+    """
+    Write the transmission table as obdeect reads it and return its file.
+
+    obdeect accepts wavelengths that are integers in [0, 1000) nm; other rows are dropped (the
+    table ends at 1000 nm, where no photon is simulated). Lines that do not start with a number
+    are copied.
+
+    Parameters
+    ----------
+    transmission_file : Path
+        Atmospheric transmission table (extinction-table format).
+    directory : Path
+        Directory of the written table (created if it does not exist).
+
+    Returns
+    -------
+    Path
+        Transmission table written.
+    """
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    lines = []
+    for line in Path(transmission_file).read_text(encoding="utf-8").splitlines():
+        tokens = line.split()
+        if not tokens or not _is_number(tokens[0]):
+            lines.append(line)
+        elif _is_integer_below(tokens[0], OBDEECT_MAX_WAVELENGTH_NM):
+            lines.append(" ".join(tokens))
+    output = directory / TRANSMISSION_FILE_NAME
+    output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return output
+
+
+def write_zero_transmission(transmission_file, directory):
+    """
+    Write the transmission table with optical depth 0 at all altitudes and return its file.
+
+    Used by sim_telarray with Bypass_Optics 1 or 2 when an upstream stage applies the
+    atmospheric extinction: sim_telarray then reads this table and applies no extinction. The
+    wavelengths of the table are kept; lines that do not start with a number are copied.
+
+    Parameters
+    ----------
+    transmission_file : Path
+        Atmospheric transmission table (extinction-table format).
+    directory : Path
+        Directory of the written table (created if it does not exist).
+
+    Returns
+    -------
+    Path
+        Zero-depth transmission table written.
+    """
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    lines = []
+    for line in Path(transmission_file).read_text(encoding="utf-8").splitlines():
+        tokens = line.split()
+        if tokens and _is_number(tokens[0]):
+            lines.append(" ".join([tokens[0], *["0"] * (len(tokens) - 1)]))
+        else:
+            lines.append(line)
+    output = directory / ZERO_TRANSMISSION_FILE_NAME
+    output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return output

@@ -5,6 +5,9 @@ import astropy.units as u
 from simtools.corsika.corsika_config import corsika_telescope_ids
 from simtools.simulation_software.programs import program_command
 
+#: Photon-stream id of a telescope = its CORSIKA IACT id + this offset (streams start at 1).
+STREAM_TELESCOPE_ID_OFFSET = 1
+
 SOFTWARE = "obdeect"
 FROM_CORSIKA_PROGRAM = "obdeect-stream-from-corsika"
 TO_SIMTEL_PROGRAM = "obdeect-stream-to-simtel"
@@ -27,7 +30,7 @@ def from_corsika_command(input_file):
     return [*program_command(SOFTWARE, FROM_CORSIKA_PROGRAM), str(input_file)]
 
 
-def to_simtel_command(camera_map, input_file, allow_pending=(), scaled_factors=()):
+def to_simtel_command(camera_map, input_file, allow_pending=(), scaled_factors=(), atmprof=None):
     """
     Return the command tokens converting a camera-frame photon stream to sim_telarray input.
 
@@ -41,6 +44,9 @@ def to_simtel_command(camera_map, input_file, allow_pending=(), scaled_factors=(
         Efficiency factors pending upstream that sim_telarray does not apply.
     scaled_factors : iterable of str
         Efficiency factors whose sim_telarray table holds f/f_env.
+    atmprof : str or Path, optional
+        Atmospheric profile (atmprof text) written as ATMPROF before the events. Needed when the
+        stream has no ATMPROF block of its own (e.g. light-source streams).
 
     Returns
     -------
@@ -48,6 +54,8 @@ def to_simtel_command(camera_map, input_file, allow_pending=(), scaled_factors=(
         Command tokens; the converted stream is written to stdout.
     """
     command = [*program_command(SOFTWARE, TO_SIMTEL_PROGRAM), "--camera-map", str(camera_map)]
+    if atmprof is not None:
+        command.extend(["--atmprof", str(atmprof)])
     for factor in allow_pending:
         command.extend(["--allow-pending", factor])
     for factor in scaled_factors:
@@ -60,8 +68,10 @@ def write_camera_map(telescope_models, path):
     """
     Write the camera map of the telescopes of an array and return its file.
 
-    Each line is ``telescope_id mirror_class camera_rotation_deg``, with the CORSIKA telescope
-    id of the telescope.
+    Each line is ``telescope_id mirror_class camera_rotation_deg`` (mirror class 1 single, 2
+    dual). The telescope id is the photon-stream id of the telescope: the CORSIKA IACT id plus
+    ``STREAM_TELESCOPE_ID_OFFSET`` (obdeect streams number telescopes from 1; stream-to-simtel
+    rejects ids below 1).
 
     Parameters
     ----------
@@ -78,8 +88,9 @@ def write_camera_map(telescope_models, path):
     ids = corsika_telescope_ids(telescope_models)
     lines = []
     for name, telescope in telescope_models.items():
-        mirror_class = telescope.get_parameter_value("mirror_class")
+        # model mirror class 2 is dual mirror; stream-to-simtel takes 1 (single) or 2 (dual)
+        mirror_class = 2 if telescope.get_parameter_value("mirror_class") == 2 else 1
         rotation_deg = telescope.get_parameter_value_with_unit("camera_rotate").to_value(u.deg)
-        lines.append(f"{ids[name]} {mirror_class} {rotation_deg}")
+        lines.append(f"{ids[name] + STREAM_TELESCOPE_ID_OFFSET} {mirror_class} {rotation_deg}")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path

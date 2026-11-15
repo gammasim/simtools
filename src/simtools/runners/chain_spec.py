@@ -54,12 +54,18 @@ class ChainSpec:
         return dict(self.options.get(stage, {}))
 
     def applied_factors(self):
-        """Return the efficiency factors applied by each stage: a list of (stage, factors)."""
+        """
+        Return the efficiency factors applied by each stage: a list of (stage, factors).
+
+        A stage receives the factors applied by the stages before it (``upstream``), so that a
+        stage applies a factor only if no upstream stage does (see ``applied_factors_of``).
+        """
         applied = []
+        upstream = frozenset()
         for stage in self.stages:
-            method = getattr(get_stage_class(stage), "applied_factors", None)
-            factors = frozenset(method(self.stage_options(stage))) if method else frozenset()
+            factors = applied_factors_of(stage, self.stage_options(stage), upstream)
             applied.append((stage, factors))
+            upstream |= factors
         return applied
 
     def check_applied_factors(self):
@@ -73,6 +79,12 @@ class ChainSpec:
                         f"in stage {seen[factor]!r} and in stage {stage!r}."
                     )
                 seen[factor] = stage
+
+
+def applied_factors_of(stage, options, upstream=frozenset()):
+    """Return the efficiency factors that a stage applies, given the factors applied upstream."""
+    method = getattr(get_stage_class(stage), "applied_factors", None)
+    return frozenset(method(options, upstream=upstream)) if method else frozenset()
 
 
 def parse_chain(items):

@@ -69,7 +69,7 @@ class ObdeectOpticsStage:
         self.file_list = {}
 
     @classmethod
-    def applied_factors(cls, options):
+    def applied_factors(cls, options, upstream=frozenset()):  # pylint: disable=unused-argument
         """
         Return the efficiency factors the stage applies to the photons.
 

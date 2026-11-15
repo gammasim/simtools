@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+from astropy.table import Column, Table
 
 from simtools.runners import stages
 from simtools.runners.chain_spec import (
@@ -193,6 +194,25 @@ def test_prepare_sets_bypass_optics_before_show_all(corsika_config_mock_array_mo
     assert "-C Bypass_Optics=2 -C show=all -" in lines[0]
 
 
+def test_prepare_reads_zero_transmission_table_before_show_all(corsika_config_mock_array_model):
+    config = corsika_config_mock_array_model
+    stage = SimTelArrayStage(
+        simulation_parameters=config.simulation_parameters,
+        array_model=config.array_model,
+        label="test-zero-transmission",
+        context=config.context,
+        bypass_optics=1,
+        atmospheric_transmission="/results/atmosphere/atmosphere-zero-transmission.dat",
+    )
+
+    lines = stage.prepare(run_number=1, input_file=STDIN)
+
+    assert (
+        "-C Bypass_Optics=1 -C atmospheric_transmission="
+        "/results/atmosphere/atmosphere-zero-transmission.dat -C show=all -"
+    ) in lines[0]
+
+
 @pytest.mark.parametrize(
     ("options", "expected"),
     [
@@ -367,7 +387,7 @@ def fake_photon_stage(monkeypatch):
         streams = True
 
         @classmethod
-        def applied_factors(cls, options):
+        def applied_factors(cls, options, upstream=frozenset()):
             return frozenset({QUANTUM_EFFICIENCY})
 
     monkeypatch.setitem(stages.STAGES, "fake_qe", lambda: FakeStage)
@@ -474,3 +494,168 @@ def test_light_stage_errors(light_simulation):
         stage.prepare(1, output=StreamTo(("downstream",)))
     assert stage.environment() == {}
     assert stage.get_resources(runtime=1.5) == {"runtime": 1.5}
+
+
+@pytest.mark.parametrize(
+    ("options", "upstream", "expected"),
+    [
+        ({"bypass_optics": 1}, frozenset({"atmospheric_extinction"}), {"quantum_efficiency"}),
+        ({"bypass_optics": 2}, frozenset({"atmospheric_extinction"}), {"quantum_efficiency"}),
+        (
+            {"bypass_optics": 1},
+            frozenset(),
+            {"quantum_efficiency", "atmospheric_extinction"},
+        ),
+        ({"bypass_optics": 3}, frozenset({"atmospheric_extinction"}), {"quantum_efficiency"}),
+    ],
+)
+def test_applied_factors_extinction_moves_to_upstream_stage(options, upstream, expected):
+    assert SimTelArrayStage.applied_factors(options, upstream=upstream) == frozenset(expected)
+
+
+def test_mode_zero_with_upstream_extinction_is_rejected_by_chain():
+    from simtools.runners.chain_spec import parse_chain
+
+    spec = parse_chain(["corsika", "obdeect_atmosphere", "sim_telarray"])
+
+    with pytest.raises(ValueError, match=r"applies 'atmospheric_extinction' twice"):
+        spec.check_applied_factors()
+
+
+def test_zero_transmission_directory_differs_from_atmosphere_stage_directory():
+    """Exporting the site table into the atmosphere directory would overwrite its table."""
+    from simtools.runners import atmosphere_stage, sim_telarray_stage
+
+    assert sim_telarray_stage.ZERO_TRANSMISSION_DIRECTORY != atmosphere_stage.OUTPUT_DIRECTORY
+
+
+@pytest.mark.parametrize(
+    ("stages", "options", "expected"),
+    [
+        (
+            ("corsika", "obdeect_atmosphere", "sim_telarray"),
+            {"sim_telarray": {"bypass_optics": 1}},
+            True,
+        ),
+        (
+            ("corsika", "obdeect_atmosphere", "sim_telarray"),
+            {"sim_telarray": {"bypass_optics": 2}},
+            True,
+        ),
+        (("corsika", "sim_telarray"), {"sim_telarray": {"bypass_optics": 1}}, False),
+        (
+            ("corsika", "obdeect_atmosphere", "sim_telarray"),
+            {"sim_telarray": {"bypass_optics": 3}},
+            False,
+        ),
+        (("corsika", "obdeect_atmosphere", "sim_telarray"), {}, False),
+    ],
+)
+def test_uses_zero_transmission(stages, options, expected):
+    from simtools.runners.sim_telarray_stage import uses_zero_transmission
+
+    assert uses_zero_transmission(stages, lambda name: options.get(name, {})) is expected
+
+
+class _EnvelopeTelescope:
+    """Telescope model with a QE table, the parts of a model the envelope reads."""
+
+    def __init__(self, name):
+        self.name = name
+        self.parameters = {"quantum_efficiency": {"value": "qe.ecsv", "instrument": name}}
+        self._table = Table(
+            {
+                "wavelength": Column([300.0, 500.0], unit="nm"),
+                "efficiency": [0.2, 0.4],
+            }
+        )
+
+    def get_parameter_table(self, parameter_name):
+        assert parameter_name == "quantum_efficiency"
+        return self._table
+
+    def get_parameter_value(self, parameter_name):
+        assert parameter_name == "qe_variation"
+        return 0.063
+
+
+def test_instances_efficiency_envelope_follows_atmosphere_stage(corsika_config_mock_array_model):
+    config = corsika_config_mock_array_model
+
+    def _stages(stage_names):
+        inputs = StageInputs(
+            array_models=(config.array_model,),
+            simulation_parameters=(config.simulation_parameters,),
+            shower_configurations=(),
+            args={},
+            context=config.context,
+            chain_options={"obdeect_atmosphere": {"efficiency_envelope": "qe"}},
+            stages=stage_names,
+        )
+        return SimTelArrayStage.instances(inputs)
+
+    (with_envelope,) = _stages(("obdeect_atmosphere", "sim_telarray"))
+    (without_envelope,) = _stages(("corsika", "sim_telarray"))
+
+    assert with_envelope.efficiency_envelope is True
+    assert without_envelope.efficiency_envelope is False
+
+
+def test_instances_thinned_upstream_sets_min_photons_zero(corsika_config_mock_array_model):
+    config = corsika_config_mock_array_model
+
+    def _stage(stage_names):
+        inputs = StageInputs(
+            array_models=(config.array_model,),
+            simulation_parameters=(config.simulation_parameters,),
+            shower_configurations=(),
+            args={},
+            context=config.context,
+            stages=stage_names,
+        )
+        (stage,) = SimTelArrayStage.instances(inputs)
+        return stage
+
+    assert _stage(("obdeect_atmosphere", "sim_telarray")).simulator_array.min_photons == 0
+    assert _stage(("corsika", "sim_telarray")).simulator_array.min_photons is None
+
+
+def test_prepare_with_envelope_points_sim_telarray_to_scaled_tables(
+    corsika_config_mock_array_model, mocker, tmp_test_directory
+):
+    config = corsika_config_mock_array_model
+    stage = SimTelArrayStage(
+        simulation_parameters=config.simulation_parameters,
+        array_model=config.array_model,
+        label="test-envelope",
+        context=config.context,
+        efficiency_envelope=True,
+    )
+    stage.array_model = SimpleNamespace(
+        model_version="6.0.0",
+        telescope_models={"LSTN-01": _EnvelopeTelescope("LSTN-01")},
+    )
+    mocker.patch.object(
+        stage.simulator_array, "make_run_command", return_value=["sim_telarray", "command"]
+    )
+    stage.simulator_array.file_list = {}
+
+    stage.prepare(run_number=2, input_file=STDIN)
+
+    (directory,) = stage.simulator_array.include_directories
+    assert directory.name == "qe-table"
+    assert directory.parent.name == "6.0.0"
+    assert directory.parent.parent.name == "run000002"
+    (table,) = list(directory.glob("*.dat"))
+    assert table.read_text(encoding="utf-8").splitlines()[0].startswith("100 ")
+
+
+def test_prepare_without_envelope_sets_no_include_directories(sim_telarray_stage, mocker):
+    mocker.patch.object(
+        sim_telarray_stage.simulator_array, "make_run_command", return_value=["sim_telarray"]
+    )
+    sim_telarray_stage.simulator_array.file_list = {}
+
+    sim_telarray_stage.prepare(run_number=1, input_file=STDIN)
+
+    assert sim_telarray_stage.simulator_array.include_directories == ()
