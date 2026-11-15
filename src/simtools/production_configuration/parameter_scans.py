@@ -31,14 +31,14 @@ _ECSV_FORMAT = "ascii.ecsv"
 _KEPT_METADATA = (
     "model_parameter_sets",
     "site",
-    "simulation_chain",
+    "simulation_software",
     "job_grid_summary",
     "job_grid_format_version",
 )
 _PRODUCTION_GRID_ARGS = (
     "site",
     "model_version",
-    "simulation_chain",
+    "simulation_software",
     "azimuth_angle",
     "zenith_angle",
     "showers_per_run",

@@ -1,29 +1,7 @@
-"""Calibration light sources of photon-stream simulation chains.
-
-A light source type turns the simulation models of a calibration device and a telescope into
-a request (a frozen dataclass without reference to any program) and the request into the
-command that makes the photons. The request does not depend on the command line of a
-photon-source program: replacing the program means replacing the ``command`` of a source type.
-
-Source types are looked up by name in ``SOURCE_TYPES``, which maps each name to a factory
-returning the source-type class; factories defer imports until the type is used. Further types
-are added with :func:`register_source_type`; no existing code changes.
-
-A source-type class provides:
-
-- ``name`` and ``light_source_types`` (the ``light_source_type`` model values it handles),
-- ``build_request(calibration_model, telescope_model, site_model, config, seed)``,
-- ``command(request, work_directory, output=None, file_token="")``: the command tokens; files
-  the program reads are written to ``work_directory``.
-
-The models are used through ``get_parameter_value`` and ``get_parameter_value_with_unit``.
-``config`` holds the settings of a light-emission run: ``number_of_events``, ``flasher_photons``,
-``wavelength``, ``light_source_position``, ``light_source_pointing`` and ``run_number``.
-"""
+"""Build flasher and illuminator requests from calibration and telescope models."""
 
 import json
 from dataclasses import asdict, dataclass
-from importlib import import_module
 from pathlib import Path
 
 import astropy.units as u
@@ -495,133 +473,34 @@ def illuminator_request(calibration_model, telescope_model, site_model, config, 
     )
 
 
-class FlasherSource:
-    """Flasher traced in process through the telescope model (shadowing by its structure)."""
-
-    name = "flasher"
-    light_source_types = ("flat_fielding",)
-    build_request = staticmethod(flasher_request)
-
-    @staticmethod
-    def command(request, work_directory, output=None, file_token="", executable=None):
-        """
-        Return the command tokens that make the photons of a flasher request.
-
-        See ``simtools.simulation_chain.obdeect.sources.flasher_command``.
-
-        Parameters
-        ----------
-        request : FlasherRequest
-            Flasher request; it is written to ``work_directory``.
-        work_directory : str or Path
-            Directory of the request file and the exported model files.
-        output : str or Path, optional
-            Output file; without it the program writes the photon stream to stdout.
-        file_token : str
-            Suffix of the request file name.
-        executable : str, optional
-            Python interpreter (default: the running one).
-
-        Returns
-        -------
-        list of str
-            Command tokens.
-        """
-        # The obdeect module imports this module: import it when the command is built.
-        from simtools.simulation_chain.obdeect import sources  # pylint: disable=C0415
-
-        return sources.flasher_command(request, work_directory, output, file_token, executable)
-
-
-class IlluminatorSource:
-    """Illuminator (external light source) made with the obdeect point-source program."""
-
-    name = "illuminator"
-    light_source_types = ("illuminator",)
-    build_request = staticmethod(illuminator_request)
-
-    @staticmethod
-    def command(request, work_directory, output=None, file_token="", executable=None):
-        """
-        Return the command tokens that make the photons of an illuminator request.
-
-        See ``simtools.simulation_chain.obdeect.sources.illuminator_command``.
-
-        Parameters
-        ----------
-        request : IlluminatorRequest
-            Illuminator request.
-        work_directory : str or Path
-            Directory for the telescope position file and tables.
-        output : str or Path, optional
-            Output file; without it the program writes the photon stream to stdout.
-        file_token : str
-            Suffix of the table file names.
-        executable : str, optional
-            Program (default: the one of the program catalog).
-
-        Returns
-        -------
-        list of str
-            Command tokens.
-        """
-        # The obdeect module imports this module: import it when the command is built.
-        from simtools.simulation_chain.obdeect import sources  # pylint: disable=C0415
-
-        return sources.illuminator_command(request, work_directory, output, file_token, executable)
-
-
-# ---------------------------------------------------------------------------
-# Registry
-# ---------------------------------------------------------------------------
-
-
-def _lazy_source_type(module, class_name):
-    """Return a factory that imports a source-type class when it is first used."""
-
-    def factory():
-        return getattr(import_module(module), class_name)
-
-    return factory
-
-
-SOURCE_TYPES = {
-    "flasher": _lazy_source_type(__name__, "FlasherSource"),
-    "illuminator": _lazy_source_type(__name__, "IlluminatorSource"),
-}
-
-
-def register_source_type(name, factory):
-    """
-    Register a source type under a name, replacing any type registered under it.
-
-    Parameters
-    ----------
-    name : str
-        Source-type name.
-    factory : callable
-        Function without arguments returning the source-type class.
-    """
-    SOURCE_TYPES[name] = factory
-
-
-def get_source_type(name):
-    """Return the source-type class registered under a name."""
+def build_request(name, calibration_model, telescope_model, site_model, config, seed=1):
+    """Build the request for a flasher or illuminator."""
+    builders = {"flasher": flasher_request, "illuminator": illuminator_request}
     try:
-        return SOURCE_TYPES[name]()
+        builder = builders[name]
     except KeyError as exc:
-        raise ValueError(
-            f"Unknown light source type {name!r}; known: {sorted(SOURCE_TYPES)}"
-        ) from exc
+        raise ValueError(f"Unknown light source type {name!r}; known: {sorted(builders)}") from exc
+    return builder(calibration_model, telescope_model, site_model, config, seed)
 
 
-def source_type_of_model(light_source_type):
-    """Return the source-type class that handles a ``light_source_type`` model value."""
-    for name in SOURCE_TYPES:
-        source_type = get_source_type(name)
-        if light_source_type in source_type.light_source_types:
-            return source_type
+def source_name_for_model(light_source_type):
+    """Return the source name for a model ``light_source_type`` value."""
+    for name, model_types in (("flasher", ("flat_fielding",)), ("illuminator", ("illuminator",))):
+        if light_source_type in model_types:
+            return name
     raise ValueError(
-        f"No light source type handles light_source_type {light_source_type!r}; "
-        f"known: {sorted(SOURCE_TYPES)}"
+        f"No light source handles light_source_type {light_source_type!r}; "
+        "known: ['flasher', 'illuminator']"
     )
+
+
+def source_command(name, request, work_directory, output=None, file_token="", executable=None):
+    """Return command tokens for a source request."""
+    from simtools.simulation_software.obdeect import sources  # pylint: disable=C0415
+
+    commands = {"flasher": sources.flasher_command, "illuminator": sources.illuminator_command}
+    try:
+        command = commands[name]
+    except KeyError as exc:
+        raise ValueError(f"Unknown light source type {name!r}; known: {sorted(commands)}") from exc
+    return command(request, work_directory, output, file_token, executable)

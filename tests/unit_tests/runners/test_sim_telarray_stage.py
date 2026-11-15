@@ -16,7 +16,7 @@ from simtools.runners.chain_spec import (
 )
 from simtools.runners.sim_telarray_stage import LightSimTelArrayStage, SimTelArrayStage
 from simtools.runners.stages import STDIN, StageInputs, StreamTo
-from simtools.simulation_chain.products import CAMERA_PHOTONS_IACT, CHERENKOV_PHOTONS
+from simtools.simulation_software.products import CAMERA_PHOTONS_IACT, CHERENKOV_PHOTONS
 
 ALL_FACTORS = frozenset(
     {ATMOSPHERIC_EXTINCTION, MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION, QUANTUM_EFFICIENCY}

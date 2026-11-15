@@ -70,27 +70,23 @@ height above the observation level, as in sim_telarray. The reference-point alti
 
 ## Simulation chain
 
-`--simulation_chain` lists the stages of the simulation in order, each as
+`--simulation_software` lists the stages of the simulation in order, each as
 `STAGE` or `STAGE:KEY=VALUE,...`. The default is `corsika sim_telarray`: showers with CORSIKA,
-telescopes and cameras with sim_telarray. The stages are defined in
-`src/simtools/resources/simulation_stages.yml`; a stage must consume what the previous stage
-produces. Examples:
+telescopes and cameras with sim_telarray. A stage must consume what the previous stage produces. Examples:
 
 ```bash
---simulation_chain sim_telarray        # sim_telarray only, e.g. from a CORSIKA input file
---simulation_chain corsika             # CORSIKA only
---simulation_chain corsika obdeect_atmosphere obdeect_optics sim_telarray:bypass_optics=3
+--simulation_software sim_telarray        # sim_telarray only, e.g. from a CORSIKA input file
+--simulation_software corsika             # CORSIKA only
+--simulation_software corsika corsika_to_stream obdeect_atmosphere obdeect_optics \
+  stream_to_simtel sim_telarray:bypass_optics=3
 ```
 
-Where two neighbouring stages do not match (a stage produces a data product the next one does not
-consume), the converter stages between the two products are inserted. The last example runs
-`corsika`, `corsika_to_stream`, `obdeect_atmosphere`, `obdeect_optics`, `stream_to_simtel` and
-`sim_telarray`; the chain that runs is logged. Converters can also be listed explicitly.
+List converters explicitly when consecutive programs use different photon formats.
 
 The same list is used in configuration files:
 
 ```yaml
-simulation_chain:
+simulation_software:
   - corsika
   - sim_telarray
 ```

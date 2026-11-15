@@ -1,15 +1,4 @@
-"""Flasher light as a camera-frame photon stream.
-
-The light of a flasher is made and traced in process through the optical model of the telescope
-(``ObdeectRayTracer.trace_light_source``): the obscurers of the telescope, including its
-structure, shadow the light; the mirrors and the telescope transmission are bypassed. The photons
-at the camera plane are written as a photon stream (frame C: x and y on the focal-surface plane,
-z implicit; direction, time, weight and wavelength), one event per pulse and telescope id 1.
-
-Run as ``python -m simtools.simulation_chain.flasher_stream --request FILE [--output FILE]``
-(see ``simtools.simulation_chain.light_sources.FlasherSource.command``); the stream goes to
-stdout without ``--output``.
-"""
+"""Trace flasher light through telescope obscurers and write camera-frame photon streams."""
 
 import argparse
 import logging
@@ -25,7 +14,7 @@ from simtools.model_repository.reader import SimulationModelReader, resolve_mode
 from simtools.ray_tracing.backends.interface import LightSourceRequest
 from simtools.runtime.context import RunContext
 from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
-from simtools.simulation_chain.light_sources import flasher_request_from_json
+from simtools.simulation_software.light_sources import flasher_request_from_json
 
 PRODUCER = "simtools-flasher"
 TELESCOPE_ID = 1

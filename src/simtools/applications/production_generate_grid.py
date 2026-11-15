@@ -139,7 +139,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE(required=True),
         cli.ARRAY_LAYOUT_NAME(required=True),
-        cli.SIMULATION_CHAIN,
+        cli.SIMULATION_SOFTWARE,
         cli.PRIMARY,
         cli.PRIMARY_ID_TYPE,
         cli.AZIMUTH_ANGLE,

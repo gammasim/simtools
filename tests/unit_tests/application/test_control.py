@@ -138,7 +138,7 @@ def test_initialize_runtime_without_resolving_sim_software_executables():
 
 def test_initialize_runtime_validates_simulation_dependencies_after_loading():
     """Dependency validation runs after settings load and before logging."""
-    mock_args_dict = {"log_level": "info", "simulation_chain": ["corsika"]}
+    mock_args_dict = {"log_level": "info", "simulation_software": ["corsika"]}
     with (
         patch(
             "simtools.application.control.dependencies.validate_simulation_dependencies"
@@ -159,7 +159,7 @@ def test_initialize_runtime_validates_software_of_all_chain_stages():
     """The software of every stage of the chain is validated, options are ignored."""
     mock_args_dict = {
         "log_level": "info",
-        "simulation_chain": [
+        "simulation_software": [
             "corsika",
             "corsika_to_stream",
             "obdeect_optics",
@@ -178,7 +178,7 @@ def test_initialize_runtime_validates_software_of_all_chain_stages():
     assert validate.call_args.args[0] == frozenset({"corsika", "obdeect", "sim_telarray"})
 
 
-def test_initialize_runtime_validates_sim_telarray_without_simulation_chain():
+def test_initialize_runtime_validates_sim_telarray_without_simulation_software():
     """Without a simulation chain only sim_telarray is validated."""
     with (
         patch(
@@ -195,7 +195,7 @@ def test_initialize_runtime_defers_dependency_validation_for_remote_jobs():
     """Remote grid controllers leave simulation checks to their backend workers."""
     mock_args_dict = {
         "log_level": "info",
-        "simulation_chain": ["corsika"],
+        "simulation_software": ["corsika"],
         "_defer_simulation_dependency_validation": True,
     }
     with (
@@ -213,7 +213,7 @@ def test_initialize_runtime_defers_dependency_validation_for_remote_jobs():
 
 def test_initialize_runtime_stops_when_dependencies_are_unavailable():
     """Dependency failures prevent the rest of application startup."""
-    mock_args_dict = {"log_level": "info", "simulation_chain": ["corsika"]}
+    mock_args_dict = {"log_level": "info", "simulation_software": ["corsika"]}
     with (
         patch(
             "simtools.application.control.dependencies.validate_simulation_dependencies",

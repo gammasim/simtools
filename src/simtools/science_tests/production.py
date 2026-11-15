@@ -180,7 +180,7 @@ def check_reviewed_production(definition, replacements):
     expected = {f"job-{index:06d}" for index in range(1, len(rows) + 1)}
     _require_same_ids(expected, [item.data.get(_JOB_ID) for item in discovered], "production jobs")
     manifests = {item.data[_JOB_ID]: item for item in discovered}
-    fixed = {key: metadata[key] for key in ("site", "simulation_chain") if key in metadata}
+    fixed = {key: metadata[key] for key in ("site", "simulation_software") if key in metadata}
     for index, row in enumerate(rows, start=1):
         manifest = manifests[f"job-{index:06d}"]
         _check_grid_row(row | fixed, manifest.data["configuration"])

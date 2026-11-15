@@ -145,10 +145,10 @@ class Simulator:
         self.site = self.context.args.get("site", None)
         self.model_version = self.context.args.get("model_version", None)
         self.chain_spec = chain_spec.parse_chain(
-            self.context.args.get("simulation_chain", constants.SIMULATION_CHAIN_DEFAULT)
+            self.context.args.get("simulation_software", constants.SIMULATION_SOFTWARE_DEFAULT)
         )
         self.chain = self.chain_spec.chain()
-        self._log_chain()
+        self.logger.info("Simulation software: %s", " -> ".join(self.chain.stages))
         self.run_mode = self.context.args.get("run_mode", None)
         self.io_handler = self.context.paths
 
@@ -167,12 +167,6 @@ class Simulator:
             context=self.context,
         )
         self.file_list = self.runner_service.load_files(self.run_number)
-
-    def _log_chain(self):
-        """Log the stages of the chain and the converters inserted between them."""
-        inserted = [name for name in self.chain.stages if name not in self.chain_spec.stages]
-        note = f" (converters inserted: {', '.join(inserted)})" if inserted else ""
-        self.logger.info(f"Simulation chain: {' -> '.join(self.chain.stages)}{note}")
 
     def _initialize_from_tool_configuration(self):
         """Initialize run number from the tool configuration."""

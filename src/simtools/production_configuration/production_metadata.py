@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import h5py
 from astropy import units as u
 
-from simtools.constants import SIMULATION_CHAIN_DEFAULT
+from simtools.constants import SIMULATION_SOFTWARE_DEFAULT
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.production_configuration.jobs_io import (
@@ -34,7 +34,7 @@ _AZIMUTH_ANGLE = "azimuth_angle"
 _ZENITH_ANGLE = "zenith_angle"
 REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS = tuple(
     "primary azimuth_angle zenith_angle energy_range core_scatter view_cone showers_per_run "
-    "model_version array_layout_name site simulation_chain".split()
+    "model_version array_layout_name site simulation_software".split()
 )
 # Possessive quantifiers keep malformed log lines from triggering backtracking.
 _SIMTEL_EVENT_COUNT_PATTERN = re.compile(
@@ -86,7 +86,7 @@ def _write_manifests(production_path, job_grid_file, args_dict, context):
                 f"Metadata manifest already exists: {manifest_path}. Use --overwrite to replace it."
             )
         args = job_grid_row_to_simulate_prod_args(row, metadata)
-        args.setdefault("simulation_chain", list(SIMULATION_CHAIN_DEFAULT))
+        args.setdefault("simulation_software", list(SIMULATION_SOFTWARE_DEFAULT))
         args.setdefault("eslope", -2.0)
         missing = [
             key
@@ -117,7 +117,7 @@ def _write_manifests(production_path, job_grid_file, args_dict, context):
         )
         file_inventory = inventory_production_files(job_directory)
         validate_required_production_outputs(
-            file_inventory, args["simulation_chain"], job_directory
+            file_inventory, args["simulation_software"], job_directory
         )
         threshold = args.get("curved_atmosphere_min_zenith_angle")
         manifest = build_production_job_manifest(
@@ -356,7 +356,7 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
         "site": args_dict["site"],
         "array_layout_name": args_dict["array_layout_name"],
         "model_version": _scalar_or_list(args_dict["model_version"]),
-        "simulation_chain": list(args_dict["simulation_chain"]),
+        "simulation_software": list(args_dict["simulation_software"]),
         _AZIMUTH_ANGLE: args_dict[_AZIMUTH_ANGLE],
         _ZENITH_ANGLE: args_dict[_ZENITH_ANGLE],
         "energy_min": energy_min,

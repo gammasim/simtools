@@ -42,7 +42,7 @@ def _job_rows():
 def _metadata():
     return {
         "site": "North",
-        "simulation_chain": ["corsika", "sim_telarray"],
+        "simulation_software": ["corsika", "sim_telarray"],
         "coordinate_system": "ha_dec",
     }
 

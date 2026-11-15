@@ -1,10 +1,4 @@
-"""Commands of the obdeect light sources: flasher (in process) and illuminator (point source).
-
-The requests and the source-type classes are in ``simtools.simulation_chain.light_sources``; the
-source-type classes call the builders of this module. A different software provides its own
-module in a sibling subpackage of ``simtools.simulation_chain`` and its programs in the program
-catalog; its source types are added with ``light_sources.register_source_type``.
-"""
+"""Build obdeect flasher and illuminator commands from light-source requests."""
 
 import sys
 from pathlib import Path
@@ -12,12 +6,12 @@ from pathlib import Path
 import numpy as np
 
 from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
-from simtools.simulation_chain.light_sources import request_to_json
-from simtools.simulation_chain.programs import program_command
+from simtools.simulation_software.light_sources import request_to_json
+from simtools.simulation_software.programs import program_command
 
 SOFTWARE = "obdeect"
 ILLUMINATOR_PROGRAM = "obdeect-sources-point-source"
-FLASHER_MODULE = "simtools.simulation_chain.flasher_stream"
+FLASHER_MODULE = "simtools.simulation_software.flasher_stream"
 
 
 def _number(value):
@@ -75,7 +69,7 @@ def flasher_command(request, work_directory, output=None, file_token="", executa
     """
     Return the command tokens that make the photons of a flasher request.
 
-    The command runs ``simtools.simulation_chain.flasher_stream``, which traces the light of
+    The command runs ``simtools.simulation_software.flasher_stream``, which traces the light of
     the flasher to the camera plane (obscurers of the telescope tested, mirrors bypassed).
 
     Parameters

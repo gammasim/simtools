@@ -1,24 +1,17 @@
-"""Atmosphere of the simulation chain as a simulation stage (obdeect propagation).
-
-In a chain::
-
-    simulation_chain: [corsika, obdeect_atmosphere, obdeect_optics, "sim_telarray:bypass_optics=3"]
-
-The command is built in ``simtools.simulation_chain.obdeect.atmosphere``.
-"""
+"""Apply obdeect atmospheric extinction to a photon stream."""
 
 import shlex
 
 from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION
 from simtools.runners.stages import STDIN, StreamTo
 from simtools.runtime.context import RunContext
-from simtools.simulation_chain.atmosphere import (
+from simtools.simulation_software.atmosphere import (
     DEFAULT_MODE,
     DEFAULT_SEED,
     build_atmosphere_request,
 )
-from simtools.simulation_chain.obdeect.atmosphere import propagation_command
-from simtools.simulation_chain.products import PHOTONS_GROUND, PHOTONS_SKY
+from simtools.simulation_software.obdeect.atmosphere import propagation_command
+from simtools.simulation_software.products import PHOTONS_GROUND, PHOTONS_SKY
 
 STAGE_OPTIONS = ("seed", "mode", "wavelength_range_nm")
 OUTPUT_DIRECTORY = "atmosphere"

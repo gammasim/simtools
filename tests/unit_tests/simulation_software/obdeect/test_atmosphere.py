@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from simtools.simulation_chain.atmosphere import AtmosphereRequest
-from simtools.simulation_chain.obdeect.atmosphere import propagation_command
-from simtools.simulation_chain.programs import program_command
+from simtools.simulation_software.atmosphere import AtmosphereRequest
+from simtools.simulation_software.obdeect.atmosphere import propagation_command
+from simtools.simulation_software.programs import program_command
 
 
 def _request(**kwargs):

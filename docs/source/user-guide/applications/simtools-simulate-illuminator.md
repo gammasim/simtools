@@ -16,11 +16,10 @@ Three modes of operation are supported:
    in parallel, using a configurable number of CPU cores.
 
 The stages of the simulation of each illuminator-telescope pair are set with
-``--simulation_chain`` (default ``light_emission sim_telarray``: the sim_telarray LightEmission
+``--simulation_software`` (default ``light_emission sim_telarray``: the sim_telarray LightEmission
 program, then sim_telarray). Each stage is ``STAGE`` or ``STAGE:KEY=VALUE,...``; the chain starts
 with a light source stage and has no ``corsika`` stage, for example
-``obdeect_illuminator obdeect_atmosphere obdeect_optics sim_telarray:bypass_optics=3`` (converters
-between stages are inserted). See :doc:`/components/obdeect` for the stages.
+``obdeect_illuminator obdeect_atmosphere obdeect_optics stream_to_simtel sim_telarray:bypass_optics=3``. See :doc:`/components/obdeect` for the stages.
 
 **Example Usage**
 

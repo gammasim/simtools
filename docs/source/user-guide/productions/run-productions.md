@@ -10,7 +10,7 @@ from many such runs, usually generated from the ECSV production grid described i
 `simtools-simulate-prod` prepares the simulation configuration, writes run scripts, executes the
 selected simulation software, validates the produced files, and reports the result.
 
-The `simulation_chain` lists the stages that are executed (default: `corsika sim_telarray`):
+The `simulation_software` lists the stages that are executed (default: `corsika sim_telarray`):
 
 - `corsika`: run shower simulations only
 - `sim_telarray`: run detector simulation using an existing CORSIKA input file

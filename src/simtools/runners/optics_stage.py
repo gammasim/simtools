@@ -1,21 +1,4 @@
-"""Telescope optics as a simulation stage: photons at the telescope traced to the camera.
-
-The stage traces a photon stream (ground or telescope frame) through the optics of one
-telescope of an array model and writes camera-frame photons. The photons of the other telescopes
-are dropped, so a chain runs one instance per telescope and array model, each with its own random
-instrument (mirror errors). The translation of the telescope models into the optics job is in
-``simtools.simulation_chain.optics``; the optical model file and the command are made in
-``simtools.simulation_chain.obdeect.optics``.
-
-Stage options are given after the stage name in the chain::
-
-    simulation_chain: [corsika, obdeect_atmosphere,
-                       "obdeect_optics:telescope_transmission=full,threads=4",
-                       "sim_telarray:bypass_optics=3"]
-
-``telescope_transmission`` is ``full`` (the only mode); ``threads`` is the number of tracing
-threads of each instance (default: the usable cores divided among the instances).
-"""
+"""Trace each telescope photon stream through obdeect optics to its camera."""
 
 import os
 import shlex
@@ -26,12 +9,12 @@ from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.model_utils import export_model_files
 from simtools.runners.chain_spec import MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION
 from simtools.runners.stages import StreamTo
-from simtools.simulation_chain.obdeect.optics import trace_stream_command, write_optical_model
-from simtools.simulation_chain.optics import (
+from simtools.simulation_software.obdeect.optics import trace_stream_command, write_optical_model
+from simtools.simulation_software.optics import (
     TELESCOPE_TRANSMISSION_MODES,
     optics_requests,
 )
-from simtools.simulation_chain.products import PHOTONS_CAMERA, PHOTONS_GROUND, PHOTONS_TELESCOPE
+from simtools.simulation_software.products import PHOTONS_CAMERA, PHOTONS_GROUND, PHOTONS_TELESCOPE
 
 STAGE_NAME = "obdeect_optics"
 #: Photon streams number telescopes from 1 (sim_telarray numbering); the IACT ids of the CORSIKA

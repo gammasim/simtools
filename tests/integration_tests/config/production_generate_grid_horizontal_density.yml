@@ -29,7 +29,7 @@ applications:
     output_file: job_grid_horizontal_grid_density.ecsv
     output_path: simtools-output
     primary: gamma
-    simulation_chain:
+    simulation_software:
     - corsika
     - sim_telarray
     site: North

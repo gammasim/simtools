@@ -26,16 +26,16 @@ def _validate_max_photoelectrons(args_dict, _config_sources, parser):
         parser.error("--max_photoelectrons must be at least 1000 and less than 500000000.")
 
 
-def _validate_simulation_chain(args_dict, _config_sources, parser):
+def _validate_simulation_software(args_dict, _config_sources, parser):
     """Allow a simulation chain other than the default only in full-simulation mode."""
-    chain = args_dict.get("simulation_chain")
+    chain = args_dict.get("simulation_software")
     if (
         args_dict.get("run_mode") == "direct_injection"
         and chain
         and tuple(chain) != LIGHT_EMISSION_CHAIN_DEFAULT
     ):
         parser.error(
-            "--simulation_chain is available in run mode full_simulation only; "
+            "--simulation_software is available in run mode full_simulation only; "
             "direct_injection runs its own chain."
         )
 
@@ -43,7 +43,7 @@ def _validate_simulation_chain(args_dict, _config_sources, parser):
 def _validate(args_dict, config_sources, parser):
     """Validate the arguments of the application."""
     _validate_max_photoelectrons(args_dict, config_sources, parser)
-    _validate_simulation_chain(args_dict, config_sources, parser)
+    _validate_simulation_software(args_dict, config_sources, parser)
 
 
 _ARGUMENTS = (
@@ -118,7 +118,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         cli.RAY_TRACING_BACKEND,
-        cli.SIMULATION_CHAIN(
+        cli.SIMULATION_SOFTWARE(
             default=list(LIGHT_EMISSION_CHAIN_DEFAULT),
             help=(
                 "Stages of the full simulation in order, each as STAGE or STAGE:KEY=VALUE,... "

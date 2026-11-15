@@ -37,7 +37,7 @@ applications:
     simulation_seed:
     - 1745
     - 290
-    simulation_chain:
+    simulation_software:
     - corsika
     - sim_telarray
     site: South

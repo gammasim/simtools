@@ -1,15 +1,9 @@
-"""Optical model file and command line of the obdeect ray tracing of a photon stream.
-
-``obdeect ray-tracing trace-stream`` traces a photon stream through the optics of one telescope
-(see ``simtools.simulation_chain.optics`` for the request). A different software provides its own
-module in a sibling subpackage of ``simtools.simulation_chain`` and its programs in the program
-catalog.
-"""
+"""Export optical models and build obdeect photon-stream tracing commands."""
 
 from pathlib import Path
 
 from simtools.ray_tracing.backends.interface import create_shower_tracer
-from simtools.simulation_chain.programs import program_command
+from simtools.simulation_software.programs import program_command
 
 SOFTWARE = "obdeect"
 COMMAND_PROGRAM = "obdeect"

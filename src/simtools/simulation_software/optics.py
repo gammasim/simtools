@@ -4,7 +4,7 @@ An :class:`OpticsRequest` describes what is traced for one telescope of an array
 it is built from, the pointing, the seeds and the telescope transmission mode. It does not depend
 on a program. The optical model file and the command line of ``obdeect ray-tracing trace-stream``,
 which traces a photon stream (ground or telescope frame) through the optics to camera-frame
-photons, are made in ``simtools.simulation_chain.obdeect.optics``.
+photons, are made in ``simtools.simulation_software.obdeect.optics``.
 
 Frames: the ground frame is the horizontal plane through the telescope sphere centre (x north,
 y west, z up); the pointing is the telescope zenith and azimuth in that frame. The camera frame is

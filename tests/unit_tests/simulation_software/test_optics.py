@@ -8,8 +8,8 @@ from types import SimpleNamespace
 import pytest
 
 from simtools.simtel.shower_photons import derive_seed
-from simtools.simulation_chain import optics
-from simtools.simulation_chain.optics import OpticsRequest
+from simtools.simulation_software import optics
+from simtools.simulation_software.optics import OpticsRequest
 
 _NOT_IN_RANGE = "must lie in"
 

@@ -90,7 +90,7 @@ def test_build_chain_runner_has_one_instance_per_stage(light_simulation):
     ("short", "full"),
     [
         (
-            ["obdeect_flasher", "sim_telarray:bypass_optics=1"],
+            ["obdeect_flasher", "stream_to_simtel", "sim_telarray:bypass_optics=1"],
             ("obdeect_flasher", "stream_to_simtel", "sim_telarray"),
         ),
         (
@@ -98,6 +98,7 @@ def test_build_chain_runner_has_one_instance_per_stage(light_simulation):
                 "obdeect_illuminator",
                 "obdeect_atmosphere",
                 "obdeect_optics",
+                "stream_to_simtel",
                 "sim_telarray:bypass_optics=3",
             ],
             (
@@ -110,7 +111,7 @@ def test_build_chain_runner_has_one_instance_per_stage(light_simulation):
         ),
     ],
 )
-def test_light_chains_without_converters_get_them_inserted(short, full):
+def test_light_chains_with_explicit_converters(short, full):
     spec = chain_spec.parse_chain(short)
     chain = spec.chain()
 

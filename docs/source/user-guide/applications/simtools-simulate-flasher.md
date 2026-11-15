@@ -19,7 +19,7 @@ visualization with 'simtools-plot-simtel-events'.
 
 **Simulation chain**
 
-In full-simulation mode, ``--simulation_chain`` lists the stages that simulate one telescope
+In full-simulation mode, ``--simulation_software`` lists the stages that simulate one telescope
 (default ``light_emission sim_telarray``: the sim_telarray LightEmission program, then
 sim_telarray). Each stage is ``STAGE`` or ``STAGE:KEY=VALUE,...``; the chain starts with a light
 source stage and has no ``corsika`` stage. The direct-injection run mode accepts only the default.
@@ -28,7 +28,7 @@ source stage and has no ``corsika`` stage. The direct-injection run mode accepts
 
     simtools-simulate-flasher --run_mode full_simulation --light_source_type flat_fielding \
     --model_version 7.0.0 --site North --telescopes MSTN-04 \
-    --simulation_chain obdeect_flasher sim_telarray:bypass_optics=1
+    --simulation_software obdeect_flasher stream_to_simtel sim_telarray:bypass_optics=1
 
 See :doc:`/components/obdeect` for the stages.
 

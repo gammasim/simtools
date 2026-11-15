@@ -3,15 +3,15 @@
 import numpy as np
 import pytest
 
-from simtools.simulation_chain import light_sources
-from simtools.simulation_chain.light_sources import (
+from simtools.simulation_software import light_sources
+from simtools.simulation_software.light_sources import (
     AngularDistribution,
     FlasherRequest,
     IlluminatorRequest,
     PulseShape,
 )
-from simtools.simulation_chain.obdeect import sources
-from simtools.simulation_chain.programs import program_command
+from simtools.simulation_software.obdeect import sources
+from simtools.simulation_software.programs import program_command
 
 
 def _flasher_request(**options):
@@ -43,7 +43,7 @@ def test_flasher_command(tmp_path):
     assert tokens == [
         "py",
         "-m",
-        "simtools.simulation_chain.flasher_stream",
+        "simtools.simulation_software.flasher_stream",
         *("--request", str(tmp_path / "light_source_request_x.json")),
         *("--output-path", str(tmp_path)),
         *("--output", str(tmp_path / "f.pst")),

@@ -200,7 +200,7 @@ def initialize_runtime(
     validate_simulation_dependencies = "sim_telarray" in needs
     if validate_simulation_dependencies and not args_dict.get(_DEFER_SIMULATION_VALIDATION, False):
         software = chain_spec.parse_chain(
-            args_dict.get("simulation_chain", ["sim_telarray"])
+            args_dict.get("simulation_software", ["sim_telarray"])
         ).software
         dependencies.validate_simulation_dependencies(software, context=context)
 

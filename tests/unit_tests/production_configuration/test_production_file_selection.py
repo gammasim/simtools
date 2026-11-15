@@ -66,7 +66,7 @@ def _write_manifest(base, job_name, run_number, he_interaction="qgs3", zenith=No
             "site": "North",
             "array_layout_name": "CTAO-North-Alpha",
             "model_version": "7.0.0",
-            "simulation_chain": ["corsika", "sim_telarray"],
+            "simulation_software": ["corsika", "sim_telarray"],
             "corsika_he_interaction": he_interaction,
             "azimuth_angle": {"value": 180.0, "unit": "deg"},
             "zenith_angle": zenith or {"value": 20.0, "unit": "deg"},
@@ -196,7 +196,7 @@ def test_check_manifest_rejects_paths_outside_job_directory(tmp_test_directory):
             "site": "North",
             "array_layout_name": "CTAO-North-Alpha",
             "model_version": "7.0.0",
-            "simulation_chain": ["corsika", "sim_telarray"],
+            "simulation_software": ["corsika", "sim_telarray"],
             "azimuth_angle": {"value": 180.0, "unit": "deg"},
             "zenith_angle": {"value": 20.0, "unit": "deg"},
             "energy_min": {"value": 0.03, "unit": "TeV"},
@@ -371,7 +371,7 @@ def test_manifest_schema_versions():
 
     assert get_manifest_schema_metadata("simulate_prod_job")["schema_version"] == "2.0.0"
     assert (
-        "simulation_chain"
+        "simulation_software"
         in schema.load_schema(schema_file, "2.0.0")["properties"]["configuration"]["properties"]
     )
     assert (

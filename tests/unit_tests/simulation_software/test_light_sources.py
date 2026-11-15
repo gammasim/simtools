@@ -1,22 +1,18 @@
 #!/usr/bin/python3
 
 import math
-import subprocess
-import sys
 
 import astropy.units as u
 import pytest
 
-from simtools.simulation_chain import light_sources
-from simtools.simulation_chain.light_sources import (
+from simtools.simulation_software import light_sources
+from simtools.simulation_software.light_sources import (
     AngularDistribution,
     FlasherRequest,
-    FlasherSource,
     IlluminatorRequest,
-    IlluminatorSource,
     PulseShape,
 )
-from simtools.simulation_chain.obdeect import sources
+from simtools.simulation_software.obdeect import sources
 
 
 class _Model:
@@ -271,7 +267,9 @@ def test_flasher_request_json_round_trip(tmp_path):
 
 def test_flasher_source_builds_the_obdeect_command(tmp_path):
     request = _flasher_request()
-    tokens = FlasherSource.command(request, tmp_path, file_token="_x", executable="py")
+    tokens = light_sources.source_command(
+        "flasher", request, tmp_path, file_token="_x", executable="py"
+    )
     assert tokens == sources.flasher_command(request, tmp_path, None, "_x", "py")
 
 
@@ -299,50 +297,33 @@ def _illuminator_request(**options):
 
 def test_illuminator_source_builds_the_obdeect_command(tmp_path):
     request = _illuminator_request()
-    tokens = IlluminatorSource.command(request, tmp_path, output=tmp_path / "i.pst")
+    tokens = light_sources.source_command(
+        "illuminator", request, tmp_path, output=tmp_path / "i.pst"
+    )
     assert tokens == sources.illuminator_command(request, tmp_path, tmp_path / "i.pst")
 
 
-def test_registry_has_builtin_types():
-    assert light_sources.get_source_type("flasher") is FlasherSource
-    assert light_sources.get_source_type("illuminator") is IlluminatorSource
-    assert light_sources.source_type_of_model("flat_fielding") is FlasherSource
-    assert light_sources.source_type_of_model("illuminator") is IlluminatorSource
-
-
-def test_registry_errors():
+def test_source_dispatch(flasher_model, illuminator_model, telescope_model, site_model):
+    assert light_sources.source_name_for_model("flat_fielding") == "flasher"
+    assert light_sources.source_name_for_model("illuminator") == "illuminator"
+    assert isinstance(
+        light_sources.build_request("flasher", flasher_model, telescope_model, site_model, {}),
+        FlasherRequest,
+    )
     with pytest.raises(ValueError, match="Unknown light source type 'laser'"):
-        light_sources.get_source_type("laser")
-    with pytest.raises(ValueError, match="No light source type handles"):
-        light_sources.source_type_of_model("laser_beam")
+        light_sources.build_request("laser", None, None, None, {})
+    with pytest.raises(ValueError, match="No light source handles"):
+        light_sources.source_name_for_model("laser_beam")
 
 
-def test_new_source_type_without_editing_existing_code(monkeypatch):
-    class LaserSource:
-        name = "laser"
-        light_source_types = ("laser_beam",)
-
-        @staticmethod
-        def build_request(*_args, **_kwargs):
-            return "request"
-
-        @staticmethod
-        def command(request, work_directory, output=None, file_token="", executable=None):
-            return ["laser", request, str(work_directory)]
-
-    monkeypatch.setattr(light_sources, "SOURCE_TYPES", dict(light_sources.SOURCE_TYPES))
-    light_sources.register_source_type("laser", lambda: LaserSource)
-    assert light_sources.get_source_type("laser") is LaserSource
-    assert light_sources.source_type_of_model("laser_beam") is LaserSource
-    assert light_sources.source_type_of_model("flat_fielding") is FlasherSource
-
-
-def test_source_types_do_not_import_obdeect():
+def test_source_command_is_lazy(tmp_path):
     code = (
         "import sys\n"
-        "import simtools.simulation_chain.light_sources as m\n"
-        "m.get_source_type('flasher'); m.get_source_type('illuminator')\n"
-        "assert not any(name.startswith('obdeect') for name in sys.modules)\n"
+        "import simtools.simulation_software.light_sources as m\n"
+        "assert not any(name.startswith('simtools.simulation_software.obdeect') for name in sys.modules)\n"
     )
+    import subprocess
+    import sys
+
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr

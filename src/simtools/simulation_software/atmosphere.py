@@ -4,7 +4,7 @@ The atmosphere applies the atmospheric transmission and the in-telescope path of
 to a photon stream, moves photons from the sky to the ground frame, and thins or weights the
 photons. This module holds the model inputs (:class:`AtmosphereRequest`) and does not depend on
 a program. The command line of the obdeect program is in
-``simtools.simulation_chain.obdeect.atmosphere``; the simulation stage is in
+``simtools.simulation_software.obdeect.atmosphere``; the simulation stage is in
 ``simtools.runners.atmosphere_stage``.
 """
 

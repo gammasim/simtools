@@ -1216,14 +1216,14 @@ def test_default_chain_runs_unchanged(default_chain_simulator, light_source_type
     simulator.light_emission_config = {
         LIGHT_SOURCE_TYPE: light_source_type,
         "max_photoelectrons": 5000,
-        "simulation_chain": chain,
+        "simulation_software": chain,
     }
     with (
         patch.object(get_light_source_writer(simulator), MAKE_COMMAND_METHOD) as make_command,
         patch.object(simulator, TELESCOPE_POINTING_METHOD, return_value=(20.0, 30.0)),
     ):
         make_command.side_effect = lambda output: f"light-emission-program {output}"
-        assert simulator.simulation_chain() is None
+        assert simulator.simulation_software() is None
         lines = simulator.make_run_command()
         assert lines == _reference_run_command(simulator)
     assert lines[2] == "light-emission-program /out/iact_output.dat\n\n"
@@ -1231,12 +1231,12 @@ def test_default_chain_runs_unchanged(default_chain_simulator, light_source_type
     assert lines[5] == "rm -f '/out/iact_output.dat'\n\n"
 
 
-def test_simulation_chain_items(simulator_instance):
+def test_simulation_software_items(simulator_instance):
     chain = ["obdeect_flasher", "stream_to_simtel", "sim_telarray:bypass_optics=1"]
-    simulator_instance.light_emission_config = {"simulation_chain": chain}
-    assert simulator_instance.simulation_chain() == chain
-    simulator_instance.light_emission_config = {"simulation_chain": "light_emission"}
-    assert simulator_instance.simulation_chain() == ["light_emission"]
+    simulator_instance.light_emission_config = {"simulation_software": chain}
+    assert simulator_instance.simulation_software() == chain
+    simulator_instance.light_emission_config = {"simulation_software": "light_emission"}
+    assert simulator_instance.simulation_software() == ["light_emission"]
 
 
 def test_make_sim_telarray_command_defaults_equal_simtel_script(default_chain_simulator):
@@ -1274,7 +1274,7 @@ def test_light_emission_command_and_check(default_chain_simulator):
 
 def test_prepare_run_with_chain_writes_chain_script(simulator_instance, tmp_test_directory):
     chain = ["obdeect_flasher", "stream_to_simtel"]
-    simulator_instance.light_emission_config = {"simulation_chain": chain}
+    simulator_instance.light_emission_config = {"simulation_software": chain}
     script_file = tmp_test_directory / "chain.sh"
     simulator_instance.submission_files.get_file_name.return_value = script_file
     simulator_instance.runner_service.get_file_name.side_effect = lambda file_type: (

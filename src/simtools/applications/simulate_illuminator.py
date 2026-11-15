@@ -101,7 +101,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.INSTRUMENT_SEED,
         cli.SIMULATION_SEED,
         cli.RAY_TRACING_BACKEND,
-        cli.SIMULATION_CHAIN(
+        cli.SIMULATION_SOFTWARE(
             default=list(LIGHT_EMISSION_CHAIN_DEFAULT),
             help=(
                 "Stages of the simulation in order, each as STAGE or STAGE:KEY=VALUE,... "

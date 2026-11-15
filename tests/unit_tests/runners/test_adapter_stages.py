@@ -15,7 +15,7 @@ from simtools.runners.chain_spec import (
     ChainSpec,
 )
 from simtools.runners.stages import STDIN, StageInputs, StreamTo
-from simtools.simulation_chain.products import (
+from simtools.simulation_software.products import (
     CAMERA_PHOTONS_IACT,
     CHERENKOV_PHOTONS,
     PHOTONS_CAMERA,

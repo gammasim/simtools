@@ -30,7 +30,7 @@ model_version (str, required)
     Simulation model version.
 array_layout_name (str, required)
     Single-telescope array layout name for simulations.
-simulation_chain (list of str)
+simulation_software (list of str)
     Stages of the simulation chain (default: corsika sim_telarray).
 azimuth_angle (float, required)
     Azimuth angle in degrees.

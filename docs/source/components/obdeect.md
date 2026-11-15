@@ -25,9 +25,8 @@ structure.
 
 ## Simulation chain
 
-A simulation is an ordered list of stages, `--simulation_chain` (default
-`corsika sim_telarray`). Each stage is written `STAGE` or `STAGE:KEY=VALUE,...`; the stages and
-the software they need are declared in `resources/simulation_stages.yml`. obdeect provides:
+A simulation is an ordered list of stages, `--simulation_software` (default
+`corsika sim_telarray`). Each stage is written `STAGE` or `STAGE:KEY=VALUE,...`; obdeect provides:
 
 | Stage | Task |
 | --- | --- |
@@ -41,36 +40,29 @@ the software they need are declared in `resources/simulation_stages.yml`. obdeec
 Air showers through obdeect atmosphere and optics, with sim_telarray simulating only the camera:
 
 ```bash
-simtools-simulate-prod --simulation_chain corsika obdeect_atmosphere obdeect_optics \
+simtools-simulate-prod --simulation_software corsika corsika_to_stream obdeect_atmosphere obdeect_optics stream_to_simtel \
   sim_telarray:bypass_optics=3 ...
 ```
 
-Stages are connected by the data products they consume and produce. `corsika_to_stream` and
-`stream_to_simtel` are converters: where two neighbouring stages do not match, the converters
-between their products are inserted (the chain above runs both), and the chain that runs is
-logged. A chain in which two stages apply the same efficiency factor (for example the atmosphere
+List conversion stages explicitly between programs with different photon formats. A chain in which two stages apply the same efficiency factor (for example the atmosphere
 in obdeect and in sim_telarray) is rejected. `Bypass_Optics=3` makes sim_telarray simulate the
 camera only. simtools checks that the installed sim_telarray release supports it before any job is
 written; for a locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3` states the
 highest supported level.
 
 The calibration applications select obdeect with `--ray_tracing_backend` (next section) or with
-`--simulation_chain` (default `light_emission sim_telarray`), which runs the stages for one
+`--simulation_software` (default `light_emission sim_telarray`), which runs the stages for one
 telescope: a calibration chain starts with `light_emission`, `obdeect_flasher` or
 `obdeect_illuminator` and has no `corsika` stage. The option `bypass_optics` of `sim_telarray` is
 required when the photons come from obdeect (camera-frame photons); after `light_emission` it
 follows the light source type.
 
 ```bash
-simtools-simulate-flasher --run_mode full_simulation --simulation_chain obdeect_flasher \
+simtools-simulate-flasher --run_mode full_simulation --simulation_software obdeect_flasher stream_to_simtel \
   sim_telarray:bypass_optics=1 ...
-simtools-simulate-illuminator --simulation_chain obdeect_illuminator obdeect_atmosphere \
-  obdeect_optics sim_telarray:bypass_optics=3 ...
+simtools-simulate-illuminator --simulation_software obdeect_illuminator obdeect_atmosphere \
+  obdeect_optics stream_to_simtel sim_telarray:bypass_optics=3 ...
 ```
-
-The programs of a stage are located through `resources/simulation_programs.yml`; a further
-software package adds its stages and programs there, and its command builders in a sibling of
-`simulation_chain/obdeect/`.
 
 ## Flashers and illuminators
 

@@ -1,33 +1,4 @@
-"""Calibration light sources as simulation stages (first stage of a chain, no input product).
-
-A light-source stage makes the photons of a calibration device (flasher or illuminator) and
-writes them as a photon stream. Which program makes them is defined by the source type of
-``simtools.simulation_chain.light_sources`` (registry ``SOURCE_TYPES``); the stage only builds the
-request from the models and runs the command of the source type.
-
-Configuration: the stage reads the settings of a light-emission run from ``StageInputs.args``
-(the arguments of ``simtools-simulate-flasher`` and ``simtools-simulate-illuminator``:
-``light_source``, ``telescope`` or a single entry of ``telescopes``, ``site``,
-``model_version``, ``number_of_events``, ``flasher_photons``, ``wavelength``,
-``light_source_position``, ``light_source_pointing``, ``run_number``). Options of the stage in
-the chain (``StageInputs.options_of(name)``) take precedence over the arguments::
-
-    simulation_chain: ["obdeect_flasher:wavelength=355,number_of_events=10",
-                       stream_to_simtel, sim_telarray]
-
-A stage simulates one telescope. The flasher stage traces its light in a separate process
-(``simtools.simulation_chain.flasher_stream``) through the optical model of the telescope, so
-that the structure shadows it; the illuminator stage runs the obdeect point-source program. The
-commands are built in ``simtools.simulation_chain.obdeect.sources``. Adding a light source type
-means a source type in the registry of ``light_sources`` and a subclass of ``LightSourceStage``
-registered with ``stages.register_stage``.
-
-The stage ``light_emission`` wraps the LightEmission program of sim_telarray (``ff-1m`` or
-``xyzls``), which writes an IACT file of the run of one ``SimulatorLightEmission``
-(``StageInputs.calibration``)::
-
-    simulation_chain: [light_emission, sim_telarray]
-"""
+"""Calibration light sources as photon-stream stages and sim_telarray LightEmission stages."""
 
 import dataclasses
 import shlex
@@ -38,8 +9,8 @@ import astropy.units as u
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners.stages import CHERENKOV_PHOTONS, StreamTo
 from simtools.simtel.simtel_seeds import instance_seed_pairs
-from simtools.simulation_chain import light_sources
-from simtools.simulation_chain.products import PHOTONS_CAMERA, PHOTONS_SKY
+from simtools.simulation_software import light_sources
+from simtools.simulation_software.products import PHOTONS_CAMERA, PHOTONS_SKY
 from simtools.utils import value_conversion
 
 LIGHT_EMISSION_DIRECTORY = "light_emission"
@@ -82,7 +53,7 @@ class LightSourceStage:
     Parameters
     ----------
     source_type : type
-        Source-type class (see ``simtools.simulation_chain.light_sources``).
+        Source-type class (see ``simtools.simulation_software.light_sources``).
     request : FlasherRequest or IlluminatorRequest
         Request of the source type.
     work_directory : str or Path
@@ -99,9 +70,8 @@ class LightSourceStage:
     produces = None
     streams = True
 
-    def __init__(self, source_type, request, work_directory, file_token="", executable=None):
+    def __init__(self, request, work_directory, file_token="", executable=None):
         """Initialize LightSourceStage."""
-        self.source_type = source_type
         self.request = request
         self.work_directory = Path(work_directory)
         self.file_token = file_token
@@ -126,7 +96,6 @@ class LightSourceStage:
             One stage.
         """
         config = dict(inputs.args) | inputs.options_of(cls.name)
-        source_type = light_sources.get_source_type(cls.source_name)
         telescope = _telescope(config)
         context = inputs.context
         telescope_model, site_model, calibration_model = initialize_simulation_models(
@@ -141,22 +110,26 @@ class LightSourceStage:
             context=context,
         )
         model_type = str(calibration_model.get_parameter_value("flasher_type")).lower()
-        if model_type not in source_type.light_source_types:
+        if light_sources.source_name_for_model(model_type) != cls.source_name:
             raise ValueError(
                 f"Light source {config.get('light_source')!r} is of type {model_type!r}; "
-                f"stage {cls.name!r} needs one of {source_type.light_source_types}."
+                f"stage {cls.name!r} handles {cls.source_name!r}."
             )
         config["wavelength"] = _wavelength(config)
         instrument_seed, simulation_seed = instance_seed_pairs(context=context)[0]
         config |= {"telescope": telescope, "instrument_seed": instrument_seed}
-        request = source_type.build_request(
-            calibration_model, telescope_model, site_model, config, seed=simulation_seed
+        request = light_sources.build_request(
+            cls.source_name,
+            calibration_model,
+            telescope_model,
+            site_model,
+            config,
+            seed=simulation_seed,
         )
         token = _file_token(telescope, config.get("light_source"), request.wavelength_nm)
         work_directory = context.paths.get_output_directory(LIGHT_EMISSION_DIRECTORY)
         return [
             cls(
-                source_type,
                 request,
                 work_directory,
                 token,
@@ -199,7 +172,8 @@ class LightSourceStage:
         target = None if streamed else self.output_file(run_number)
         self.work_directory.mkdir(parents=True, exist_ok=True)
         command = shlex.join(
-            self.source_type.command(
+            light_sources.source_command(
+                self.source_name,
                 request,
                 self.work_directory,
                 output=target,

@@ -1,14 +1,9 @@
-"""Command line of the obdeect propagation program for an atmosphere request.
-
-The program applies the atmosphere to a photon stream (see ``simtools.simulation_chain.atmosphere``
-for the request). A different software provides its own module with a command builder in a
-sibling subpackage of ``simtools.simulation_chain`` and its programs in the program catalog.
-"""
+"""Build obdeect atmospheric propagation commands."""
 
 from pathlib import Path
 
-from simtools.simulation_chain.atmosphere import STDIO
-from simtools.simulation_chain.programs import program_command
+from simtools.simulation_software.atmosphere import STDIO
+from simtools.simulation_software.programs import program_command
 
 SOFTWARE = "obdeect"
 PROPAGATION_PROGRAM = "obdeect-propagation-run"

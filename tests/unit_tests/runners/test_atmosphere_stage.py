@@ -9,9 +9,9 @@ from simtools.runners import stages
 from simtools.runners.atmosphere_stage import ObdeectAtmosphereStage
 from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION, ChainSpec
 from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo
-from simtools.simulation_chain.atmosphere import AtmosphereRequest
-from simtools.simulation_chain.products import CAMERA_EVENTS, PHOTONS_GROUND, PHOTONS_SKY
-from simtools.simulation_chain.programs import program_command
+from simtools.simulation_software.atmosphere import AtmosphereRequest
+from simtools.simulation_software.products import CAMERA_EVENTS, PHOTONS_GROUND, PHOTONS_SKY
+from simtools.simulation_software.programs import program_command
 
 
 @pytest.fixture

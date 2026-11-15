@@ -33,7 +33,7 @@ exact software versions used by a production are identified from the image tag, 
 notes, and generated run logs.
 
 Some parameters are normally production-policy settings rather than per-production tuning knobs.
-Examples are `simulation_chain`, `curved_atmosphere_min_zenith_angle`, and
+Examples are `simulation_software`, `curved_atmosphere_min_zenith_angle`, and
 `corsika_hadronic_transition_energy`. An explicitly configured transition energy is written into
 every job-grid row; when omitted, the transition field is omitted and the selected CORSIKA
 executable retains its own behavior.

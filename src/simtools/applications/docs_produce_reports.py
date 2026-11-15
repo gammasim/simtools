@@ -33,7 +33,9 @@ _ARGUMENTS = (
         action="store_true",
         help="Produce array_element reports for an observatory at a given site.",
     ),
-    cli.SIMULATION_SOFTWARE(required=True),
+    cli.SIMULATION_SOFTWARE(
+        required=True, nargs=None, default=None, choices=["corsika", "sim_telarray"]
+    ),
     cli.MODEL_VERSION,
     cli.OVERWRITE_MODEL_PARAMETERS,
     cli.SITE,

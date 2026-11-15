@@ -1,24 +1,11 @@
-"""Adapter stages of the obdeect chain: CORSIKA photons to photon streams and back to sim_telarray.
-
-``corsika_to_stream`` converts CORSIKA IACT output to a photon stream; ``stream_to_simtel``
-converts a camera-frame photon stream to sim_telarray input. The commands are built in
-``simtools.simulation_chain.obdeect.streams`` and the programs are located with
-``simtools.simulation_chain.programs``; the obdeect package is not imported. Both stages are
-converters: they are inserted where the products of two neighbouring stages differ
-(``simtools.runners.stages.insert_converters``), so that a chain lists only the simulation steps::
-
-    simulation_chain: [corsika, obdeect_atmosphere, obdeect_optics, "sim_telarray:bypass_optics=3"]
-
-runs ``corsika``, ``corsika_to_stream``, ``obdeect_atmosphere``, ``obdeect_optics``,
-``stream_to_simtel`` and ``sim_telarray``.
-"""
+"""Convert CORSIKA photons to streams and camera streams to sim_telarray input."""
 
 import shlex
 
 from simtools.job_execution.runner_services import RunnerServices
 from simtools.runners.stages import StreamTo
-from simtools.simulation_chain.obdeect import streams
-from simtools.simulation_chain.products import (
+from simtools.simulation_software.obdeect import streams
+from simtools.simulation_software.products import (
     CAMERA_PHOTONS_IACT,
     CHERENKOV_PHOTONS,
     PHOTONS_CAMERA,

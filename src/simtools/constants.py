@@ -122,6 +122,6 @@ ZENITH_ANGLE_SCALING_FACTOR_DEFAULT = 3.9781
 # Simulation software with configuration parameters that can be reported.
 SIMULATION_SOFTWARE_CHOICES = ("corsika", "sim_telarray")
 # Default simulation chain: showers with CORSIKA, telescopes and cameras with sim_telarray.
-SIMULATION_CHAIN_DEFAULT = ("corsika", "sim_telarray")
+SIMULATION_SOFTWARE_DEFAULT = ("corsika", "sim_telarray")
 # Default chain of calibration light sources: LightEmission program, then sim_telarray.
 LIGHT_EMISSION_CHAIN_DEFAULT = ("light_emission", "sim_telarray")

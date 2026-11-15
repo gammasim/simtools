@@ -5,8 +5,8 @@ from types import SimpleNamespace
 
 import astropy.units as u
 
-from simtools.simulation_chain.obdeect import streams
-from simtools.simulation_chain.programs import program_command
+from simtools.simulation_software.obdeect import streams
+from simtools.simulation_software.programs import program_command
 
 
 def test_from_corsika_command():

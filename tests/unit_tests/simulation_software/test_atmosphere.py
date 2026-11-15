@@ -7,7 +7,7 @@ import astropy.units as u
 import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
-from simtools.simulation_chain.atmosphere import (
+from simtools.simulation_software.atmosphere import (
     AtmosphereRequest,
     build_atmosphere_request,
     in_telescope_pathlength_m,

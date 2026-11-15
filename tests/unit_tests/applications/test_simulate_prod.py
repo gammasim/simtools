@@ -52,7 +52,7 @@ def job_grid_file(tmp_test_directory):
             },
         ],
         grid_file,
-        metadata={"site": "North", "simulation_chain": ["corsika", "sim_telarray"]},
+        metadata={"site": "North", "simulation_software": ["corsika", "sim_telarray"]},
     )
     return grid_file
 
@@ -185,7 +185,7 @@ def test_parse_job_grid_file_selects_row(
 
     for key, value in expected.items():
         assert args[key] == value
-    assert args["simulation_chain"] == ["corsika", "sim_telarray"]
+    assert args["simulation_software"] == ["corsika", "sim_telarray"]
 
 
 @pytest.mark.parametrize("backend", ["local", "htcondor"])
@@ -272,7 +272,7 @@ def test_parse_job_grid_row_without_file_fails(monkeypatch, capsys):
 def test_sim_telarray_only_does_not_require_primary(monkeypatch):
     args = _parse_with_args(
         monkeypatch,
-        ["--simulation_chain", "sim_telarray", "--array_layout_name", "alpha"],
+        ["--simulation_software", "sim_telarray", "--array_layout_name", "alpha"],
     )
 
     assert args["primary"] is None
@@ -280,7 +280,7 @@ def test_sim_telarray_only_does_not_require_primary(monkeypatch):
 
 def test_parse_without_job_grid_requires_array_layout(monkeypatch, capsys):
     with pytest.raises(SystemExit):
-        _parse_with_args(monkeypatch, ["--simulation_chain", "sim_telarray"])
+        _parse_with_args(monkeypatch, ["--simulation_software", "sim_telarray"])
 
     assert "--array_layout_name" in capsys.readouterr().err
 
@@ -290,7 +290,7 @@ def test_parse_rejects_array_element_list(monkeypatch, capsys):
         _parse_with_args(
             monkeypatch,
             [
-                "--simulation_chain",
+                "--simulation_software",
                 "sim_telarray",
                 "--array_element_list",
                 "MSTN-01",
@@ -304,7 +304,7 @@ def test_parse_rejects_telescope(monkeypatch, capsys):
     with pytest.raises(SystemExit):
         _parse_with_args(
             monkeypatch,
-            ["--simulation_chain", "sim_telarray", "--telescope", "LSTN-01"],
+            ["--simulation_software", "sim_telarray", "--telescope", "LSTN-01"],
         )
 
     assert "unrecognized arguments: --telescope" in capsys.readouterr().err
@@ -321,7 +321,7 @@ def test_corsika_requires_primary(monkeypatch, capsys):
     with pytest.raises(SystemExit):
         _parse_with_args(
             monkeypatch,
-            ["--simulation_chain", "corsika", "--array_layout_name", "alpha"],
+            ["--simulation_software", "corsika", "--array_layout_name", "alpha"],
         )
 
     assert "--primary" in capsys.readouterr().err
@@ -429,7 +429,7 @@ def test_main_writes_job_metadata_to_output_path(
     manifest = {
         "configuration": {
             "run_number": 7,
-            "simulation_chain": ["corsika", "sim_telarray"],
+            "simulation_software": ["corsika", "sim_telarray"],
         },
         "files": {"sim_telarray": ["gamma.simtel.zst"]},
     }
@@ -473,7 +473,7 @@ def test_main_writes_job_metadata_to_grid_output_path(
     manifest = {
         "configuration": {
             "run_number": 7,
-            "simulation_chain": ["corsika", "sim_telarray"],
+            "simulation_software": ["corsika", "sim_telarray"],
         },
         "files": {"sim_telarray": ["gamma.simtel.zst"]},
     }

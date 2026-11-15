@@ -17,4 +17,4 @@ def test_simulation_software_defaults():
     """Test simulation software default values."""
     assert defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG == 65
     assert defaults.SIMULATION_SOFTWARE_CHOICES == ("corsika", "sim_telarray")
-    assert defaults.SIMULATION_CHAIN_DEFAULT == ("corsika", "sim_telarray")
+    assert defaults.SIMULATION_SOFTWARE_DEFAULT == ("corsika", "sim_telarray")

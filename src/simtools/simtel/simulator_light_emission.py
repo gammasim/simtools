@@ -54,7 +54,7 @@ LIGHT_SOURCE_POINTING = "light_source_pointing"
 NUMBER_OF_EVENTS = "number_of_events"
 RUN_NUMBER = "run_number"
 TELESCOPE_SPHERE_RADIUS = "telescope_sphere_radius"
-SIMULATION_CHAIN = "simulation_chain"
+SIMULATION_SOFTWARE = "simulation_software"
 CHAIN_RUNNER_MODULE = "simtools.runners.light_emission_runner"
 
 
@@ -255,7 +255,7 @@ class SimulatorLightEmission(SimtelRunner):
             raise FileExistsError(
                 f"sim_telarray output file exists, cancelling simulation: {output_file}"
             )
-        if self.simulation_chain() is not None:
+        if self.simulation_software() is not None:
             self.make_run_command()
             return script_file
         if self._backend() is not None:
@@ -264,7 +264,7 @@ class SimulatorLightEmission(SimtelRunner):
         script_file.write_text("".join(lines), encoding="utf-8")
         return script_file
 
-    def simulation_chain(self):
+    def simulation_software(self):
         """
         Return the stages (items ``STAGE[:KEY=VALUE,...]``) of a configured simulation chain.
 
@@ -274,7 +274,7 @@ class SimulatorLightEmission(SimtelRunner):
             None for the default chain (LightEmission program, then sim_telarray), which is run
             by ``make_run_command``.
         """
-        items = self.light_emission_config.get(SIMULATION_CHAIN)
+        items = self.light_emission_config.get(SIMULATION_SOFTWARE)
         if isinstance(items, str):
             items = [items]
         if not items or tuple(items) == LIGHT_EMISSION_CHAIN_DEFAULT:
@@ -434,7 +434,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
         """Light emission and sim_telarray run command (a backend writes the photons beforehand)."""
-        items = self.simulation_chain()
+        items = self.simulation_software()
         if items is not None:
             return self._chain_run_command(items)
         iact_output = self.runner_service.get_file_name(file_type="iact_output")

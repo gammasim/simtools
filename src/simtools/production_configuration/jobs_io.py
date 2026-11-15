@@ -26,7 +26,7 @@ _OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "model_pa
 SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
     """primary azimuth_angle zenith_angle energy_range core_scatter view_cone showers_per_run
     model_version array_layout_name corsika_le_interaction corsika_he_interaction
-    corsika_hadronic_transition_energy run_number run_number_offset site simulation_chain
+    corsika_hadronic_transition_energy run_number run_number_offset site simulation_software
     """.split()
 )
 _SIMULATE_PROD_PATH_FIELDS = (
@@ -228,7 +228,7 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
         A single deserialized job row as returned by :func:`read_job_grid`.
     metadata : dict, optional
         Job grid metadata as returned alongside the rows.  When provided,
-        ``site`` and ``simulation_chain`` are included in the result.
+        ``site`` and ``simulation_software`` are included in the result.
 
     Returns
     -------
@@ -255,7 +255,9 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     args.update({key: job_row[key] for key in ("ha", "dec") if job_row.get(key) is not None})
 
     metadata = metadata or {}
-    args.update({key: metadata[key] for key in ("site", "simulation_chain") if metadata.get(key)})
+    args.update(
+        {key: metadata[key] for key in ("site", "simulation_software") if metadata.get(key)}
+    )
     if job_row.get("scan_label"):
         args["scan_label"] = job_row["scan_label"]
 
@@ -467,7 +469,7 @@ def _select_rows(args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, p
 
 def _validate_simulation_arguments(args_dict, parser):
     """Validate requirements that depend on the stages of the simulation chain."""
-    stages = parse_chain(args_dict["simulation_chain"]).stages
+    stages = parse_chain(args_dict["simulation_software"]).stages
     if "corsika" in stages and not args_dict.get("primary"):
         parser.error("the following argument is required for CORSIKA: --primary")
 

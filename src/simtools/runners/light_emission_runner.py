@@ -1,14 +1,4 @@
-"""Run script of a calibration light source (flasher, illuminator) built from a simulation chain.
-
-``SimulatorLightEmission`` runs the LightEmission program of sim_telarray and sim_telarray
-(``light_emission sim_telarray``) by itself. With another ``simulation_chain`` in its
-configuration, it builds the run script here with the stages of the chain, e.g.::
-
-    simulation_chain: [obdeect_flasher, stream_to_simtel, "sim_telarray:bypass_optics=1"]
-
-The simulation of one telescope is the array of the chain: the stages of the chain find the
-telescope, site and models of the light-emission simulation in the stage inputs.
-"""
+"""Build calibration run scripts from explicitly ordered simulation stages."""
 
 from dataclasses import dataclass
 from types import SimpleNamespace

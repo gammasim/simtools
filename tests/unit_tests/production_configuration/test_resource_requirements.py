@@ -420,7 +420,7 @@ def _make_discoverable(manifest):
         statistics={SIMULATED_EVENTS: 10, TRIGGERED_EVENTS: 5},
     )
     manifest.data[CONFIGURATION].update(
-        simulation_chain=["corsika", "sim_telarray"],
+        simulation_software=["corsika", "sim_telarray"],
         view_cone_min={VALUE: 0.0, "unit": "deg"},
         view_cone_max={VALUE: 0.0, "unit": "deg"},
         core_scatter_max={VALUE: 100.0, "unit": "m"},

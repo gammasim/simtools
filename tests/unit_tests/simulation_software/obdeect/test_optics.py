@@ -7,9 +7,9 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from simtools.simulation_chain.obdeect import optics
-from simtools.simulation_chain.optics import OpticsRequest
-from simtools.simulation_chain.programs import program_command
+from simtools.simulation_software.obdeect import optics
+from simtools.simulation_software.optics import OpticsRequest
+from simtools.simulation_software.programs import program_command
 
 _MIRROR_LIST = """0 0 100.0 0.0 0
 125 0 100.0 0.0 0

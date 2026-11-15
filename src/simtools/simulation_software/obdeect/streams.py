@@ -1,16 +1,9 @@
-"""Commands of the obdeect stream adapters between CORSIKA, photon streams and sim_telarray.
-
-``obdeect-stream-from-corsika`` converts CORSIKA IACT output to a photon stream;
-``obdeect-stream-to-simtel`` converts a camera-frame photon stream to sim_telarray input with a
-camera map. The stages that run them are in ``simtools.runners.adapter_stages``. A different
-software provides its own module in a sibling subpackage of ``simtools.simulation_chain`` and its
-programs in the program catalog.
-"""
+"""Convert CORSIKA IACT photons to streams and camera streams to sim_telarray input."""
 
 import astropy.units as u
 
 from simtools.corsika.corsika_config import corsika_telescope_ids
-from simtools.simulation_chain.programs import program_command
+from simtools.simulation_software.programs import program_command
 
 SOFTWARE = "obdeect"
 FROM_CORSIKA_PROGRAM = "obdeect-stream-from-corsika"

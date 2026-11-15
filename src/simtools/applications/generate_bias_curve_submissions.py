@@ -12,7 +12,7 @@ _ARGUMENTS = (
     cli.SITE(required=True),
     cli.MODEL_VERSION(required=True, nargs=None),
     cli.ARRAY_LAYOUT_NAME(required=True),
-    cli.SIMULATION_CHAIN,
+    cli.SIMULATION_SOFTWARE,
     cli.AZIMUTH_ANGLE(required=True, action="store", nargs=None, default=None),
     cli.ZENITH_ANGLE(required=True, action="store", nargs=None, default=None),
     cli.SHOWERS_PER_RUN(required=True),

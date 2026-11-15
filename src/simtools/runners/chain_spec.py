@@ -1,28 +1,4 @@
-"""Chain specification: the stages of a simulation and their options, given as a list.
-
-A chain is an ordered list of stage names (see ``simtools.runners.stages``), each with optional
-options, written ``STAGE`` or ``STAGE:KEY=VALUE[,KEY=VALUE...]``. The same list is used on the
-command line (``--simulation_chain corsika sim_telarray``) and in configuration files::
-
-    simulation_chain:
-      - corsika
-      - obdeect_atmosphere
-      - obdeect_optics
-      - sim_telarray:bypass_optics=3
-
-Option values are read as YAML scalars (``3`` is an integer, ``true`` a boolean). A stage is
-listed at most once.
-
-Where two neighbouring stages do not match (a stage produces a data product that the next one
-does not consume), the converter stages between the two products are inserted (see
-:func:`simtools.runners.stages.insert_converters`); in the example, ``corsika_to_stream`` after
-``corsika`` and ``stream_to_simtel`` before ``sim_telarray``. The chain that runs is
-``ChainSpec.resolved_stages``. Converters can also be listed explicitly.
-
-A stage class may define ``applied_factors(options)``, returning the efficiency factors it
-applies to the photons (e.g. ``"mirror_reflectivity"``). A chain in which two stages apply the
-same factor is rejected, so that no factor is applied twice.
-"""
+"""Parse ordered simulation stages and options, validating connections and efficiency factors."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -32,7 +8,6 @@ import yaml
 from simtools.runners.stages import (
     SimulationChain,
     get_stage_class,
-    insert_converters,
     stages_software,
 )
 
@@ -63,21 +38,16 @@ class ChainSpec:
     stages: tuple[str, ...]
     options: Mapping = field(default_factory=dict, hash=False, compare=False)
 
-    @property
-    def resolved_stages(self):
-        """Return the stages with the converters inserted where neighbouring stages differ."""
-        return insert_converters(self.stages)
-
     def chain(self):
-        """Return the ``SimulationChain``; raise if two stages apply the same factor."""
-        chain = SimulationChain(self.resolved_stages)
+        """Return the ``SimulationChain``; raise if stages mismatch or duplicate a factor."""
+        chain = SimulationChain(self.stages)
         self.check_applied_factors()
         return chain
 
     @property
     def software(self):
-        """Return the software needed by the stages, converters included."""
-        return stages_software(self.resolved_stages)
+        """Return the software needed by the listed stages."""
+        return stages_software(self.stages)
 
     def stage_options(self, stage):
         """Return the options of a stage (empty if there are none)."""
@@ -86,7 +56,7 @@ class ChainSpec:
     def applied_factors(self):
         """Return the efficiency factors applied by each stage: a list of (stage, factors)."""
         applied = []
-        for stage in self.resolved_stages:
+        for stage in self.stages:
             method = getattr(get_stage_class(stage), "applied_factors", None)
             factors = frozenset(method(self.stage_options(stage))) if method else frozenset()
             applied.append((stage, factors))

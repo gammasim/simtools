@@ -17,7 +17,7 @@ from simtools.io.file_type import product_suffixes
 from simtools.runners.chain_spec import parse_chain
 from simtools.runners.stages import get_stage_class
 from simtools.sim_events.simtel_io_metadata import read_sim_telarray_metadata
-from simtools.simulation_chain import products
+from simtools.simulation_software import products
 
 SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
 
@@ -277,9 +277,9 @@ def inventory_production_files(job_directory):
     return inventory
 
 
-def validate_required_production_outputs(file_inventory, simulation_chain, job_directory):
+def validate_required_production_outputs(file_inventory, simulation_software, job_directory):
     """Require the principal output of the last stage of the chain before marking a job complete."""
-    last_stage = parse_chain(simulation_chain).stages[-1]
+    last_stage = parse_chain(simulation_software).stages[-1]
     product = get_stage_class(last_stage).produces
     required_type = _PRODUCT_FILE_TYPES.get(product)
     if required_type is None:

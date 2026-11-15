@@ -17,7 +17,7 @@ def test_production_definition_from_grid_arguments():
             "showers_per_run": 100,
             "total_showers": None,
             "max_showers_per_run": None,
-            "simulation_chain": ["corsika", "sim_telarray"],
+            "simulation_software": ["corsika", "sim_telarray"],
         }
     )
 
@@ -32,7 +32,7 @@ def test_production_definition_rejects_unknown_simulation_stage():
     with pytest.raises(ValueError, match="Unknown simulation stage"):
         production_definition_from_arguments(
             {
-                "simulation_chain": ["unknown"],
+                "simulation_software": ["unknown"],
             }
         )
 
@@ -40,7 +40,7 @@ def test_production_definition_rejects_unknown_simulation_stage():
 def test_production_definition_records_stages_of_any_chain():
     definition = production_definition_from_arguments(
         {
-            "simulation_chain": [
+            "simulation_software": [
                 "corsika",
                 "corsika_to_stream",
                 "obdeect_atmosphere",

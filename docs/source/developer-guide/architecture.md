@@ -53,9 +53,7 @@ Each axis where simtools grows has one extension point:
 | Event-file format | `EventReader` Protocol in `sim_events/formats/readers.py` |
 | Model-repository storage | `ModelStorage` Protocol in `model_repository/storage.py` |
 | Execution backend | `job_execution/backends/registry.py` |
-| Simulation stage | entry in `resources/simulation_stages.yml` (stage class and the software it needs); see [simulation chains](../components/obdeect.md#simulation-chain) |
-| Program of a stage | entry in `resources/simulation_programs.yml`, located with `simulation_chain/programs.py` |
-| Light-source type | `register_source_type` in `simulation_chain/light_sources.py` |
+| Simulation stage | `register_stage` in `runners/stages.py`; see [simulation chains](../components/obdeect.md#simulation-chain) |
 | Plot | `plot_tables` and `plot_configuration.metaschema.yml` |
 | Application | `ApplicationDefinition` plus the `[project.scripts]` entry |
 
