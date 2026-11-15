@@ -148,12 +148,24 @@ def test_trace_stream_of_ground_photons(request_one, toy_telescope, tmp_test_dir
         "cy": np.zeros(count, "f4"),
         "t": np.zeros(count, "f4"),
         "w": np.ones(count, "f4"),
+        "zem": np.full(count, 20000.0, "f4"),
         "wavelength": np.full(count, 400.0, "f4"),
     }
     input_file = Path(tmp_test_directory) / "ground.pst"
     output_file = Path(tmp_test_directory) / "camera.pst"
     with stream.Writer(str(input_file), "test") as writer:
-        writer.write("run", {"run_number": 1})
+        writer.write(
+            "run",
+            {
+                "run_number": 1,
+                "observation_level_m": 2200.0,
+                "n_telescopes": 3,
+                "telescope_x_m": [0.0, 10.0, 20.0],
+                "telescope_y_m": [0.0, 0.0, 0.0],
+                "telescope_z_m": [0.0, 0.0, 0.0],
+                "telescope_r_m": [10.0, 10.0, 10.0],
+            },
+        )
         writer.write("event", {"event_number": 1})
         for telescope_id in (0, 1, 3):
             writer.write(
@@ -177,3 +189,21 @@ def test_trace_stream_of_ground_photons(request_one, toy_telescope, tmp_test_dir
         for record in records
         if record["type"] == "telescope"
     )
+
+    from simtools.simulation_software.merge_streams import merge_streams
+
+    other_file = Path(tmp_test_directory) / "camera-other.pst"
+    other_request = replace(request_one, telescope_id=1)
+    command = optics.trace_stream_command(other_request, model_file, input_file, other_file)
+    assert cli.main(command[command.index("ray-tracing") :]) == 0
+    merged_file = Path(tmp_test_directory) / "camera-merged.pst"
+    merge_streams([output_file, other_file], merged_file)
+    merged = list(stream.Reader(str(merged_file)))
+    assert [r["metadata"]["telescope_id"] for r in merged if r["type"] == "telescope"] == [3, 1]
+    assert len([r for r in merged if r["type"] == "event"]) == 1
+    simtel_file = Path(tmp_test_directory) / "camera.iact"
+    roundtrip_file = Path(tmp_test_directory) / "roundtrip.pst"
+    stream.stream_to_simtel(merged_file, simtel_file, {1: (1, 0.0), 3: (1, 0.0)})
+    stream.corsika_to_stream(simtel_file, roundtrip_file)
+    roundtrip = list(stream.Reader(str(roundtrip_file)))
+    assert {r["metadata"]["telescope_id"] for r in roundtrip if r["type"] == "telescope"} == {1, 3}

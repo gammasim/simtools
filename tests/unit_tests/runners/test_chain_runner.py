@@ -145,3 +145,48 @@ def test_environment_and_resources():
 
     assert runner.environment() == {"SHOWER_ENV": "1", "TELESCOPE_ENV": "1"}
     assert runner.get_resources(runtime=4.0)["runtime"] == pytest.approx(4.0)
+
+
+@pytest.mark.parametrize("source_name", ["atmosphere", "corsika_to_stream"])
+def test_multi_telescope_optics_is_merged_before_array_consumer(tmp_test_directory, source_name):
+    atmosphere = _fake_stage(source_name)
+    optics = _fake_stage("obdeect_optics", copies=2)
+    converter = _fake_stage("stream_to_simtel")
+    runner = _runner(atmosphere, optics, converter)
+    script = Path(tmp_test_directory) / "run.sh"
+
+    runner.prepare_run(4, script)
+
+    assert [call[1] for call in optics.calls] == [Path(f"{source_name}-0-4.out")] * 2
+    assert all(call[2] is None for call in optics.calls)
+    text = script.read_text(encoding="utf-8")
+    assert text.index(f"run {source_name}") < text.index("run obdeect_optics")
+    assert text.index("run obdeect_optics 1") < text.index("simulation_software.merge_streams")
+    assert text.index("simulation_software.merge_streams") < text.index("run stream_to_simtel")
+    assert "obdeect_optics-0-4.out" in text
+    assert "obdeect_optics-1-4.out" in text
+
+
+def test_single_telescope_optics_keeps_streaming(tmp_test_directory):
+    source = _fake_stage("atmosphere")
+    optics = _fake_stage("obdeect_optics")
+    converter = _fake_stage("stream_to_simtel")
+    runner = _runner(source, optics, converter)
+    script = Path(tmp_test_directory) / "run.sh"
+
+    runner.prepare_run(4, script)
+
+    assert optics.calls[0][1] == STDIN
+    assert isinstance(optics.calls[0][2], StreamTo)
+    assert "merge_streams" not in script.read_text(encoding="utf-8")
+
+
+def test_multiple_optics_read_atmosphere_output_without_converter(tmp_test_directory):
+    atmosphere = _fake_stage("atmosphere")
+    optics = _fake_stage("obdeect_optics", copies=2)
+    runner = _runner(atmosphere, optics)
+
+    runner.prepare_run(4, Path(tmp_test_directory) / "run.sh")
+
+    assert [call[1] for call in optics.calls] == [Path("atmosphere-0-4.out")] * 2
+    assert atmosphere.calls == [(0, None, None)]

@@ -288,6 +288,9 @@ def _fake_class(name, consumes, produces, factors=(), lines=()):
                 return [f"{name} | {command}" for command in output.commands]
             return [f"{name}-{self.tag} {input_file}"]
 
+        def output_file(self, run_number):
+            return Path(f"{name}-{run_number}.pst")
+
     Fake.name, Fake.consumes, Fake.produces = name, consumes, produces
     return Fake
 

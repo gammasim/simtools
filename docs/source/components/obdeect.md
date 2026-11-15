@@ -50,6 +50,10 @@ camera only. simtools checks that the installed sim_telarray release supports it
 written; for a locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3` states the
 highest supported level.
 
+For multiple telescopes, the photon stream before optics and each telescope's camera stream are
+written to disk. The camera streams are merged by event before sim_telarray runs, so the output
+directory needs space for these intermediate files.
+
 The calibration applications select obdeect with `--ray_tracing_backend` (next section) or with
 `--simulation_software` (default `light_emission sim_telarray`), which runs the stages for one
 telescope: a calibration chain starts with `light_emission`, `obdeect_flasher` or
