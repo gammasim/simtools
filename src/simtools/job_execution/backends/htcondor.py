@@ -359,6 +359,10 @@ class HTCondorBackend:
             )
         htcondor = self._load_htcondor()
         self._validate_job_resources(jobs, config)
+        for job in jobs:
+            if config.get("container_image") or job.resources.get("container_image"):
+                for output in job.output_paths:
+                    Path(output).expanduser().resolve().parent.mkdir(parents=True, exist_ok=True)
         work_dir = self._create_work_dir(options)
         self._serialize_jobs(jobs, work_dir)
         event_log = self._resolve_event_log(config, work_dir)

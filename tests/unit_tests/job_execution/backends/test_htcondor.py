@@ -330,12 +330,19 @@ def test_htcondor_submit_success_builds_handle(monkeypatch, tmp_test_directory):
     monkeypatch.setattr(backend, "_serialize_jobs", lambda *_args: None)
     monkeypatch.setattr(backend, "_resolve_event_log", lambda _config, _work: work_dir / "events")
 
-    jobs = [JobSpec("job-000000", 3, command=("echo", "ok"))]
-    handle = backend.submit(jobs, ExecutionOptions(work_dir=work_dir))
+    image = work_dir / "image.sif"
+    image.touch()
+    output = work_dir / "nsb-grid" / "job-000000"
+    jobs = [JobSpec("job-000000", 3, command=("echo", "ok"), output_paths=(output,))]
+    handle = backend.submit(
+        jobs, ExecutionOptions(work_dir=work_dir, backend_config={"container_image": image})
+    )
 
     assert handle.scheduler_id == 17
     assert handle.process_ids == {"job-000000": 4}
     assert handle.metadata["indices"] == {"job-000000": 3}
+    assert output.parent.is_dir()
+    assert not output.exists()
 
 
 def test_htcondor_resource_overrides_build_itemdata(tmp_test_directory):
