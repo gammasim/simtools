@@ -1072,12 +1072,38 @@ def test_dual_mirror_flasher_distance_and_axis(
     source = {"angular_profile": "a", "pulse": None, "wavelength_nm": 400.0, "seeds": (5, 3)}
 
     distance = simulator_instance.calculate_distance_focal_plane_calibration_device()
-    assert distance.to_value(u.m) == pytest.approx(expected_distance, rel=1e-3)
+    assert math.isclose(distance.to_value(u.m), expected_distance, rel_tol=1e-3)
 
     request, _, _, altitude = simulator_instance._flasher_request(source, 2156.0)
     assert request.axis == pytest.approx((0.0, 0.0, expected_axis_z))
     assert request.position_m == pytest.approx((0.0, 0.0, flasher_z / 100.0))
-    assert altitude == pytest.approx(2156.0 + expected_distance, rel=1e-3)
+    assert math.isclose(altitude, 2156.0 + expected_distance, rel_tol=1e-3)
+
+
+@pytest.mark.parametrize(
+    ("mirror_class", "flasher_z", "expected"),
+    [
+        (2, 310.84, True),  # Dual mirror, flasher above focal-surface vertex (258.88 cm).
+        (2, 200.0, False),  # Dual mirror, flasher below the focal surface.
+        (1, 310.84, False),  # Single mirror: side check does not apply.
+    ],
+)
+def test_flasher_above_focal_surface(simulator_instance, mirror_class, flasher_z, expected):
+    parameters = {
+        "focal_length": 215.0 * u.cm,
+        "focal_surface_parameters": [258.88, -0.00471698] * u.cm,
+        "focus_offset": None,
+    }
+    simulator_instance.telescope_model.get_parameter_value.return_value = mirror_class
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = parameters.get
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
+        0.0 * u.cm,
+        0.0 * u.cm,
+        flasher_z * u.cm,
+        "primary_mirror_frame",
+    ]
+
+    assert simulator_instance.flasher_above_focal_surface() is expected
 
 
 @pytest.mark.parametrize("source_height", [1000.0, 0.0])

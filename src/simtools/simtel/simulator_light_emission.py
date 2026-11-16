@@ -691,6 +691,15 @@ class SimulatorLightEmission(SimtelRunner):
         distance = self._focal_plane_height() - flasher_z
         return abs(distance) if self._dual_mirror() else distance
 
+    def flasher_above_focal_surface(self):
+        """Return True if a dual-mirror telescope's flasher sits above the focal surface."""
+        if not self._dual_mirror():
+            return False
+        flasher_z = self.calibration_model.get_parameter_value_with_unit(FLASHER_POSITION)[2].to(
+            u.m
+        )
+        return bool(self._focal_plane_height() < flasher_z)
+
     def _focal_plane_height(self):
         """
         Return the height of the focal plane in the primary-mirror frame, including focus offset.
