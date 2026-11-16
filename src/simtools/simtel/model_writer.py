@@ -16,7 +16,6 @@ from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 
 _CORSIKA_FILE = "corsika_file"
@@ -24,6 +23,37 @@ _PRIMARY = "primary"
 _ZENITH_ANGLE = "zenith_angle"
 _AZIMUTH_ANGLE = "azimuth_angle"
 SIMTEL_SOFTWARE = "sim_telarray"
+
+
+def get_model_writer(model, simulation_software="sim_telarray", context=None):
+    """Return the selected model configuration writer, retaining its table cache.
+
+    Parameters
+    ----------
+    model : ModelParameter or ArrayModel
+        Resolved simulation model.
+    simulation_software : str
+        Registered configuration writer.
+    context : RunContext, optional
+        Run context; the model's own context is used if not given.
+
+    Returns
+    -------
+    object
+        Software-specific model writer.
+
+    Raises
+    ------
+    ValueError
+        If the selected software is not registered.
+    """
+    try:
+        factory = _WRITERS[simulation_software]
+    except KeyError as exc:
+        raise ValueError(f"Unknown model configuration writer '{simulation_software}'.") from exc
+    if simulation_software not in model.configuration_writers:
+        model.configuration_writers[simulation_software] = factory(model, context=context)
+    return model.configuration_writers[simulation_software]
 
 
 class SimtelModelWriter:
@@ -409,3 +439,6 @@ class SimtelModelWriter:
         """
         self.export_single_mirror_list_file(mirror_number, set_focal_length_to_zero)
         return self.single_mirror_list_file_paths[mirror_number]
+
+
+_WRITERS = {"sim_telarray": SimtelModelWriter}
