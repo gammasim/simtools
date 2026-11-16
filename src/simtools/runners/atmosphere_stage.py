@@ -4,11 +4,12 @@ import dataclasses
 import shlex
 
 import astropy.units as u
+import numpy as np
 
 from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION
 from simtools.runners.stages import STDIN, StreamTo
 from simtools.runtime.context import RunContext
-from simtools.simulation_software import efficiency, light_sources
+from simtools.simulation_software import efficiency, light_sources, optics
 from simtools.simulation_software.atmosphere import (
     DEFAULT_MODE,
     DEFAULT_SEED,
@@ -53,6 +54,35 @@ def _wavelength_range(inputs, options):
     return (wavelength, wavelength + MONOCHROMATIC_BAND_NM)
 
 
+def _simulation_seed(array_model):
+    """Return the sim_telarray simulation seed of the array model (DEFAULT_SEED if unset)."""
+    if array_model.sim_telarray_seed is None:
+        return DEFAULT_SEED
+    return optics.seeds_of(array_model.sim_telarray_seed)[1]
+
+
+def run_seed(base_seed, run_number):
+    """
+    Return the thinning seed of one run, derived from a base seed and the run number.
+
+    Runs with different run numbers or base seeds get independent random sequences; the same
+    base seed and run number give the same seed.
+
+    Parameters
+    ----------
+    base_seed : int
+        Base seed (the sim_telarray simulation seed of the run).
+    run_number : int
+        Run number.
+
+    Returns
+    -------
+    int
+        Seed of the obdeect propagation.
+    """
+    return int(np.random.SeedSequence((int(base_seed), int(run_number))).generate_state(1)[0])
+
+
 class ObdeectAtmosphereStage:
     """
     Atmosphere stage: applies the atmospheric extinction and the in-telescope path to photons.
@@ -77,9 +107,10 @@ class ObdeectAtmosphereStage:
     produces = PHOTONS_GROUND
     streams = True
 
-    def __init__(self, request, label=None, context=None, envelope_model=None):
+    def __init__(self, request, label=None, context=None, envelope_model=None, seed_per_run=False):
         """Initialize ObdeectAtmosphereStage."""
         self.request = request
+        self.seed_per_run = seed_per_run
         self.label = label or self.name
         self.context = context or RunContext.from_environment()
         self.envelope_model = envelope_model
@@ -90,7 +121,8 @@ class ObdeectAtmosphereStage:
         """
         Return one atmosphere stage per array model.
 
-        Stage options (after the stage name in the chain): ``seed``, ``mode`` (``thinned`` or
+        Stage options (after the stage name in the chain): ``seed`` (used for every run; default:
+        derived per run from the simulation seed and the run number), ``mode`` (``thinned`` or
         ``weighted``), ``wavelength_range_nm`` (two values) and ``efficiency_envelope`` (``qe``,
         default: thin photons by the quantum-efficiency bound of the telescopes; ``none``).
         Unknown options are rejected.
@@ -103,12 +135,13 @@ class ObdeectAtmosphereStage:
             )
         envelope = efficiency.envelope_for_inputs(inputs)
         wavelength_range = _wavelength_range(inputs, options)
+        explicit_seed = options.get("seed")
         stage_list = []
         for array_model in inputs.array_models:
             request = build_atmosphere_request(
                 array_model.site_model,
                 array_model.telescope_models,
-                seed=options.get("seed", DEFAULT_SEED),
+                seed=(_simulation_seed(array_model) if explicit_seed is None else explicit_seed),
                 mode=options.get("mode", DEFAULT_MODE),
                 wavelength_range_nm=wavelength_range,
             )
@@ -125,6 +158,7 @@ class ObdeectAtmosphereStage:
                     label=label,
                     context=inputs.context,
                     envelope_model=array_model if envelope else None,
+                    seed_per_run=explicit_seed is None,
                 )
             )
         return stage_list
@@ -160,8 +194,11 @@ class ObdeectAtmosphereStage:
             output_file = STDIN
         else:
             output_file = self.output_file(run_number)
+        request = self.request
+        if self.seed_per_run:
+            request = dataclasses.replace(request, seed=run_seed(request.seed, run_number))
         command = propagation_command(
-            self.request,
+            request,
             input_file=input_file,
             output_file=output_file,
             envelope_file=None if self.envelope_model is None else self.write_envelope(run_number),

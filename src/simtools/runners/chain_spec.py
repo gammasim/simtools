@@ -131,10 +131,25 @@ def _parse_item(item):
     return stage, _parse_options(item, text)
 
 
+def _split_options(text):
+    """Split ``KEY=VALUE,...`` at the commas outside brackets (list values keep their commas)."""
+    parts, depth, start = [], 0, 0
+    for index, char in enumerate(text):
+        if char in "[{":
+            depth += 1
+        elif char in "]}":
+            depth -= 1
+        elif char == _OPTION_SEPARATOR and depth == 0:
+            parts.append(text[start:index])
+            start = index + 1
+    parts.append(text[start:])
+    return parts
+
+
 def _parse_options(item, text):
     """Return the options ``KEY=VALUE,...`` of a chain item."""
     options = {}
-    for option in filter(None, (part.strip() for part in text.split(_OPTION_SEPARATOR))):
+    for option in filter(None, (part.strip() for part in _split_options(text))):
         key, separator, value = option.partition(_VALUE_SEPARATOR)
         key = key.strip()
         if not separator or not key:

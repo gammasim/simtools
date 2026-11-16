@@ -69,6 +69,24 @@ def test_parse_chain_options_are_yaml_scalars():
     assert spec.stage_options("corsika") == {}
 
 
+def test_parse_chain_options_keep_commas_inside_lists():
+    spec = chain_spec.parse_chain(
+        [
+            "obdeect_atmosphere:wavelength_range_nm=[300,700],seed=3",
+            "stream_to_simtel:allow_pending=[atmosphere, mirror],scaled_factors=[qe]",
+        ]
+    )
+
+    assert spec.stage_options("obdeect_atmosphere") == {
+        "wavelength_range_nm": [300, 700],
+        "seed": 3,
+    }
+    assert spec.stage_options("stream_to_simtel") == {
+        "allow_pending": ["atmosphere", "mirror"],
+        "scaled_factors": ["qe"],
+    }
+
+
 @pytest.mark.parametrize(
     ("items", "match"),
     [

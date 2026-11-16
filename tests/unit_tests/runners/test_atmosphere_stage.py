@@ -9,7 +9,7 @@ import pytest
 from astropy.table import Column, Table
 
 from simtools.runners import stages
-from simtools.runners.atmosphere_stage import ObdeectAtmosphereStage
+from simtools.runners.atmosphere_stage import ObdeectAtmosphereStage, run_seed
 from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION, ChainSpec, parse_chain
 from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo
 from simtools.simulation_software.atmosphere import AtmosphereRequest
@@ -142,7 +142,33 @@ def test_instances_one_per_array_model(array_model_north, run_context):
     assert len(stages_of_run) == 2
     assert all(stage.request.site == "North" for stage in stages_of_run)
     assert all(stage.request.seed == 1 for stage in stages_of_run)
+    assert all(stage.seed_per_run for stage in stages_of_run)
     assert all(stage.request.mode == "thinned" for stage in stages_of_run)
+
+
+def test_run_seed_depends_on_base_seed_and_run_number():
+    assert run_seed(22, 1) == run_seed(22, 1)
+    assert len({run_seed(22, 1), run_seed(22, 2), run_seed(23, 1)}) == 3
+
+
+def test_instances_derive_the_seed_of_each_run(array_model_north, run_context, monkeypatch):
+    monkeypatch.setattr(
+        array_model_north, "sim_telarray_seed", SimpleNamespace(seed_string="11,22")
+    )
+    inputs = StageInputs(
+        array_models=(array_model_north,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+    )
+
+    (stage,) = ObdeectAtmosphereStage.instances(inputs)
+
+    assert stage.request.seed == 22
+    for run_number in (1, 2):
+        tokens = _tokens(stage.prepare(run_number=run_number, input_file=STDIN)[0])
+        assert tokens[tokens.index("--seed") + 1] == str(run_seed(22, run_number))
 
 
 def test_instances_use_stage_options(array_model_north, run_context):
@@ -164,6 +190,10 @@ def test_instances_use_stage_options(array_model_north, run_context):
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
 
     assert stage.request.seed == 7
+    assert not stage.seed_per_run
+    for run_number in (1, 2):
+        tokens = _tokens(stage.prepare(run_number=run_number, input_file=STDIN)[0])
+        assert tokens[tokens.index("--seed") + 1] == "7"
     assert stage.request.mode == "weighted"
     assert stage.request.wavelength_range_nm == (250.0, 700.0)
 

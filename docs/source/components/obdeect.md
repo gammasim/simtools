@@ -26,7 +26,8 @@ structure.
 ## Simulation chain
 
 A simulation is an ordered list of stages, `--simulation_software` (default
-`corsika sim_telarray`). Each stage is written `STAGE` or `STAGE:KEY=VALUE,...`; obdeect provides:
+`corsika sim_telarray`). Each stage is written `STAGE` or `STAGE:KEY=VALUE,...`, with list values in
+brackets (`obdeect_atmosphere:wavelength_range_nm=[300,700]`); obdeect provides:
 
 | Stage | Task |
 | --- | --- |
@@ -43,6 +44,10 @@ Air showers through obdeect atmosphere and optics, with sim_telarray simulating 
 simtools-simulate-prod --simulation_software corsika corsika_to_stream obdeect_atmosphere obdeect_optics stream_to_simtel \
   sim_telarray:bypass_optics=3 ...
 ```
+
+`obdeect_atmosphere` derives the seed of its photon thinning from the simulation seed and the run
+number, so each run draws its own random numbers; `obdeect_atmosphere:seed=N` uses `N` for every
+run.
 
 List conversion stages explicitly between programs with different photon formats. A chain in which two stages apply the same efficiency factor (for example the atmosphere
 in obdeect and in sim_telarray) is rejected. `Bypass_Optics=3` makes sim_telarray simulate the
