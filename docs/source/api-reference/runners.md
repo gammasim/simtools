@@ -32,6 +32,13 @@ simulation chains.
    :members:
 ```
 
+## stage_types
+
+```{eval-rst}
+.. automodule:: runners.stage_types
+   :members:
+```
+
 ## chain_runner
 
 (chain-runner)=

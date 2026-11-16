@@ -14,7 +14,8 @@ from simtools.runners.chain_spec import (
     applied_factors_of,
 )
 from simtools.runners.shower_routing import ShowerRouting, route_threads
-from simtools.runners.stages import CAMERA_EVENTS, CHERENKOV_PHOTONS, STDIN, get_stage_class
+from simtools.runners.stage_types import CAMERA_EVENTS, CHERENKOV_PHOTONS, STDIN
+from simtools.runners.stages import get_stage_class
 from simtools.simtel.photon_bunch_file import bypass_optics_level
 from simtools.simtel.sim_telarray_capabilities import check_bypass_optics
 from simtools.simtel.simtel_runner import SIM_TELARRAY_ENV, sim_telarray_env_as_string

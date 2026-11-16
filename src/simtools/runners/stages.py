@@ -13,18 +13,12 @@ from importlib import import_module
 from itertools import pairwise
 from typing import Protocol
 
-from simtools.simulation_software import products
+from simtools.runners import stage_types
 
-CHERENKOV_PHOTONS = products.CHERENKOV_PHOTONS
-CAMERA_EVENTS = products.CAMERA_EVENTS
-STDIN = "-"
-
-
-@dataclass(frozen=True)
-class StreamTo:
-    """Output of a stage that is streamed to downstream stage commands (shell lines)."""
-
-    commands: tuple[str, ...]
+CAMERA_EVENTS = stage_types.CAMERA_EVENTS
+CHERENKOV_PHOTONS = stage_types.CHERENKOV_PHOTONS
+STDIN = stage_types.STDIN
+StreamTo = stage_types.StreamTo
 
 
 @dataclass(frozen=True)

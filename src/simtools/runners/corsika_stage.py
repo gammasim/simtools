@@ -9,7 +9,7 @@ from simtools.corsika import build_options
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.job_execution.runner_services import RunnerServices
 from simtools.ray_tracing.backends.interface import get_backend
-from simtools.runners.stages import CHERENKOV_PHOTONS, StreamTo
+from simtools.runners.stage_types import CHERENKOV_PHOTONS, StreamTo
 
 
 class CorsikaStage:
