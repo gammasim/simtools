@@ -49,7 +49,7 @@ _ARGUMENTS = (
         type=float,
         nargs=3,
         metavar=("MIN_THRESHOLD", "NUMBER_OF_THRESHOLDS", "STEP_SIZE"),
-        default=None,
+        required=True,
     ),
 )
 

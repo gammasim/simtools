@@ -37,7 +37,7 @@ def _base_args(tmp_test_directory):
         "nsb_energy_range": "20 MeV 25 MeV",
         "proton_energy_range": "2 GeV 2000 GeV",
         "nsb_scaling_factor": 2,
-        "trigger_thresholds": None,
+        "trigger_thresholds": [220, 10, 10],
         "output_path": str(Path(tmp_test_directory) / "bias_curves"),
     }
 
@@ -294,23 +294,13 @@ def test_threshold_parameter_is_chosen_from_telescope_model(
     )
 
 
-@pytest.mark.parametrize(
-    ("threshold_param", "expected_values"),
-    [
-        (
-            "asum_threshold",
-            [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
-        ),
-        ("dsum_threshold", [22, 23, 24, 25, 26, 27, 28, 29, 30]),
-        ("discriminator_threshold", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-    ],
-)
-def test_threshold_values_use_parameter_defaults(threshold_param, expected_values):
-    assert parameter_scans._threshold_values(threshold_param) == expected_values
+def test_threshold_values_require_explicit_scan():
+    with pytest.raises(ValueError, match="trigger_thresholds"):
+        parameter_scans._threshold_values()
 
 
 def test_threshold_values_expand_configured_thresholds():
-    assert parameter_scans._threshold_values("asum_threshold", [225, 3, 10]) == [225, 235, 245]
+    assert parameter_scans._threshold_values([225, 3, 10]) == [225, 235, 245]
 
 
 @pytest.mark.parametrize(
@@ -324,7 +314,7 @@ def test_threshold_values_expand_configured_thresholds():
 )
 def test_invalid_configured_thresholds_are_rejected(trigger_thresholds, error):
     with pytest.raises(ValueError, match=error):
-        parameter_scans._threshold_values("asum_threshold", trigger_thresholds)
+        parameter_scans._threshold_values(trigger_thresholds)
 
 
 @pytest.mark.parametrize("curve_name", ["nsb", "proton"])
@@ -350,7 +340,7 @@ def test_scan_config_contains_curve_overwrite_and_trigger_scan(tmp_test_director
         {
             "name": "asum_threshold",
             "path": "changes.LSTN-01.asum_threshold",
-            "values": [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
+            "values": [220, 230, 240, 250, 260, 270, 280, 290, 300, 310],
             "label": "asum",
             "label_separator": "",
         }
@@ -362,4 +352,11 @@ def test_validate_required_args_rejects_missing_required_argument(tmp_test_direc
     args = _base_args(tmp_test_directory)
     args["site"] = ""
     with pytest.raises(ValueError, match="Missing required argument: --site"):
+        parameter_scans.generate_scan_grids(args, Mock())
+
+
+def test_generate_scan_grids_rejects_missing_thresholds(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+    args["trigger_thresholds"] = None
+    with pytest.raises(ValueError, match="--trigger_thresholds"):
         parameter_scans.generate_scan_grids(args, Mock())

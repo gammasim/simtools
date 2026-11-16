@@ -59,16 +59,12 @@ _REQUIRED_ARGS = (
     "core_scatter",
     "view_cone",
     "number_of_runs",
+    "trigger_thresholds",
 )
 # curve name -> (primary, application argument holding the energy range)
 _CURVES = {
     "nsb": ("gamma", "nsb_energy_range"),
     "proton": ("proton", "proton_energy_range"),
-}
-_DEFAULT_THRESHOLDS = {
-    "asum_threshold": [*range(220, 310, 10), *range(320, 361, 20)],
-    "dsum_threshold": list(range(22, 31)),
-    "discriminator_threshold": list(range(0, 10)),
 }
 _logger = logging.getLogger(__name__)
 
@@ -190,10 +186,10 @@ def _clean_scan_grid_metadata(output_file):
     table.write(output_file, format=_ECSV_FORMAT, overwrite=True)
 
 
-def _threshold_values(threshold_param, trigger_thresholds=None):
-    """Return trigger thresholds from ``(minimum, count, step)`` or the defaults."""
+def _threshold_values(trigger_thresholds=None):
+    """Return trigger thresholds from ``(minimum, count, step)``."""
     if trigger_thresholds is None:
-        return _DEFAULT_THRESHOLDS.get(threshold_param, _DEFAULT_THRESHOLDS["dsum_threshold"])
+        raise ValueError("trigger_thresholds must specify minimum, count, and step size.")
     if len(trigger_thresholds) != 3:
         raise ValueError(
             "trigger_thresholds must contain minimum threshold, number of thresholds, "
@@ -243,7 +239,7 @@ def _scan_config(curve_name, telescope, args):
                 {
                     "name": threshold_param,
                     "path": f"changes.{telescope}.{threshold_param}",
-                    "values": _threshold_values(threshold_param, args.get("trigger_thresholds")),
+                    "values": _threshold_values(args.get("trigger_thresholds")),
                     "label": threshold_param.removesuffix("_threshold"),
                     "label_separator": "",
                 }
