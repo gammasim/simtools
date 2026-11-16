@@ -25,23 +25,27 @@ structure.
 
 ## Simulation chain
 
-A simulation is an ordered list of stages, `--simulation_software` (default
-`corsika sim_telarray`). Each stage is written `STAGE` or `STAGE:KEY=VALUE,...`, with list values in
-brackets (`obdeect_atmosphere:wavelength_range_nm=[300,700]`); obdeect provides:
+simtools runs a simulation as an ordered list of stages, `--simulation_software` (default
+`corsika sim_telarray`). Each stage is written `STAGE` or `STAGE:KEY=VALUE,...`, with list values
+in brackets (`obdeect_atmosphere:wavelength_range_nm=[300,700]`). obdeect only traces photons;
+the stages below wrap its programs, and sim_telarray simulates the camera and electronics.
 
-| Stage | Task |
-| --- | --- |
-| `corsika_to_stream` | CORSIKA photon bunches to a photon stream |
-| `obdeect_atmosphere` | extinction of the atmosphere along the light path |
-| `obdeect_optics` | mirrors, shadowing and telescope transmission, one process per telescope |
-| `stream_to_simtel` | photon stream to the sim_telarray photon-bunch input |
-| `obdeect_flasher`, `obdeect_illuminator` | calibration light; the flasher light is traced through the telescope structure |
-| `light_emission` | sim_telarray LightEmission program (`ff-1m`, `xyzls`) as first stage of a calibration chain |
+| Stage | Program | Task |
+| --- | --- | --- |
+| `corsika_to_stream` | `obdeect stream` | CORSIKA photon bunches to a photon stream |
+| `obdeect_atmosphere` | `obdeect propagation` | photons from emission to the ground, with atmospheric extinction |
+| `obdeect_optics` | `obdeect ray-tracing` | mirrors, shadowing and telescope transmission, one process per telescope |
+| `stream_to_simtel` | `obdeect stream` | photon stream to the sim_telarray photon-bunch input |
+| `obdeect_flasher` | simtools flasher stream (obdeect ray tracing) | flasher photons, traced past the telescope structure to the camera |
+| `obdeect_illuminator` | `obdeect sources` | photons of the illuminator |
+| `light_emission` | sim_telarray LightEmission (`ff-1m`, `xyzls`) | calibration light as first stage of a calibration chain |
+| `corsika`, `sim_telarray` | CORSIKA, sim_telarray | air showers; telescopes, camera and electronics |
 
-Air showers through obdeect atmosphere and optics, with sim_telarray simulating only the camera:
+Air showers traced through the atmosphere and the optics by obdeect, with sim_telarray simulating
+only the camera:
 
 ```bash
-simtools-simulate-prod --simulation_software corsika corsika_to_stream obdeect_atmosphere obdeect_optics stream_to_simtel \
+simtools-simulate-prod --simulation_software corsika obdeect_atmosphere obdeect_optics \
   sim_telarray:bypass_optics=3 ...
 ```
 
@@ -49,17 +53,20 @@ simtools-simulate-prod --simulation_software corsika corsika_to_stream obdeect_a
 number, so each run draws its own random numbers; `obdeect_atmosphere:seed=N` uses `N` for every
 run.
 
-List conversion stages explicitly between programs with different photon formats. A chain in which two stages apply the same efficiency factor (for example the atmosphere
-in obdeect and in sim_telarray) is rejected. `Bypass_Optics=3` makes sim_telarray simulate the
-camera only. simtools checks that the installed sim_telarray release supports it before any job is
-written; for a locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3` states the
-highest supported level.
+simtools inserts the converter between two stages with different photon formats
+(`corsika_to_stream`, `stream_to_simtel`); list a converter to give it options, e.g.
+`stream_to_simtel:allow_pending=[atmosphere]`. A chain in
+which two stages apply the same efficiency factor (for example the atmospheric extinction in
+`obdeect_atmosphere` and in sim_telarray) is rejected. `Bypass_Optics=3` makes sim_telarray
+simulate the camera only. simtools checks that the installed sim_telarray release supports it
+before any job is written; for a locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3`
+states the highest supported level.
 
 For multiple telescopes, the photon stream before optics and each telescope's camera stream are
 written to disk. The camera streams are merged by event before sim_telarray runs, so the output
 directory needs space for these intermediate files.
 
-The calibration applications select obdeect with `--ray_tracing_backend` (next section) or with
+The calibration applications use obdeect with `--ray_tracing_backend` (next section) or with
 `--simulation_software` (default `light_emission sim_telarray`), which runs the stages for one
 telescope: a calibration chain starts with `light_emission`, `obdeect_flasher` or
 `obdeect_illuminator` and has no `corsika` stage. The option `bypass_optics` of `sim_telarray` is
@@ -78,18 +85,18 @@ photons, so the default cut would drop whole events. `min_photoelectrons` still 
 the quantum efficiency. The run log states this ("Upstream obdeect_atmosphere thins photons").
 
 ```bash
-simtools-simulate-flasher --run_mode full_simulation --simulation_software obdeect_flasher stream_to_simtel \
+simtools-simulate-flasher --run_mode full_simulation --simulation_software obdeect_flasher \
   sim_telarray:bypass_optics=1 ...
 simtools-simulate-illuminator --simulation_software obdeect_illuminator obdeect_atmosphere \
-  obdeect_optics stream_to_simtel sim_telarray:bypass_optics=3 ...
+  obdeect_optics sim_telarray:bypass_optics=3 ...
 ```
 
 ## Flashers and illuminators
 
 With `--ray_tracing_backend obdeect`, `simtools-simulate-flasher --run_mode
 full_simulation` and `simtools-simulate-illuminator` split the simulation into
-stages: obdeect makes the light of the calibration device and traces it to the
-camera entrance, simtools writes the photons as photon bunches
+stages: obdeect generates the photons of the calibration device and traces them
+to the camera entrance, simtools writes the photons as photon bunches
 (`simtel.photon_bunch_file`), and sim_telarray simulates the camera and
 electronics with its optics bypassed (`Bypass_Optics=1` for single-mirror,
 `Bypass_Optics=2` for dual-mirror telescopes). This replaces the sim_telarray

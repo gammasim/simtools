@@ -1,1 +1,0 @@
-Run sim_telarray with ``min_photons=0`` when an obdeect atmosphere stage thins the photons upstream. Previously sim_telarray skipped whole telescope events whose thinned photon count was below its default ``min_photons`` cut.

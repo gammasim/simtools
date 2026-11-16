@@ -6,7 +6,9 @@ from dataclasses import dataclass, field
 import yaml
 
 from simtools.runners.stages import (
+    CONVERTER_STAGES,
     SimulationChain,
+    connects,
     get_stage_class,
     stages_software,
 )
@@ -30,7 +32,7 @@ class ChainSpec:
     Parameters
     ----------
     stages : tuple of str
-        Stage names in chain order.
+        Stage names in chain order, including the converter stages.
     options : dict
         Options of each stage, by stage name.
     """
@@ -91,6 +93,10 @@ def parse_chain(items):
     """
     Return the chain specification of a list of stage items.
 
+    Converter stages (``CONVERTER_STAGES``) may be left out: between two stages whose data
+    products differ, the one converter that fits is inserted. A converter is listed explicitly
+    to give it options.
+
     Parameters
     ----------
     items : str or list of str
@@ -104,7 +110,8 @@ def parse_chain(items):
     Raises
     ------
     ValueError
-        If the list is empty, a stage is listed twice, or an item is malformed.
+        If the list is empty, a stage is unknown or listed twice, an item is malformed, or more
+        than one converter fits between two stages.
     """
     items = [items] if isinstance(items, str) else list(items or ())
     if not items:
@@ -117,7 +124,42 @@ def parse_chain(items):
         stages.append(stage)
         if stage_options:
             options[stage] = stage_options
-    return ChainSpec(tuple(stages), options)
+    return ChainSpec(_with_converters(stages), options)
+
+
+def _with_converters(stages):
+    """Return the stages with the converter inserted between stages whose products differ."""
+    completed = [stages[0]]
+    for downstream in stages[1:]:
+        converter = _converter_between(completed[-1], downstream)
+        if converter is not None:
+            if converter in stages or converter in completed:
+                raise ValueError(
+                    f"Stage {converter!r} is needed between stages {completed[-1]!r} and "
+                    f"{downstream!r} but is listed elsewhere in the simulation chain."
+                )
+            completed.append(converter)
+        completed.append(downstream)
+    return tuple(completed)
+
+
+def _converter_between(upstream, downstream):
+    """Return the converter connecting two stages, or None if none is needed or none fits."""
+    upstream_class, downstream_class = get_stage_class(upstream), get_stage_class(downstream)
+    if connects(upstream_class, downstream_class):
+        return None
+    fitting = [
+        name
+        for name in CONVERTER_STAGES
+        if connects(upstream_class, get_stage_class(name))
+        and connects(get_stage_class(name), downstream_class)
+    ]
+    if len(fitting) > 1:
+        raise ValueError(
+            f"Several converters fit between stages {upstream!r} and {downstream!r}: "
+            f"{fitting}; list one of them in the chain."
+        )
+    return fitting[0] if fitting else None
 
 
 def _parse_item(item):

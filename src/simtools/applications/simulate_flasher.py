@@ -122,7 +122,8 @@ APPLICATION = ApplicationDefinition.for_module(
             default=list(LIGHT_EMISSION_CHAIN_DEFAULT),
             help=(
                 "Stages of the full simulation in order, each as STAGE or STAGE:KEY=VALUE,... "
-                "(e.g. obdeect_flasher stream_to_simtel sim_telarray:bypass_optics=1)."
+                "(e.g. obdeect_flasher sim_telarray:bypass_optics=1); converters between photon "
+                "formats are inserted."
             ),
         ),
     ),

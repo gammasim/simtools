@@ -6,6 +6,7 @@ import sys
 import pytest
 
 from simtools.runners import chain_spec, stages
+from simtools.simulation_software.products import PHOTONS_CAMERA
 
 OBDEECT_CHAIN = (
     "corsika",
@@ -190,17 +191,83 @@ def test_chain_keeps_explicit_converters():
     assert spec.stage_options("sim_telarray") == {"bypass_optics": 3}
 
 
-def test_software_includes_the_programs_of_explicit_converters():
+@pytest.mark.parametrize(
+    ("items", "expected"),
+    [
+        (
+            ["corsika", "obdeect_atmosphere", "obdeect_optics", "sim_telarray:bypass_optics=3"],
+            OBDEECT_CHAIN,
+        ),
+        (
+            [
+                "corsika",
+                "obdeect_atmosphere",
+                "obdeect_optics",
+                "stream_to_simtel",
+                "sim_telarray:bypass_optics=3",
+            ],
+            OBDEECT_CHAIN,
+        ),
+        (
+            ["obdeect_flasher", "sim_telarray:bypass_optics=1"],
+            ("obdeect_flasher", "stream_to_simtel", "sim_telarray"),
+        ),
+        (
+            [
+                "obdeect_illuminator",
+                "obdeect_atmosphere",
+                "obdeect_optics",
+                "sim_telarray:bypass_optics=3",
+            ],
+            ("obdeect_illuminator", *OBDEECT_CHAIN[2:]),
+        ),
+        (["corsika", "sim_telarray"], ("corsika", "sim_telarray")),
+    ],
+)
+def test_parse_chain_inserts_missing_converters(items, expected):
+    spec = chain_spec.parse_chain(items)
+
+    assert spec.stages == expected
+    assert spec.chain().stages == expected
+
+
+def test_explicit_converter_keeps_its_options():
     spec = chain_spec.parse_chain(
-        ["obdeect_flasher", "stream_to_simtel", "sim_telarray:bypass_optics=3"]
+        ["obdeect_flasher", "stream_to_simtel:allow_pending=[atmosphere]", "sim_telarray"]
     )
 
     assert spec.stages == ("obdeect_flasher", "stream_to_simtel", "sim_telarray")
+    assert spec.stage_options("stream_to_simtel") == {"allow_pending": ["atmosphere"]}
+
+
+def test_software_includes_the_programs_of_inserted_converters(fake_stages):
+    fake_stages("camera_source", None, PHOTONS_CAMERA)
+
+    spec = chain_spec.parse_chain(["camera_source", "sim_telarray"])
+
+    assert spec.stages == ("camera_source", "stream_to_simtel", "sim_telarray")
     assert spec.software == {"obdeect", "sim_telarray"}
 
 
-def test_chain_spec_rejects_missing_explicit_converter():
-    spec = chain_spec.parse_chain(["corsika", "obdeect_atmosphere"])
+def test_parse_chain_rejects_several_fitting_converters(fake_stages, monkeypatch):
+    fake_stages("source", None, "raw")
+    fake_stages("convert_a", "raw", stages.CHERENKOV_PHOTONS)
+    fake_stages("convert_b", "raw", stages.CHERENKOV_PHOTONS)
+    monkeypatch.setattr(chain_spec, "CONVERTER_STAGES", ("convert_a", "convert_b"))
+
+    with pytest.raises(ValueError, match=r"Several converters fit .*convert_a.*convert_b"):
+        chain_spec.parse_chain(["source", "sim_telarray"])
+
+
+def test_parse_chain_rejects_converter_listed_elsewhere():
+    with pytest.raises(ValueError, match="'corsika_to_stream' is needed between"):
+        chain_spec.parse_chain(
+            ["corsika", "obdeect_atmosphere", "obdeect_optics", "sim_telarray", "corsika_to_stream"]
+        )
+
+
+def test_chain_without_fitting_converter_is_rejected():
+    spec = chain_spec.parse_chain(["obdeect_atmosphere", "corsika"])
 
     with pytest.raises(ValueError, match="consumes"):
         spec.chain()

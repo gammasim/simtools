@@ -77,11 +77,11 @@ telescopes and cameras with sim_telarray. A stage must consume what the previous
 ```bash
 --simulation_software sim_telarray        # sim_telarray only, e.g. from a CORSIKA input file
 --simulation_software corsika             # CORSIKA only
---simulation_software corsika corsika_to_stream obdeect_atmosphere obdeect_optics \
-  stream_to_simtel sim_telarray:bypass_optics=3
+--simulation_software corsika obdeect_atmosphere obdeect_optics sim_telarray:bypass_optics=3
 ```
 
-List converters explicitly when consecutive programs use different photon formats.
+simtools inserts the converters between programs with different photon formats
+(`corsika_to_stream`, `stream_to_simtel`); list a converter to give it options.
 
 The same list is used in configuration files:
 

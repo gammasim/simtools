@@ -5,7 +5,8 @@ obdeect program). Stages are connected by the data products they consume and pro
 through files or as a stream. A chain is an ordered list of stage names. Stage classes are
 imported when first used. Further stages are added with :func:`register_stage`.
 ``SimulationChain`` checks that each stage consumes the data product of the stage before it
-when the chain is created.
+when the chain is created. Converter stages only change the format of photons; a chain may leave
+them out (see ``simtools.runners.chain_spec``).
 """
 
 from dataclasses import dataclass, field
@@ -114,6 +115,9 @@ STAGE_SOFTWARE = {
     "obdeect_illuminator": frozenset({"obdeect"}),
 }
 
+#: Stages that only convert photons between the formats of two programs.
+CONVERTER_STAGES = ("corsika_to_stream", "stream_to_simtel")
+
 
 def register_stage(name, factory, software=()):
     """
@@ -166,6 +170,11 @@ def _as_tuple(consumed):
     return (consumed,) if isinstance(consumed, str) else tuple(consumed)
 
 
+def connects(upstream, downstream):
+    """Return whether stage class ``downstream`` consumes what stage class ``upstream`` produces."""
+    return upstream.produces in _as_tuple(downstream.consumes)
+
+
 def get_stage_class(name) -> type[SimulationStage]:
     """Return the stage class registered under a name."""
     try:
@@ -186,7 +195,7 @@ class SimulationChain:
             raise ValueError("A simulation chain needs at least one stage.")
         classes = [get_stage_class(name) for name in self.stages]
         for upstream, downstream in pairwise(classes):
-            if upstream.produces not in _as_tuple(downstream.consumes):
+            if not connects(upstream, downstream):
                 raise ValueError(
                     f"Stage {downstream.name!r} consumes {downstream.consumes!r}, "
                     f"but {upstream.name!r} produces {upstream.produces!r}."
