@@ -9,10 +9,11 @@ from simtools.corsika import build_options
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.job_execution.runner_services import RunnerServices
 from simtools.ray_tracing.backends.interface import get_backend
-from simtools.runners.stage_types import CHERENKOV_PHOTONS, StreamTo
+from simtools.runners.stage_types import StreamTo
+from simtools.runners.stages import CatalogStage, stages_with
 
 
-class CorsikaStage:
+class CorsikaStage(CatalogStage):
     """
     CORSIKA air-shower simulation stage.
 
@@ -31,9 +32,6 @@ class CorsikaStage:
         Also save the streamed CORSIKA output to a compressed file.
     """
 
-    name = "corsika"
-    consumes = None
-    produces = CHERENKOV_PHOTONS
     streams = True
 
     def __init__(
@@ -66,7 +64,7 @@ class CorsikaStage:
             context=inputs.context,
         )
         if (
-            "sim_telarray" in inputs.stages
+            stages_with(inputs.stages, "routes_shower_photons")
             and inputs.args.get("shower_route_mode", "stream") == "disk"
         ):
             stage.disk_route = bool(

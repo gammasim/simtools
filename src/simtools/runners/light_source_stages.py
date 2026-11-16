@@ -7,10 +7,15 @@ from pathlib import Path
 import astropy.units as u
 
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.runners.stages import CHERENKOV_PHOTONS, StreamTo
+from simtools.runners.stages import (
+    CatalogStage,
+    StreamTo,
+    files_of_run,
+    single_downstream,
+    stage_file,
+)
 from simtools.simtel.simtel_seeds import instance_seed_pairs
 from simtools.simulation_software import light_sources
-from simtools.simulation_software.products import PHOTONS_CAMERA, PHOTONS_SKY
 from simtools.utils import value_conversion
 
 LIGHT_EMISSION_DIRECTORY = "light_emission"
@@ -46,28 +51,29 @@ def _file_token(telescope, light_source, wavelength_nm):
     return "_" + "".join(c if (c.isalnum() or c in "-_") else "_" for c in text)
 
 
-class LightSourceStage:
+class LightSourceStage(CatalogStage):
     """
     Light-source stage: photons of one calibration device seen by one telescope.
 
+    The light-source type is the catalog field ``light_source`` of the stage (see
+    ``light_sources`` in ``resources/simulation_software.yml``).
+
     Parameters
     ----------
-    source_type : type
-        Source-type class (see ``simtools.simulation_software.light_sources``).
     request : FlasherRequest or IlluminatorRequest
         Request of the source type.
     work_directory : str or Path
-        Directory of the output file and the tables of the source.
+        Directory of the tables of the source.
     file_token : str
-        Suffix of the file names of this instance.
+        Suffix of the table file names of this instance.
     executable : str, optional
         Program of the source type (default: the one of the source type).
+    simulation_models_path : str or Path, optional
+        Simulation models (for sources that read model files).
+    run_files : RunnerServices, optional
+        File naming of the run (output file when the output is not streamed).
     """
 
-    name = None
-    source_name = None
-    consumes = None
-    produces = None
     streams = True
 
     def __init__(
@@ -77,8 +83,10 @@ class LightSourceStage:
         file_token="",
         executable=None,
         simulation_models_path=None,
+        run_files=None,
     ):
         """Initialize LightSourceStage."""
+        self.run_files = run_files
         self.request = request
         self.work_directory = Path(work_directory)
         self.file_token = file_token
@@ -118,16 +126,16 @@ class LightSourceStage:
             context=context,
         )
         model_type = str(calibration_model.get_parameter_value("flasher_type")).lower()
-        if light_sources.source_name_for_model(model_type) != cls.source_name:
+        if light_sources.source_name_for_model(model_type) != cls.spec.light_source:
             raise ValueError(
                 f"Light source {config.get('light_source')!r} is of type {model_type!r}; "
-                f"stage {cls.name!r} handles {cls.source_name!r}."
+                f"stage {cls.name!r} handles {cls.spec.light_source!r}."
             )
         config["wavelength"] = _wavelength(config)
         instrument_seed, simulation_seed = instance_seed_pairs(context=context)[0]
         config |= {"telescope": telescope, "instrument_seed": instrument_seed}
         request = light_sources.build_request(
-            cls.source_name,
+            cls.spec.light_source,
             calibration_model,
             telescope_model,
             site_model,
@@ -143,12 +151,13 @@ class LightSourceStage:
                 token,
                 executable=config.get("executable"),
                 simulation_models_path=config.get("simulation_models_path"),
+                run_files=files_of_run(inputs, label, required=False),
             )
         ]
 
     def output_file(self, run_number):
         """Return the photon-stream file written when the output is not streamed."""
-        return self.work_directory / f"{self.name}{self.file_token}_run{run_number:06d}.pst"
+        return stage_file(self, "output", run_number)
 
     def prepare(self, run_number, input_file=None, output=None):
         """
@@ -173,16 +182,12 @@ class LightSourceStage:
             raise ValueError("A light source does not read an input product or stream.")
         request = dataclasses.replace(self.request, run_number=run_number)
         streamed = isinstance(output, StreamTo)
-        if streamed and len(output.commands) != 1:
-            raise ValueError(
-                f"Stage {self.name!r} streams to exactly one downstream command; "
-                f"got {len(output.commands)}."
-            )
+        downstream = single_downstream(output, self.name) if streamed else None
         target = None if streamed else self.output_file(run_number)
         self.work_directory.mkdir(parents=True, exist_ok=True)
         command = shlex.join(
             light_sources.source_command(
-                self.source_name,
+                self.spec.light_source,
                 request,
                 self.work_directory,
                 output=target,
@@ -191,7 +196,7 @@ class LightSourceStage:
                 simulation_models_path=self.simulation_models_path,
             )
         )
-        return [f"{command} | {output.commands[0]}"] if streamed else [command]
+        return [f"{command} | {downstream}"] if streamed else [command]
 
     def environment(self):
         """Return environment variables needed to run the stage (none)."""
@@ -203,30 +208,8 @@ class LightSourceStage:
         total = sum(events) if isinstance(events, tuple | list) else events
         return {"runtime": runtime, "n_events": int(total)}
 
-    @staticmethod
-    def applied_factors(options=None, upstream=frozenset()):
-        """Return the efficiency factors applied to the photons (none)."""
-        del options, upstream
-        return frozenset()
 
-
-class FlasherSourceStage(LightSourceStage):
-    """Flasher (flat-fielding light source): photons at the camera plane of the telescope."""
-
-    name = "obdeect_flasher"
-    source_name = "flasher"
-    produces = PHOTONS_CAMERA
-
-
-class IlluminatorSourceStage(LightSourceStage):
-    """Illuminator (external light source): photons in the sky frame."""
-
-    name = "obdeect_illuminator"
-    source_name = "illuminator"
-    produces = PHOTONS_SKY
-
-
-class LightEmissionStage:
+class LightEmissionStage(CatalogStage):
     """
     LightEmission program of sim_telarray as the first stage of a chain.
 
@@ -239,9 +222,6 @@ class LightEmissionStage:
         Light-emission simulation of one telescope and one light source.
     """
 
-    name = "light_emission"
-    consumes = None
-    produces = CHERENKOV_PHOTONS
     streams = False
 
     def __init__(self, calibration):
@@ -302,9 +282,3 @@ class LightEmissionStage:
     def get_resources(self, runtime=None):
         """Return the run time."""
         return {"runtime": runtime}
-
-    @staticmethod
-    def applied_factors(options=None, upstream=frozenset()):
-        """Return the efficiency factors applied to the photons (none)."""
-        del options, upstream
-        return frozenset()

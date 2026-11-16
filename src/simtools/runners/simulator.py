@@ -9,7 +9,6 @@ from types import MappingProxyType
 
 import numpy as np
 
-from simtools import constants
 from simtools.corsika import output_validation as corsika_output_validation
 from simtools.io import table_handler
 from simtools.io.file_type import product_value
@@ -20,7 +19,10 @@ from simtools.model.array_model import ArrayModel
 from simtools.model_repository.reader import with_resolved_model_reader
 from simtools.runners import chain_spec, sim_telarray_stage
 from simtools.runners.chain_runner import ChainRunner
+from simtools.runners.corsika_stage import CorsikaStage
+from simtools.runners.sim_telarray_stage import SimTelArrayStage
 from simtools.runners.stages import StageInputs
+from simtools.runtime import software_catalog
 from simtools.runtime.context import RunContext
 from simtools.sim_events import file_info, writer
 from simtools.sim_events.hdf5_output_validation import validate_sim_events
@@ -145,7 +147,10 @@ class Simulator:
         self.site = self.context.args.get("site", None)
         self.model_version = self.context.args.get("model_version", None)
         self.chain_spec = chain_spec.parse_chain(
-            self.context.args.get("simulation_software", constants.SIMULATION_SOFTWARE_DEFAULT)
+            self.context.args.get(
+                "simulation_software",
+                software_catalog.default_chain(software_catalog.AIR_SHOWER_SOURCE),
+            )
         )
         self.chain = self.chain_spec.chain()
         self.logger.info("Simulation software: %s", " -> ".join(self.chain.stages))
@@ -203,7 +208,7 @@ class Simulator:
                 model_reader=self.model_reader,
                 context=self.context,
             )
-            if self.chain.starts_with_showers:
+            if self.chain.generates_air_showers:
                 cfg = get_shower_configuration(
                     array_model=model,
                     label=self.label,
@@ -394,7 +399,7 @@ class Simulator:
 
         The files are saved using the configured simulation file list entries.
         """
-        if not self.chain.has("sim_telarray"):
+        if not self.chain.runs(SimTelArrayStage):
             self.logger.warning(
                 "Reduced event lists can only be saved for sim_telarray simulations."
             )
@@ -722,7 +727,7 @@ class Simulator:
             f"with {expected_mc_events} MC events and {expected_shower_events} shower events."
         )
 
-        if self.chain.has("sim_telarray"):
+        if self.chain.runs(SimTelArrayStage):
             simtel_output_validation.validate_sim_telarray(
                 data_files=self.get_files(file_type="sim_telarray_output"),
                 log_files=self.get_files(file_type="sim_telarray_log"),
@@ -732,10 +737,10 @@ class Simulator:
                 curved_atmo=parameters.use_curved_atmosphere,
                 allow_for_changes=self._allowed_metadata_changes(),
             )
-        if self.chain.has("corsika"):
+        if self.chain.runs(CorsikaStage):
             corsika_output_validation.validate_corsika_output(
                 data_files=self.get_files(file_type="corsika_output")
-                if self.chain.stages == ("corsika",) or self.context.args.get("save_corsika_output")
+                if len(self.chain.stages) == 1 or self.context.args.get("save_corsika_output")
                 else None,
                 log_files=self.get_files(file_type="corsika_log"),
                 expected_shower_events=expected_shower_events,

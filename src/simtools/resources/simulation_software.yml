@@ -1,0 +1,403 @@
+---
+# Simulation software of simtools and the stages of a simulation chain.
+#
+# This file is the only place that names the programs, the stages, the data products that
+# connect the stages, the stage options and the files each program writes. Code asks this
+# catalog (simtools.runtime.software_catalog) instead of naming a program or a stage.
+# Validated by schemas/simulation_software.schema.yml.
+
+efficiency_factors:
+  atmospheric_extinction: Atmospheric transmission along the light path.
+  mirror_reflectivity: Reflectivity of the mirrors.
+  telescope_transmission: Transmission of the telescope structure (shadowing).
+  quantum_efficiency: Photon detection efficiency of the camera.
+
+products:
+  cherenkov_photons:
+    description: CORSIKA IACT photon bunches in the ground frame (EventIO).
+    frame: ground
+    format: iact
+  photons_sky:
+    description: Photon stream, photons emitted at a point in the sky (light sources).
+    frame: sky
+    format: stream
+  photons_ground:
+    description: Photon stream in the ground frame (horizontal plane through the sphere centre).
+    frame: ground
+    format: stream
+  photons_telescope:
+    description: Photon stream in the telescope frame (sources inside the telescope).
+    frame: telescope
+    format: stream
+  photons_camera:
+    description: Photon stream in the camera frame (position on the camera entrance).
+    frame: camera
+    format: stream
+  camera_photons_iact:
+    description: Camera-frame photons as IACT photon bunches, for sim_telarray with bypassed optics.
+    frame: camera
+    format: iact
+  camera_events:
+    description: Camera events written by sim_telarray.
+    format: events
+
+software:
+  corsika:
+    description: Air showers and Cherenkov photons (CORSIKA 7).
+    dependency: corsika
+    formats:
+      corsika: [.corsika, .corsika.gz, .corsika.zst]
+    files:
+      corsika_input:
+        suffixes: [.corsika.input]
+        default_suffix: .corsika.input
+        role: input
+        retention: persistent
+        directory: run
+      corsika_output:
+        suffixes_from: corsika
+        default_suffix: .corsika.zst
+        role: result
+        retention: persistent
+        directory: run
+      corsika_log:
+        suffixes: [.corsika.log, .corsika.log.gz, .corsika.log.zst]
+        default_suffix: .corsika.log.gz
+        role: diagnostic
+        retention: persistent
+        directory: run
+      corsika_err:
+        suffixes: [.corsika.err, .corsika.err.gz, .corsika.err.zst]
+        default_suffix: .corsika.err.gz
+        role: diagnostic
+        retention: persistent
+        directory: run
+      corsika_resources:
+        suffixes: [.corsika.resources.json]
+        default_suffix: .corsika.resources.json
+        role: metadata
+        retention: persistent
+        directory: run
+      multi_pipe_config:
+        suffixes: [.multi_pipe.cfg]
+        default_suffix: .multi_pipe.cfg
+        role: intermediate
+        retention: persistent
+        directory: run
+      multi_pipe_script:
+        suffixes: [.multi_pipe.sh]
+        default_suffix: .multi_pipe.sh
+        role: intermediate
+        retention: persistent
+        directory: run
+      multi_pipe_resources:
+        suffixes: [.multipipe.resources.json]
+        default_suffix: .multipipe.resources.json
+        role: metadata
+        retention: persistent
+        directory: run
+
+  sim_telarray:
+    description: Telescope optics, camera and electronics (sim_telarray and its LightEmission programs).
+    dependency: sim_telarray
+    formats:
+      sim_telarray: [.simtel, .simtel.gz, .simtel.zst]
+    files:
+      sim_telarray_output:
+        suffixes_from: sim_telarray
+        default_suffix: .simtel.zst
+        role: result
+        retention: persistent
+        directory: run
+      sim_telarray_histogram_output:
+        suffixes: [.hdata, .hdata.gz, .hdata.zst]
+        default_suffix: .hdata.zst
+        role: result
+        retention: persistent
+        directory: run
+      sim_telarray_log:
+        suffixes: [.simtel.log, .simtel.log.gz, .simtel.log.zst]
+        default_suffix: .simtel.log.gz
+        role: diagnostic
+        retention: persistent
+        directory: run
+      sim_telarray_err:
+        suffixes: [.simtel.err, .simtel.err.gz, .simtel.err.zst]
+        default_suffix: .simtel.err.gz
+        role: diagnostic
+        retention: persistent
+        directory: run
+      sim_telarray_event_data:
+        suffixes: [.reduced_event_data.hdf5, .reduced_event_data.hdf5.gz, .reduced_event_data.hdf5.zst]
+        default_suffix: .reduced_event_data.hdf5
+        role: result
+        retention: persistent
+        directory: run
+      sim_telarray_resources:
+        suffixes: [.simtel.resources.json]
+        default_suffix: .simtel.resources.json
+        role: metadata
+        retention: persistent
+        directory: run
+      iact_output:
+        suffixes: [.iact.gz]
+        default_suffix: .iact.gz
+        role: intermediate
+        retention: temporary
+        directory: run
+        note: Light-emission handoff consumed by sim_telarray.
+      light_emission_log:
+        suffixes: [.light_emission.log.gz]
+        default_suffix: .light_emission.log.gz
+        role: diagnostic
+        retention: persistent
+        directory: run
+      light_emission_err:
+        suffixes: [.light_emission.err.gz]
+        default_suffix: .light_emission.err.gz
+        role: diagnostic
+        retention: persistent
+        directory: run
+      light_emission_resources:
+        suffixes: [.light_emission.resources.json]
+        default_suffix: .light_emission.resources.json
+        role: metadata
+        retention: persistent
+        directory: run
+      shower_route_resources:
+        suffixes: [.shower_route.resources.json]
+        default_suffix: .shower_route.resources.json
+        role: metadata
+        retention: persistent
+        directory: run
+      shower_route_log:
+        suffixes: [.shower_route.log]
+        default_suffix: .shower_route.log
+        role: diagnostic
+        retention: persistent
+      telescope_route_map:
+        suffixes: [.telescope_map.json]
+        default_suffix: .telescope_map.json
+        role: intermediate
+        retention: persistent
+        directory: run
+      camera_bunch_file:
+        suffixes: [.camera.iact.gz, .camera.iact.zst]
+        default_suffix: .camera.iact.gz
+        role: intermediate
+        retention: temporary
+        directory: run
+
+  obdeect:
+    description: obdeect is a simulation chain for imaging atmospheric Cherenkov telescopes.
+    dependency: python_package
+    package: obdeect
+    command: obdeect
+    command_module: obdeect.stream.cli
+    programs:
+      obdeect-propagation-run: propagation/bin/obdeect-propagation-run
+      obdeect-stream-from-corsika: stream/bin/obdeect-stream-from-corsika
+      obdeect-stream-to-simtel: stream/bin/obdeect-stream-to-simtel
+      obdeect-sources-point-source: sources/bin/obdeect-sources-point-source
+      obdeect-sources-flasher: sources/bin/obdeect-sources-flasher
+    files:
+      photon_stream:
+        suffixes: [.pst]
+        default_suffix: .pst
+        role: intermediate
+        retention: temporary
+        directory: run
+        note: Photon stream written by a stage when its output is not streamed.
+      photon_bunches:
+        suffixes: [.iact]
+        default_suffix: .iact
+        role: intermediate
+        retention: temporary
+        directory: run
+        note: IACT photon bunches written by a stage when its output is not streamed.
+      camera_map:
+        suffixes: [.camera_map.txt]
+        default_suffix: .camera_map.txt
+        role: input
+        retention: persistent
+        directory: run
+
+# Files of any stage (named <run base name>.<stage name><suffix>).
+files:
+  stage_log:
+    suffixes: [.log]
+    default_suffix: .log
+    role: diagnostic
+    retention: persistent
+    directory: run
+  stage_resources:
+    suffixes: [.resources.json]
+    default_suffix: .resources.json
+    role: metadata
+    retention: persistent
+    directory: run
+
+light_sources:
+  flasher:
+    description: Flat-fielding flasher in front of the camera.
+    model_types: [flat_fielding]
+    request: simtools.simulation_software.light_sources:flasher_request
+    command: simtools.simulation_software.obdeect.sources:flasher_command
+  illuminator:
+    description: External illuminator (point source at a distance).
+    model_types: [illuminator]
+    request: simtools.simulation_software.light_sources:illuminator_request
+    command: simtools.simulation_software.obdeect.sources:illuminator_command
+
+stages:
+  corsika:
+    description: Air showers and Cherenkov photons.
+    software: corsika
+    implementation: simtools.runners.corsika_stage:CorsikaStage
+    source: air_shower
+    produces: cherenkov_photons
+    required_arguments: [primary]
+    production_result: production_corsika
+
+  light_emission:
+    description: Photons of a calibration light source (sim_telarray LightEmission program).
+    software: sim_telarray
+    implementation: simtools.runners.light_source_stages:LightEmissionStage
+    source: light_source
+    produces: cherenkov_photons
+
+  obdeect_flasher:
+    description: Flasher photons traced past the telescope structure to the camera.
+    software: obdeect
+    implementation: simtools.runners.light_source_stages:LightSourceStage
+    source: light_source
+    light_source: flasher
+    produces: photons_camera
+    options_from_arguments: true
+    files:
+      output: photon_stream
+
+  obdeect_illuminator:
+    description: Illuminator photons emitted in the sky frame.
+    software: obdeect
+    implementation: simtools.runners.light_source_stages:LightSourceStage
+    source: light_source
+    light_source: illuminator
+    produces: photons_sky
+    options_from_arguments: true
+    files:
+      output: photon_stream
+
+  corsika_to_stream:
+    description: CORSIKA photon bunches to a photon stream.
+    software: obdeect
+    implementation: simtools.runners.adapter_stages:CorsikaToStreamStage
+    converter: true
+    consumes: [cherenkov_photons]
+    produces: photons_ground
+    files:
+      output: photon_stream
+
+  obdeect_atmosphere:
+    description: Photons from emission to the ground, with atmospheric extinction (thinned).
+    software: obdeect
+    implementation: simtools.runners.atmosphere_stage:ObdeectAtmosphereStage
+    consumes: [photons_sky, photons_ground]
+    produces: photons_ground
+    applies: [atmospheric_extinction]
+    thins_photons: true
+    options:
+      seed:
+        type: integer
+        description: Thinning seed of every run (default derived from the simulation seed and the run number).
+      mode:
+        type: string
+        enum: [thinned, weighted]
+        default: thinned
+        description: One photon per surviving photon, or weighted photons.
+      wavelength_range_nm:
+        type: list
+        items: number
+        length: 2
+        description: Wavelength range of photons without a wavelength.
+      efficiency_envelope:
+        type: string
+        enum: [qe, none]
+        description: Thin photons by the quantum-efficiency bound (default on for camera-only chains).
+    files:
+      output: photon_stream
+
+  obdeect_optics:
+    description: Mirrors, shadowing and telescope transmission; one process for all telescopes.
+    software: obdeect
+    implementation: simtools.runners.optics_stage:ObdeectOpticsStage
+    consumes: [photons_ground, photons_telescope]
+    produces: photons_camera
+    applies: [mirror_reflectivity, telescope_transmission]
+    options:
+      telescope_transmission:
+        type: string
+        enum: [full]
+        default: full
+        description: Part of the telescope transmission applied (only full keeps the chain complete).
+      threads:
+        type: integer
+        description: Tracing threads (default all cores).
+    files:
+      output: photon_stream
+      log: stage_log
+      resources: stage_resources
+
+  stream_to_simtel:
+    description: Camera-frame photon stream to sim_telarray photon bunches.
+    software: obdeect
+    implementation: simtools.runners.adapter_stages:StreamToSimtelStage
+    converter: true
+    consumes: [photons_camera]
+    produces: camera_photons_iact
+    options:
+      allow_pending:
+        type: list
+        items: string
+        description: Efficiency factors that may be pending in the stream.
+      scaled_factors:
+        type: list
+        items: string
+        description: Efficiency factors whose tables are scaled by an envelope.
+    files:
+      output: photon_bunches
+      camera_map: camera_map
+
+  sim_telarray:
+    description: Telescopes (optics unless bypassed), camera and electronics.
+    software: sim_telarray
+    implementation: simtools.runners.sim_telarray_stage:SimTelArrayStage
+    consumes: [cherenkov_photons, camera_photons_iact]
+    produces: camera_events
+    routes_shower_photons: true
+    production_result: production_sim_telarray
+    options:
+      bypass_optics:
+        type: integer
+        enum: [0, 1, 2, 3]
+        default: 0
+        description: >-
+          0 traces CORSIKA photons through the optics; 1 or 2 takes photons at the camera
+          entrance (level from the mirror class); 3 simulates the camera only.
+    applies_by_option:
+      bypass_optics:
+        0: [atmospheric_extinction, mirror_reflectivity, telescope_transmission, quantum_efficiency]
+        # photons at the camera entrance; a zero-depth table if the extinction is applied upstream
+        1:
+          applies: [atmospheric_extinction, quantum_efficiency]
+          skips_if_applied_upstream: [atmospheric_extinction]
+        2:
+          applies: [atmospheric_extinction, quantum_efficiency]
+          skips_if_applied_upstream: [atmospheric_extinction]
+        3: [quantum_efficiency]
+    camera_only:
+      bypass_optics: 3
+
+default_chains:
+  air_shower: [corsika, sim_telarray]
+  light_source: [light_emission, sim_telarray]

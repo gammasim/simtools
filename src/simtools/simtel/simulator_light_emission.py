@@ -9,7 +9,6 @@ import astropy.units as u
 import numpy as np
 
 from simtools.atmosphere.transmission import AtmosphericTransmission
-from simtools.constants import LIGHT_EMISSION_CHAIN_DEFAULT
 from simtools.job_execution import execution, runner_services
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.calibration_model import CalibrationModel
@@ -21,6 +20,7 @@ from simtools.model.model_utils import (
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.model_repository.reader import resolve_model_reader
 from simtools.ray_tracing.backends.interface import LightSourceRequest, get_backend
+from simtools.runtime import software_catalog
 from simtools.runtime.context import RunContext
 from simtools.simtel import output_validation as simtel_output_validation
 from simtools.simtel.photon_bunch_file import (
@@ -277,7 +277,9 @@ class SimulatorLightEmission(SimtelRunner):
         items = self.light_emission_config.get(SIMULATION_SOFTWARE)
         if isinstance(items, str):
             items = [items]
-        if not items or tuple(items) == LIGHT_EMISSION_CHAIN_DEFAULT:
+        if not items or tuple(items) == software_catalog.default_chain(
+            software_catalog.LIGHT_SOURCE
+        ):
             return None
         return list(items)
 

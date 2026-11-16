@@ -2,117 +2,78 @@
 
 import os
 import shlex
-from dataclasses import replace
 
 from simtools.corsika.corsika_config import corsika_telescope_ids
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.model_utils import export_model_files
-from simtools.runners.chain_spec import MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION
-from simtools.runners.stages import StreamTo
+from simtools.runners.stages import (
+    CatalogStage,
+    StreamTo,
+    files_of_run,
+    single_downstream,
+    stage_file,
+)
 from simtools.simulation_software.obdeect.optics import trace_stream_command, write_optical_model
 from simtools.simulation_software.optics import (
-    TELESCOPE_TRANSMISSION_MODES,
     optics_requests,
 )
-from simtools.simulation_software.products import PHOTONS_CAMERA, PHOTONS_GROUND, PHOTONS_TELESCOPE
 
-STAGE_NAME = "obdeect_optics"
 #: Photon streams number telescopes from 1 (sim_telarray numbering); the IACT ids of the CORSIKA
 #: telescope list start at 0.
 STREAM_ID_OFFSET = 1
 
 
-def _telescope_transmission(options):
-    """Return the telescope transmission mode of the stage options."""
-    mode = options.get("telescope_transmission", "full")
-    if mode not in TELESCOPE_TRANSMISSION_MODES:
-        raise ValueError(
-            f"Invalid telescope transmission {mode!r} of stage {STAGE_NAME!r}; only "
-            f"{', '.join(TELESCOPE_TRANSMISSION_MODES)} is supported (with 'angular' the "
-            "constant part of the transmission would stay unapplied in the chain)"
-        )
-    return mode
-
-
-class ObdeectOpticsStage:
+class ObdeectOpticsStage(CatalogStage):
     """
-    Optics of one telescope of one array model (obdeect ``trace-stream``).
+    Optics of the telescopes of one array model, traced by one obdeect ``trace-stream`` process.
+
+    Each telescope has its own optical model; the process writes one camera-frame stream with
+    the events in input order, so the stage streams to the camera stage.
 
     Parameters
     ----------
-    request : OpticsRequest
-        Optics job of the telescope.
-    telescope_model : TelescopeModel
-        Model of the telescope (the optical model is compiled from it).
-    context : RunContext
-        Run context (output paths).
-    label : str
-        Instance label.
-    position, count : int
-        Position of this instance among the ``count`` instances of the stage. The downstream
-        command of a streamed output is selected by the position when there are several.
+    requests : tuple of OpticsRequest
+        Optics job of each telescope, in the order of the array.
+    telescope_models : tuple of TelescopeModel
+        Model of each telescope (its optical model is compiled from it).
+    run_files : RunnerServices
+        File naming of the run.
     """
 
-    name = STAGE_NAME
-    consumes = (PHOTONS_GROUND, PHOTONS_TELESCOPE)
-    produces = PHOTONS_CAMERA
     streams = True
 
-    def __init__(self, request, telescope_model, context, label=None, position=0, count=1):
+    def __init__(self, requests, telescope_models, run_files):
         """Initialize ObdeectOpticsStage."""
-        self.request = request
-        self.telescope_model = telescope_model
-        self.context = context
-        self.label = label
-        self.position = position
-        self.count = count
-        self.file_list = {}
-
-    @classmethod
-    def applied_factors(cls, options, upstream=frozenset()):  # pylint: disable=unused-argument
-        """
-        Return the efficiency factors the stage applies to the photons.
-
-        obdeect applies the mirror reflectivity and the telescope transmission (the geometry of
-        the telescope structure replaces the transmission when it is traced).
-        """
-        _telescope_transmission(options)
-        return {MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION}
+        self.requests = tuple(requests)
+        self.telescope_models = tuple(telescope_models)
+        self.run_files = run_files
+        self.file_list = None
 
     @classmethod
     def instances(cls, inputs, label=None):
-        """Return one stage per telescope of each array model."""
+        """Return one stage per array model, tracing all telescopes of the array."""
         if inputs.context is None:
-            raise ValueError(f"Stage {STAGE_NAME!r} needs a run context.")
-        options = inputs.options_of(STAGE_NAME)
-        transmission = _telescope_transmission(options)
-        pairs = []
+            raise ValueError(f"Stage {cls.name!r} needs a run context.")
+        options = cls.stage_options(inputs)
+        threads = _threads(options, inputs.args, len(inputs.array_models))
+        files = files_of_run(inputs, label)
+        stage_list = []
         for parameters, array_model in zip(inputs.simulation_parameters, inputs.array_models):
-            ids = corsika_telescope_ids(array_model.telescope_models)
-            for request in optics_requests(
+            requests = optics_requests(
                 array_model,
                 parameters,
-                ids,
+                corsika_telescope_ids(array_model.telescope_models),
                 stream_id_offset=STREAM_ID_OFFSET,
-                telescope_transmission=transmission,
-            ):
-                pairs.append((request, array_model.telescope_models[request.telescope_name]))
-        threads = _threads(options, inputs.args, len(pairs))
-        return [
-            cls(
-                _with_threads(request, threads),
-                telescope,
-                inputs.context,
-                label=label,
-                position=position,
-                count=len(pairs),
+                telescope_transmission=options["telescope_transmission"],
+                threads=threads,
             )
-            for position, (request, telescope) in enumerate(pairs)
-        ]
+            telescopes = [array_model.telescope_models[r.telescope_name] for r in requests]
+            stage_list.append(cls(requests, telescopes, files))
+        return stage_list
 
     def prepare(self, run_number, input_file=None, output=None):
         """
-        Write the optical model and return the shell line that traces the photons.
+        Write the optical models and return the shell line that traces the photons.
 
         Parameters
         ----------
@@ -121,7 +82,7 @@ class ObdeectOpticsStage:
         input_file : str or Path
             Photon stream file, or ``STDIN`` when reading a stream.
         output : StreamTo or None
-            Downstream commands receiving the camera photons; None writes the output file.
+            Downstream command receiving the camera photons; None writes the output file.
 
         Returns
         -------
@@ -130,38 +91,42 @@ class ObdeectOpticsStage:
         """
         if input_file is None:
             raise ValueError("The optics stage needs an input photon stream.")
-        export_model_files(self.telescope_model, update_if_necessary=True)
-        model_file = write_optical_model(self.request, self.telescope_model)
+        model_files = []
+        for request, telescope_model in zip(self.requests, self.telescope_models):
+            export_model_files(telescope_model, update_if_necessary=True)
+            model_files.append(write_optical_model(request, telescope_model))
         streamed = isinstance(output, StreamTo)
         command = trace_stream_command(
-            self.request,
-            model_file,
+            self.requests,
+            model_files,
             input_file=input_file,
             output_file="-" if streamed else self.output_file(run_number),
         )
-        resources_file = self._file("resources.json", run_number)
-        log_file = self._file("log", run_number)
-        self.file_list = {"obdeect_optics_resources": [resources_file]}
-        self.file_list["obdeect_optics_log"] = [log_file]
+        resources_file = stage_file(self, "resources", run_number)
+        log_file = stage_file(self, "log", run_number)
+        self.file_list = {
+            f"{self.name}_resources": [resources_file],
+            f"{self.name}_log": [log_file],
+        }
         text = _guarded(
             shlex.join(
                 build_accounting_command(
                     command,
                     resources_file,
-                    STAGE_NAME,
+                    self.name,
                     run_number,
-                    model_version=self.request.model_version,
+                    model_version=self.requests[0].model_version,
                 )
             ),
             log_file,
         )
         if streamed:
-            return [f"{text} | {self._downstream_command(output)}"]
+            return [f"{text} | {single_downstream(output, self.name)}"]
         return [text]
 
     def output_file(self, run_number):
-        """Return the camera photon stream file of this telescope."""
-        return self._file("camera.pst", run_number)
+        """Return the camera photon stream file of the array."""
+        return stage_file(self, "output", run_number)
 
     def environment(self):
         """Return environment variables needed by the stage (none)."""
@@ -171,39 +136,14 @@ class ObdeectOpticsStage:
         """Return computing resources used (reported by the first stage of the chain only)."""
         del runtime
 
-    def _file(self, suffix, run_number):
-        """Return a file of this instance in the output directory."""
-        request = self.request
-        return self.context.paths.get_output_directory() / (
-            f"{request.telescope_name}_{request.model_version}_run{run_number:06d}"
-            f"_{STAGE_NAME}.{suffix}"
-        )
-
-    def _downstream_command(self, output):
-        """Return the downstream command that receives the camera photons of this instance."""
-        commands = output.commands
-        if len(commands) == 1:
-            return commands[0]
-        if len(commands) == self.count:
-            return commands[self.position]
-        raise ValueError(
-            f"Stage {STAGE_NAME!r} has {self.count} instances, but {len(commands)} downstream "
-            "commands receive its stream."
-        )
-
 
 def _threads(options, args, instances):
-    """Return the tracing threads of each instance."""
+    """Return the tracing threads of each instance (all cores shared by the instances)."""
     if "threads" in options:
         return int(options["threads"])
     if args.get("sequential", False):
         return 1
     return max(1, (os.process_cpu_count() or 1) // max(1, instances))
-
-
-def _with_threads(request, threads):
-    """Return the request with the number of tracing threads."""
-    return replace(request, threads=threads)
 
 
 def _guarded(command_text, log_file):

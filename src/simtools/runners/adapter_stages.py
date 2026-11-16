@@ -2,50 +2,16 @@
 
 import shlex
 
-from simtools.job_execution.runner_services import RunnerServices
-from simtools.runners.stages import StreamTo
+from simtools.runners.stages import (
+    CatalogStage,
+    StreamTo,
+    efficiency_envelope_enabled,
+    files_of_run,
+    stage_file,
+)
 from simtools.simulation_software import efficiency
 from simtools.simulation_software.atmosphere import export_atmosphere_files
 from simtools.simulation_software.obdeect import streams
-from simtools.simulation_software.products import (
-    CAMERA_PHOTONS_IACT,
-    CHERENKOV_PHOTONS,
-    PHOTONS_CAMERA,
-    PHOTONS_GROUND,
-)
-
-CORSIKA_OUTPUT = "corsika_output"
-IACT_OUTPUT = "iact_output"
-STREAM_SUFFIX = ".pst"
-CAMERA_MAP_SUFFIX = ".camera_map.txt"
-CAMERA_IACT_SUFFIX = ".camera.iact"
-
-
-def _corsika_runner_service(inputs, label):
-    """Return the file names of the CORSIKA run (the first shower configuration defines it)."""
-    if inputs.calibration is not None:
-        return inputs.calibration.runner_service
-    if not inputs.shower_configurations:
-        raise ValueError("The obdeect chain needs a CORSIKA configuration (shower simulations).")
-    config = inputs.shower_configurations[0]
-    return RunnerServices(
-        config,
-        run_type="corsika",
-        label=label,
-        context=inputs.context or config.context,
-    )
-
-
-def _stream_file(runner_service, run_number, suffix, file_type=CORSIKA_OUTPUT):
-    """Return a file next to the CORSIKA output of a run, with a suffix added to its name."""
-    corsika_output = runner_service.get_file_name(file_type, run_number=run_number)
-    return corsika_output.with_name(f"{corsika_output.name}{suffix}")
-
-
-def _string_list(options, key):
-    """Return a list option as a tuple of strings (a single string is one item)."""
-    value = options.get(key, ())
-    return (value,) if isinstance(value, str) else tuple(value)
 
 
 def _connect_output(command, output, output_file):
@@ -61,30 +27,27 @@ def _connect_output(command, output, output_file):
     return [f"{command} > {shlex.quote(str(output_file))}"]
 
 
-class CorsikaToStreamStage:
+class CorsikaToStreamStage(CatalogStage):
     """
     Convert CORSIKA IACT photon bunches to a photon stream in the ground frame.
 
     Parameters
     ----------
-    runner_service : RunnerServices
-        File names of the CORSIKA run.
+    run_files : RunnerServices
+        File naming of the run.
     """
 
-    name = "corsika_to_stream"
-    consumes = CHERENKOV_PHOTONS
-    produces = PHOTONS_GROUND
     streams = True
 
-    def __init__(self, runner_service):
+    def __init__(self, run_files):
         """Initialize CorsikaToStreamStage."""
-        self.runner_service = runner_service
+        self.run_files = run_files
         self.file_list = None
 
     @classmethod
     def instances(cls, inputs, label=None):
-        """Return the stage of the CORSIKA run."""
-        return [cls(_corsika_runner_service(inputs, label))]
+        """Return the stage of the run."""
+        return [cls(files_of_run(inputs, label))]
 
     def prepare(self, run_number, input_file=None, output=None):
         """
@@ -106,13 +69,13 @@ class CorsikaToStreamStage:
             Shell lines.
         """
         if input_file is None:
-            raise ValueError("corsika_to_stream reads the CORSIKA output: give a file or STDIN.")
+            raise ValueError(f"{self.name} reads the CORSIKA output: give a file or STDIN.")
         command = shlex.join(streams.from_corsika_command(input_file))
         return _connect_output(command, output, self.output_file(run_number))
 
     def output_file(self, run_number):
         """Return the photon stream file of the run."""
-        return _stream_file(self.runner_service, run_number, STREAM_SUFFIX)
+        return stage_file(self, "output", run_number)
 
     def environment(self):
         """Return the environment variables of the stage (none)."""
@@ -120,10 +83,10 @@ class CorsikaToStreamStage:
 
     def get_resources(self, runtime=None):
         """Return computing resources used (of the CORSIKA run)."""
-        return self.runner_service.get_resources(runtime=runtime)
+        return self.run_files.get_resources(runtime=runtime)
 
 
-class StreamToSimtelStage:
+class StreamToSimtelStage(CatalogStage):
     """
     Convert a camera-frame photon stream to sim_telarray input.
 
@@ -133,35 +96,30 @@ class StreamToSimtelStage:
 
     Parameters
     ----------
-    runner_service : RunnerServices
-        File names of the CORSIKA run (of the light-emission run for a calibration light source).
+    run_files : RunnerServices
+        File naming of the run.
     array_model : ArrayModel
         Telescope models of the array.
     allow_pending : tuple of str
         Efficiency factors pending upstream that sim_telarray does not apply (``--allow-pending``).
     scaled_factors : tuple of str
         Efficiency factors whose sim_telarray table holds f/f_env (``--scaled-factor``).
-    file_type : str
-        File type of the run whose name the files of the stage extend.
+    write_atmprof : bool
+        Write the atmospheric profile of the site for the converter (light-source streams).
     """
 
-    name = "stream_to_simtel"
-    consumes = PHOTONS_CAMERA
-    produces = CAMERA_PHOTONS_IACT
     streams = True
 
     def __init__(
         self,
-        runner_service,
+        run_files,
         array_model,
         allow_pending=(),
         scaled_factors=(),
-        file_type=CORSIKA_OUTPUT,
         write_atmprof=False,
     ):
         """Initialize StreamToSimtelStage."""
-        self.runner_service = runner_service
-        self.file_type = file_type
+        self.run_files = run_files
         self.write_atmprof = write_atmprof
         self.array_model = array_model
         self.allow_pending = tuple(allow_pending)
@@ -176,18 +134,17 @@ class StreamToSimtelStage:
                 "The obdeect chain converts one array model per run; "
                 f"got {len(inputs.array_models)} array models."
             )
-        options = inputs.options_of(cls.name)
-        scaled_factors = _string_list(options, "scaled_factors")
-        if efficiency.chain_envelope_enabled(inputs):
+        options = cls.stage_options(inputs)
+        scaled_factors = tuple(options.get("scaled_factors", ()))
+        if efficiency_envelope_enabled(inputs):
             # sim_telarray's QE table holds QE / envelope (see simulation_software.efficiency)
             scaled_factors = tuple(dict.fromkeys((*scaled_factors, efficiency.OBDEECT_QE_FACTOR)))
         return [
             cls(
-                _corsika_runner_service(inputs, label),
+                files_of_run(inputs, label),
                 inputs.array_models[0],
-                allow_pending=_string_list(options, "allow_pending"),
+                allow_pending=options.get("allow_pending", ()),
                 scaled_factors=scaled_factors,
-                file_type=CORSIKA_OUTPUT if inputs.calibration is None else IACT_OUTPUT,
                 # light-source streams carry no ATMPROF block: the site profile is written
                 write_atmprof=inputs.calibration is not None,
             )
@@ -213,7 +170,7 @@ class StreamToSimtelStage:
             Shell lines.
         """
         if input_file is None:
-            raise ValueError("stream_to_simtel reads a photon stream: give a file or STDIN.")
+            raise ValueError(f"{self.name} reads a photon stream: give a file or STDIN.")
         atmprof = self.write_atmprof_file(run_number) if self.write_atmprof else None
         command = streams.to_simtel_command(
             self.write_camera_map(run_number),
@@ -226,7 +183,7 @@ class StreamToSimtelStage:
 
     def camera_map_file(self, run_number):
         """Return the camera map file of the run."""
-        return _stream_file(self.runner_service, run_number, CAMERA_MAP_SUFFIX, self.file_type)
+        return stage_file(self, "camera_map", run_number)
 
     def write_atmprof_file(self, run_number):
         """Write the atmospheric profile of the site (atmprof text) and return its file."""
@@ -248,7 +205,7 @@ class StreamToSimtelStage:
 
     def output_file(self, run_number):
         """Return the sim_telarray input file of the run."""
-        return _stream_file(self.runner_service, run_number, CAMERA_IACT_SUFFIX, self.file_type)
+        return stage_file(self, "output", run_number)
 
     def environment(self):
         """Return the environment variables of the stage (none)."""
@@ -256,4 +213,4 @@ class StreamToSimtelStage:
 
     def get_resources(self, runtime=None):
         """Return computing resources used (of the CORSIKA run)."""
-        return self.runner_service.get_resources(runtime=runtime)
+        return self.run_files.get_resources(runtime=runtime)

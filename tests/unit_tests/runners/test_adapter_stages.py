@@ -8,20 +8,18 @@ import astropy.units as u
 import pytest
 
 from simtools.runners import adapter_stages, stages
-from simtools.runners.adapter_stages import CorsikaToStreamStage, StreamToSimtelStage
-from simtools.runners.chain_spec import (
-    ATMOSPHERIC_EXTINCTION,
-    MIRROR_REFLECTIVITY,
-    TELESCOPE_TRANSMISSION,
-    ChainSpec,
-)
-from simtools.runners.stages import STDIN, StageInputs, StreamTo
-from simtools.simulation_software.products import (
-    CAMERA_PHOTONS_IACT,
-    CHERENKOV_PHOTONS,
-    PHOTONS_CAMERA,
-    PHOTONS_GROUND,
-)
+from simtools.runners.chain_spec import ChainSpec
+from simtools.runners.stages import STDIN, StageInputs, StreamTo, get_stage_class
+
+CAMERA_PHOTONS_IACT = "camera_photons_iact"
+CHERENKOV_PHOTONS = "cherenkov_photons"
+PHOTONS_CAMERA = "photons_camera"
+PHOTONS_GROUND = "photons_ground"
+ATMOSPHERIC_EXTINCTION = "atmospheric_extinction"
+MIRROR_REFLECTIVITY = "mirror_reflectivity"
+TELESCOPE_TRANSMISSION = "telescope_transmission"
+CorsikaToStreamStage = get_stage_class("corsika_to_stream")
+StreamToSimtelStage = get_stage_class("stream_to_simtel")
 
 
 class _Telescope:
@@ -55,6 +53,7 @@ def _inputs(config, array_models=None, chain_options=None, showers=True):
         args={},
         context=config.context,
         chain_options=chain_options or {},
+        stages=("corsika", "corsika_to_stream", "stream_to_simtel"),
     )
 
 
@@ -99,14 +98,14 @@ def _fake_stage(name, consumes, produces, factors=()):
 
 def test_corsika_to_stream_protocol():
     assert CorsikaToStreamStage.name == "corsika_to_stream"
-    assert CorsikaToStreamStage.consumes == CHERENKOV_PHOTONS
+    assert CorsikaToStreamStage.consumes == (CHERENKOV_PHOTONS,)
     assert CorsikaToStreamStage.produces == PHOTONS_GROUND
     assert CorsikaToStreamStage.streams is True
 
 
 def test_stream_to_simtel_protocol():
     assert StreamToSimtelStage.name == "stream_to_simtel"
-    assert StreamToSimtelStage.consumes == PHOTONS_CAMERA
+    assert StreamToSimtelStage.consumes == (PHOTONS_CAMERA,)
     assert StreamToSimtelStage.produces == CAMERA_PHOTONS_IACT
     assert StreamToSimtelStage.streams is True
 
@@ -114,9 +113,9 @@ def test_stream_to_simtel_protocol():
 def test_instances_require_shower_configuration(corsika_config_mock_array_model):
     inputs = _inputs(corsika_config_mock_array_model, showers=False)
 
-    with pytest.raises(ValueError, match="needs a CORSIKA configuration"):
+    with pytest.raises(ValueError, match="need a light-emission or a shower configuration"):
         CorsikaToStreamStage.instances(inputs)
-    with pytest.raises(ValueError, match="needs a CORSIKA configuration"):
+    with pytest.raises(ValueError, match="need a light-emission or a shower configuration"):
         StreamToSimtelStage.instances(inputs)
 
 
@@ -283,17 +282,16 @@ def test_stream_to_simtel_environment_and_resources(stream_to_simtel):
 @pytest.fixture
 def fake_atmosphere_and_optics(monkeypatch):
     """Fake atmosphere and optics stages (the programs of other worktrees) of the obdeect chain."""
+    registry = stages.registry()
     monkeypatch.setitem(
-        stages.STAGES,
+        registry,
         "fake_atmosphere",
-        lambda: _fake_stage(
-            "fake_atmosphere", PHOTONS_GROUND, PHOTONS_GROUND, (ATMOSPHERIC_EXTINCTION,)
-        ),
+        _fake_stage("fake_atmosphere", PHOTONS_GROUND, PHOTONS_GROUND, (ATMOSPHERIC_EXTINCTION,)),
     )
     monkeypatch.setitem(
-        stages.STAGES,
+        registry,
         "fake_optics",
-        lambda: _fake_stage(
+        _fake_stage(
             "fake_optics",
             PHOTONS_GROUND,
             PHOTONS_CAMERA,

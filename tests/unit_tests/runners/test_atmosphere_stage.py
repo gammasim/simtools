@@ -9,12 +9,29 @@ import pytest
 from astropy.table import Column, Table
 
 from simtools.runners import stages
-from simtools.runners.atmosphere_stage import ObdeectAtmosphereStage, run_seed
-from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION, ChainSpec, parse_chain
-from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo
+from simtools.runners.atmosphere_stage import run_seed
+from simtools.runners.chain_spec import ChainSpec, parse_chain
+from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo, get_stage_class
 from simtools.simulation_software.atmosphere import AtmosphereRequest
-from simtools.simulation_software.products import CAMERA_EVENTS, PHOTONS_GROUND, PHOTONS_SKY
 from simtools.simulation_software.programs import program_command
+
+CAMERA_EVENTS = "camera_events"
+PHOTONS_GROUND = "photons_ground"
+PHOTONS_SKY = "photons_sky"
+ATMOSPHERIC_EXTINCTION = "atmospheric_extinction"
+ObdeectAtmosphereStage = get_stage_class("obdeect_atmosphere")
+
+
+class _RunFiles:
+    """File naming of a run: ``<directory>/run<N>.<stage><suffix>``."""
+
+    def __init__(self, directory):
+        self.directory = Path(directory)
+
+    def get_stage_file_name(self, stage_name, file_type, run_number=None):
+        assert file_type == "photon_stream"
+        self.directory.mkdir(parents=True, exist_ok=True)
+        return self.directory / f"run{run_number:06d}.{stage_name}.pst"
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +57,11 @@ def request_for_stage(tmp_test_directory):
 
 @pytest.fixture
 def atmosphere_stage(request_for_stage, run_context):
-    return ObdeectAtmosphereStage(request_for_stage, label="test-atmosphere", context=run_context)
+    return ObdeectAtmosphereStage(
+        request_for_stage,
+        run_files=_RunFiles(run_context.paths.get_output_directory("corsika")),
+        context=run_context,
+    )
 
 
 def _tokens(line):
@@ -55,8 +76,8 @@ def test_stage_protocol_attributes():
 
 
 def test_applied_factors_is_atmospheric_extinction():
-    assert ObdeectAtmosphereStage.applied_factors({}) == frozenset({ATMOSPHERIC_EXTINCTION})
-    assert ObdeectAtmosphereStage.applied_factors({"seed": 2}) == frozenset(
+    assert ObdeectAtmosphereStage.spec.applied_factors({}) == frozenset({ATMOSPHERIC_EXTINCTION})
+    assert ObdeectAtmosphereStage.spec.applied_factors({"seed": 2}) == frozenset(
         {ATMOSPHERIC_EXTINCTION}
     )
 
@@ -86,7 +107,7 @@ def test_prepare_reads_stdin_and_writes_file(atmosphere_stage, run_context):
         str(output),
     ]
     assert output.parent.is_dir()
-    assert output.parent == run_context.paths.get_output_directory("atmosphere")
+    assert output.parent == run_context.paths.get_output_directory("corsika")
 
 
 def test_prepare_reads_input_file(atmosphere_stage):
@@ -119,8 +140,15 @@ def test_prepare_without_input_raises(atmosphere_stage):
         atmosphere_stage.prepare(run_number=1, input_file=None)
 
 
-def test_output_file_name_uses_label_and_run(atmosphere_stage):
-    assert atmosphere_stage.output_file(7).name == "test-atmosphere-run000007.pst"
+def test_output_file_name_uses_stage_and_run(atmosphere_stage):
+    assert atmosphere_stage.output_file(7).name == "run000007.obdeect_atmosphere.pst"
+
+
+def test_output_file_needs_run_files(request_for_stage, run_context):
+    stage = ObdeectAtmosphereStage(request_for_stage, context=run_context)
+
+    with pytest.raises(ValueError, match="no run configuration to name its output file"):
+        stage.output_file(1)
 
 
 def test_environment_and_resources_are_empty(atmosphere_stage):
@@ -164,6 +192,9 @@ def test_instances_derive_the_seed_of_each_run(array_model_north, run_context, m
     )
 
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    stage.run_files = stage.run_files or _RunFiles(
+        run_context.paths.get_output_directory("corsika")
+    )
 
     assert stage.request.seed == 22
     for run_number in (1, 2):
@@ -188,6 +219,9 @@ def test_instances_use_stage_options(array_model_north, run_context):
     )
 
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    stage.run_files = stage.run_files or _RunFiles(
+        run_context.paths.get_output_directory("corsika")
+    )
 
     assert stage.request.seed == 7
     assert not stage.seed_per_run
@@ -213,10 +247,16 @@ def test_instances_illuminator_range_is_source_wavelength(array_model_north, run
         shower_configurations=(),
         args={},
         context=run_context,
-        calibration=SimpleNamespace(calibration_model=_CalibrationModel()),
+        calibration=SimpleNamespace(
+            calibration_model=_CalibrationModel(),
+            runner_service=_RunFiles(run_context.paths.get_output_directory("light")),
+        ),
     )
 
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    stage.run_files = stage.run_files or _RunFiles(
+        run_context.paths.get_output_directory("corsika")
+    )
 
     # obdeect needs lo < hi; no photon is drawn from this range (they carry 300 nm)
     assert stage.request.wavelength_range_nm == pytest.approx((300.0, 301.0))
@@ -229,11 +269,17 @@ def test_instances_explicit_range_overrides_source_wavelength(array_model_north,
         shower_configurations=(),
         args={},
         context=run_context,
-        calibration=SimpleNamespace(calibration_model=_CalibrationModel()),
+        calibration=SimpleNamespace(
+            calibration_model=_CalibrationModel(),
+            runner_service=_RunFiles(run_context.paths.get_output_directory("light")),
+        ),
         chain_options={"obdeect_atmosphere": {"wavelength_range_nm": [250.0, 700.0]}},
     )
 
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    stage.run_files = stage.run_files or _RunFiles(
+        run_context.paths.get_output_directory("corsika")
+    )
 
     assert stage.request.wavelength_range_nm == (250.0, 700.0)
 
@@ -248,6 +294,9 @@ def test_instances_without_light_source_keeps_run_keys(array_model_north, run_co
     )
 
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    stage.run_files = stage.run_files or _RunFiles(
+        run_context.paths.get_output_directory("corsika")
+    )
 
     assert stage.request.wavelength_range_nm is None
 
@@ -262,7 +311,9 @@ def test_instances_reject_unknown_options(array_model_north, run_context):
         chain_options={"obdeect_atmosphere": {"threads": 4}},
     )
 
-    with pytest.raises(ValueError, match=r"Unknown options of stage 'obdeect_atmosphere'"):
+    with pytest.raises(
+        ValueError, match=r"Unknown option\(s\) \['threads'\] of stage 'obdeect_atmosphere'"
+    ):
         ObdeectAtmosphereStage.instances(inputs)
 
 
@@ -276,7 +327,7 @@ def fake_stage_factories(monkeypatch):
             (),
             {"name": name, "consumes": consumes, "produces": produces, "streams": True},
         )
-        monkeypatch.setitem(stages.STAGES, name, lambda: fake)
+        monkeypatch.setitem(stages.registry(), name, fake)
 
     return _register
 
@@ -304,7 +355,7 @@ def test_chain_spec_rejects_two_atmospheres():
 
 
 def test_applied_factors_is_extinction_regardless_of_options():
-    assert ObdeectAtmosphereStage.applied_factors({"seed": 2}, upstream=frozenset()) == (
+    assert ObdeectAtmosphereStage.spec.applied_factors({"seed": 2}, upstream=frozenset()) == (
         frozenset({ATMOSPHERIC_EXTINCTION})
     )
 
@@ -355,7 +406,7 @@ def test_prepare_with_envelope_writes_bound_and_passes_it(
 ):
     stage = ObdeectAtmosphereStage(
         request_for_stage,
-        label="test-atmosphere",
+        run_files=_RunFiles(run_context.paths.get_output_directory("corsika")),
         context=run_context,
         envelope_model=envelope_model,
     )
@@ -388,6 +439,9 @@ def test_instances_envelope_off_by_default(array_model_north, run_context):
     )
 
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    stage.run_files = stage.run_files or _RunFiles(
+        run_context.paths.get_output_directory("corsika")
+    )
 
     assert stage.envelope_model is None
 
@@ -404,6 +458,9 @@ def test_instances_envelope_on_by_default_for_camera_only_chain(array_model_nort
     )
 
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    stage.run_files = stage.run_files or _RunFiles(
+        run_context.paths.get_output_directory("corsika")
+    )
 
     assert stage.envelope_model is array_model_north
 
@@ -419,6 +476,9 @@ def test_instances_envelope_on_by_option(array_model_north, run_context):
     )
 
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    stage.run_files = stage.run_files or _RunFiles(
+        run_context.paths.get_output_directory("corsika")
+    )
 
     assert stage.envelope_model is array_model_north
 
@@ -434,6 +494,9 @@ def test_instances_envelope_off_by_option(array_model_north, run_context):
     )
 
     (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    stage.run_files = stage.run_files or _RunFiles(
+        run_context.paths.get_output_directory("corsika")
+    )
 
     assert stage.envelope_model is None
 
@@ -448,5 +511,5 @@ def test_instances_reject_invalid_envelope_option(array_model_north, run_context
         chain_options={"obdeect_atmosphere": {"efficiency_envelope": "yes"}},
     )
 
-    with pytest.raises(ValueError, match=r"Invalid efficiency_envelope option"):
+    with pytest.raises(ValueError, match=r"Invalid efficiency_envelope option of stage"):
         ObdeectAtmosphereStage.instances(inputs)

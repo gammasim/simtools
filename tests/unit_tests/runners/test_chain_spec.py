@@ -6,7 +6,8 @@ import sys
 import pytest
 
 from simtools.runners import chain_spec, stages
-from simtools.simulation_software.products import PHOTONS_CAMERA
+
+PHOTONS_CAMERA = "photons_camera"
 
 OBDEECT_CHAIN = (
     "corsika",
@@ -18,7 +19,7 @@ OBDEECT_CHAIN = (
 )
 
 
-def _register(name, consumes, produces, applies=()):
+def _register(name, consumes, produces, applies=(), **roles):
     class FakeStage:
         streams = True
 
@@ -29,7 +30,9 @@ def _register(name, consumes, produces, applies=()):
     FakeStage.name = name
     FakeStage.consumes = consumes
     FakeStage.produces = produces
-    stages.register_stage(name, lambda: FakeStage)
+    for role, value in roles.items():
+        setattr(FakeStage, role, value)
+    stages.register_stage(FakeStage)
     return FakeStage
 
 
@@ -37,14 +40,13 @@ def _register(name, consumes, produces, applies=()):
 def fake_stages():
     names = []
 
-    def register(name, consumes, produces, applies=()):
+    def register(name, consumes, produces, applies=(), **roles):
         names.append(name)
-        return _register(name, consumes, produces, applies)
+        return _register(name, consumes, produces, applies, **roles)
 
     yield register
     for name in names:
         stages.STAGES.pop(name)
-        stages.STAGE_SOFTWARE.pop(name)
 
 
 def test_parse_chain_of_stage_names():
@@ -60,14 +62,27 @@ def test_parse_chain_of_one_stage(single):
     assert chain_spec.parse_chain(single).stages == ("corsika",)
 
 
-def test_parse_chain_options_are_yaml_scalars():
-    spec = chain_spec.parse_chain(
-        ["corsika", " sim_telarray : bypass_optics=3 , check=true , name=abc "]
-    )
+def test_parse_chain_options_are_yaml_scalars(fake_stages):
+    fake_stages("camera", "cherenkov_photons", "camera_events")
+    spec = chain_spec.parse_chain(["corsika", " camera : level=3 , check=true , name=abc "])
 
-    assert spec.stages == ("corsika", "sim_telarray")
-    assert spec.stage_options("sim_telarray") == {"bypass_optics": 3, "check": True, "name": "abc"}
+    assert spec.stages == ("corsika", "camera")
+    assert spec.stage_options("camera") == {"level": 3, "check": True, "name": "abc"}
     assert spec.stage_options("corsika") == {}
+
+
+@pytest.mark.parametrize(
+    ("item", "match"),
+    [
+        ("sim_telarray:bypass=1", r"Unknown option\(s\) \['bypass'\] of stage 'sim_telarray'"),
+        ("sim_telarray:bypass_optics=5", r"Invalid bypass_optics option .* choose from"),
+        ("sim_telarray:bypass_optics=yes", r"'bypass_optics' of stage 'sim_telarray' must be"),
+        ("obdeect_atmosphere:wavelength_range_nm=[300]", r"of number with 2 values"),
+    ],
+)
+def test_parse_chain_checks_options_against_the_catalog(item, match):
+    with pytest.raises(ValueError, match=match):
+        chain_spec.parse_chain(["corsika", item])
 
 
 def test_parse_chain_options_keep_commas_inside_lists():
@@ -140,8 +155,8 @@ def test_chain_rejects_unknown_stage_and_mismatched_products():
 
 
 def test_chain_rejects_factor_applied_twice(fake_stages):
-    fake_stages("optics_a", stages.CHERENKOV_PHOTONS, "optics_a", {"mirror_reflectivity"})
-    fake_stages("optics_b", "optics_a", stages.CAMERA_EVENTS, {"mirror_reflectivity", "qe"})
+    fake_stages("optics_a", "cherenkov_photons", "optics_a", {"mirror_reflectivity"})
+    fake_stages("optics_b", "optics_a", "camera_events", {"mirror_reflectivity", "qe"})
     spec = chain_spec.parse_chain(["corsika", "optics_a", "optics_b"])
 
     with pytest.raises(
@@ -151,8 +166,8 @@ def test_chain_rejects_factor_applied_twice(fake_stages):
 
 
 def test_applied_factors_depend_on_stage_options(fake_stages):
-    fake_stages("optics_a", stages.CHERENKOV_PHOTONS, "optics_a", {"mirror_reflectivity"})
-    fake_stages("camera", "optics_a", stages.CAMERA_EVENTS)
+    fake_stages("optics_a", "cherenkov_photons", "optics_a", {"mirror_reflectivity"})
+    fake_stages("camera", "optics_a", "camera_events")
     spec = chain_spec.parse_chain(["corsika", "optics_a", "camera:extra=[mirror_reflectivity]"])
 
     assert dict(spec.applied_factors())["camera"] == {"mirror_reflectivity"}
@@ -249,11 +264,10 @@ def test_software_includes_the_programs_of_inserted_converters(fake_stages):
     assert spec.software == {"obdeect", "sim_telarray"}
 
 
-def test_parse_chain_rejects_several_fitting_converters(fake_stages, monkeypatch):
+def test_parse_chain_rejects_several_fitting_converters(fake_stages):
     fake_stages("source", None, "raw")
-    fake_stages("convert_a", "raw", stages.CHERENKOV_PHOTONS)
-    fake_stages("convert_b", "raw", stages.CHERENKOV_PHOTONS)
-    monkeypatch.setattr(chain_spec, "CONVERTER_STAGES", ("convert_a", "convert_b"))
+    fake_stages("convert_a", "raw", "cherenkov_photons", converter=True)
+    fake_stages("convert_b", "raw", "cherenkov_photons", converter=True)
 
     with pytest.raises(ValueError, match=r"Several converters fit .*convert_a.*convert_b"):
         chain_spec.parse_chain(["source", "sim_telarray"])

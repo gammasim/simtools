@@ -59,7 +59,7 @@ def test_package_lookup_error(monkeypatch):
 
 
 def test_unknown_software():
-    with pytest.raises(ValueError, match="Unknown software"):
+    with pytest.raises(ValueError, match=r"Unknown simulation software .other."):
         programs.program_command("other", "obdeect")
 
 
@@ -104,3 +104,8 @@ def test_installed_obdeect_programs_are_located():
 
     assert Path(programs.program_command("obdeect", "obdeect-propagation-run")[0]).is_file()
     assert programs.program_command("obdeect", "obdeect")
+
+
+def test_software_without_package():
+    with pytest.raises(ValueError, match="'corsika' has no Python package"):
+        programs.program_command("corsika", "corsika")

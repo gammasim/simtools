@@ -3,7 +3,7 @@
 import logging
 from collections.abc import Mapping
 
-from simtools.io.file_type import product_value
+from simtools.io.file_type import product_value, products_in_directory
 from simtools.runtime.context import RunContext
 from simtools.sim_events.simulation_parameters import SimulationParameters
 
@@ -15,34 +15,21 @@ _FILE_SUFFIX = "suffix"
 _SUBMISSION_DIRECTORY = "sub"
 _SIM_TELARRAY_HISTOGRAM_PRODUCT = "sim_telarray_histogram_output"
 
-_RUNNER_FILE_PLACEMENT = {
-    "corsika_input": _RUN_NUMBER,
-    "corsika_output": _RUN_NUMBER,
-    "corsika_log": _RUN_NUMBER,
-    "corsika_err": _RUN_NUMBER,
-    "corsika_resources": _RUN_NUMBER,
-    "iact_output": _RUN_NUMBER,
-    "sim_telarray_output": _RUN_NUMBER,
-    "sim_telarray_histogram": _RUN_NUMBER,
-    "sim_telarray_log": _RUN_NUMBER,
-    "sim_telarray_err": _RUN_NUMBER,
-    "sim_telarray_event_data": _RUN_NUMBER,
-    "sim_telarray_resources": _RUN_NUMBER,
-    "light_emission_log": _RUN_NUMBER,
-    "light_emission_err": _RUN_NUMBER,
-    "light_emission_resources": _RUN_NUMBER,
-    "multi_pipe_config": _RUN_NUMBER,
-    "multi_pipe_script": _RUN_NUMBER,
-    "multi_pipe_resources": _RUN_NUMBER,
-    "shower_route_resources": _RUN_NUMBER,
-    "telescope_route_map": _RUN_NUMBER,
-    "camera_bunch_file": _RUN_NUMBER,
-    "sub_out": _SUBMISSION_DIRECTORY,
-    "sub_err": _SUBMISSION_DIRECTORY,
-    "sub_log": _SUBMISSION_DIRECTORY,
-    "sub_script": _SUBMISSION_DIRECTORY,
-}
 _RUNNER_PRODUCT_IDS = {"sim_telarray_histogram": _SIM_TELARRAY_HISTOGRAM_PRODUCT}
+#: Directory type of each run file (``directory`` of the file products, run or submission).
+_RUNNER_FILE_PLACEMENT = {
+    **{
+        product_id: _RUN_NUMBER
+        for product_id in products_in_directory("run")
+        if product_id not in _RUNNER_PRODUCT_IDS.values()
+    },
+    **{
+        alias: _RUN_NUMBER
+        for alias, product_id in _RUNNER_PRODUCT_IDS.items()
+        if product_id in products_in_directory("run")
+    },
+    **dict.fromkeys(products_in_directory("submission"), _SUBMISSION_DIRECTORY),
+}
 FILES_AND_PATHS = {
     file_type: {
         _FILE_SUFFIX: product_value(
@@ -295,6 +282,31 @@ class RunnerServices:
         output_file_name = f"{file_name}{desc[_FILE_SUFFIX]}"
         warn_if_file_name_exceeds_dirac_limit(output_file_name, file_type)
         return dir_path / output_file_name
+
+    def get_stage_file_name(self, stage_name, file_type, run_number=None):
+        """
+        Return a file of a simulation stage: ``<base name>.<stage name><suffix>``.
+
+        The suffix and the directory are those of the file type (``resources/file_types.yml``),
+        so the files of all stages of a run share one naming scheme.
+
+        Parameters
+        ----------
+        stage_name : str
+            Name of the stage.
+        file_type : str
+            File type (e.g. ``stage_photon_stream``, ``stage_log``).
+        run_number : int
+            Run number.
+
+        Returns
+        -------
+        Path
+            File name with full path.
+        """
+        file_name = self.get_file_name(file_type, run_number=run_number)
+        suffix = FILES_AND_PATHS[file_type][_FILE_SUFFIX]
+        return file_name.with_name(f"{file_name.name.removesuffix(suffix)}.{stage_name}{suffix}")
 
     @staticmethod
     def _get_run_number_string(run_number):

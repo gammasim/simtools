@@ -15,6 +15,7 @@ from simtools.data_model import validate_data
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.job_execution.job import JobSpec
 from simtools.runners.chain_spec import parse_chain
+from simtools.runners.stages import get_stage_class, stage_role
 from simtools.utils.value_conversion import get_value_as_quantity, get_value_in_unit
 
 logger = logging.getLogger(__name__)
@@ -469,9 +470,10 @@ def _select_rows(args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, p
 
 def _validate_simulation_arguments(args_dict, parser):
     """Validate requirements that depend on the stages of the simulation chain."""
-    stages = parse_chain(args_dict["simulation_software"]).stages
-    if "corsika" in stages and not args_dict.get("primary"):
-        parser.error("the following argument is required for CORSIKA: --primary")
+    for name in parse_chain(args_dict["simulation_software"]).stages:
+        for argument in stage_role(get_stage_class(name), "required_arguments", ()):
+            if not args_dict.get(argument):
+                parser.error(f"the following argument is required for stage {name}: --{argument}")
 
 
 def format_quantity_field(rows, key, summary_unit=None, *, log_wording=False):

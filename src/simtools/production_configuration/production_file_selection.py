@@ -15,9 +15,8 @@ from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.io.file_type import product_suffixes
 from simtools.runners.chain_spec import parse_chain
-from simtools.runners.stages import get_stage_class
+from simtools.runners.stages import get_stage_class, stage_role
 from simtools.sim_events.simtel_io_metadata import read_sim_telarray_metadata
-from simtools.simulation_software import products
 
 SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
 
@@ -30,10 +29,6 @@ _FILE_TYPE_PRODUCTS = {
     "corsika": "production_corsika",
     "corsika_log": "production_corsika_log",
     "trigger_histograms": "trigger_histograms",
-}
-_PRODUCT_FILE_TYPES = {
-    products.CHERENKOV_PHOTONS: "corsika",
-    products.CAMERA_EVENTS: "sim_telarray",
 }
 _FILE_TYPE_SUFFIXES = {
     file_type: product_suffixes(product_id) for file_type, product_id in _FILE_TYPE_PRODUCTS.items()
@@ -280,12 +275,14 @@ def inventory_production_files(job_directory):
 def validate_required_production_outputs(file_inventory, simulation_software, job_directory):
     """Require the principal output of the last stage of the chain before marking a job complete."""
     last_stage = parse_chain(simulation_software).stages[-1]
-    product = get_stage_class(last_stage).produces
-    required_type = _PRODUCT_FILE_TYPES.get(product)
+    result = stage_role(get_stage_class(last_stage), "production_result")
+    required_type = next(
+        (file_type for file_type, product in _FILE_TYPE_PRODUCTS.items() if product == result),
+        None,
+    )
     if required_type is None:
         raise ValueError(
-            f"Cannot check the output of stage '{last_stage}': "
-            f"no production file type for its product '{product}'."
+            f"Cannot check the output of stage '{last_stage}': it does not end a production chain."
         )
     if not file_inventory.get(required_type):
         raise ValueError(

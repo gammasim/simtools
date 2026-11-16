@@ -7,6 +7,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
+from simtools.runtime import software_catalog
 from simtools.utils import value_conversion
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -510,23 +511,19 @@ def illuminator_request(calibration_model, telescope_model, site_model, config, 
 
 
 def build_request(name, calibration_model, telescope_model, site_model, config, seed=1):
-    """Build the request for a flasher or illuminator."""
-    builders = {"flasher": flasher_request, "illuminator": illuminator_request}
-    try:
-        builder = builders[name]
-    except KeyError as exc:
-        raise ValueError(f"Unknown light source type {name!r}; known: {sorted(builders)}") from exc
+    """Build the request of a light-source type (``request`` in the software catalog)."""
+    builder = software_catalog.load_object(software_catalog.light_source(name)["request"])
     return builder(calibration_model, telescope_model, site_model, config, seed)
 
 
 def source_name_for_model(light_source_type):
-    """Return the source name for a model ``light_source_type`` value."""
-    for name, model_types in (("flasher", ("flat_fielding",)), ("illuminator", ("illuminator",))):
-        if light_source_type in model_types:
+    """Return the light-source type that simulates a model ``flasher_type`` value."""
+    for name in software_catalog.light_source_names():
+        if light_source_type in software_catalog.light_source(name)["model_types"]:
             return name
     raise ValueError(
         f"No light source handles light_source_type {light_source_type!r}; "
-        "known: ['flasher', 'illuminator']"
+        f"known: {sorted(software_catalog.light_source_names())}"
     )
 
 
@@ -539,21 +536,13 @@ def source_command(
     executable=None,
     simulation_models_path=None,
 ):
-    """Return command tokens for a source request."""
-    from simtools.simulation_software.obdeect import sources  # pylint: disable=C0415
-
-    commands = {"flasher": sources.flasher_command, "illuminator": sources.illuminator_command}
-    try:
-        command = commands[name]
-    except KeyError as exc:
-        raise ValueError(f"Unknown light source type {name!r}; known: {sorted(commands)}") from exc
-    if name == "flasher":
-        return command(
-            request,
-            work_directory,
-            output,
-            file_token,
-            executable,
-            simulation_models_path=simulation_models_path,
-        )
-    return command(request, work_directory, output, file_token, executable)
+    """Return the command tokens of a light-source type (``command`` in the software catalog)."""
+    command = software_catalog.load_object(software_catalog.light_source(name)["command"])
+    return command(
+        request,
+        work_directory,
+        output,
+        file_token,
+        executable,
+        simulation_models_path=simulation_models_path,
+    )

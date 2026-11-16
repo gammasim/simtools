@@ -5,9 +5,14 @@ from types import SimpleNamespace
 
 from simtools.runners import chain_spec
 from simtools.runners.chain_runner import ChainRunner
-from simtools.runners.stages import StageInputs, get_stage_class
-
-SHOWER_STAGE = "corsika"
+from simtools.runners.stages import (
+    AIR_SHOWER_SOURCE,
+    LIGHT_SOURCE,
+    StageInputs,
+    get_stage_class,
+    registry,
+    stage_role,
+)
 
 
 @dataclass(frozen=True)
@@ -41,15 +46,19 @@ def check_light_chain(chain):
     Raises
     ------
     ValueError
-        If the chain does not start with a stage that consumes no product or contains CORSIKA.
+        If the chain does not start with a light-source stage or has an air-shower stage.
     """
-    if chain.has(SHOWER_STAGE) or not chain.starts_with_showers:
+    if chain.source != LIGHT_SOURCE or chain.with_role("source", AIR_SHOWER_SOURCE):
         first = chain.stages[0]
+        light = sorted(
+            name
+            for name, stage in registry().items()
+            if stage_role(stage, "source") == LIGHT_SOURCE
+        )
         raise ValueError(
-            "A chain of a calibration light source starts with a light source stage "
-            f"(light_emission, obdeect_flasher or obdeect_illuminator) and has no {SHOWER_STAGE} "
-            f"stage; got {list(chain.stages)} (first stage {first!r} consumes "
-            f"{get_stage_class(first).consumes!r})."
+            f"A chain of a calibration light source starts with a light-source stage ({light}) "
+            f"and has no air-shower stage; got {list(chain.stages)} (first stage {first!r} "
+            f"consumes {get_stage_class(first).consumes!r})."
         )
 
 

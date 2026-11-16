@@ -9,19 +9,15 @@ import pytest
 from simtools.runners import stages
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.chain_spec import (
-    MIRROR_REFLECTIVITY,
-    TELESCOPE_TRANSMISSION,
     ChainSpec,
 )
-from simtools.runners.optics_stage import ObdeectOpticsStage
 from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo, get_stage_class
 from simtools.simtel.shower_photons import derive_seed
-from simtools.simulation_software.products import (
-    CHERENKOV_PHOTONS,
-    PHOTONS_CAMERA,
-    PHOTONS_GROUND,
-    PHOTONS_TELESCOPE,
-)
+
+CHERENKOV_PHOTONS = "cherenkov_photons"
+PHOTONS_CAMERA = "photons_camera"
+PHOTONS_GROUND = "photons_ground"
+PHOTONS_TELESCOPE = "photons_telescope"
 
 _MIRROR_LIST = """0 0 100.0 0.0 0
 125 0 100.0 0.0 0
@@ -73,11 +69,34 @@ def _telescope(type_name, directory):
     )
 
 
+MIRROR_REFLECTIVITY = "mirror_reflectivity"
+TELESCOPE_TRANSMISSION = "telescope_transmission"
+ObdeectOpticsStage = get_stage_class("obdeect_optics")
+
+
+class _RunFiles:
+    """File naming of a run: ``<directory>/run<N>.<stage><suffix of the file type>``."""
+
+    SUFFIXES = {"photon_stream": ".pst", "stage_log": ".log", "stage_resources": ".resources.json"}
+
+    def __init__(self, directory):
+        self.directory = Path(directory)
+
+    def get_stage_file_name(self, stage_name, file_type, run_number=None):
+        self.directory.mkdir(parents=True, exist_ok=True)
+        return self.directory / f"run{run_number:06d}.{stage_name}{self.SUFFIXES[file_type]}"
+
+
 @pytest.fixture
 def context(tmp_test_directory):
     output = Path(tmp_test_directory) / "output"
     paths = SimpleNamespace(get_output_directory=lambda: output)
     return SimpleNamespace(paths=paths)
+
+
+@pytest.fixture
+def run_files(context):
+    return _RunFiles(context.paths.get_output_directory())
 
 
 @pytest.fixture
@@ -96,7 +115,7 @@ def array_model(tmp_test_directory):
 
 
 @pytest.fixture
-def inputs(array_model, context):
+def inputs(array_model, context, run_files):
     parameters = SimpleNamespace(zenith_angle=20.0, azimuth_angle=180.0)
     return StageInputs(
         array_models=(array_model,),
@@ -104,6 +123,7 @@ def inputs(array_model, context):
         shower_configurations=(),
         args={},
         context=context,
+        calibration=SimpleNamespace(runner_service=run_files),
     )
 
 
@@ -119,22 +139,20 @@ def test_stage_attributes():
     assert ObdeectOpticsStage.consumes == (PHOTONS_GROUND, PHOTONS_TELESCOPE)
     assert ObdeectOpticsStage.produces == PHOTONS_CAMERA
     assert ObdeectOpticsStage.streams
-    assert get_stage_class("obdeect_optics") is ObdeectOpticsStage
 
 
-def test_instances_one_per_telescope(inputs):
-    stages = ObdeectOpticsStage.instances(inputs, label="test")
+def test_instances_one_per_array_model(inputs):
+    (stage,) = ObdeectOpticsStage.instances(inputs, label="test")
 
-    assert [stage.request.telescope_name for stage in stages] == ["LSTN-01", "MSTN-01", "LSTN-02"]
-    assert [stage.request.telescope_type for stage in stages] == ["LST", "MST", "LST"]
+    assert [r.telescope_name for r in stage.requests] == ["LSTN-01", "MSTN-01", "LSTN-02"]
+    assert [r.telescope_type for r in stage.requests] == ["LST", "MST", "LST"]
     # Stream ids start at 1; the instrument seed follows the IACT id (from 0).
-    assert [stage.request.telescope_id for stage in stages] == [1, 2, 3]
-    assert [stage.request.instrument_seed for stage in stages] == [
+    assert [r.telescope_id for r in stage.requests] == [1, 2, 3]
+    assert [r.instrument_seed for r in stage.requests] == [
         derive_seed(11, telescope_id) for telescope_id in (0, 1, 2)
     ]
-    assert [(stage.position, stage.count) for stage in stages] == [(0, 3), (1, 3), (2, 3)]
-    assert stages[0].request.zenith_deg == pytest.approx(20.0)
-    assert stages[2].telescope_model is inputs.array_models[0].telescope_models["LSTN-02"]
+    assert stage.requests[0].zenith_deg == pytest.approx(20.0)
+    assert stage.telescope_models[2] is inputs.array_models[0].telescope_models["LSTN-02"]
 
 
 def test_instances_of_several_array_models(inputs):
@@ -144,12 +162,13 @@ def test_instances_of_several_array_models(inputs):
         shower_configurations=(),
         args={"sequential": True},
         context=inputs.context,
+        calibration=inputs.calibration,
     )
 
     stages = ObdeectOpticsStage.instances(two)
 
-    assert len(stages) == 6
-    assert {stage.request.threads for stage in stages} == {1}
+    assert len(stages) == 2
+    assert {r.threads for stage in stages for r in stage.requests} == {1}
 
 
 def test_instances_take_options(inputs):
@@ -161,12 +180,13 @@ def test_instances_take_options(inputs):
         args={},
         context=inputs.context,
         chain_options=options,
+        calibration=inputs.calibration,
     )
 
-    stages = ObdeectOpticsStage.instances(chained)
+    (stage,) = ObdeectOpticsStage.instances(chained)
 
-    assert {stage.request.telescope_transmission for stage in stages} == {"full"}
-    assert {stage.request.threads for stage in stages} == {3}
+    assert {r.telescope_transmission for r in stage.requests} == {"full"}
+    assert {r.threads for r in stage.requests} == {3}
 
 
 def test_instances_need_context(inputs):
@@ -181,15 +201,14 @@ def test_instances_need_context(inputs):
 
 
 def test_applied_factors():
-    assert ObdeectOpticsStage.applied_factors({}) == {MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION}
-    with pytest.raises(ValueError, match="stay unapplied"):
-        ObdeectOpticsStage.applied_factors({"telescope_transmission": "angular"})
-    with pytest.raises(ValueError, match="Invalid telescope transmission"):
-        ObdeectOpticsStage.applied_factors({"telescope_transmission": "none"})
+    spec = ObdeectOpticsStage.spec
+    assert spec.applied_factors({}) == {MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION}
+    with pytest.raises(ValueError, match="Invalid telescope_transmission option"):
+        spec.applied_factors({"telescope_transmission": "angular"})
 
 
-def test_prepare_streaming_input_to_file(inputs, context):
-    stage = ObdeectOpticsStage.instances(inputs)[0]
+def test_prepare_traces_all_telescopes_in_one_command(inputs, context):
+    (stage,) = ObdeectOpticsStage.instances(inputs)
 
     (line,) = stage.prepare(5, input_file=STDIN)
 
@@ -197,12 +216,19 @@ def test_prepare_streaming_input_to_file(inputs, context):
     assert tokens[tokens.index("ray-tracing") :][:2] == ["ray-tracing", "trace-stream"]
     assert tokens[tokens.index("--input") + 1] == "-"
     assert tokens[tokens.index("--output") + 1] == str(stage.output_file(5))
-    assert tokens[tokens.index("--telescopes") + 1] == "1"
-    model_file = stage.telescope_model.config_file_directory / stage.request.model_file_name
-    assert tokens[tokens.index("--model") + 1] == str(model_file)
-    assert model_file.is_file()
-    assert stage.output_file(5).name == "LSTN-01_7.0.0_run000005_obdeect_optics.camera.pst"
+    assert "--telescopes" not in tokens
+    models = [tokens[index + 1] for index, token in enumerate(tokens) if token == "--model"]
+    expected = [
+        f"{request.telescope_id}={telescope.config_file_directory / request.model_file_name}"
+        for request, telescope in zip(stage.requests, stage.telescope_models)
+    ]
+    assert models == expected
+    assert all(Path(model.split("=", 1)[1]).is_file() for model in models)
+    assert stage.output_file(5).name == "run000005.obdeect_optics.pst"
     assert stage.output_file(5).parent == context.paths.get_output_directory()
+    assert stage.file_list["obdeect_optics_log"] == [
+        context.paths.get_output_directory() / "run000005.obdeect_optics.log"
+    ]
     assert len(stage.file_list["obdeect_optics_resources"]) == 1
 
 
@@ -221,29 +247,18 @@ def test_prepare_requires_input(inputs):
         stage.prepare(5)
 
 
-def test_prepare_streamed_output_pipes_to_matching_downstream(inputs):
-    first, second, _third = ObdeectOpticsStage.instances(inputs)
-    downstream = StreamTo(("consume-a", "consume-b", "consume-c"))
-
-    (line_first,) = first.prepare(5, input_file=STDIN, output=downstream)
-    (line_second,) = second.prepare(5, input_file=STDIN, output=downstream)
-
-    assert line_first.endswith(" | consume-a")
-    assert line_second.endswith(" | consume-b")
-    assert _command_tokens(line_first)[-1] == "-"
-
-
-def test_prepare_single_downstream_command(inputs):
-    stage = ObdeectOpticsStage.instances(inputs)[0]
+def test_prepare_streams_to_one_downstream_command(inputs):
+    (stage,) = ObdeectOpticsStage.instances(inputs)
 
     (line,) = stage.prepare(5, input_file=STDIN, output=StreamTo(("consume",)))
 
     assert line.endswith(" | consume")
+    assert _command_tokens(line)[-1] == "-"
 
 
-def test_prepare_mismatching_downstream_commands(inputs):
-    stage = ObdeectOpticsStage.instances(inputs)[0]
-    with pytest.raises(ValueError, match="downstream commands receive its stream"):
+def test_prepare_rejects_several_downstream_commands(inputs):
+    (stage,) = ObdeectOpticsStage.instances(inputs)
+    with pytest.raises(ValueError, match="pipes into one downstream command, got 2"):
         stage.prepare(5, input_file=STDIN, output=StreamTo(("a", "b")))
 
 
@@ -299,15 +314,13 @@ def _fake_class(name, consumes, produces, factors=(), lines=()):
 def fake_chain_stages(monkeypatch):
     fakes = {
         "fake_to_stream": _fake_class("fake_to_stream", CHERENKOV_PHOTONS, PHOTONS_GROUND),
-        "fake_camera": _fake_class(
-            "consume", PHOTONS_CAMERA, "camera_events", lines=("a", "b", "c")
-        ),
+        "fake_camera": _fake_class("consume", PHOTONS_CAMERA, "camera_events", lines=("shared",)),
         "fake_double": _fake_class(
             "fake_double", PHOTONS_CAMERA, "camera_events", {MIRROR_REFLECTIVITY}
         ),
     }
     for name, fake in fakes.items():
-        monkeypatch.setitem(stages.STAGES, name, lambda fake=fake: fake)
+        monkeypatch.setitem(stages.registry(), name, fake)
 
 
 def test_chain_is_valid(fake_chain_stages):
@@ -329,7 +342,7 @@ def test_factor_applied_twice_is_rejected(fake_chain_stages):
         spec.check_applied_factors()
 
 
-def test_runner_pipes_each_telescope_into_its_own_command(
+def test_runner_streams_the_array_through_one_optics_process(
     inputs, fake_chain_stages, tmp_test_directory
 ):
     chain = SimulationChain(("fake_to_stream", "obdeect_optics", "fake_camera"))
@@ -339,23 +352,6 @@ def test_runner_pipes_each_telescope_into_its_own_command(
 
     lines = script.read_text(encoding="utf-8").splitlines()
     optics_lines = [line for line in lines if "trace-stream" in line]
-    assert len(optics_lines) == 3
-    for line, tag in zip(optics_lines, "abc"):
-        assert line.endswith(f"| consume-{tag} -")
-
-
-def test_runner_pipes_all_telescopes_into_a_shared_command(
-    inputs, fake_chain_stages, monkeypatch, tmp_test_directory
-):
-    shared = _fake_class("consume", PHOTONS_CAMERA, "camera_events", lines=("shared",))
-    monkeypatch.setitem(stages.STAGES, "fake_camera", lambda: shared)
-    chain = SimulationChain(("fake_to_stream", "obdeect_optics", "fake_camera"))
-    script = Path(tmp_test_directory) / "run.sh"
-
-    ChainRunner(chain, inputs).prepare_run(1, script)
-
-    optics_lines = [
-        line for line in script.read_text(encoding="utf-8").splitlines() if "trace-stream" in line
-    ]
-    assert len(optics_lines) == 3
-    assert all(line.endswith("| consume-shared -") for line in optics_lines)
+    assert len(optics_lines) == 1
+    assert optics_lines[0].startswith("fake_to_stream | ")
+    assert optics_lines[0].endswith("| consume-shared -")

@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 from astropy.table import Column, Table
 
-from simtools.runners.stages import StageInputs
 from simtools.simulation_software import efficiency
 from simtools.simulation_software.efficiency import (
     ENVELOPE_FLOOR,
@@ -67,40 +66,6 @@ def test_envelope_setting_defaults_to_off():
 def test_envelope_setting_rejects_unknown_value():
     with pytest.raises(ValueError, match=r"Invalid efficiency_envelope option: 'yes'"):
         efficiency.envelope_setting({"efficiency_envelope": "yes"})
-
-
-def test_chain_envelope_enabled_follows_atmosphere_stage(run_context):
-    def _inputs(stages, options=None):
-        return StageInputs(
-            array_models=(),
-            simulation_parameters=(),
-            shower_configurations=(),
-            args={},
-            context=run_context,
-            chain_options=options or {},
-            stages=stages,
-        )
-
-    assert efficiency.chain_envelope_enabled(_inputs(("corsika", "sim_telarray"))) is False
-    assert efficiency.chain_envelope_enabled(_inputs(("obdeect_atmosphere",))) is False
-    assert (
-        efficiency.chain_envelope_enabled(
-            _inputs(
-                ("obdeect_atmosphere",),
-                {"obdeect_atmosphere": {"efficiency_envelope": "qe"}},
-            )
-        )
-        is True
-    )
-    assert (
-        efficiency.chain_envelope_enabled(
-            _inputs(
-                ("obdeect_atmosphere",),
-                {"obdeect_atmosphere": {"efficiency_envelope": "none"}},
-            )
-        )
-        is False
-    )
 
 
 def test_sim_telarray_qe_interpolates_linearly_on_grid():
@@ -230,60 +195,3 @@ def test_envelope_directory_per_run_and_model_version(run_context):
 
     assert directory == run_context.paths.get_output_directory(["efficiency", "run000003", "6.0.0"])
     assert directory.is_dir()
-
-
-def _chain(stages, chain_options=None, context=None):
-    return StageInputs(
-        array_models=(),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=context,
-        chain_options=chain_options or {},
-        stages=stages,
-    )
-
-
-@pytest.mark.parametrize(
-    ("stages", "chain_options", "expected"),
-    [
-        # default: on for a chain ending in sim_telarray with Bypass_Optics 3
-        (("obdeect_atmosphere", "sim_telarray"), {"sim_telarray": {"bypass_optics": 3}}, True),
-        # default: off for Bypass_Optics 1 or 2, and for a chain not ending in sim_telarray
-        (("obdeect_atmosphere", "sim_telarray"), {"sim_telarray": {"bypass_optics": 1}}, False),
-        (("obdeect_atmosphere", "sim_telarray"), {"sim_telarray": {"bypass_optics": 2}}, False),
-        (("obdeect_atmosphere", "sim_telarray"), {}, False),
-        (("obdeect_atmosphere", "stream_to_simtel"), {}, False),
-        # explicit option overrides the default in both directions
-        (
-            ("obdeect_atmosphere", "sim_telarray"),
-            {
-                "obdeect_atmosphere": {"efficiency_envelope": "none"},
-                "sim_telarray": {"bypass_optics": 3},
-            },
-            False,
-        ),
-        (
-            ("obdeect_atmosphere", "sim_telarray"),
-            {
-                "obdeect_atmosphere": {"efficiency_envelope": "qe"},
-                "sim_telarray": {"bypass_optics": 1},
-            },
-            True,
-        ),
-    ],
-)
-def test_envelope_default_depends_on_chain_end(stages, chain_options, expected):
-    inputs = _chain(stages, chain_options)
-
-    assert efficiency.envelope_for_inputs(inputs) is expected
-    assert efficiency.chain_envelope_enabled(inputs) is expected
-
-
-def test_envelope_default_requires_sim_telarray_last():
-    inputs = _chain(
-        ("obdeect_atmosphere", "sim_telarray", "corsika_to_stream"),
-        {"sim_telarray": {"bypass_optics": 3}},
-    )
-
-    assert efficiency.envelope_for_inputs(inputs) is False

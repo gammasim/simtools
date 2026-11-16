@@ -6,23 +6,27 @@ import shlex
 import astropy.units as u
 import numpy as np
 
-from simtools.runners.chain_spec import ATMOSPHERIC_EXTINCTION
-from simtools.runners.stages import STDIN, StreamTo
+from simtools.runners.stages import (
+    STDIN,
+    CatalogStage,
+    StreamTo,
+    ends_camera_only,
+    files_of_run,
+    single_downstream,
+    stage_file,
+)
 from simtools.runtime.context import RunContext
 from simtools.simulation_software import efficiency, light_sources, optics
 from simtools.simulation_software.atmosphere import (
-    DEFAULT_MODE,
     DEFAULT_SEED,
     build_atmosphere_request,
     write_obdeect_transmission,
 )
 from simtools.simulation_software.obdeect.atmosphere import propagation_command
-from simtools.simulation_software.products import PHOTONS_GROUND, PHOTONS_SKY
 from simtools.utils import value_conversion
 
 #: Width [nm] added above a monochromatic light-source wavelength (see ``_wavelength_range``).
 MONOCHROMATIC_BAND_NM = 1.0
-STAGE_OPTIONS = ("seed", "mode", "wavelength_range_nm", efficiency.ENVELOPE_OPTION)
 OUTPUT_DIRECTORY = "atmosphere"
 
 
@@ -83,7 +87,7 @@ def run_seed(base_seed, run_number):
     return int(np.random.SeedSequence((int(base_seed), int(run_number))).generate_state(1)[0])
 
 
-class ObdeectAtmosphereStage:
+class ObdeectAtmosphereStage(CatalogStage):
     """
     Atmosphere stage: applies the atmospheric extinction and the in-telescope path to photons.
 
@@ -94,24 +98,37 @@ class ObdeectAtmosphereStage:
     ----------
     request : AtmosphereRequest
         Atmosphere inputs of one array.
-    label : str
-        Instance label.
+    run_files : RunnerServices
+        File naming of the run.
     context : RunContext or None
         Run context (output directory); default: the environment context.
     envelope_model : ArrayModel or None
         Array model whose telescope types bound the efficiency envelope; None: no envelope.
+    seed_per_run : bool
+        Derive the seed of each run from the request seed and the run number.
     """
 
-    name = "obdeect_atmosphere"
-    consumes = (PHOTONS_SKY, PHOTONS_GROUND)
-    produces = PHOTONS_GROUND
     streams = True
 
-    def __init__(self, request, label=None, context=None, envelope_model=None, seed_per_run=False):
+    @classmethod
+    def efficiency_envelope(cls, inputs):
+        """
+        Return True if the stage thins the photons by the efficiency envelope.
+
+        The option ``efficiency_envelope`` decides; without it, the envelope is on for a chain
+        whose last stage simulates the camera only.
+        """
+        default = efficiency.ENVELOPE_ON if ends_camera_only(inputs) else efficiency.ENVELOPE_OFF
+        options = cls.stage_options(inputs)
+        return efficiency.envelope_setting(options, default=default)
+
+    def __init__(
+        self, request, run_files=None, context=None, envelope_model=None, seed_per_run=False
+    ):
         """Initialize ObdeectAtmosphereStage."""
         self.request = request
         self.seed_per_run = seed_per_run
-        self.label = label or self.name
+        self.run_files = run_files
         self.context = context or RunContext.from_environment()
         self.envelope_model = envelope_model
         self.file_list = {}
@@ -121,19 +138,12 @@ class ObdeectAtmosphereStage:
         """
         Return one atmosphere stage per array model.
 
-        Stage options (after the stage name in the chain): ``seed`` (used for every run; default:
-        derived per run from the simulation seed and the run number), ``mode`` (``thinned`` or
-        ``weighted``), ``wavelength_range_nm`` (two values) and ``efficiency_envelope`` (``qe``,
-        default: thin photons by the quantum-efficiency bound of the telescopes; ``none``).
-        Unknown options are rejected.
+        The options are declared in the software catalog. Without ``seed``, the seed of each run
+        is derived from the simulation seed and the run number.
         """
-        options = inputs.options_of(cls.name)
-        unknown = sorted(set(options) - set(STAGE_OPTIONS))
-        if unknown:
-            raise ValueError(
-                f"Unknown options of stage {cls.name!r}: {unknown}; known: {list(STAGE_OPTIONS)}"
-            )
-        envelope = efficiency.envelope_for_inputs(inputs)
+        options = cls.stage_options(inputs)
+        files = files_of_run(inputs, label, required=False)
+        envelope = cls.efficiency_envelope(inputs)
         wavelength_range = _wavelength_range(inputs, options)
         explicit_seed = options.get("seed")
         stage_list = []
@@ -142,7 +152,7 @@ class ObdeectAtmosphereStage:
                 array_model.site_model,
                 array_model.telescope_models,
                 seed=(_simulation_seed(array_model) if explicit_seed is None else explicit_seed),
-                mode=options.get("mode", DEFAULT_MODE),
+                mode=options["mode"],
                 wavelength_range_nm=wavelength_range,
             )
             request = dataclasses.replace(
@@ -155,7 +165,7 @@ class ObdeectAtmosphereStage:
             stage_list.append(
                 cls(
                     request,
-                    label=label,
+                    run_files=files,
                     context=inputs.context,
                     envelope_model=array_model if envelope else None,
                     seed_per_run=explicit_seed is None,
@@ -185,12 +195,7 @@ class ObdeectAtmosphereStage:
             raise ValueError(f"Stage {self.name!r} needs an input photon stream.")
         downstream = None
         if isinstance(output, StreamTo):
-            if len(output.commands) != 1:
-                raise ValueError(
-                    f"Stage {self.name!r} pipes into one downstream command, "
-                    f"got {len(output.commands)}."
-                )
-            downstream = output.commands[0]
+            downstream = single_downstream(output, self.name)
             output_file = STDIN
         else:
             output_file = self.output_file(run_number)
@@ -216,8 +221,7 @@ class ObdeectAtmosphereStage:
 
     def output_file(self, run_number):
         """Return the photon stream file written when the output is not streamed."""
-        directory = self.context.paths.get_output_directory(OUTPUT_DIRECTORY)
-        return directory / f"{self.label}-run{run_number:06d}.pst"
+        return stage_file(self, "output", run_number)
 
     def environment(self):
         """Return the environment variables needed (none)."""
@@ -226,8 +230,3 @@ class ObdeectAtmosphereStage:
     def get_resources(self, runtime=None):  # pylint: disable=unused-argument
         """Return computing resources used (none: the chain's first stage reports them)."""
         return {}
-
-    @classmethod
-    def applied_factors(cls, _options, upstream=frozenset()):  # pylint: disable=unused-argument
-        """Return the efficiency factors applied by this stage: the atmospheric extinction."""
-        return frozenset({ATMOSPHERIC_EXTINCTION})

@@ -5,9 +5,9 @@
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import scientific_int
-from simtools.constants import LIGHT_EMISSION_CHAIN_DEFAULT
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.runners.simulator import Simulator
+from simtools.runtime import software_catalog
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import value_conversion
 
@@ -32,7 +32,7 @@ def _validate_simulation_software(args_dict, _config_sources, parser):
     if (
         args_dict.get("run_mode") == "direct_injection"
         and chain
-        and tuple(chain) != LIGHT_EMISSION_CHAIN_DEFAULT
+        and tuple(chain) != software_catalog.default_chain(software_catalog.LIGHT_SOURCE)
     ):
         parser.error(
             "--simulation_software is available in run mode full_simulation only; "
@@ -119,7 +119,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         cli.RAY_TRACING_BACKEND,
         cli.SIMULATION_SOFTWARE(
-            default=list(LIGHT_EMISSION_CHAIN_DEFAULT),
+            default=list(software_catalog.default_chain(software_catalog.LIGHT_SOURCE)),
             help=(
                 "Stages of the full simulation in order, each as STAGE or STAGE:KEY=VALUE,... "
                 "(e.g. obdeect_flasher sim_telarray:bypass_optics=1); converters between photon "

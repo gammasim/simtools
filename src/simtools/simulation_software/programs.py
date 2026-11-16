@@ -1,23 +1,17 @@
-"""Locate the executables used by the obdeect simulation chain."""
+"""Locate the executables of the simulation software (``programs`` in the software catalog)."""
 
 import importlib.util
 import shutil
 import sys
 from pathlib import Path
 
-_OBDEECT_PROGRAMS = {
-    "obdeect-propagation-run": "propagation/bin/obdeect-propagation-run",
-    "obdeect-stream-from-corsika": "stream/bin/obdeect-stream-from-corsika",
-    "obdeect-stream-to-simtel": "stream/bin/obdeect-stream-to-simtel",
-    "obdeect-sources-point-source": "sources/bin/obdeect-sources-point-source",
-    "obdeect-sources-flasher": "sources/bin/obdeect-sources-flasher",
-}
+from simtools.runtime import software_catalog
 
 
-def _package_directories():
-    """Return directories containing an installed obdeect package."""
+def _package_directories(package):
+    """Return directories containing an installed Python package."""
     try:
-        spec = importlib.util.find_spec("obdeect")
+        spec = importlib.util.find_spec(package)
     except ImportError, ValueError:
         return []
     if spec is None:
@@ -25,34 +19,54 @@ def _package_directories():
     return [Path(path) for path in spec.submodule_search_locations or []]
 
 
-def _install_error(name):
-    return ValueError(f"Program {name!r} not found; install the package 'obdeect' to run it.")
+def _install_error(name, package):
+    return ValueError(f"Program {name!r} not found; install the package {package!r} to run it.")
+
+
+def _command(name, package, module):
+    """Return the tokens of the main command of a package (its console script, else its module)."""
+    candidate = Path(sys.executable).parent / name
+    if candidate.is_file():
+        return [str(candidate)]
+    found = shutil.which(name)
+    if found:
+        return [found]
+    if module and _package_directories(package):
+        code = f"import sys; from {module} import main; sys.exit(main(sys.argv[1:]))"
+        return [sys.executable, "-c", code]
+    raise _install_error(name, package)
 
 
 def program_command(software, name):
-    """Return command tokens for an executable used by a simulation chain."""
-    if software != "obdeect":
-        raise ValueError("Unknown software; supported software: ['obdeect']")
-    if name == "obdeect":
-        command = "obdeect"
-        candidate = Path(sys.executable).parent / command
-        if candidate.is_file():
-            return [str(candidate)]
-        found = shutil.which(command)
-        if found:
-            return [found]
-        if _package_directories():
-            code = "import sys; from obdeect.stream.cli import main; sys.exit(main(sys.argv[1:]))"
-            return [sys.executable, "-c", code]
-        raise _install_error(name)
+    """
+    Return the command tokens of a program of a simulation software.
 
-    if name not in _OBDEECT_PROGRAMS:
+    Parameters
+    ----------
+    software : str
+        Simulation software (catalog name) with a Python package.
+    name : str
+        The software's ``command`` or one of its ``programs``.
+
+    Raises
+    ------
+    ValueError
+        If the software has no package, the program is unknown or not installed.
+    """
+    entry = software_catalog.software(software)
+    package = entry.get("package")
+    if package is None:
+        raise ValueError(f"Software {software!r} has no Python package with programs.")
+    if name == entry.get("command"):
+        return _command(name, package, entry.get("command_module"))
+    programs = entry.get("programs", {})
+    if name not in programs:
         raise ValueError(
-            f"Unknown program {name!r} of software 'obdeect'; "
-            f"known: {sorted([*_OBDEECT_PROGRAMS, 'obdeect'])}"
+            f"Unknown program {name!r} of software {software!r}; "
+            f"known: {sorted([*programs, entry.get('command')])}"
         )
-    for directory in _package_directories():
-        program = directory / _OBDEECT_PROGRAMS[name]
+    for directory in _package_directories(package):
+        program = directory / programs[name]
         if program.is_file():
             return [str(program)]
-    raise _install_error(name)
+    raise _install_error(name, package)

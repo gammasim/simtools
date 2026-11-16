@@ -43,6 +43,9 @@ properties:
           enum: [input, intermediate, result, diagnostic, metadata]
         retention:
           enum: [persistent, temporary, workflow_defined]
+        directory:
+          description: Directory of a run file (run directory or submission directory).
+          enum: [run, submission]
         note:
           type: string
       oneOf:

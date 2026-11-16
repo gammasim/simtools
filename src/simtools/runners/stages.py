@@ -2,22 +2,26 @@
 
 A stage is one step of a simulation, run by one program (e.g. CORSIKA, sim_telarray or an
 obdeect program). Stages are connected by the data products they consume and produce, either
-through files or as a stream. A chain is an ordered list of stage names. Stage classes are
-imported when first used. Further stages are added with :func:`register_stage`.
+through files or as a stream. A chain is an ordered list of stage names.
+
+The stages are declared in ``resources/simulation_software.yml`` (see
+``simtools.runtime.software_catalog``): name, software, products, options, files and role. The
+class of a stage is its catalog ``implementation``; it holds only how the stage runs. Other code
+asks a stage for its role (:func:`stages_with`, :func:`stage_role`) instead of naming it.
 ``SimulationChain`` checks that each stage consumes the data product of the stage before it
 when the chain is created. Converter stages only change the format of photons; a chain may leave
 them out (see ``simtools.runners.chain_spec``).
 """
 
 from dataclasses import dataclass, field
-from importlib import import_module
+from functools import lru_cache
 from itertools import pairwise
 from typing import Protocol
 
+from simtools.job_execution.runner_services import RunnerServices
 from simtools.runners import stage_types
+from simtools.runtime import software_catalog
 
-CAMERA_EVENTS = stage_types.CAMERA_EVENTS
-CHERENKOV_PHOTONS = stage_types.CHERENKOV_PHOTONS
 STDIN = stage_types.STDIN
 StreamTo = stage_types.StreamTo
 
@@ -41,7 +45,16 @@ class StageInputs:
 
 
 class SimulationStage(Protocol):
-    """One program of a simulation chain."""
+    """
+    One program of a simulation chain.
+
+    The name, the products and the catalog entry (``spec``, see
+    ``simtools.runtime.software_catalog.StageSpec``) come from the software catalog. The roles a
+    stage can have in a chain are catalog fields (:func:`stage_role`): ``software``, ``source``
+    (``air_shower`` or ``light_source``), ``converter``, ``thins_photons``,
+    ``routes_shower_photons``, ``required_arguments``, ``production_result`` and the efficiency
+    factors it applies.
+    """
 
     name: str
     consumes: str | tuple[str, ...] | None
@@ -80,60 +93,243 @@ class SimulationStage(Protocol):
         """Return the computing resources used."""
 
 
-def _lazy_stage(class_path):
-    """Return a factory importing a stage class ("module:Class") when it is first used."""
-
-    def factory():
-        module, class_name = class_path.split(":")
-        return getattr(import_module(module), class_name)
-
-    return factory
-
-
-STAGES = {
-    "corsika": _lazy_stage("simtools.runners.corsika_stage:CorsikaStage"),
-    "sim_telarray": _lazy_stage("simtools.runners.sim_telarray_stage:SimTelArrayStage"),
-    "light_emission": _lazy_stage("simtools.runners.light_source_stages:LightEmissionStage"),
-    "corsika_to_stream": _lazy_stage("simtools.runners.adapter_stages:CorsikaToStreamStage"),
-    "stream_to_simtel": _lazy_stage("simtools.runners.adapter_stages:StreamToSimtelStage"),
-    "obdeect_atmosphere": _lazy_stage("simtools.runners.atmosphere_stage:ObdeectAtmosphereStage"),
-    "obdeect_optics": _lazy_stage("simtools.runners.optics_stage:ObdeectOpticsStage"),
-    "obdeect_flasher": _lazy_stage("simtools.runners.light_source_stages:FlasherSourceStage"),
-    "obdeect_illuminator": _lazy_stage(
-        "simtools.runners.light_source_stages:IlluminatorSourceStage"
-    ),
-}
-STAGE_SOFTWARE = {
-    "corsika": frozenset({"corsika"}),
-    "sim_telarray": frozenset({"sim_telarray"}),
-    "light_emission": frozenset({"sim_telarray"}),
-    "corsika_to_stream": frozenset({"obdeect"}),
-    "stream_to_simtel": frozenset({"obdeect"}),
-    "obdeect_atmosphere": frozenset({"obdeect"}),
-    "obdeect_optics": frozenset({"obdeect"}),
-    "obdeect_flasher": frozenset({"obdeect"}),
-    "obdeect_illuminator": frozenset({"obdeect"}),
-}
-
-#: Stages that only convert photons between the formats of two programs.
-CONVERTER_STAGES = ("corsika_to_stream", "stream_to_simtel")
-
-
-def register_stage(name, factory, software=()):
+class CatalogStage:
     """
-    Register a stage under a name, replacing any stage already registered under it.
+    Base class of the stage implementations of the software catalog.
+
+    The registry makes a subclass per catalog stage that sets the name, the products and the
+    catalog entry (``spec``); an implementation holds only how the stage runs.
+    """
+
+    name = None
+    consumes = None
+    produces = None
+    spec = None
+    streams = True
+
+    @classmethod
+    def stage_options(cls, inputs):
+        """Return the options of the stage in the chain, checked and with their defaults."""
+        return cls.spec.checked_options(inputs.options_of(cls.name))
+
+
+AIR_SHOWER_SOURCE = software_catalog.AIR_SHOWER_SOURCE
+LIGHT_SOURCE = software_catalog.LIGHT_SOURCE
+#: Stage classes by name: the catalog stages (built on first use, see :func:`registry`) and the
+#: stages added with :func:`register_stage`.
+STAGES = {}
+
+
+def _catalog_stage_class(spec):
+    """
+    Return the class of a catalog stage: a subclass of its implementation with the catalog fields.
+
+    The subclass carries the name, the products and the catalog entry (``spec``), so that one
+    implementation can serve several stages (e.g. the light-source stages).
+    """
+    implementation = software_catalog.load_object(spec.implementation)
+    return type(
+        implementation.__name__,
+        (implementation,),
+        {
+            "name": spec.name,
+            "consumes": spec.consumes,
+            "produces": spec.produces,
+            "spec": spec,
+            "__module__": implementation.__module__,
+            "__doc__": implementation.__doc__,
+        },
+    )
+
+
+@lru_cache(maxsize=1)
+def _catalog_stages():
+    """Return the classes of the catalog stages by name (imported once)."""
+    return {
+        name: _catalog_stage_class(software_catalog.stage_spec(name))
+        for name in software_catalog.stage_names()
+    }
+
+
+def registry():
+    """Return the stage classes by name: the catalog stages and the registered stages."""
+    for name, stage_class in _catalog_stages().items():
+        STAGES.setdefault(name, stage_class)
+    return STAGES
+
+
+def register_stage(stage_class):
+    """
+    Register a stage class under its name, replacing any stage registered under it.
+
+    A stage of simtools is an entry of ``resources/simulation_software.yml``; this adds a stage
+    outside the catalog (e.g. in tests). The class declares ``name``, ``consumes`` and
+    ``produces``, and the role attributes it has (see :class:`SimulationStage`).
 
     Parameters
     ----------
-    name : str
-        Stage name used in simulation chains.
-    factory : callable
-        Function without arguments returning the stage class.
-    software : iterable of str
-        Software the stage needs (names of the ``simulation_software`` of the model parameters).
+    stage_class : type
+        Stage class.
     """
-    STAGES[name] = factory
-    STAGE_SOFTWARE[name] = frozenset(software)
+    registry()[stage_class.name] = stage_class
+
+
+def stage_role(stage_class, role, default=None):
+    """
+    Return a role of a stage class: its catalog field, or else its attribute.
+
+    Parameters
+    ----------
+    stage_class : type
+        Stage class.
+    role : str
+        Role (see :class:`SimulationStage`).
+    default : object
+        Value if the stage does not declare the role.
+    """
+    spec = getattr(stage_class, "spec", None)
+    value = getattr(spec, role) if spec is not None else getattr(stage_class, role, None)
+    return default if value is None else value
+
+
+def stages_with(names, role, value=True):
+    """
+    Return the names of the stages that have a role.
+
+    Parameters
+    ----------
+    names : iterable of str
+        Stage names (e.g. the stages of a chain).
+    role : str
+        Role attribute (see :class:`SimulationStage`).
+    value : object
+        Value of the role attribute.
+
+    Returns
+    -------
+    list of str
+        Names of the stages whose role attribute equals ``value``, in the given order.
+    """
+    return [name for name in names if stage_role(get_stage_class(name), role) == value]
+
+
+def converter_stages():
+    """Return the names of the converter stages (role ``converter``)."""
+    return [name for name, stage in registry().items() if stage_role(stage, "converter", False)]
+
+
+def applied_factors_of(stage, options, upstream=frozenset()):
+    """
+    Return the efficiency factors a stage applies, given the factors applied upstream.
+
+    A stage class may compute them (method ``applied_factors``); otherwise they follow its
+    catalog declaration (``applies``, ``applies_by_option``, ``skips_if_applied_upstream``).
+    """
+    stage_class = get_stage_class(stage)
+    method = getattr(stage_class, "applied_factors", None)
+    if method is not None:
+        return frozenset(method(options, upstream=upstream))
+    spec = getattr(stage_class, "spec", None)
+    return spec.applied_factors(options, upstream) if spec is not None else frozenset()
+
+
+def files_of_run(inputs, label=None, required=True):
+    """
+    Return the file naming of a run (``RunnerServices``), shared by the stages of its chain.
+
+    A light-emission run names its files after the light-emission simulation; a shower run after
+    the run of its first stage (run type: the software of that stage; the first shower
+    configuration).
+
+    Parameters
+    ----------
+    inputs : StageInputs
+        Inputs of the stages.
+    label : str, optional
+        Instance label.
+    required : bool
+        Raise if the run has no configuration; otherwise return None (a stage that only streams
+        writes no file).
+    """
+    if inputs.calibration is not None:
+        return inputs.calibration.runner_service
+    if not inputs.shower_configurations or not inputs.stages:
+        if not required:
+            return None
+        raise ValueError("The stages of a chain need a light-emission or a shower configuration.")
+    config = inputs.shower_configurations[0]
+    (run_type,) = stage_role(get_stage_class(inputs.stages[0]), "software")
+    return RunnerServices(
+        config, run_type=run_type, label=label, context=inputs.context or config.context
+    )
+
+
+def stage_file(stage, use, run_number):
+    """
+    Return a file of a stage instance: ``<run base name>.<stage name><suffix>``.
+
+    The file product of the use (``output``, ``log``, ...) is the catalog ``files`` entry of the
+    stage; the instance has the file naming of its run (``run_files``).
+
+    Parameters
+    ----------
+    stage : object
+        Stage instance with ``spec`` and ``run_files``.
+    use : str
+        Use of the file.
+    run_number : int
+        Run number.
+    """
+    if stage.run_files is None:
+        raise ValueError(f"Stage {stage.name!r} has no run configuration to name its {use} file.")
+    return stage.run_files.get_stage_file_name(
+        stage.name, stage.spec.file_type(use), run_number=run_number
+    )
+
+
+def single_downstream(output, stage_name):
+    """Return the one downstream command of a streamed output; raise if there are several."""
+    if len(output.commands) != 1:
+        raise ValueError(
+            f"Stage {stage_name!r} pipes into one downstream command, got {len(output.commands)}."
+        )
+    return output.commands[0]
+
+
+def ends_camera_only(inputs):
+    """
+    Return True if the last stage of the chain simulates the camera only.
+
+    The last stage declares this in the catalog (``camera_only``: option values).
+
+    Parameters
+    ----------
+    inputs : StageInputs
+        Inputs of the stages (chain stages and chain options).
+    """
+    if not inputs.stages:
+        return False
+    last = inputs.stages[-1]
+    spec = getattr(get_stage_class(last), "spec", None)
+    return bool(spec and spec.simulates_camera_only(inputs.options_of(last)))
+
+
+def efficiency_envelope_enabled(inputs):
+    """
+    Return True if a thinning stage of the chain thins the photons by the efficiency envelope.
+
+    A thinning stage declares this with the role method ``efficiency_envelope(inputs)``.
+
+    Parameters
+    ----------
+    inputs : StageInputs
+        Inputs of the stages (chain stages and chain options).
+    """
+    for name in stages_with(inputs.stages, "thins_photons"):
+        envelope = getattr(get_stage_class(name), "efficiency_envelope", None)
+        if envelope and envelope(inputs):
+            return True
+    return False
 
 
 def stages_software(names):
@@ -157,9 +353,7 @@ def stages_software(names):
     """
     software = set()
     for name in names:
-        if name not in STAGES:
-            raise ValueError(f"Unknown simulation stage {name!r}; known: {sorted(STAGES)}")
-        software |= STAGE_SOFTWARE.get(name, frozenset())
+        software |= frozenset(stage_role(get_stage_class(name), "software", ()))
     return frozenset(software)
 
 
@@ -177,10 +371,11 @@ def connects(upstream, downstream):
 
 def get_stage_class(name) -> type[SimulationStage]:
     """Return the stage class registered under a name."""
+    stages = registry()
     try:
-        return STAGES[name]()
+        return stages[name]
     except KeyError as exc:
-        raise ValueError(f"Unknown simulation stage {name!r}; known: {sorted(STAGES)}") from exc
+        raise ValueError(f"Unknown simulation stage {name!r}; known: {sorted(stages)}") from exc
 
 
 @dataclass(frozen=True)
@@ -212,15 +407,28 @@ class SimulationChain:
         return [get_stage_class(name) for name in self.stages]
 
     @property
-    def starts_with_showers(self):
-        """Return whether the first stage generates showers (consumes no input)."""
-        return self.stage_classes[0].consumes is None
+    def source(self):
+        """Return the kind of photons the first stage generates (None if it reads an input)."""
+        return stage_role(self.stage_classes[0], "source")
+
+    @property
+    def generates_air_showers(self):
+        """Return whether the first stage generates air showers."""
+        return self.source == AIR_SHOWER_SOURCE
 
     @property
     def reads_input_file(self):
-        """Return whether the first stage reads an input file."""
-        return not self.starts_with_showers
+        """Return whether the first stage reads an input file (it generates no photons)."""
+        return self.stage_classes[0].consumes is not None
 
     def has(self, name):
         """Return whether the chain contains a stage."""
         return name in self.stages
+
+    def runs(self, implementation):
+        """Return whether a stage of the chain is run by an implementation (a stage class)."""
+        return any(issubclass(stage, implementation) for stage in self.stage_classes)
+
+    def with_role(self, role, value=True):
+        """Return the stages of the chain that have a role (see :func:`stages_with`)."""
+        return stages_with(self.stages, role, value)

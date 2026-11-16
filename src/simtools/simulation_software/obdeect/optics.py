@@ -38,16 +38,24 @@ def write_optical_model(request, telescope_model, directory=None):
     return path
 
 
-def trace_stream_command(request, model_file, input_file="-", output_file="-"):
+#: Request fields that one tracing process shares between its telescopes.
+_SHARED_FIELDS = ("tracing_seed", "threads", "zenith_deg", "azimuth_deg", "telescope_transmission")
+
+
+def trace_stream_command(requests, model_files, input_file="-", output_file="-"):
     """
-    Return the tokens of the obdeect command tracing a photon stream through the optics.
+    Return the tokens of the obdeect command tracing a photon stream through several telescopes.
+
+    One process traces every telescope of the requests with its own optical model and writes
+    one camera-frame stream in event order; telescopes without a request are dropped.
 
     Parameters
     ----------
-    request : OpticsRequest
-        Optics job.
-    model_file : str or Path
-        Optical model file (see :func:`write_optical_model`).
+    requests : sequence of OpticsRequest
+        Optics jobs, one per telescope, with the same pointing, tracing seed, telescope
+        transmission and threads.
+    model_files : sequence of str or Path
+        Optical model file of each request (see :func:`write_optical_model`).
     input_file, output_file : str or Path
         Photon stream files; ``-`` is standard input or output.
 
@@ -55,25 +63,43 @@ def trace_stream_command(request, model_file, input_file="-", output_file="-"):
     -------
     list of str
         Command tokens.
+
+    Raises
+    ------
+    ValueError
+        If there is no request, the numbers of requests and model files differ, or the requests
+        differ in a shared field.
     """
+    requests = list(requests)
+    model_files = list(model_files)
+    if not requests or len(requests) != len(model_files):
+        raise ValueError(
+            f"Tracing needs one model file per request; got {len(requests)} requests and "
+            f"{len(model_files)} model files."
+        )
+    first = requests[0]
+    for name in _SHARED_FIELDS:
+        values = {getattr(request, name) for request in requests}
+        if len(values) > 1:
+            raise ValueError(f"Optics requests of one tracing process differ in {name}: {values}.")
+    models = []
+    for request, model_file in zip(requests, model_files):
+        models += ["--model", f"{request.telescope_id}={model_file}"]
     return [
         *program_command(SOFTWARE, COMMAND_PROGRAM),
         "ray-tracing",
         "trace-stream",
-        "--model",
-        str(model_file),
+        *models,
         "--seed",
-        str(request.tracing_seed),
+        str(first.tracing_seed),
         "--threads",
-        str(request.threads),
-        "--telescopes",
-        str(request.telescope_id),
+        str(first.threads),
         "--pointing-zenith-deg",
-        str(request.zenith_deg),
+        str(first.zenith_deg),
         "--pointing-azimuth-deg",
-        str(request.azimuth_deg),
+        str(first.azimuth_deg),
         "--telescope-transmission",
-        request.telescope_transmission,
+        first.telescope_transmission,
         "--input",
         str(input_file),
         "--output",

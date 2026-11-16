@@ -8,19 +8,29 @@ import pytest
 
 from simtools.runners import adapter_stages, light_emission_runner, stages
 from simtools.runners.chain_runner import ChainRunner
-from simtools.runners.light_source_stages import (
-    FlasherSourceStage,
-    IlluminatorSourceStage,
-    LightEmissionStage,
-)
-from simtools.runners.stages import StageInputs, StreamTo
+from simtools.runners.light_source_stages import LightSourceStage
+from simtools.runners.stages import StageInputs, StreamTo, get_stage_class
 from simtools.simulation_software import light_sources
-from simtools.simulation_software.products import (
-    CAMERA_EVENTS,
-    CHERENKOV_PHOTONS,
-    PHOTONS_CAMERA,
-    PHOTONS_SKY,
-)
+
+CAMERA_EVENTS = "camera_events"
+CHERENKOV_PHOTONS = "cherenkov_photons"
+PHOTONS_CAMERA = "photons_camera"
+PHOTONS_SKY = "photons_sky"
+FlasherSourceStage = get_stage_class("obdeect_flasher")
+IlluminatorSourceStage = get_stage_class("obdeect_illuminator")
+LightEmissionStage = get_stage_class("light_emission")
+
+
+class _RunFiles:
+    """File naming of a run: ``<directory>/run<N>.<stage>.pst``."""
+
+    def __init__(self, directory):
+        self.directory = Path(directory)
+
+    def get_stage_file_name(self, stage_name, file_type, run_number=None):
+        assert file_type == "photon_stream"
+        return self.directory / f"run{run_number:06d}.{stage_name}.pst"
+
 
 _FLASHER = "LSFN-design"
 _ILLUMINATOR = "ILLN-01"
@@ -92,16 +102,24 @@ def _inputs(context, **args):
         shower_configurations=(),
         args=base | args,
         context=context,
+        calibration=type(
+            "Calibration",
+            (),
+            {"runner_service": _RunFiles(context.paths.get_output_directory("light"))},
+        ),
     )
 
 
 def test_registered_stage_classes():
-    assert stages.get_stage_class("obdeect_flasher") is FlasherSourceStage
-    assert stages.get_stage_class("obdeect_illuminator") is IlluminatorSourceStage
     for stage in (FlasherSourceStage, IlluminatorSourceStage):
+        assert issubclass(stage, LightSourceStage)
         assert stage.consumes is None
         assert stage.streams is True
-        assert stage.applied_factors({}) == frozenset()
+        assert stages.applied_factors_of(stage.name, {}) == frozenset()
+    assert (FlasherSourceStage.spec.light_source, IlluminatorSourceStage.spec.light_source) == (
+        "flasher",
+        "illuminator",
+    )
     assert FlasherSourceStage.produces == PHOTONS_CAMERA
     assert IlluminatorSourceStage.produces == PHOTONS_SKY
 
@@ -193,7 +211,7 @@ def test_prepare_writes_file_without_stream(flasher_stage):
     assert request.instrument_seed == 3
     output = flasher_stage.output_file(5)
     assert tokens[tokens.index("--output") + 1] == str(output)
-    assert output.name == "obdeect_flasher_LSTN-01_LSFN-design_355nm_run000005.pst"
+    assert output.name == "run000005.obdeect_flasher.pst"
 
 
 def test_prepare_streams_to_downstream_command(flasher_stage):
@@ -206,7 +224,7 @@ def test_prepare_streams_to_downstream_command(flasher_stage):
 def test_prepare_errors(flasher_stage):
     with pytest.raises(ValueError, match="does not read an input"):
         flasher_stage.prepare(1, input_file="in.pst")
-    with pytest.raises(ValueError, match="exactly one downstream command"):
+    with pytest.raises(ValueError, match="pipes into one downstream command, got 2"):
         flasher_stage.prepare(1, output=StreamTo(("a", "b")))
 
 
@@ -240,10 +258,9 @@ class _FakeDownstream:
 
 
 def test_chain_with_fake_downstream_stage(monkeypatch, light_source_context):
-    monkeypatch.setattr(stages, "STAGES", dict(stages.STAGES))
-    stages.register_stage("fake_downstream", lambda: _FakeDownstream)
+    monkeypatch.setitem(stages.registry(), "fake_downstream", _FakeDownstream)
     chain = stages.SimulationChain(("obdeect_flasher", "fake_downstream"))
-    assert chain.starts_with_showers
+    assert chain.source == stages.LIGHT_SOURCE
     runner = ChainRunner(chain, _inputs(light_source_context, light_source=_FLASHER))
     script = runner.stages[0][0].work_directory / "run.sh"
     runner.prepare_run(1, script)
@@ -270,12 +287,11 @@ def _calibration_inputs(light_simulation, *chain):
 
 
 def test_light_emission_stage_registered():
-    assert stages.get_stage_class("light_emission") is LightEmissionStage
     assert stages.stages_software(["light_emission"]) == {"sim_telarray"}
     assert LightEmissionStage.consumes is None
     assert LightEmissionStage.produces == CHERENKOV_PHOTONS
     assert LightEmissionStage.streams is False
-    assert LightEmissionStage.applied_factors({}) == frozenset()
+    assert stages.applied_factors_of("light_emission", {}) == frozenset()
 
 
 def test_light_emission_stage_lines_are_those_of_the_run_command(light_simulation):
@@ -328,12 +344,12 @@ def test_flasher_chain_through_light_emission_simulation(
     items = ["obdeect_flasher", "stream_to_simtel", "sim_telarray:bypass_optics=1"]
     light_emission_runner.write_chain_script(light_simulation, items, script)
     lines = script.read_text(encoding="utf-8").splitlines()
-    iact_file = light_simulation.runner_service.get_file_name("iact_output")
-    camera_iact = f"{iact_file}.camera.iact"
+    camera_iact = tmp_test_directory / "run.stream_to_simtel.photon_bunches"
     assert "simtools.simulation_software.flasher_stream" in lines[3]
     assert " | " in lines[3]
     assert lines[3].endswith(f"> {camera_iact}")
-    assert Path(f"{iact_file}.camera_map.txt").read_text(encoding="utf-8") == "1 1 0.0\n"
+    camera_map = tmp_test_directory / "run.stream_to_simtel.camera_map"
+    assert camera_map.read_text(encoding="utf-8") == "1 1 0.0\n"
     assert "--atmprof " in lines[3]
     assert f"-C input_file={camera_iact}" in lines[4]
     assert "-C Bypass_Optics=1" in lines[4]

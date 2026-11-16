@@ -26,6 +26,7 @@ from packaging.requirements import InvalidRequirement, Requirement
 
 from simtools.io import ascii_handler
 from simtools.runtime import context as run_context
+from simtools.runtime import software_catalog
 from simtools.utils import general as gen
 from simtools.version import __version__
 
@@ -55,7 +56,6 @@ LEGACY_BUILD_OPTION_KEYS = {
     "stdtools_version": "stdtools_tag",
 }
 _CORSIKA_TABLE_MANIFEST_SCHEMA_MAJOR = 1
-_SIMULATION_SOFTWARE = frozenset({"corsika", "sim_telarray", "obdeect"})
 _GIT_LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1\n"
 
 
@@ -65,8 +65,8 @@ def validate_simulation_dependencies(software, context=None):
     Parameters
     ----------
     software : iterable of str
-        Software needed by the stages of the simulation chain (``corsika``,
-        ``sim_telarray``, ``obdeect``).
+        Software needed by the stages of the simulation chain (names of the software catalog,
+        ``resources/simulation_software.yml``; its ``dependency`` selects the check).
 
     Raises
     ------
@@ -76,36 +76,55 @@ def validate_simulation_dependencies(software, context=None):
     """
     context = context or run_context.RunContext.from_environment()
     required = frozenset(software)
-    unknown = required - _SIMULATION_SOFTWARE
+    unknown = required - set(software_catalog.software_names())
     if unknown:
         raise ValueError(f"Unknown simulation software: {', '.join(sorted(unknown))}")
 
     errors = []
-    if "sim_telarray" in required:
-        _collect_dependency_error(errors, "sim_telarray", lambda: context.software.sim_telarray_exe)
-    if "obdeect" in required:
-        _collect_dependency_error(errors, "obdeect", _obdeect_package)
-    if "corsika" in required:
-        geometry = "curved" if _uses_curved_atmosphere(context) else "flat"
-        _collect_dependency_error(
-            errors, f"CORSIKA ({geometry})", lambda: _corsika_executable(geometry, context)
-        )
-        try:
-            table_path = context.software.corsika_interaction_table_path
-            errors.extend(_validate_corsika_interaction_tables(table_path, context))
-        except (FileNotFoundError, PermissionError, TypeError, ValueError) as exc:
-            errors.append(f"CORSIKA interaction tables: {exc}")
-
+    for name in sorted(required):
+        entry = software_catalog.software(name)
+        _DEPENDENCY_CHECKS[entry["dependency"]](errors, name, entry, context)
     if errors:
         raise ValueError("Simulation dependencies are unavailable:\n- " + "\n- ".join(errors))
 
 
-def _obdeect_package():
-    """Return the location of the obdeect package; raise ValueError if it is not installed."""
-    specification = importlib.util.find_spec("obdeect")
+def _python_package(package):
+    """Return the location of a Python package; raise ValueError if it is not installed."""
+    specification = importlib.util.find_spec(package)
     if specification is None:
-        raise ValueError("the obdeect package is not installed")
+        raise ValueError(f"the {package} package is not installed")
     return specification.origin or next(iter(specification.submodule_search_locations))
+
+
+def _check_python_package(errors, name, entry, _context):
+    """Check a software installed as a Python package (catalog ``package``)."""
+    _collect_dependency_error(errors, name, lambda: _python_package(entry["package"]))
+
+
+def _check_sim_telarray(errors, name, _entry, context):
+    """Check the sim_telarray executable."""
+    _collect_dependency_error(errors, name, lambda: context.software.sim_telarray_exe)
+
+
+def _check_corsika(errors, _name, _entry, context):
+    """Check the CORSIKA executable of the atmosphere geometry and the interaction tables."""
+    geometry = "curved" if _uses_curved_atmosphere(context) else "flat"
+    _collect_dependency_error(
+        errors, f"CORSIKA ({geometry})", lambda: _corsika_executable(geometry, context)
+    )
+    try:
+        table_path = context.software.corsika_interaction_table_path
+        errors.extend(_validate_corsika_interaction_tables(table_path, context))
+    except (FileNotFoundError, PermissionError, TypeError, ValueError) as exc:
+        errors.append(f"CORSIKA interaction tables: {exc}")
+
+
+#: Installation checks by the ``dependency`` of a software catalog entry.
+_DEPENDENCY_CHECKS = {
+    "python_package": _check_python_package,
+    "sim_telarray": _check_sim_telarray,
+    "corsika": _check_corsika,
+}
 
 
 def _collect_dependency_error(errors, name, getter):

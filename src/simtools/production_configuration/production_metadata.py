@@ -9,7 +9,6 @@ from types import SimpleNamespace
 import h5py
 from astropy import units as u
 
-from simtools.constants import SIMULATION_SOFTWARE_DEFAULT
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.production_configuration.jobs_io import (
@@ -25,6 +24,7 @@ from simtools.production_configuration.production_file_selection import (
     resolve_relative_manifest_path,
     validate_required_production_outputs,
 )
+from simtools.runtime import software_catalog
 from simtools.utils import names
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 
@@ -86,7 +86,10 @@ def _write_manifests(production_path, job_grid_file, args_dict, context):
                 f"Metadata manifest already exists: {manifest_path}. Use --overwrite to replace it."
             )
         args = job_grid_row_to_simulate_prod_args(row, metadata)
-        args.setdefault("simulation_software", list(SIMULATION_SOFTWARE_DEFAULT))
+        args.setdefault(
+            "simulation_software",
+            list(software_catalog.default_chain(software_catalog.AIR_SHOWER_SOURCE)),
+        )
         args.setdefault("eslope", -2.0)
         missing = [
             key

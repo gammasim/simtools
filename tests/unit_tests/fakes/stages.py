@@ -2,8 +2,10 @@
 
 from pathlib import Path
 
-from simtools.runners.stages import CAMERA_EVENTS, CHERENKOV_PHOTONS
 from tests.unit_tests.builders.tables import reduced_event_tables
+
+CAMERA_EVENTS = "camera_events"
+CHERENKOV_PHOTONS = "cherenkov_photons"
 
 
 class FakeShowerStage:

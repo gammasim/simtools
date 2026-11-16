@@ -723,3 +723,12 @@ def test_write_development_dependency_manifest(mocker, monkeypatch, tmp_test_dir
     }
     assert manifest["container"] == {"base_image": "alma:9"}
     assert Path(str(output)).with_suffix(".json.sha256").is_file()
+
+
+def test_validate_simulation_dependencies_checks_python_package(run_context, monkeypatch):
+    """Software installed as a Python package is checked by its catalog ``package``."""
+    context = _dependency_context(run_context)
+    monkeypatch.setattr("importlib.util.find_spec", lambda name: None)
+
+    with pytest.raises(ValueError, match="obdeect: the obdeect package is not installed"):
+        validate_simulation_dependencies({"obdeect"}, context=context)

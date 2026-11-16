@@ -78,20 +78,24 @@ def request_one():
 
 
 def test_trace_stream_command(request_one):
-    command = optics.trace_stream_command(request_one, "model.json", "in.pst", "out.pst")
+    other = replace(request_one, telescope_name="TOYN-05", telescope_id=5)
+
+    command = optics.trace_stream_command(
+        [request_one, other], ["toy2.json", "toy5.json"], "in.pst", "out.pst"
+    )
 
     assert command == [
         *program_command("obdeect", "obdeect"),
         "ray-tracing",
         "trace-stream",
         "--model",
-        "model.json",
+        "3=toy2.json",
+        "--model",
+        "5=toy5.json",
         "--seed",
         "4",
         "--threads",
         "1",
-        "--telescopes",
-        "3",
         "--pointing-zenith-deg",
         "20.0",
         "--pointing-azimuth-deg",
@@ -106,10 +110,30 @@ def test_trace_stream_command(request_one):
 
 
 def test_trace_stream_command_streams_by_default(request_one):
-    command = optics.trace_stream_command(request_one, "model.json")
+    command = optics.trace_stream_command([request_one], ["model.json"])
 
     assert command[command.index("--input") + 1] == "-"
     assert command[command.index("--output") + 1] == "-"
+
+
+@pytest.mark.parametrize(
+    ("requests", "files", "match"),
+    [
+        ([], [], "one model file per request; got 0 requests"),
+        (["one"], ["a.json", "b.json"], "got 1 requests and 2 model files"),
+        (["one", "pointing"], ["a.json", "b.json"], "differ in zenith_deg"),
+        (["one", "seed"], ["a.json", "b.json"], "differ in tracing_seed"),
+    ],
+)
+def test_trace_stream_command_rejects_inconsistent_requests(request_one, requests, files, match):
+    variants = {
+        "one": request_one,
+        "pointing": replace(request_one, telescope_id=5, zenith_deg=30.0),
+        "seed": replace(request_one, telescope_id=5, tracing_seed=9),
+    }
+
+    with pytest.raises(ValueError, match=match):
+        optics.trace_stream_command([variants[name] for name in requests], files)
 
 
 def test_write_optical_model(request_one, toy_telescope):
@@ -134,7 +158,7 @@ def test_optical_model_depends_on_instrument_seed(request_one, toy_telescope):
 
 
 def test_trace_stream_of_ground_photons(request_one, toy_telescope, tmp_test_directory):
-    """Run obdeect on a small ground-frame stream: unselected telescopes are dropped."""
+    """Run obdeect on a small ground-frame stream: two telescopes in one process, one dropped."""
     stream = pytest.importorskip("obdeect.stream")
     cli = pytest.importorskip("obdeect.stream.cli")
     model_file = optics.write_optical_model(request_one, toy_telescope)
@@ -176,34 +200,29 @@ def test_trace_stream_of_ground_photons(request_one, toy_telescope, tmp_test_dir
         writer.write("event_end", {"event_number": 1})
         writer.write("run_end", {})
 
-    command = optics.trace_stream_command(request_one, model_file, input_file, output_file)
+    other_request = replace(request_one, telescope_name="TOYN-01", telescope_id=1)
+    command = optics.trace_stream_command(
+        [request_one, other_request], [model_file, model_file], input_file, output_file
+    )
 
     assert cli.main(command[command.index("ray-tracing") :]) == 0
     records = list(stream.Reader(str(output_file)))
     telescopes = [
         record["metadata"]["telescope_id"] for record in records if record["type"] == "telescope"
     ]
-    assert telescopes == [3]
+    assert telescopes == [1, 3]
+    assert len([r for r in records if r["type"] == "event"]) == 1
     assert all(
         record["metadata"]["frame"] == stream.FRAMES["camera"]
         for record in records
         if record["type"] == "telescope"
     )
-
-    from simtools.simulation_software.merge_streams import merge_streams
-
-    other_file = Path(tmp_test_directory) / "camera-other.pst"
-    other_request = replace(request_one, telescope_id=1)
-    command = optics.trace_stream_command(other_request, model_file, input_file, other_file)
-    assert cli.main(command[command.index("ray-tracing") :]) == 0
-    merged_file = Path(tmp_test_directory) / "camera-merged.pst"
-    merge_streams([output_file, other_file], merged_file)
-    merged = list(stream.Reader(str(merged_file)))
-    assert [r["metadata"]["telescope_id"] for r in merged if r["type"] == "telescope"] == [3, 1]
-    assert len([r for r in merged if r["type"] == "event"]) == 1
     simtel_file = Path(tmp_test_directory) / "camera.iact"
     roundtrip_file = Path(tmp_test_directory) / "roundtrip.pst"
-    stream.stream_to_simtel(merged_file, simtel_file, {1: (1, 0.0), 3: (1, 0.0)})
+    # the toy stream has no atmosphere status; sim_telarray would apply the atmosphere
+    stream.stream_to_simtel(
+        output_file, simtel_file, {1: (1, 0.0), 3: (1, 0.0)}, allow_pending_atmosphere=True
+    )
     stream.corsika_to_stream(simtel_file, roundtrip_file)
     roundtrip = list(stream.Reader(str(roundtrip_file)))
     assert {r["metadata"]["telescope_id"] for r in roundtrip if r["type"] == "telescope"} == {1, 3}

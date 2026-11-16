@@ -357,12 +357,14 @@ def test_validate_required_production_outputs_uses_last_stage_of_chain(tmp_test_
         validate_required_production_outputs({}, ["corsika"], tmp_test_directory)
 
 
-def test_validate_required_production_outputs_rejects_stage_without_file_type(tmp_test_directory):
-    with pytest.raises(ValueError, match="Cannot check the output of stage 'corsika_to_stream'"):
+@pytest.mark.parametrize("last_stage", ["corsika_to_stream", "light_emission"])
+def test_validate_required_production_outputs_rejects_stage_without_result(
+    tmp_test_directory, last_stage
+):
+    chain = ["corsika", last_stage] if last_stage == "corsika_to_stream" else [last_stage]
+    with pytest.raises(ValueError, match=f"stage '{last_stage}': it does not end a production"):
         validate_required_production_outputs(
-            {"corsika": ["shower.corsika.zst"]},
-            ["corsika", "corsika_to_stream"],
-            tmp_test_directory,
+            {"corsika": ["shower.corsika.zst"]}, chain, tmp_test_directory
         )
 
 

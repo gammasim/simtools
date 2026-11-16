@@ -121,7 +121,14 @@ def flasher_command(
     ]
 
 
-def illuminator_command(request, work_directory, output=None, file_token="", executable=None):
+def illuminator_command(
+    request,
+    work_directory,
+    output=None,
+    file_token="",
+    executable=None,
+    simulation_models_path=None,
+):
     """
     Return the command tokens that make the photons of an illuminator request.
 
@@ -140,12 +147,15 @@ def illuminator_command(request, work_directory, output=None, file_token="", exe
         Suffix of the table file names.
     executable : str, optional
         Program (default: the point-source program of the program catalog).
+    simulation_models_path : str or Path, optional
+        Not used: the illuminator needs no model files (same signature as the flasher).
 
     Returns
     -------
     list of str
         Command tokens.
     """
+    del simulation_models_path
     telescope_file = Path(work_directory) / f"light_source_telescope_position{file_token}.dat"
     telescope_file.parent.mkdir(parents=True, exist_ok=True)
     telescope_file.write_text(

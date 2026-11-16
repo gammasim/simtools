@@ -1,8 +1,6 @@
 """Run script for a chain of simulation stages."""
 
 import logging
-import shlex
-import sys
 from pathlib import Path
 
 from simtools.runners.stages import STDIN, StreamTo
@@ -80,15 +78,11 @@ class ChainRunner:
                 stream = StreamTo(tuple(stage_lines))
             else:
                 stream = None
-                if self._merges_optics(index - 1):
-                    stage_lines.insert(0, self._merge_command(index - 1, run_number))
                 lines = stage_lines + lines
         return lines
 
     def _streams(self, upstream, downstream):
         """Return whether two neighbouring stages exchange their product as a stream."""
-        if self._merges_optics(upstream) or self._multiple_optics(downstream):
-            return False
         return all(
             instance.streams for index in (upstream, downstream) for instance in self.stages[index]
         )
@@ -111,8 +105,6 @@ class ChainRunner:
         """
         upstream = self.stages[index - 1]
         count = len(self.stages[index])
-        if self._merges_optics(index - 1):
-            return [self._merged_optics_file(index - 1, run_number)]
         if len(upstream) == 1:
             return [upstream[0].output_file(run_number)] * count
         if len(upstream) == count:
@@ -123,41 +115,6 @@ class ChainRunner:
             f"Stage {downstream_name!r} has {count} instances, but upstream stage "
             f"{upstream_name!r} has {len(upstream)}. Files are handed over only from one "
             "upstream instance or between stages with the same number of instances."
-        )
-
-    def _merges_optics(self, index):
-        """Return whether telescope optics outputs feed one array converter."""
-        return (
-            self._multiple_optics(index)
-            and index < len(self.stages) - 1
-            and self.chain.stage_classes[index + 1].name == "stream_to_simtel"
-            and len(self.stages[index + 1]) == 1
-        )
-
-    def _multiple_optics(self, index):
-        """Return whether a stage traces more than one telescope."""
-        return (
-            0 <= index < len(self.stages)
-            and len(self.stages[index]) > 1
-            and self.chain.stage_classes[index].name == "obdeect_optics"
-        )
-
-    def _merged_optics_file(self, index, run_number):
-        """Return the array photon stream file for the run."""
-        first = self.stages[index][0].output_file(run_number)
-        return first.with_name(f"{first.name}.merged")
-
-    def _merge_command(self, index, run_number):
-        """Return the event-wise merger command for the telescope streams."""
-        return shlex.join(
-            [
-                sys.executable,
-                "-m",
-                "simtools.simulation_software.merge_streams",
-                "--output",
-                str(self._merged_optics_file(index, run_number)),
-                *(str(stage.output_file(run_number)) for stage in self.stages[index]),
-            ]
         )
 
     def _merged_file_list(self):

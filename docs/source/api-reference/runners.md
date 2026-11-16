@@ -117,13 +117,7 @@ simulation chains.
 .. automodule:: simulation_software.light_sources
    :members:
 
-.. automodule:: simulation_software.merge_streams
-   :members:
-
 .. automodule:: simulation_software.optics
-   :members:
-
-.. automodule:: simulation_software.products
    :members:
 
 .. automodule:: simulation_software.programs

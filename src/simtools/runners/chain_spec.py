@@ -6,18 +6,13 @@ from dataclasses import dataclass, field
 import yaml
 
 from simtools.runners.stages import (
-    CONVERTER_STAGES,
     SimulationChain,
+    applied_factors_of,
     connects,
+    converter_stages,
     get_stage_class,
     stages_software,
 )
-
-#: Efficiency factors that can be applied by more than one program of a chain.
-ATMOSPHERIC_EXTINCTION = "atmospheric_extinction"
-MIRROR_REFLECTIVITY = "mirror_reflectivity"
-TELESCOPE_TRANSMISSION = "telescope_transmission"
-QUANTUM_EFFICIENCY = "quantum_efficiency"
 
 _STAGE_SEPARATOR = ":"
 _OPTION_SEPARATOR = ","
@@ -83,17 +78,11 @@ class ChainSpec:
                 seen[factor] = stage
 
 
-def applied_factors_of(stage, options, upstream=frozenset()):
-    """Return the efficiency factors that a stage applies, given the factors applied upstream."""
-    method = getattr(get_stage_class(stage), "applied_factors", None)
-    return frozenset(method(options, upstream=upstream)) if method else frozenset()
-
-
 def parse_chain(items):
     """
     Return the chain specification of a list of stage items.
 
-    Converter stages (``CONVERTER_STAGES``) may be left out: between two stages whose data
+    Converter stages (role ``converter``) may be left out: between two stages whose data
     products differ, the one converter that fits is inserted. A converter is listed explicitly
     to give it options.
 
@@ -124,6 +113,10 @@ def parse_chain(items):
         stages.append(stage)
         if stage_options:
             options[stage] = stage_options
+    for stage, stage_options in options.items():
+        spec = getattr(get_stage_class(stage), "spec", None)
+        if spec is not None:
+            spec.checked_options(stage_options)
     return ChainSpec(_with_converters(stages), options)
 
 
@@ -150,7 +143,7 @@ def _converter_between(upstream, downstream):
         return None
     fitting = [
         name
-        for name in CONVERTER_STAGES
+        for name in converter_stages()
         if connects(upstream_class, get_stage_class(name))
         and connects(get_stage_class(name), downstream_class)
     ]

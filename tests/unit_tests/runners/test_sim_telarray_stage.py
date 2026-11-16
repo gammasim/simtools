@@ -8,16 +8,17 @@ import pytest
 from astropy.table import Column, Table
 
 from simtools.runners import stages
-from simtools.runners.chain_spec import (
-    ATMOSPHERIC_EXTINCTION,
-    MIRROR_REFLECTIVITY,
-    QUANTUM_EFFICIENCY,
-    TELESCOPE_TRANSMISSION,
-    ChainSpec,
-)
-from simtools.runners.sim_telarray_stage import LightSimTelArrayStage, SimTelArrayStage
-from simtools.runners.stages import STDIN, StageInputs, StreamTo
-from simtools.simulation_software.products import CAMERA_PHOTONS_IACT, CHERENKOV_PHOTONS
+from simtools.runners.chain_spec import ChainSpec
+from simtools.runners.sim_telarray_stage import LightSimTelArrayStage
+from simtools.runners.stages import STDIN, StageInputs, StreamTo, get_stage_class
+
+CAMERA_PHOTONS_IACT = "camera_photons_iact"
+CHERENKOV_PHOTONS = "cherenkov_photons"
+ATMOSPHERIC_EXTINCTION = "atmospheric_extinction"
+MIRROR_REFLECTIVITY = "mirror_reflectivity"
+QUANTUM_EFFICIENCY = "quantum_efficiency"
+TELESCOPE_TRANSMISSION = "telescope_transmission"
+SimTelArrayStage = get_stage_class("sim_telarray")
 
 ALL_FACTORS = frozenset(
     {ATMOSPHERIC_EXTINCTION, MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION, QUANTUM_EFFICIENCY}
@@ -224,19 +225,21 @@ def test_prepare_reads_zero_transmission_table_before_show_all(corsika_config_mo
     ],
 )
 def test_applied_factors_by_bypass_mode(options, expected):
-    assert SimTelArrayStage.applied_factors(options) == frozenset(expected)
+    assert SimTelArrayStage.spec.applied_factors(options) == frozenset(expected)
 
 
 def test_applied_factors_rejects_unknown_mode():
-    with pytest.raises(ValueError, match=r"Invalid bypass_optics option: 4"):
-        SimTelArrayStage.applied_factors({"bypass_optics": 4})
+    with pytest.raises(
+        ValueError, match=r"Invalid bypass_optics option of stage 'sim_telarray': 4"
+    ):
+        SimTelArrayStage.spec.applied_factors({"bypass_optics": 4})
 
 
 def test_neutral_atmosphere_option_is_rejected():
     with pytest.raises(
-        ValueError, match=r"Unknown sim_telarray stage option\(s\): neutral_atmosphere"
+        ValueError, match=r"Unknown option\(s\) \['neutral_atmosphere'\] of stage 'sim_telarray'"
     ):
-        SimTelArrayStage.applied_factors({"bypass_optics": 2, "neutral_atmosphere": True})
+        SimTelArrayStage.spec.applied_factors({"bypass_optics": 2, "neutral_atmosphere": True})
 
 
 def _release_output(release):
@@ -372,7 +375,7 @@ def test_instances_reject_invalid_bypass_option(corsika_config_mock_array_model)
         chain_options={"sim_telarray": {"bypass_optics": "yes"}},
     )
 
-    with pytest.raises(ValueError, match="Invalid bypass_optics option"):
+    with pytest.raises(ValueError, match="'bypass_optics' of stage 'sim_telarray' must be of type"):
         SimTelArrayStage.instances(inputs)
 
 
@@ -390,7 +393,7 @@ def fake_photon_stage(monkeypatch):
         def applied_factors(cls, options, upstream=frozenset()):
             return frozenset({QUANTUM_EFFICIENCY})
 
-    monkeypatch.setitem(stages.STAGES, "fake_qe", lambda: FakeStage)
+    monkeypatch.setitem(stages.registry(), "fake_qe", FakeStage)
 
 
 def test_chain_rejects_quantum_efficiency_applied_twice(fake_photon_stage):
@@ -483,7 +486,7 @@ def test_light_instances_keep_site_table_without_upstream_extinction(light_simul
 
 def test_light_instances_reject_unknown_option(light_simulation):
     inputs = _light_inputs(light_simulation, ("light_emission", "sim_telarray"), {"other": 1})
-    with pytest.raises(ValueError, match="Unknown sim_telarray stage option"):
+    with pytest.raises(ValueError, match="Unknown option"):
         SimTelArrayStage.instances(inputs)
 
 
@@ -504,7 +507,7 @@ def test_light_stage_command_equals_light_emission_script(light_simulation, ligh
 
 
 def test_light_stage_uses_input_file_of_upstream_stage(light_simulation):
-    stage = LightSimTelArrayStage(light_simulation, bypass_optics=3)
+    stage = LightSimTelArrayStage(SimTelArrayStage, light_simulation, bypass_optics=3)
     (line,) = stage.prepare(1, input_file=Path("/in/camera.iact"))
     assert "-C input_file=/in/camera.iact" in line
     assert "-C Bypass_Optics=3" in line
@@ -512,7 +515,7 @@ def test_light_stage_uses_input_file_of_upstream_stage(light_simulation):
 
 
 def test_light_stage_errors(light_simulation):
-    stage = LightSimTelArrayStage(light_simulation)
+    stage = LightSimTelArrayStage(SimTelArrayStage, light_simulation)
     with pytest.raises(ValueError, match="reads a file and writes its file"):
         stage.prepare(1, input_file=STDIN)
     with pytest.raises(ValueError, match="reads a file and writes its file"):
@@ -535,7 +538,7 @@ def test_light_stage_errors(light_simulation):
     ],
 )
 def test_applied_factors_extinction_moves_to_upstream_stage(options, upstream, expected):
-    assert SimTelArrayStage.applied_factors(options, upstream=upstream) == frozenset(expected)
+    assert SimTelArrayStage.spec.applied_factors(options, upstream=upstream) == frozenset(expected)
 
 
 def test_mode_zero_with_upstream_extinction_is_rejected_by_chain():

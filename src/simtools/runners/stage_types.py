@@ -1,9 +1,7 @@
-"""Shared data products and stream output for simulation stages."""
+"""Stream input and output of simulation stages (the products are in ``products``)."""
 
 from dataclasses import dataclass
 
-CHERENKOV_PHOTONS = "cherenkov_photons"
-CAMERA_EVENTS = "camera_events"
 STDIN = "-"
 
 

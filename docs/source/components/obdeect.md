@@ -1,6 +1,6 @@
 # Telescope ray tracing with obdeect
 
-[obdeect](https://github.com/gammasim/obdeect) is an optical ray tracer for
+[obdeect](https://github.com/gammasim/obdeect) is a simulation chain for
 imaging atmospheric Cherenkov telescopes. It is a backend for the
 ray-tracing applications of simtools (PSF, effective mirror area, effective
 focal length, incident angles) and for the calibration light of flashers and
@@ -29,12 +29,17 @@ simtools runs a simulation as an ordered list of stages, `--simulation_software`
 `corsika sim_telarray`). Each stage is written `STAGE` or `STAGE:KEY=VALUE,...`, with list values
 in brackets (`obdeect_atmosphere:wavelength_range_nm=[300,700]`). obdeect only traces photons;
 the stages below wrap its programs, and sim_telarray simulates the camera and electronics.
+The stages, their options (type, allowed values, default), the data products that connect them
+and the files they write are declared in
+[`resources/simulation_software.yml`](https://github.com/gammasim/simtools/blob/main/src/simtools/resources/simulation_software.yml);
+options are checked against it when the chain is read. The files of a stage are named
+`<run base name>.<stage name><suffix>`.
 
 | Stage | Program | Task |
 | --- | --- | --- |
 | `corsika_to_stream` | `obdeect stream` | CORSIKA photon bunches to a photon stream |
 | `obdeect_atmosphere` | `obdeect propagation` | photons from emission to the ground, with atmospheric extinction |
-| `obdeect_optics` | `obdeect ray-tracing` | mirrors, shadowing and telescope transmission, one process per telescope |
+| `obdeect_optics` | `obdeect ray-tracing` | mirrors, shadowing and telescope transmission; one process traces all telescopes, each with its own optical model |
 | `stream_to_simtel` | `obdeect stream` | photon stream to the sim_telarray photon-bunch input |
 | `obdeect_flasher` | simtools flasher stream (obdeect ray tracing) | flasher photons, traced past the telescope structure to the camera |
 | `obdeect_illuminator` | `obdeect sources` | photons of the illuminator |
@@ -62,9 +67,9 @@ simulate the camera only. simtools checks that the installed sim_telarray releas
 before any job is written; for a locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3`
 states the highest supported level.
 
-For multiple telescopes, the photon stream before optics and each telescope's camera stream are
-written to disk. The camera streams are merged by event before sim_telarray runs, so the output
-directory needs space for these intermediate files.
+The whole chain runs as one pipe, also for several telescopes: one `obdeect_optics` process
+traces every telescope of the array with its own optical model and writes the camera photons in
+event order.
 
 The calibration applications use obdeect with `--ray_tracing_backend` (next section) or with
 `--simulation_software` (default `light_emission sim_telarray`), which runs the stages for one

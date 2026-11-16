@@ -27,12 +27,7 @@ OBDEECT_QE_FACTOR = "qe"
 ENVELOPE_OPTION = "efficiency_envelope"
 ENVELOPE_ON = "qe"
 ENVELOPE_OFF = "none"
-#: Chain stage whose option ``bypass_optics=3`` selects the default envelope (on).
-SIM_TELARRAY_STAGE = "sim_telarray"
-CAMERA_ONLY_BYPASS = 3
 ENVELOPE_OPTIONS = (ENVELOPE_ON, ENVELOPE_OFF)
-#: Name of the atmosphere stage in a chain (its option switches the envelope).
-ATMOSPHERE_STAGE = "obdeect_atmosphere"
 QE_PARAMETER = "quantum_efficiency"
 QE_VARIATION_PARAMETER = "qe_variation"
 #: Standard deviations of the pixel QE variation left as margin by the headroom, so that the
@@ -118,68 +113,6 @@ def envelope_setting(options, default=ENVELOPE_OFF):
         choices = ", ".join(ENVELOPE_OPTIONS)
         raise ValueError(f"Invalid {ENVELOPE_OPTION} option: {value!r}; choose from {choices}.")
     return value == ENVELOPE_ON
-
-
-def ends_camera_only(inputs):
-    """
-    Return True if the chain ends in sim_telarray with ``bypass_optics=3`` (photons on the camera).
-
-    Parameters
-    ----------
-    inputs : StageInputs
-        Inputs of the stages (chain stages and chain options).
-
-    Returns
-    -------
-    bool
-        True if the last stage is sim_telarray with Bypass_Optics 3.
-    """
-    if not inputs.stages or inputs.stages[-1] != SIM_TELARRAY_STAGE:
-        return False
-    return inputs.options_of(SIM_TELARRAY_STAGE).get("bypass_optics") == CAMERA_ONLY_BYPASS
-
-
-def envelope_for_inputs(inputs):
-    """
-    Return whether the efficiency envelope is on for a chain.
-
-    An explicit ``efficiency_envelope`` option of the atmosphere stage always decides. Without
-    it, the envelope is on for a chain that ends in sim_telarray with ``bypass_optics=3`` and off
-    otherwise.
-
-    Parameters
-    ----------
-    inputs : StageInputs
-        Inputs of the stages (chain stages and chain options).
-
-    Returns
-    -------
-    bool
-        True if the envelope is on.
-    """
-    default = ENVELOPE_ON if ends_camera_only(inputs) else ENVELOPE_OFF
-    return envelope_setting(inputs.options_of(ATMOSPHERE_STAGE), default=default)
-
-
-def chain_envelope_enabled(inputs):
-    """
-    Return whether the chain of the stage inputs carries an efficiency envelope.
-
-    A chain without the atmosphere stage has no envelope (see :func:`envelope_for_inputs`).
-
-    Parameters
-    ----------
-    inputs : StageInputs
-        Inputs of the stages (chain stages and chain options).
-
-    Returns
-    -------
-    bool
-        True if the atmosphere stage of the chain has the envelope on.
-    """
-    if ATMOSPHERE_STAGE not in inputs.stages:
-        return False
-    return envelope_for_inputs(inputs)
 
 
 def sim_telarray_qe(table, grid=WAVELENGTH_GRID_NM):

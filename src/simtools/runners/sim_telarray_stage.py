@@ -6,23 +6,22 @@ import shlex
 
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.ray_tracing.backends.interface import get_backend
-from simtools.runners.chain_spec import (
-    ATMOSPHERIC_EXTINCTION,
-    MIRROR_REFLECTIVITY,
-    QUANTUM_EFFICIENCY,
-    TELESCOPE_TRANSMISSION,
-    applied_factors_of,
-)
 from simtools.runners.shower_routing import ShowerRouting, route_threads
-from simtools.runners.stage_types import CAMERA_EVENTS, CHERENKOV_PHOTONS, STDIN
-from simtools.runners.stages import get_stage_class
+from simtools.runners.stage_types import STDIN
+from simtools.runners.stages import (
+    CatalogStage,
+    applied_factors_of,
+    efficiency_envelope_enabled,
+    get_stage_class,
+    stages_with,
+)
+from simtools.runtime import software_catalog
 from simtools.simtel.photon_bunch_file import bypass_optics_level
 from simtools.simtel.sim_telarray_capabilities import check_bypass_optics
 from simtools.simtel.simtel_runner import SIM_TELARRAY_ENV, sim_telarray_env_as_string
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.simulation_software import efficiency
 from simtools.simulation_software.atmosphere import export_atmosphere_files, write_zero_transmission
-from simtools.simulation_software.products import CAMERA_PHOTONS_IACT
 
 #: Chain option: 0 (default) runs sim_telarray's optics on CORSIKA photons; 1 or 2 gives photons
 #: at the camera entrance (Bypass_Optics from the mirror class of the telescopes); 3 is
@@ -36,34 +35,25 @@ _logger = logging.getLogger(__name__)
 #: Output directory of the zero-depth transmission table (sim_telarray, bypass 1 or 2). Separate
 #: from the atmosphere stage: exporting the site table here must not overwrite its table.
 ZERO_TRANSMISSION_DIRECTORY = "atmosphere_zero"
-_KNOWN_OPTIONS = (BYPASS_OPTICS_OPTION,)
-_BYPASS_MODES = (0, 1, 2, 3)
 _BYPASS_MODE_CAPABILITY_CHECK = 3
 _DUAL_MIRROR_CLASS = 2
 
 
-def _bypass_mode(options):
-    """Return the bypass mode of the stage options (0 if not given)."""
-    unknown = sorted(set(options) - set(_KNOWN_OPTIONS))
-    if unknown:
-        raise ValueError(
-            f"Unknown sim_telarray stage option(s): {', '.join(unknown)}; "
-            f"known options: {', '.join(_KNOWN_OPTIONS)}."
-        )
-    mode = options.get(BYPASS_OPTICS_OPTION, 0)
-    if mode not in _BYPASS_MODES:
-        raise ValueError(
-            f"Invalid {BYPASS_OPTICS_OPTION} option: {mode!r}; choose from "
-            f"{', '.join(str(value) for value in _BYPASS_MODES)}."
-        )
-    return mode
+def _bypass_mode(spec, options):
+    """Return the bypass mode of the stage options (catalog default if not given)."""
+    return spec.checked_options(options)[BYPASS_OPTICS_OPTION]
+
+
+def _upstream_stages(inputs, stage_name):
+    """Return the stages before ``stage_name`` in the chain (all stages if it is not listed)."""
+    names = list(inputs.stages)
+    return names[: names.index(stage_name)] if stage_name in names else names
 
 
 def _upstream_factors(inputs, stage_name):
     """Return the efficiency factors applied by the stages before ``stage_name`` in the chain."""
-    names = list(inputs.stages)
     upstream = frozenset()
-    for name in names[: names.index(stage_name)] if stage_name in names else names:
+    for name in _upstream_stages(inputs, stage_name):
         upstream |= applied_factors_of(name, inputs.options_of(name), upstream)
     return upstream
 
@@ -72,7 +62,9 @@ def uses_zero_transmission(stage_names, options_of):
     """
     Return True if sim_telarray reads a zero-depth transmission table in the chain.
 
-    That is the case for Bypass_Optics 1 or 2 with an upstream stage that applies the extinction.
+    That is the case when sim_telarray leaves a factor to an upstream stage
+    (``skips_if_applied_upstream`` in the software catalog: the atmospheric extinction with
+    Bypass_Optics 1 or 2).
 
     Parameters
     ----------
@@ -83,8 +75,9 @@ def uses_zero_transmission(stage_names, options_of):
     """
     upstream = frozenset()
     for name in stage_names:
-        if name == SimTelArrayStage.name:
-            return _bypass_mode(options_of(name)) in (1, 2) and ATMOSPHERIC_EXTINCTION in upstream
+        stage_class = get_stage_class(name)
+        if issubclass(stage_class, SimTelArrayStage):
+            return bool(stage_class.spec.skipped_factors(options_of(name), upstream))
         upstream |= applied_factors_of(name, options_of(name), upstream)
     return False
 
@@ -145,7 +138,7 @@ def _configure_shower_routing(stages, inputs, label):
         stage.streams = mode == "stream"
 
 
-class SimTelArrayStage:
+class SimTelArrayStage(CatalogStage):
     """
     sim_telarray array simulation stage, one instance per array model.
 
@@ -164,9 +157,6 @@ class SimTelArrayStage:
         the QE table divided by the envelope (see ``simtools.simulation_software.efficiency``).
     """
 
-    name = "sim_telarray"
-    consumes = (CHERENKOV_PHOTONS, CAMERA_PHOTONS_IACT)
-    produces = CAMERA_EVENTS
     streams = True
 
     def __init__(
@@ -196,60 +186,22 @@ class SimTelArrayStage:
         self.shower_routing = None
 
     @classmethod
-    def applied_factors(cls, options, upstream=frozenset()):
-        """
-        Return the efficiency factors that sim_telarray applies to the photons it reads.
-
-        Without bypass (mode 0), sim_telarray applies the atmospheric extinction, mirror
-        reflectivity, telescope transmission and quantum efficiency to CORSIKA photons. With
-        bypass modes 1 and 2, the photons are given at the camera entrance and sim_telarray
-        applies its own atmospheric extinction and quantum efficiency; the mirror reflectivity and
-        the telescope transmission are applied upstream. Mode 3 applies only the quantum
-        efficiency.
-
-        Parameters
-        ----------
-        options : dict
-            Stage options of the chain spec (``bypass_optics``).
-
-        Returns
-        -------
-        frozenset of str
-            Efficiency factors applied by sim_telarray.
-        """
-        mode = _bypass_mode(options)
-        if mode == 0:
-            return frozenset(
-                {
-                    ATMOSPHERIC_EXTINCTION,
-                    MIRROR_REFLECTIVITY,
-                    TELESCOPE_TRANSMISSION,
-                    QUANTUM_EFFICIENCY,
-                }
-            )
-        if mode in (1, 2):
-            if ATMOSPHERIC_EXTINCTION in upstream:
-                # an upstream stage applies the extinction; sim_telarray reads a zero-depth table
-                return frozenset({QUANTUM_EFFICIENCY})
-            return frozenset({QUANTUM_EFFICIENCY, ATMOSPHERIC_EXTINCTION})
-        return frozenset({QUANTUM_EFFICIENCY})
-
-    @classmethod
     def instances(cls, inputs, label=None):
         """Return one sim_telarray stage per array model (one for a light-emission run)."""
         options = inputs.options_of(cls.name)
-        mode = _bypass_mode(options)
+        mode = _bypass_mode(cls.spec, options)
         if mode == _BYPASS_MODE_CAPABILITY_CHECK:
             # Checked before any stage is built, so no job is written for an unsupported level.
             check_bypass_optics(mode, inputs.context)
-        zero_extinction = mode in (1, 2) and ATMOSPHERIC_EXTINCTION in _upstream_factors(
-            inputs, cls.name
+        zero_extinction = bool(
+            cls.spec.skipped_factors(options, _upstream_factors(inputs, cls.name))
         )
         if inputs.calibration is not None:
             return [
                 LightSimTelArrayStage(
+                    cls,
                     inputs.calibration,
-                    _light_bypass_level(inputs, mode),
+                    _light_bypass_level(cls, inputs, mode),
                     atmospheric_transmission=(
                         _zero_transmission(inputs.calibration.site_model, inputs.context)
                         if zero_extinction
@@ -257,12 +209,12 @@ class SimTelArrayStage:
                     ),
                 )
             ]
-        envelope = efficiency.chain_envelope_enabled(inputs)
-        thinned = efficiency.ATMOSPHERE_STAGE in inputs.stages
-        if thinned:
+        envelope = efficiency_envelope_enabled(inputs)
+        thinning = stages_with(_upstream_stages(inputs, cls.name), "thins_photons")
+        if thinning:
             _logger.info(
                 "Upstream %s thins photons: sim_telarray runs with min_photons=%s",
-                efficiency.ATMOSPHERE_STAGE,
+                ", ".join(thinning),
                 THINNED_MIN_PHOTONS,
             )
         stages = [
@@ -278,7 +230,7 @@ class SimTelArrayStage:
                     else None
                 ),
                 efficiency_envelope=envelope,
-                photons_thinned=thinned,
+                photons_thinned=bool(thinning),
             )
             for parameters, array_model in zip(inputs.simulation_parameters, inputs.array_models)
         ]
@@ -390,7 +342,7 @@ class SimTelArrayStage:
         return self.runner_service.get_resources(runtime=runtime)
 
 
-def _light_bypass_level(inputs, mode):
+def _light_bypass_level(stage_class, inputs, mode):
     """
     Return the Bypass_Optics level of a light-emission run (None: derived by the simulation).
 
@@ -398,21 +350,21 @@ def _light_bypass_level(inputs, mode):
     sim_telarray: photons of the LightEmission program need the level of the light source type;
     camera-frame photons need the option.
     """
-    if BYPASS_OPTICS_OPTION in inputs.options_of(SimTelArrayStage.name):
+    name = stage_class.name
+    if BYPASS_OPTICS_OPTION in inputs.options_of(name):
         if mode in (1, 2):
             return bypass_optics_level(
                 inputs.calibration.telescope_model.get_parameter_value("mirror_class")
                 == _DUAL_MIRROR_CLASS
             )
         return mode
-    position = inputs.stages.index(SimTelArrayStage.name) if inputs.stages else 0
-    if position > 0 and get_stage_class(inputs.stages[position - 1]).produces == (
-        CAMERA_PHOTONS_IACT
-    ):
+    position = inputs.stages.index(name) if name in inputs.stages else 0
+    upstream = get_stage_class(inputs.stages[position - 1]).produces if position > 0 else None
+    if upstream is not None and software_catalog.product(upstream).get("frame") == "camera":
         raise ValueError(
-            f"The option {BYPASS_OPTICS_OPTION!r} of stage {SimTelArrayStage.name!r} is required "
+            f"The option {BYPASS_OPTICS_OPTION!r} of stage {name!r} is required "
             f"for the camera-frame photons of {inputs.stages[position - 1]!r}: "
-            f"use {SimTelArrayStage.name}:{BYPASS_OPTICS_OPTION}=1 (or 2 or 3)."
+            f"use {name}:{BYPASS_OPTICS_OPTION}=1 (or 2 or 3)."
         )
     return None
 
@@ -426,19 +378,21 @@ class LightSimTelArrayStage:
 
     Parameters
     ----------
+    stage_class : type
+        Stage class of the chain (name and products).
     calibration : SimulatorLightEmission
         Light-emission simulation of one telescope and one light source.
     bypass_optics : int or None
         Bypass_Optics value (0: none; None: derived by the light-emission simulation).
     """
 
-    name = SimTelArrayStage.name
-    consumes = SimTelArrayStage.consumes
-    produces = CAMERA_EVENTS
     streams = False
 
-    def __init__(self, calibration, bypass_optics=None, atmospheric_transmission=None):
+    def __init__(self, stage_class, calibration, bypass_optics=None, atmospheric_transmission=None):
         """Initialize LightSimTelArrayStage."""
+        self.name = stage_class.name
+        self.consumes = stage_class.consumes
+        self.produces = stage_class.produces
         self.calibration = calibration
         self.bypass_optics = bypass_optics
         self.atmospheric_transmission = atmospheric_transmission

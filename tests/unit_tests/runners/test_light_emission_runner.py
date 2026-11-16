@@ -2,7 +2,7 @@
 
 import pytest
 
-from simtools.runners import chain_spec, light_emission_runner
+from simtools.runners import chain_spec, light_emission_runner, stages
 from simtools.runners.stages import SimulationChain
 
 OBDEECT_FLASHER_CHAIN = ["obdeect_flasher", "stream_to_simtel", "sim_telarray:bypass_optics=1"]
@@ -22,7 +22,7 @@ STANDARD_CHAIN = ["light_emission", "sim_telarray:bypass_optics=1"]
 def test_light_chains_are_valid(items):
     chain = chain_spec.parse_chain(items).chain()
     light_emission_runner.check_light_chain(chain)
-    assert chain.starts_with_showers
+    assert chain.source == stages.LIGHT_SOURCE
 
 
 @pytest.mark.parametrize(
@@ -35,7 +35,7 @@ def test_light_chains_are_valid(items):
 )
 def test_check_light_chain_rejects_chains_without_light_source(stages):
     chain = SimulationChain(stages)
-    with pytest.raises(ValueError, match="starts with a light source stage"):
+    with pytest.raises(ValueError, match="starts with a light-source stage"):
         light_emission_runner.check_light_chain(chain)
 
 
@@ -75,7 +75,7 @@ def test_chain_script_runs_stages_in_order(light_simulation, tmp_test_directory)
 
 
 def test_chain_script_rejects_shower_chain(light_simulation, tmp_test_directory):
-    with pytest.raises(ValueError, match="starts with a light source stage"):
+    with pytest.raises(ValueError, match="starts with a light-source stage"):
         light_emission_runner.write_chain_script(
             light_simulation, ["corsika", "sim_telarray"], tmp_test_directory / "chain.sh"
         )

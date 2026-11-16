@@ -39,6 +39,11 @@ def light_simulation(run_context, tmp_test_directory, monkeypatch):
     simulation.runner_service.get_file_name.side_effect = lambda file_type, run_number=None: (
         Path(tmp_test_directory) / f"{file_type}.dat"
     )
+    simulation.runner_service.get_stage_file_name.side_effect = (
+        lambda stage, file_type, run_number=None: (
+            Path(tmp_test_directory) / f"run.{stage}.{file_type}"
+        )
+    )
     simulation.submission_files = Mock()
     simulation.submission_files.get_file_name.side_effect = lambda file_type: (
         Path(tmp_test_directory) / "sub_script.sh"

@@ -8,7 +8,7 @@ import sys
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import positive_quantity, scientific_int
-from simtools.constants import LIGHT_EMISSION_CHAIN_DEFAULT
+from simtools.runtime import software_catalog
 from simtools.simtel.multi_illuminator_simulator import MultiIlluminatorSimulator
 
 _logger = logging.getLogger(__name__)
@@ -102,7 +102,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.SIMULATION_SEED,
         cli.RAY_TRACING_BACKEND,
         cli.SIMULATION_SOFTWARE(
-            default=list(LIGHT_EMISSION_CHAIN_DEFAULT),
+            default=list(software_catalog.default_chain(software_catalog.LIGHT_SOURCE)),
             help=(
                 "Stages of the simulation in order, each as STAGE or STAGE:KEY=VALUE,... "
                 "(e.g. obdeect_illuminator obdeect_atmosphere obdeect_optics "
