@@ -421,7 +421,7 @@ class PlotSimtelEvent:
         self._plot_histogram(ax2, values, edges, stats, x_label, y_label)
         radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"])
         ax3.scatter(radius[pix_ids], values, s=5, alpha=0.6)
-        ax3.set_xlabel("Distance from camera centre [m]")
+        ax3.set_xlabel("Distance from camera centre [cm]")
         ax3.set_ylabel(x_label)
 
         fig.suptitle(self._make_title(x_label, event_index))

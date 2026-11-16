@@ -12,7 +12,7 @@ The default, `waveform`, estimates the pedestal separately for each event from t
 last 10 waveform samples; a pulse tail in that window can bias the estimate.
 The monitoring option requires valid monitoring data for every selected event.
 
-The `signals` and `peak_timing` plots show a camera image, a pixel histogram,
+The `pedestals`, `signals` and `peak_timing` plots show a camera image, a pixel histogram,
 and pixel values against distance from the camera centre for each selected event.
 Signal is the pedestal-subtracted integrated high-gain waveform in digital counts;
 peak timing is the sample index of the waveform maximum. Timing plots include only
