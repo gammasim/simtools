@@ -12,6 +12,13 @@ The default, `waveform`, estimates the pedestal separately for each event from t
 last 10 waveform samples; a pulse tail in that window can bias the estimate.
 The monitoring option requires valid monitoring data for every selected event.
 
+The `signals` and `peak_timing` plots show a camera image, a pixel histogram,
+and pixel values against distance from the camera centre for each selected event.
+Signal is the pedestal-subtracted integrated high-gain waveform in digital counts;
+peak timing is the sample index of the waveform maximum. Timing plots include only
+pixels passing `--sum_threshold`. Use `--max_events` or `--event_id` to inspect
+multiple events; these plots do not average over a run.
+
 ```{eval-rst}
 Produces diagnostic figures from sim_telarray (.simtel.zst) files.
 Meant to run after simulations (e.g., simtools-simulate-flasher,
