@@ -383,6 +383,8 @@ class SimulatorLightEmission(SimtelRunner):
             c.to(u.m).value
             for c in self.calibration_model.get_parameter_value_with_unit(FLASHER_POSITION)[:3]
         )
+        # Light travels from the flasher towards the camera plane (primary-mirror frame).
+        axis_z = 1.0 if self._focal_plane_height().to_value(u.m) >= z else -1.0
         # Primary-mirror frame to telescope frame.
         z -= self.telescope_model.get_parameter_value_with_unit("mirror_offset").to(u.m).value
         radius = fiducial_radius_from_shape(
@@ -393,7 +395,7 @@ class SimulatorLightEmission(SimtelRunner):
         )
         request = LightSourceRequest(
             position_m=(x, y, z),
-            axis=(0.0, 0.0, 1.0),
+            axis=(0.0, 0.0, axis_z),
             photons_per_pulse=self._photons_per_pulse(),
             telescope_zenith=0.0,
             inside_telescope=True,
@@ -751,18 +753,48 @@ class SimulatorLightEmission(SimtelRunner):
 
     def calculate_distance_focal_plane_calibration_device(self):
         """
-        Return the distance between the focal plane and a flasher (focal length + focus offset - z).
+        Return the distance between the focal plane and a flasher.
+
+        Single-mirror telescopes: focal length + focus offset - flasher z.
+        Dual-mirror telescopes: focal-surface vertex height + focus offset, and the
+        absolute separation from the flasher (the flasher sits on either side of the
+        focal surface).
 
         Returns
         -------
         astropy.units.Quantity
             Distance between calibration device and focal plane.
         """
-        focal_length = self.telescope_model.get_parameter_value_with_unit("focal_length").to(u.m)
         flasher_z = self.calibration_model.get_parameter_value_with_unit(FLASHER_POSITION)[2].to(
             u.m
         )
-        return focal_length + self._vertical_focus_offset() - flasher_z
+        distance = self._focal_plane_height() - flasher_z
+        return abs(distance) if self._dual_mirror() else distance
+
+    def flasher_above_focal_surface(self):
+        """Return True if a dual-mirror telescope's flasher sits above the focal surface."""
+        if not self._dual_mirror():
+            return False
+        flasher_z = self.calibration_model.get_parameter_value_with_unit(FLASHER_POSITION)[2].to(
+            u.m
+        )
+        return bool(self._focal_plane_height() < flasher_z)
+
+    def _focal_plane_height(self):
+        """
+        Return the height of the focal plane in the primary-mirror frame, including focus offset.
+
+        Single-mirror telescopes use the focal length; dual-mirror telescopes use the
+        focal-surface vertex (first element of focal_surface_parameters).
+        """
+        if self._dual_mirror():
+            coefficients = self.telescope_model.get_parameter_value_with_unit(
+                "focal_surface_parameters"
+            )
+            base = u.Quantity(coefficients).ravel()[0].to(u.m)
+        else:
+            base = self.telescope_model.get_parameter_value_with_unit("focal_length").to(u.m)
+        return base + self._vertical_focus_offset()
 
     def _vertical_focus_offset(self):
         """Return the vertical-telescope focus offset (zenith terms only if both are non-zero)."""

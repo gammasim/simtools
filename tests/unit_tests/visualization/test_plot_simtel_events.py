@@ -65,6 +65,7 @@ def mock_camera():
     camera.number_of_pixels = 100
     camera.pixel_x_pos = rng.uniform(-1, 1, 100)
     camera.pixel_y_pos = rng.uniform(-1, 1, 100)
+    camera.pixels = {"x": camera.pixel_x_pos, "y": camera.pixel_y_pos}
     camera.camera_name = "TestCamera"
     return camera
 
@@ -372,7 +373,7 @@ def test_plot_camera_image_and_histogram(mock_plotter):
             event_index=0,
         )
         assert fig is not None
-        assert len(fig.axes) == 2
+        assert len(fig.axes) == 3
         plt.close(fig)
 
 
@@ -567,3 +568,22 @@ def test_streamed_plots_skip_missing_figures(mock_plotter, io_handler, tmp_test_
     save_document.assert_not_called()
     dump.assert_not_called()
     assert "No figures produced" in caplog.text
+
+
+def test_timing_projection_keeps_selected_pixel_positions(mock_plotter):
+    event = mock_plotter.event_data[0]
+    event.adc_samples[:] = 0
+    event.adc_samples[2, 4] = 20
+    event.adc_samples[7, 8] = 30
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"
+    ) as camera_plot:
+        fig = mock_plotter.plot_peak_timing(0, sum_threshold=10)
+    image = camera_plot.call_args.kwargs["image"]
+    assert np.ma.is_masked(image[0])
+    np.testing.assert_array_equal(image[[2, 7]], [4, 8])
+    offsets = fig.axes[2].collections[0].get_offsets()
+    radii = np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"])
+    np.testing.assert_allclose(offsets[:, 0], radii[[2, 7]])
+    np.testing.assert_array_equal(offsets[:, 1], [4, 8])
+    plt.close(fig)
