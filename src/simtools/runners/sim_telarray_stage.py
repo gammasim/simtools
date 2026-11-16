@@ -6,7 +6,7 @@ import shlex
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.ray_tracing.backends.interface import get_backend
 from simtools.runners.shower_routing import ShowerRouting, route_threads
-from simtools.runners.stages import CAMERA_EVENTS, CHERENKOV_PHOTONS, STDIN
+from simtools.runners.stage_types import CAMERA_EVENTS, CHERENKOV_PHOTONS, STDIN
 from simtools.simtel.simtel_runner import SIM_TELARRAY_ENV, sim_telarray_env_as_string
 from simtools.simtel.simulator_array import SimulatorArray
 

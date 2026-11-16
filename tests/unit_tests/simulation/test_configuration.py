@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from simtools.simtel.light_emission_config_writer import LightEmissionConfigWriter
-from simtools.simtel.model_writer import SimtelModelWriter
+from simtools.simtel.model_writer import SimtelModelWriter, get_model_writer
 from simtools.simulation import configuration
 
 
@@ -13,6 +13,7 @@ def test_default_model_writer():
     model = SimpleNamespace(configuration_writers={})
     writer = configuration.get_model_writer(model)
     assert isinstance(writer, SimtelModelWriter)
+    assert configuration.get_model_writer is get_model_writer
     assert configuration.get_model_writer(model) is writer
 
 
