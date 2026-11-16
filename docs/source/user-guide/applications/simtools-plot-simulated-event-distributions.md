@@ -14,6 +14,10 @@ core distance distributions.
 
 trigger_histogram_file (str, required)
     Precomputed trigger-histogram HDF5 file from ``simtools-write-trigger-histograms``.
+    A glob pattern selects a threshold scan; each product must have its matching
+    trigger-histogram metadata YAML file. Set ``array_layout_name`` for a scan.
+    Triggered energy, core-distance and angular-distance plots are written under
+    one ``threshold-<value><unit>`` directory per threshold.
 array_layout_name (str, optional)
     Optional array layout name to select from a precomputed trigger-histogram HDF5 file.
 output_path (str, required)

@@ -66,7 +66,14 @@ def generate_bias_curves(args, context=None):
         )
 
     _logger.info("Plotting bias curves...")
-    _plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path, trigger_threshold)
+    _plot_bias_curves(
+        nsb_stats,
+        proton_stats,
+        args,
+        plot_output_path,
+        trigger_threshold,
+        threshold_unit=_threshold_unit(args, context),
+    )
     _write_bias_curve_ecsv(nsb_stats, proton_stats, bias_curve_table_output)
     _export_trigger_threshold_as_model_parameter(args, trigger_threshold, context=context)
 
@@ -522,9 +529,27 @@ def _resolve_plot_output_path(output):
     return output if output.suffix else output / "bias_curve.png"
 
 
-def _plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_threshold=None):
+def _threshold_unit(args, context):
+    """Return the unit of the threshold selected by the telescope trigger."""
+    model = TelescopeModel(
+        site=args["site"],
+        telescope_name=args["telescope"],
+        model_version=args["model_version"],
+        context=context,
+    )
+    parameter = trigger_threshold_parameter(model.get_parameter_value("default_trigger"))
+    return {"asum_threshold": "mV", "discriminator_threshold": "mV", "dsum_threshold": "count"}.get(
+        parameter
+    )
+
+
+def _plot_bias_curves(
+    nsb_stats, proton_stats, config, output_path, trigger_threshold=None, threshold_unit=None
+):
     """Render prepared bias-curve tables using the generic renderer."""
-    data, plot_config = _prepare_bias_curve_plot(nsb_stats, proton_stats, config, trigger_threshold)
+    data, plot_config = _prepare_bias_curve_plot(
+        nsb_stats, proton_stats, config, trigger_threshold, threshold_unit
+    )
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     visualize.save_figure(
@@ -536,7 +561,9 @@ def _plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_thre
     )
 
 
-def _prepare_bias_curve_plot(nsb_stats, proton_stats, config, trigger_threshold=None):
+def _prepare_bias_curve_plot(
+    nsb_stats, proton_stats, config, trigger_threshold=None, threshold_unit=None
+):
     """Prepare rates, fitted curves and the threshold marker as x/y series."""
     scale = config.get("scaling_factor", 1.35)
     intersection_fraction = config["proton_intersection_fraction"]
@@ -583,7 +610,7 @@ def _prepare_bias_curve_plot(nsb_stats, proton_stats, config, trigger_threshold=
         }
     return data, {
         "title": config["title"],
-        "xtitle": "Threshold",
+        "xtitle": f"Threshold [{threshold_unit}]" if threshold_unit else "Threshold",
         "ytitle": "Trigger Rate [Hz]",
         "yscale": "log",
         "ylim": ylim,

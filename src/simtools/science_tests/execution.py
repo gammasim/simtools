@@ -388,6 +388,8 @@ def _reusable_derived_product(test):
         previous = defs.load_yaml(Path(test.args[_PROVENANCE_PATH]))
         if _settings(previous) != _settings(test.workflow):
             raise ValueError("derivation settings changed")
+        if previous.get("collection") != test.workflow.get("collection"):
+            raise ValueError("collection settings changed")
         validate_derived_workflow(test.workflow[_APPLICATIONS])
     except (OSError, ValueError, KeyError) as exc:
         raise ValueError(

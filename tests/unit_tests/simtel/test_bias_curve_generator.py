@@ -572,6 +572,7 @@ def test_generate_bias_curves_runs_full_pipeline(tmp_path):
             return_value=tmp_path / "bias.png",
         ),
         patch("simtools.simtel.bias_curve_generator._plot_bias_curves") as mock_plot,
+        patch("simtools.simtel.bias_curve_generator._threshold_unit", return_value="mV"),
         patch("simtools.simtel.bias_curve_generator._write_bias_curve_ecsv") as mock_write_bias,
         patch(
             "simtools.simtel.bias_curve_generator._calculate_trigger_threshold", return_value=250.0
@@ -587,6 +588,7 @@ def test_generate_bias_curves_runs_full_pipeline(tmp_path):
         tmp_path / "proton.ecsv",
     )
     mock_plot.assert_called_once()
+    assert mock_plot.call_args.kwargs["threshold_unit"] == "mV"
     mock_write_bias.assert_called_once()
     mock_calc_threshold.assert_called_once()
     mock_export.assert_called_once()
@@ -761,6 +763,28 @@ def test_prepare_bias_curve_plot(scale, fraction):
     assert config["yscale"] == "log"
     assert config["series_options"]["NSB"]["linestyle"] == "None"
     assert config["series_options"]["_NSB fit"]["linestyle"] == "--"
+
+
+@pytest.mark.parametrize(
+    ("unit", "expected"),
+    [("mV", "Threshold [mV]"), ("count", "Threshold [count]"), (None, "Threshold")],
+)
+def test_bias_curve_plot_threshold_unit(unit, expected):
+    _, config = bias_curve_generator._prepare_bias_curve_plot(
+        {}, {}, {"title": "Bias", "proton_intersection_fraction": 0.1}, threshold_unit=unit
+    )
+    assert config["xtitle"] == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger", "expected"),
+    [("Majority", "mV"), ("AnalogSum", "mV"), ("DigitalSum", "count"), ("unknown", None)],
+)
+def test_threshold_unit_from_telescope_model(trigger, expected, run_context):
+    args = {"site": "North", "telescope": "MSTN-01", "model_version": "8.0.0"}
+    with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as model:
+        model.return_value.get_parameter_value.return_value = trigger
+        assert bias_curve_generator._threshold_unit(args, run_context) == expected
 
 
 @pytest.mark.parametrize("threshold", [None, 0.0])

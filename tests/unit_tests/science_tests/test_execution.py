@@ -258,6 +258,21 @@ def test_derived_products_are_reused_only_when_current(bundle, successful_workfl
     assert len(successful_workflow) == 2
 
 
+def test_reused_derived_products_reject_changed_collection(bundle, successful_workflow, mocker):
+    mocker.patch.object(execution, "validate_derived_workflow")
+    bundle.catalogue[DERIVE]["derived_output"] = defs.REPORT_PATH
+    test = prepare(bundle)
+    execution._execute(test, overwrite=False)
+    test.workflow["collection"] = {
+        "output_path": str(test.work / "collected"),
+        "files": ["*/bias_curve.png"],
+        "preserve_relative_paths": True,
+    }
+    with pytest.raises(ValueError, match="collection settings changed"):
+        execution._execute(test, overwrite=False)
+    assert len(successful_workflow) == 1
+
+
 def test_selected_model_source_environment_hides_inactive_source(monkeypatch):
     monkeypatch.setenv(MODELS_PATH_ENV, MODELS)
     with execution._selected_model_source_environment({defs.MODELS_GIT_PATH: "/git"}):
