@@ -1246,6 +1246,13 @@ def test_make_sim_telarray_command_defaults_equal_simtel_script(default_chain_si
     assert "-C input_file=/out/iact_output.dat" in simulator.make_sim_telarray_command()
 
 
+def test_make_sim_telarray_command_transmission_override(default_chain_simulator):
+    simulator = default_chain_simulator
+    simulator.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
+    command = simulator.make_sim_telarray_command(atmospheric_transmission="/zero/zero.dat")
+    assert "-C atmospheric_transmission=/zero/zero.dat" in command
+
+
 def test_make_sim_telarray_command_input_and_bypass(default_chain_simulator):
     simulator = default_chain_simulator
     simulator.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}

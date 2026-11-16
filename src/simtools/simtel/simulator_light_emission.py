@@ -658,7 +658,9 @@ class SimulatorLightEmission(SimtelRunner):
         """Return the command to run sim_telarray on the output of the previous step."""
         return self.make_sim_telarray_command()
 
-    def make_sim_telarray_command(self, input_file=None, bypass_optics=None):
+    def make_sim_telarray_command(
+        self, input_file=None, bypass_optics=None, atmospheric_transmission=None
+    ):
         """
         Return the command to run sim_telarray on a file of photons.
 
@@ -669,6 +671,9 @@ class SimulatorLightEmission(SimtelRunner):
         bypass_optics : int, optional
             Bypass_Optics level, 0 for none (default: derived from the light source type, or
             from the ray-tracing backend).
+        atmospheric_transmission : str or Path, optional
+            Transmission table read by sim_telarray (default: the table of the site model), e.g.
+            a zero-depth table when an upstream stage applies the extinction.
 
         Returns
         -------
@@ -696,6 +701,8 @@ class SimulatorLightEmission(SimtelRunner):
             atmosphere = get_simtel_table_file_name(parameter_data) or (
                 f"atmospheric_transmission-{Path(self.telescope_model.config_file_path).stem}.dat"
             )
+        if atmospheric_transmission is not None:
+            atmosphere = str(atmospheric_transmission)
         options = [
             ("altitude", altitude),
             ("atmospheric_transmission", atmosphere),

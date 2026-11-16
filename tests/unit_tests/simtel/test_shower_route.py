@@ -64,6 +64,10 @@ class _FakeOpticalModel:
     def __init__(self):
         self.calls = []
 
+    @property
+    def document(self):
+        return {"optics": {"primary": None}}
+
     def max_incoming_obscurer_z_m(self):
         return INCOMING_OBSCURER_TOP_M
 

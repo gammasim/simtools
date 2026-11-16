@@ -31,6 +31,8 @@ CORSIKA_PLANE_Z = 0.0
 CM_PER_M = 100.0
 # Margin above the highest incoming obscurer for the minimum input plane height [m].
 INPUT_PLANE_MARGIN_M = 1.0
+# Radial samples of an asphere mirror aperture for its support along the input normal.
+_ASPHERE_SAMPLES = 2049
 SPEED_OF_LIGHT_CM_PER_NS = 29.9792458
 _TRACE_INPUT_KEYS = ("x", "y", "cx", "cy", "time_ns", "zem", "size", "wavelength_nm", "bunch_id")
 
@@ -67,13 +69,21 @@ class ShowerBunchFrame:
 def minimum_input_plane_height_m(optical_model, theta_deg, *, margin_m=INPUT_PLANE_MARGIN_M):
     """Return the minimum safe input plane height above the telescope sphere centre [m].
 
-    The input plane must lie above every incoming obscurer of the optical model, or photons
-    starting below an obscurer never meet it and its shadow is lost. The height is the top of the
-    highest incoming obscurer (``optical_model.max_incoming_obscurer_z_m()``, telescope frame) plus
-    ``margin_m``. The plane height along the telescope axis is the input height times
-    cos(theta), so the minimum input height is that value divided by cos(theta). Without incoming
-    obscurers the top is taken as the sphere centre. The axes offset contributes its
-    maximum vertical projection to the required height.
+    The input plane must lie above every incoming obscurer and every upstream mirror of the
+    optical model, or photons starting below them never meet them and their shadow (or the
+    reflected light) is lost. Two lower bounds are combined by taking the larger one:
+
+    - Obscurers: the top of the highest incoming obscurer (``max_incoming_obscurer_z_m()``,
+      telescope frame) plus ``margin_m``, divided by cos(theta) because the plane height along
+      the telescope axis is the input height times cos(theta). Without incoming obscurers the
+      top is taken as the sphere centre.
+    - Mirrors: the support of the primary (and the secondary if it blocks incoming light) along
+      the input normal, the ground vertical in the telescope frame, plus the axes offset and
+      ``margin_m``. This is the same bound as ``trace_bunches`` enforces (it raises ValueError
+      below a mirror). At grazing pointing the dish rises above the obscurer bound, so this
+      term sets the height there.
+
+    The axes offset contributes its maximum vertical projection to the obscurer bound.
 
     Parameters
     ----------
@@ -82,7 +92,7 @@ def minimum_input_plane_height_m(optical_model, theta_deg, *, margin_m=INPUT_PLA
     theta_deg: float
         Telescope zenith angle [deg].
     margin_m: float
-        Margin above the highest incoming obscurer [m].
+        Margin above the highest incoming obscurer and above the mirrors [m].
 
     Returns
     -------
@@ -95,7 +105,66 @@ def minimum_input_plane_height_m(optical_model, theta_deg, *, margin_m=INPUT_PLA
     offset = getattr(optical_model, "axes_offset_m", (0.0, 0.0, 0.0))
     offset_height_m = math.hypot(offset[0], offset[1]) * abs(math.sin(theta))
     offset_height_m += abs(offset[2] * math.cos(theta))
-    return (top_m + margin_m + offset_height_m) / math.cos(theta)
+    obscurer_height_m = (top_m + margin_m + offset_height_m) / math.cos(theta)
+    # The input normal (ground vertical in the telescope frame) depends on the zenith angle only.
+    normal = shower_bunch_frame(theta_deg, 0.0, input_plane_height_m=0.0).rotation[:, 2]
+    mirror_height_m = _mirror_input_plane_height_m(optical_model, normal, offset, margin_m)
+    return max(obscurer_height_m, mirror_height_m)
+
+
+def _mirror_input_plane_height_m(optical_model, normal, axes_offset_m, margin_m):
+    """Height [m] of the input plane above the upstream mirrors along the input normal.
+
+    Same bound as the obdeect ground-frame input plane: the plane n.p = h must lie above
+    the mirror supports plus the axes offset projected on n (``trace_bunches`` uses p = -offset
+    for the input origin).
+    """
+    optics = optical_model.document["optics"]
+    roles = ["primary"]
+    if optics.get("secondary_blocks_incoming"):
+        roles.append("secondary")
+    supports = [
+        _mirror_support(optics[role], normal) for role in roles if optics.get(role) is not None
+    ]
+    support = max(supports, default=0.0)
+    return max(0.0, support + float(np.dot(normal, axes_offset_m))) + margin_m
+
+
+def _mirror_support(mirror, direction):
+    """Maximum dot product with a direction over a mirror surface (facets or asphere) [m].
+
+    A facet's footprint lies within its circumradius plus its sag about the centre, so that
+    bound is used. An asphere point at radius r has the dot product hypot(d_x, d_y) r + d_z z(r);
+    its maximum over r is taken on a radial grid.
+    """
+    if "facets" in mirror:
+        best = -math.inf
+        for facet in mirror["facets"]:
+            radius = float(facet.get("radius_of_curvature_m", 0.0))
+            reach = _circumradius(facet["shape"], facet["diameter_m"])
+            sag = radius - math.sqrt(max(0.0, radius * radius - reach * reach)) if radius else 0.0
+            best = max(best, float(np.dot(facet["centre_m"], direction)) + reach + sag)
+        return best
+    asphere = mirror["asphere"]
+    radii = np.linspace(
+        float(asphere["inner_radius_m"]), float(asphere["outer_radius_m"]), _ASPHERE_SAMPLES
+    )
+    scale = float(asphere["radial_scale_m"])
+    z = np.full(radii.shape, float(asphere["vertex_z_m"]))
+    for i, coefficient in enumerate(asphere["coefficients_m"]):
+        z += float(coefficient) * (radii / scale) ** (2 * i)
+    radial = math.hypot(float(direction[0]), float(direction[1]))
+    return float(np.max(radial * radii + float(direction[2]) * z))
+
+
+def _circumradius(aperture, diameter_m):
+    """Radius [m] of the circle that encloses a plate aperture, as in the native tracer."""
+    half_width = 0.5 * float(diameter_m)
+    if aperture == "square":
+        return half_width * math.sqrt(2.0)
+    if aperture.startswith("hexagon"):
+        return half_width * 2.0 / math.sqrt(3.0)
+    return half_width
 
 
 def shower_bunch_frame(theta, phi, *, input_plane_height_m):

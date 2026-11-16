@@ -88,10 +88,10 @@ def uses_zero_transmission(stage_names, options_of):
     return False
 
 
-def _zero_transmission(array_model, context):
-    """Write the zero-depth transmission table of the site of an array model; return its file."""
+def _zero_transmission(site_model, context):
+    """Write the zero-depth transmission table of a site model; return its file."""
     directory = context.paths.get_output_directory(ZERO_TRANSMISSION_DIRECTORY)
-    _profile, transmission = export_atmosphere_files(array_model.site_model, directory)
+    _profile, transmission = export_atmosphere_files(site_model, directory)
     return write_zero_transmission(transmission, directory)
 
 
@@ -116,6 +116,32 @@ def _bypass_level(mode, array_model):
             f"array {array_model.model_version!r} mixes single and dual mirror telescopes."
         )
     return bypass_optics_level(dual_mirror.pop())
+
+
+def _configure_shower_routing(stages, inputs, label):
+    """Configure optional photon routing for the created stages."""
+    if not inputs.shower_configurations:
+        return
+    mode = inputs.args.get("shower_route_mode", "stream")
+    if mode not in ("stream", "disk"):
+        raise ValueError(f"Invalid shower route mode: {mode}; choose from stream, disk")
+    if not getattr(get_backend(context=inputs.context), "traces_shower_photons", False):
+        return
+    routes = sum(
+        len({telescope.name for telescope in stage.array_model.telescope_models.values()})
+        for stage in stages
+    )
+    threads = route_threads(
+        inputs.args.get("shower_route_threads", 1),
+        routes,
+        sequential=inputs.args.get("sequential", False),
+        usable_cores=os.process_cpu_count() or 1,
+    )
+    for stage in stages:
+        stage.shower_routing = ShowerRouting(
+            inputs.shower_configurations[0], inputs.context, label=label, threads=threads
+        )
+        stage.streams = mode == "stream"
 
 
 class SimTelArrayStage:
@@ -215,11 +241,21 @@ class SimTelArrayStage:
         if mode == _BYPASS_MODE_CAPABILITY_CHECK:
             # Checked before any stage is built, so no job is written for an unsupported level.
             check_bypass_optics(mode, inputs.context)
-        if inputs.calibration is not None:
-            return [LightSimTelArrayStage(inputs.calibration, _light_bypass_level(inputs, mode))]
         zero_extinction = mode in (1, 2) and ATMOSPHERIC_EXTINCTION in _upstream_factors(
             inputs, cls.name
         )
+        if inputs.calibration is not None:
+            return [
+                LightSimTelArrayStage(
+                    inputs.calibration,
+                    _light_bypass_level(inputs, mode),
+                    atmospheric_transmission=(
+                        _zero_transmission(inputs.calibration.site_model, inputs.context)
+                        if zero_extinction
+                        else None
+                    ),
+                )
+            ]
         envelope = efficiency.chain_envelope_enabled(inputs)
         thinned = efficiency.ATMOSPHERE_STAGE in inputs.stages
         if thinned:
@@ -236,42 +272,16 @@ class SimTelArrayStage:
                 context=inputs.context,
                 bypass_optics=_bypass_level(mode, array_model),
                 atmospheric_transmission=(
-                    _zero_transmission(array_model, inputs.context) if zero_extinction else None
+                    _zero_transmission(array_model.site_model, inputs.context)
+                    if zero_extinction
+                    else None
                 ),
                 efficiency_envelope=envelope,
                 photons_thinned=thinned,
             )
             for parameters, array_model in zip(inputs.simulation_parameters, inputs.array_models)
         ]
-        if inputs.shower_configurations:
-            mode = inputs.args.get("shower_route_mode", "stream")
-            if mode not in ("stream", "disk"):
-                raise ValueError(f"Invalid shower route mode: {mode}; choose from stream, disk")
-            if getattr(get_backend(context=inputs.context), "traces_shower_photons", False):
-                # Routes of all model versions share the usable cores (see route_threads).
-                routes = sum(
-                    len(
-                        {
-                            telescope.name
-                            for telescope in stage.array_model.telescope_models.values()
-                        }
-                    )
-                    for stage in stages
-                )
-                threads = route_threads(
-                    inputs.args.get("shower_route_threads", 1),
-                    routes,
-                    sequential=inputs.args.get("sequential", False),
-                    usable_cores=os.process_cpu_count() or 1,
-                )
-                for stage in stages:
-                    stage.shower_routing = ShowerRouting(
-                        inputs.shower_configurations[0],
-                        inputs.context,
-                        label=label,
-                        threads=threads,
-                    )
-                    stage.streams = mode == "stream"
+        _configure_shower_routing(stages, inputs, label)
         return stages
 
     @property
@@ -426,10 +436,11 @@ class LightSimTelArrayStage:
     produces = CAMERA_EVENTS
     streams = False
 
-    def __init__(self, calibration, bypass_optics=None):
+    def __init__(self, calibration, bypass_optics=None, atmospheric_transmission=None):
         """Initialize LightSimTelArrayStage."""
         self.calibration = calibration
         self.bypass_optics = bypass_optics
+        self.atmospheric_transmission = atmospheric_transmission
         self.file_list = {}
 
     def prepare(self, run_number, input_file=None, output=None):
@@ -456,7 +467,9 @@ class LightSimTelArrayStage:
             raise ValueError("sim_telarray of a light source reads a file and writes its file.")
         iact_output = self.calibration.runner_service.get_file_name(file_type="iact_output")
         command = self.calibration.make_sim_telarray_command(
-            input_file=input_file, bypass_optics=self.bypass_optics
+            input_file=input_file,
+            bypass_optics=self.bypass_optics,
+            atmospheric_transmission=self.atmospheric_transmission,
         )
         lines = [command.rstrip("\n")]
         if input_file is None or str(input_file) == str(iact_output):

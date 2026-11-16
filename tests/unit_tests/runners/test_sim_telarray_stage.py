@@ -456,6 +456,31 @@ def test_light_instances_camera_photons_need_bypass_option(light_simulation):
         SimTelArrayStage.instances(inputs)
 
 
+def test_light_instances_zero_transmission_with_upstream_extinction(light_simulation):
+    inputs = _light_inputs(
+        light_simulation,
+        ("obdeect_illuminator", "obdeect_atmosphere", "stream_to_simtel", "sim_telarray"),
+        {"bypass_optics": 1},
+    )
+    with patch(
+        "simtools.runners.sim_telarray_stage._zero_transmission", return_value="zero.dat"
+    ) as zero:
+        (stage,) = SimTelArrayStage.instances(inputs)
+    zero.assert_called_once_with(light_simulation.site_model, light_simulation.context)
+    assert stage.atmospheric_transmission == "zero.dat"
+    assert stage.bypass_optics == 1
+
+
+def test_light_instances_keep_site_table_without_upstream_extinction(light_simulation):
+    inputs = _light_inputs(
+        light_simulation,
+        ("obdeect_illuminator", "stream_to_simtel", "sim_telarray"),
+        {"bypass_optics": 1},
+    )
+    (stage,) = SimTelArrayStage.instances(inputs)
+    assert stage.atmospheric_transmission is None
+
+
 def test_light_instances_reject_unknown_option(light_simulation):
     inputs = _light_inputs(light_simulation, ("light_emission", "sim_telarray"), {"other": 1})
     with pytest.raises(ValueError, match="Unknown sim_telarray stage option"):

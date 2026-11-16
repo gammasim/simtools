@@ -107,9 +107,14 @@ def test_shower_bunch_frame_fields():
 class _FakeOpticalModel:
     """Optical model returning one fixed camera photon per input bunch, recording its calls."""
 
-    def __init__(self, top_m=INCOMING_OBSCURER_TOP_M):
+    def __init__(self, top_m=INCOMING_OBSCURER_TOP_M, optics=None):
         self.calls = []
         self.top_m = top_m
+        self.optics = {"primary": None} if optics is None else optics
+
+    @property
+    def document(self):
+        return {"optics": self.optics}
 
     def max_incoming_obscurer_z_m(self):
         return self.top_m
@@ -388,6 +393,64 @@ def test_minimum_input_plane_height_m_is_obscurer_top_plus_margin_along_the_axis
 def test_minimum_input_plane_height_m_without_incoming_obscurers():
     model = _FakeOpticalModel(top_m=None)
     assert minimum_input_plane_height_m(model, 0.0) == pytest.approx(1.0)
+
+
+def _flat_facet_optics(centre_m, diameter_m=0.0, role="primary"):
+    facet = {
+        "shape": "circle",
+        "diameter_m": diameter_m,
+        "centre_m": list(centre_m),
+        "radius_of_curvature_m": 0.0,
+    }
+    return {role: {"facets": [facet]}}
+
+
+def test_minimum_input_plane_height_m_grazing_mirror_above_obscurer_bound():
+    # At grazing pointing the primary reaches above the obscurer bound: the plane must follow it.
+    # Obscurer bound (no incoming obscurer): margin / cos(theta) = 2.92 m at 70 deg.
+    # Mirror point at telescope z = 20 m, projected on the input normal (n_z = cos(theta)).
+    theta = 70.0
+    model = _FakeOpticalModel(top_m=None, optics=_flat_facet_optics((0.0, 0.0, 20.0)))
+    height = minimum_input_plane_height_m(model, theta)
+    assert height == pytest.approx(20.0 * math.cos(math.radians(theta)) + 1.0)
+    assert height > (1.0 / math.cos(math.radians(theta)))
+
+
+def test_minimum_input_plane_height_m_asphere_mirror_uses_outer_radius():
+    # Asphere with zero sag: the support along the normal is the outer radius times the
+    # horizontal part of the normal, plus the margin (outer radius 5 m is above the obscurer bound).
+    theta = 70.0
+    optics = {
+        "primary": {
+            "asphere": {
+                "inner_radius_m": 0.0,
+                "outer_radius_m": 5.0,
+                "radial_scale_m": 1.0,
+                "vertex_z_m": 0.0,
+                "coefficients_m": [0.0],
+            }
+        }
+    }
+    model = _FakeOpticalModel(top_m=None, optics=optics)
+    normal = shower_bunch_frame(theta, 0.0, input_plane_height_m=0.0).rotation[:, 2]
+    expected = 5.0 * math.hypot(normal[0], normal[1]) + 1.0
+    assert minimum_input_plane_height_m(model, theta) == pytest.approx(expected)
+
+
+def test_minimum_input_plane_height_m_secondary_only_if_it_blocks_incoming_light():
+    theta = 0.0
+    optics = _flat_facet_optics((0.0, 0.0, 5.0))
+    optics["secondary"] = _flat_facet_optics((0.0, 0.0, 30.0))["primary"]
+    model = _FakeOpticalModel(top_m=None, optics=optics)
+    assert minimum_input_plane_height_m(model, theta) == pytest.approx(6.0)
+    optics["secondary_blocks_incoming"] = True
+    assert minimum_input_plane_height_m(model, theta) == pytest.approx(31.0)
+
+
+def test_minimum_input_plane_height_m_mirror_below_obscurer_bound_is_unchanged():
+    model = _FakeOpticalModel(top_m=27.1, optics=_flat_facet_optics((0.0, 0.0, 5.0)))
+    expected = (27.1 + 1.0) / math.cos(math.radians(THETA_DEG))
+    assert minimum_input_plane_height_m(model, THETA_DEG) == pytest.approx(expected)
 
 
 def test_write_camera_bunch_file_rejects_plane_below_incoming_obscurer(
