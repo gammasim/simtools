@@ -12,7 +12,7 @@ from simtools.corsika.input_writer import format_parameter
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.sim_events.simulation_parameters import SimulationParameters
-from simtools.simulation.configuration import get_model_writer
+from simtools.simtel.model_writer import get_model_writer
 from simtools.utils import value_conversion
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 from simtools.utils.primary_particle import PrimaryParticle
