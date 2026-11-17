@@ -341,7 +341,7 @@ def _validate_image_components(catalog):
         _corsika_build_id(component)
         for variant, digest in component.get("image-digests", {}).items():
             _validate_digest(digest, f"CORSIKA {component['source-ref']} {variant}")
-    for component in catalog["sim-telarray"]:
+    for component in catalog["sim_telarray"]:
         _validate_source_ref(component["source-ref"], "sim_telarray")
         _simtel_build_id(component)
         _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
@@ -370,7 +370,7 @@ def _validate_components(catalog, schema_version):
         catalog["corsika"], require_revisions, ref_validator, readable_refs
     )
     _validate_simtel_components(
-        catalog["sim-telarray"], require_revisions, ref_validator, readable_refs
+        catalog["sim_telarray"], require_revisions, ref_validator, readable_refs
     )
     _validate_model_and_test_components(catalog, schema_version)
     _validate_archive_versions(catalog["archives"])
@@ -524,12 +524,12 @@ def _validate_simtools_tests(test_resources, require_revision=False, readable_re
 def _validate_production_combinations(catalog):
     """Validate every production combination against catalogued components."""
     corsika_versions = {_corsika_reference(component) for component in catalog["corsika"]}
-    simtel_versions = {_simtel_tag(component) for component in catalog["sim-telarray"]}
+    simtel_versions = {_simtel_tag(component) for component in catalog["sim_telarray"]}
     cpu_variants = set(catalog["cpu-variants"])
     for combination in catalog["production-combinations"]:
         if combination["corsika"] not in corsika_versions:
             raise ValueError("Unknown CORSIKA production combination.")
-        if combination["sim-telarray"] not in simtel_versions:
+        if combination["sim_telarray"] not in simtel_versions:
             raise ValueError("Unknown sim_telarray production combination.")
         invalid_variants = set(combination.get("cpu-variants", cpu_variants)) - cpu_variants
         if invalid_variants:
@@ -647,7 +647,7 @@ def _production_matrix(catalog):
     """Build one production image matrix entry per combination and CPU variant."""
     variants = catalog["cpu-variants"]
     corsika_components = {_corsika_reference(item): item for item in catalog["corsika"]}
-    simtel_components = {_simtel_tag(item): item for item in catalog["sim-telarray"]}
+    simtel_components = {_simtel_tag(item): item for item in catalog["sim_telarray"]}
     images = _image_settings(catalog)
     return [
         _production_matrix_entry(
@@ -725,7 +725,7 @@ def _source_build_matrices(catalog):
                 ),
             ),
         }
-        for component in catalog["sim-telarray"]
+        for component in catalog["sim_telarray"]
     ]
     corsika_source_matrix = [
         {
@@ -781,7 +781,7 @@ def _production_matrix_entry(corsika_components, simtel_components, combination,
     """
     registry, suffix = images
     corsika = corsika_components[combination["corsika"]]
-    simtel = simtel_components[combination["sim-telarray"]]
+    simtel = simtel_components[combination["sim_telarray"]]
     production_corsika = _corsika_tag(corsika) or f"v{_corsika_build_id(corsika)}"
     return {
         "corsika_tag": production_corsika,
@@ -814,7 +814,7 @@ def dependency_catalog_summary(catalog):
     """
     base = catalog["base-image"]
     default_corsika = catalog["corsika"][0]
-    default_simtel = catalog["sim-telarray"][0]
+    default_simtel = catalog["sim_telarray"][0]
     test_resources = catalog.get("simtools-tests", {})
     registry, suffix = _image_settings(catalog)
     summary = {
@@ -855,7 +855,7 @@ def _source_build_summary(catalog):
     """Return summary values that only source builds use."""
     base = catalog["base-image"]
     default_corsika = catalog["corsika"][0]
-    default_simtel = catalog["sim-telarray"][0]
+    default_simtel = catalog["sim_telarray"][0]
     return {
         "build_base_image": _image_reference(
             base["name"], base["build-version"], base.get("build-digest")

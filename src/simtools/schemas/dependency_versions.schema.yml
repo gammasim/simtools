@@ -17,7 +17,7 @@ required:
 - model-repository
 - production-combinations
 - corsika
-- sim-telarray
+- sim_telarray
 properties:
   schema_version:
     const: 0.1.0
@@ -90,12 +90,12 @@ properties:
       additionalProperties: false
       required:
       - corsika
-      - sim-telarray
+      - sim_telarray
       properties:
         corsika:
           type: string
           pattern: "^[0-9]{5}$"
-        sim-telarray:
+        sim_telarray:
           type: string
         cpu-variants:
           type: array
@@ -112,7 +112,7 @@ properties:
     minItems: 1
     items:
       "$ref": "#/definitions/corsika"
-  sim-telarray:
+  sim_telarray:
     type: array
     minItems: 1
     items:
@@ -221,7 +221,7 @@ schema_version: 0.7.0
 schema_name: dependency_versions.schema
 type: object
 additionalProperties: false
-required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim-telarray]
+required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim_telarray]
 properties:
   schema_version: {const: 0.7.0}
   python: {type: string, pattern: "^[0-9]+\\.[0-9]+$"}
@@ -279,10 +279,10 @@ properties:
     items:
       type: object
       additionalProperties: false
-      required: [corsika, sim-telarray]
+      required: [corsika, sim_telarray]
       properties:
         corsika: {type: string, minLength: 1}
-        sim-telarray: {type: string, minLength: 1}
+        sim_telarray: {type: string, minLength: 1}
         cpu-variants:
           type: array
           minItems: 1
@@ -291,7 +291,7 @@ properties:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/corsika"}
-  sim-telarray:
+  sim_telarray:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/simtel"}
@@ -362,7 +362,7 @@ schema_version: 0.6.0
 schema_name: dependency_versions.schema
 type: object
 additionalProperties: false
-required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim-telarray]
+required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim_telarray]
 properties:
   schema_version: {const: 0.6.0}
   python: {type: string, pattern: "^[0-9]+\\.[0-9]+$"}
@@ -420,10 +420,10 @@ properties:
     items:
       type: object
       additionalProperties: false
-      required: [corsika, sim-telarray]
+      required: [corsika, sim_telarray]
       properties:
         corsika: {type: string, minLength: 1}
-        sim-telarray: {type: string, minLength: 1}
+        sim_telarray: {type: string, minLength: 1}
         cpu-variants:
           type: array
           minItems: 1
@@ -432,7 +432,7 @@ properties:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/corsika"}
-  sim-telarray:
+  sim_telarray:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/simtel"}
@@ -501,7 +501,7 @@ schema_version: 0.5.0
 schema_name: dependency_versions.schema
 type: object
 additionalProperties: false
-required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim-telarray]
+required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim_telarray]
 properties:
   schema_version: {const: 0.5.0}
   python: {type: string, pattern: "^[0-9]+\\.[0-9]+$"}
@@ -559,10 +559,10 @@ properties:
     items:
       type: object
       additionalProperties: false
-      required: [corsika, sim-telarray]
+      required: [corsika, sim_telarray]
       properties:
         corsika: {type: string, minLength: 1}
-        sim-telarray: {type: string, minLength: 1}
+        sim_telarray: {type: string, minLength: 1}
         cpu-variants:
           type: array
           minItems: 1
@@ -571,7 +571,7 @@ properties:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/corsika"}
-  sim-telarray:
+  sim_telarray:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/simtel"}
@@ -652,7 +652,7 @@ required:
 - simtools-tests
 - production-combinations
 - corsika
-- sim-telarray
+- sim_telarray
 properties:
   schema_version:
     const: 0.3.0
@@ -709,10 +709,10 @@ properties:
     items:
       type: object
       additionalProperties: false
-      required: [corsika, sim-telarray]
+      required: [corsika, sim_telarray]
       properties:
         corsika: {type: string, minLength: 1}
-        sim-telarray: {type: string, minLength: 1}
+        sim_telarray: {type: string, minLength: 1}
         cpu-variants:
           type: array
           minItems: 1
@@ -721,7 +721,7 @@ properties:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/corsika"}
-  sim-telarray:
+  sim_telarray:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/simtel"}
@@ -785,7 +785,7 @@ schema_version: 0.4.0
 schema_name: dependency_versions.schema
 type: object
 additionalProperties: false
-required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim-telarray]
+required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim_telarray]
 properties:
   schema_version: {const: 0.4.0}
   python: {type: string, pattern: "^[0-9]+\\.[0-9]+$"}
@@ -839,10 +839,10 @@ properties:
     items:
       type: object
       additionalProperties: false
-      required: [corsika, sim-telarray]
+      required: [corsika, sim_telarray]
       properties:
         corsika: {type: string, minLength: 1}
-        sim-telarray: {type: string, minLength: 1}
+        sim_telarray: {type: string, minLength: 1}
         cpu-variants:
           type: array
           minItems: 1
@@ -851,7 +851,7 @@ properties:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/corsika"}
-  sim-telarray:
+  sim_telarray:
     type: array
     minItems: 1
     items: {"$ref": "#/definitions/simtel"}
@@ -927,7 +927,7 @@ required:
 - simtools-tests
 - production-combinations
 - corsika
-- sim-telarray
+- sim_telarray
 properties:
   schema_version:
     const: 0.2.0
@@ -1018,12 +1018,12 @@ properties:
       additionalProperties: false
       required:
       - corsika
-      - sim-telarray
+      - sim_telarray
       properties:
         corsika:
           type: string
           pattern: "^[0-9]{5}$"
-        sim-telarray:
+        sim_telarray:
           type: string
         cpu-variants:
           type: array
@@ -1040,7 +1040,7 @@ properties:
     minItems: 1
     items:
       "$ref": "#/definitions/corsika"
-  sim-telarray:
+  sim_telarray:
     type: array
     minItems: 1
     items:
@@ -1161,7 +1161,7 @@ required:
 - simtools-tests
 - production-combinations
 - corsika
-- sim-telarray
+- sim_telarray
 properties:
   schema_version:
     const: 0.8.0
@@ -1270,12 +1270,12 @@ properties:
       additionalProperties: false
       required:
       - corsika
-      - sim-telarray
+      - sim_telarray
       properties:
         corsika:
           type: string
           minLength: 1
-        sim-telarray:
+        sim_telarray:
           type: string
           minLength: 1
         cpu-variants:
@@ -1287,7 +1287,7 @@ properties:
     minItems: 1
     items:
       $ref: '#/definitions/corsika'
-  sim-telarray:
+  sim_telarray:
     type: array
     minItems: 1
     items:
@@ -1418,7 +1418,7 @@ required:
 - images
 - production-combinations
 - corsika
-- sim-telarray
+- sim_telarray
 properties:
   schema_version:
     const: 0.9.0
@@ -1527,12 +1527,12 @@ properties:
       additionalProperties: false
       required:
       - corsika
-      - sim-telarray
+      - sim_telarray
       properties:
         corsika:
           type: string
           minLength: 1
-        sim-telarray:
+        sim_telarray:
           type: string
           minLength: 1
         cpu-variants:
@@ -1544,7 +1544,7 @@ properties:
     minItems: 1
     items:
       $ref: '#/definitions/corsika'
-  sim-telarray:
+  sim_telarray:
     type: array
     minItems: 1
     items:

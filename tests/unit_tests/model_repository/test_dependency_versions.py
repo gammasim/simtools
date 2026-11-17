@@ -37,7 +37,7 @@ def _legacy_catalog(schema_version="0.2.0"):
         "corsika-interaction-tables": {"version": "v1.0.0"},
         "archives": {"autoconf": {"version": "2.71"}, "gsl": {"version": "2.8"}},
         "model-repository": {"name": "CTAO-Simulation-Model", "default-version": "v0.1.0"},
-        "production-combinations": [{"corsika": "78010", "sim-telarray": "v1.0.0"}],
+        "production-combinations": [{"corsika": "78010", "sim_telarray": "v1.0.0"}],
         "corsika": [
             {
                 "version": "78010",
@@ -49,7 +49,7 @@ def _legacy_catalog(schema_version="0.2.0"):
                 "opt-patch-source-url": "https://example.test/op.git",
             }
         ],
-        "sim-telarray": [
+        "sim_telarray": [
             {
                 "version": "v1.0.0",
                 "source-url": "https://example.test/s.git",
@@ -90,7 +90,7 @@ def _readable_catalog(schema_version="0.6.0"):
     corsika.pop("version")
     corsika["config-ref"] = corsika.pop("config-version")
     corsika["opt-patch-ref"] = corsika.pop("opt-patch-version")
-    simtel = catalog["sim-telarray"][0]
+    simtel = catalog["sim_telarray"][0]
     simtel["source-ref"] = simtel.pop("version")
     simtel["hessio-ref"] = simtel.pop("hessio-version")
     simtel["stdtools-ref"] = simtel.pop("stdtools-version")
@@ -167,7 +167,7 @@ def test_source_ref_rejects_invalid_git_components(source_ref):
 def test_catalog_rejects_refs_without_a_usable_artifact_identifier(component):
     """Fail catalog validation when a valid Git ref cannot produce an ASCII artifact ID."""
     catalog = _readable_catalog()
-    catalog["sim-telarray"][0][f"{component}-ref"] = "\u00e9"
+    catalog["sim_telarray"][0][f"{component}-ref"] = "\u00e9"
 
     with pytest.raises(ValueError, match="valid OCI image tag"):
         dependency_versions.validate_dependency_catalog(catalog)
@@ -225,10 +225,10 @@ def test_schema_0_6_accepts_branch_refs_without_revisions():
     corsika["source-ref"] = "release/7.8"
     corsika["build-id"] = "78010"
     catalog["production-combinations"][0]["corsika"] = "release/7.8"
-    catalog["sim-telarray"][0]["source-ref"] = "release/2025"
-    catalog["sim-telarray"][0]["build-id"] = "release-2025"
+    catalog["sim_telarray"][0]["source-ref"] = "release/2025"
+    catalog["sim_telarray"][0]["build-id"] = "release-2025"
     for combination in catalog["production-combinations"]:
-        combination["sim-telarray"] = "release/2025"
+        combination["sim_telarray"] = "release/2025"
     catalog["model-repository"]["default-ref"] = "main"
     catalog["simtools-tests"]["ref"] = "release/3"
 
@@ -337,7 +337,7 @@ def test_env_template_matches_catalog(simtools_root_path):
             "Invalid source ref",
         ),
         (
-            lambda data: data["sim-telarray"][0].update({"source-ref": "bad ref"}),
+            lambda data: data["sim_telarray"][0].update({"source-ref": "bad ref"}),
             "Invalid source ref",
         ),
         (
@@ -353,7 +353,7 @@ def test_env_template_matches_catalog(simtools_root_path):
             "Invalid SHA-256 digest",
         ),
         (
-            lambda data: data["sim-telarray"][0].update({"image-digest": "latest"}),
+            lambda data: data["sim_telarray"][0].update({"image-digest": "latest"}),
             "Invalid SHA-256 digest",
         ),
         (
@@ -487,7 +487,7 @@ def test_validate_dependency_catalog_accepts_valid_revisions():
     catalog["corsika"][0].update(
         {"source-revision": revision, "config-revision": revision, "opt-patch-revision": revision}
     )
-    catalog["sim-telarray"][0].update(
+    catalog["sim_telarray"][0].update(
         {"revision": revision, "hessio-revision": revision, "stdtools-revision": revision}
     )
     assert dependency_versions.validate_dependency_catalog(catalog) is catalog
@@ -498,7 +498,7 @@ def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path)
     catalog = _load_catalog(simtools_root_path)
     digest = "sha256:" + "a" * 64
     catalog["corsika"][0]["image-digests"] = {"generic": digest}
-    catalog["sim-telarray"][0]["image-digest"] = digest
+    catalog["sim_telarray"][0]["image-digest"] = digest
 
     dependency_versions.validate_dependency_catalog(catalog)
     matrix = dependency_versions.build_workflow_matrices(catalog)["production_matrix"]
@@ -518,12 +518,12 @@ def test_build_workflow_matrices_selects_private_source_snapshots():
             "opt-patch-revision": revision,
         }
     )
-    catalog["sim-telarray"][0].update(
+    catalog["sim_telarray"][0].update(
         {"revision": revision, "hessio-revision": revision, "stdtools-revision": revision}
     )
     digest = "sha256:" + "b" * 64
     catalog["corsika"][0]["source-snapshot-digest"] = digest
-    catalog["sim-telarray"][0]["source-snapshot-digest"] = digest
+    catalog["sim_telarray"][0]["source-snapshot-digest"] = digest
 
     matrices = dependency_versions.build_workflow_matrices(catalog)
 
@@ -571,7 +571,7 @@ def test_production_matrix_uses_global_cpu_variants_by_default(simtools_root_pat
     ("field", "value", "error"),
     [
         ("corsika", "unknown", "Unknown CORSIKA"),
-        ("sim-telarray", "unknown", "Unknown sim_telarray"),
+        ("sim_telarray", "unknown", "Unknown sim_telarray"),
     ],
 )
 def test_validate_dependency_catalog_rejects_unknown_production_components(
@@ -806,7 +806,7 @@ def test_historical_model_database_key_is_normalized_without_mutation():
             "Invalid Git revision",
         ),
         (
-            lambda data: data["sim-telarray"][0].update({"revision": "short"}),
+            lambda data: data["sim_telarray"][0].update({"revision": "short"}),
             "Invalid Git revision",
         ),
         (
@@ -816,7 +816,7 @@ def test_historical_model_database_key_is_normalized_without_mutation():
             "requires all source revisions",
         ),
         (
-            lambda data: data["sim-telarray"][0].update(
+            lambda data: data["sim_telarray"][0].update(
                 {"source-snapshot-digest": "sha256:" + "a" * 64}
             ),
             "requires all source revisions",
@@ -954,7 +954,7 @@ def test_validate_dependency_catalog_rejects_invalid_images(simtools_root_path, 
         lambda data: data["corsika-interaction-tables"].update(
             {"source-url": "https://example.test/t.git"}
         ),
-        lambda data: data["sim-telarray"][0].update({"hessio-ref": "v2025-12-01-rc"}),
+        lambda data: data["sim_telarray"][0].update({"hessio-ref": "v2025-12-01-rc"}),
         lambda data: data["images"].pop("registry"),
         lambda data: data["images"].update({"tag-suffix": "gl1"}),
     ],
