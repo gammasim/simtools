@@ -1,6 +1,7 @@
 """Write and validate metadata manifests for completed simulation production jobs."""
 
 import gzip
+import logging
 import re
 from copy import deepcopy
 from pathlib import Path
@@ -10,6 +11,7 @@ import h5py
 from astropy import units as u
 
 from simtools.io.ascii_handler import write_data_to_file
+from simtools.io.file_type import product_suffixes
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.production_configuration.jobs_io import (
     job_grid_row_to_simulate_prod_args,
@@ -25,6 +27,8 @@ from simtools.production_configuration.production_file_selection import (
     validate_required_production_outputs,
 )
 from simtools.runtime import software_catalog
+from simtools.sim_events.simtel_io_metadata import read_sim_telarray_metadata
+from simtools.simtel.sim_telarray_metadata import get_ctao_metadata_registry
 from simtools.utils import names
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 
@@ -41,6 +45,7 @@ _SIMTEL_EVENT_COUNT_PATTERN = re.compile(
     r"\d++/\d++/\d++/\d++\s++tel\.,\s*+"
     r"(?P<simulated>\d++)/(?P<triggered>\d++)\s++events\s*+$"
 )
+_logger = logging.getLogger(__name__)
 
 
 def write_production_metadata(args_dict, context=None):
@@ -256,10 +261,41 @@ def build_production_job_manifest(
             else inventory_production_files(output_directory)
         ),
     }
+    ctao_metadata = _get_ctao_output_metadata(output_directory, manifest["files"])
+    if ctao_metadata:
+        manifest["ctao_metadata"] = ctao_metadata
     event_counts = get_sim_telarray_event_counts(output_directory, manifest["files"])
     if event_counts is not None:
         manifest["statistics"] = event_counts
     return manifest
+
+
+def _get_ctao_output_metadata(output_directory, file_inventory):
+    """Return available CTAO metadata keyed by sim_telarray output path."""
+    result = {}
+    ctao_keys = set(get_ctao_metadata_registry())
+    for relative_path in file_inventory.get("sim_telarray", []):
+        output_path = resolve_relative_manifest_path(output_directory, relative_path)
+        try:
+            global_metadata, _ = read_sim_telarray_metadata(output_path)
+        except (AttributeError, OSError, ValueError) as exc:
+            _logger.warning("Unable to read CTAO metadata from %s: %s", output_path, exc)
+            continue
+        if not global_metadata:
+            continue
+        ctao_values = _filter_ctao_metadata(global_metadata, ctao_keys)
+        if ctao_values:
+            result[relative_path] = ctao_values
+    return result
+
+
+def _filter_ctao_metadata(global_metadata, ctao_keys):
+    """Select scalar CTAO metadata values using the generated-key registry."""
+    return {
+        key: value
+        for key, value in global_metadata.items()
+        if key in ctao_keys and isinstance(value, (str, int, float, bool))
+    }
 
 
 def get_sim_telarray_event_counts(output_directory, file_inventory):
@@ -275,17 +311,53 @@ def get_sim_telarray_event_counts(output_directory, file_inventory):
     Returns
     -------
     dict or None
-        Mapping with ``simulated_events`` and ``triggered_events`` when counts
-        can be recovered from reduced-event HDF5 files or sim_telarray logs.
+        Mapping with an ``outputs`` key whose value maps each sim_telarray output
+        path to its ``simulated_events`` and ``triggered_events`` counts. Returns
+        None when counts cannot be recovered from matching reduced-event HDF5
+        files or sim_telarray logs.
     """
     output_directory = Path(output_directory)
-    return _reduced_event_counts(output_directory, file_inventory) or (
-        _sim_telarray_log_event_counts(output_directory, file_inventory)
+    statistics = {}
+    for output_path in file_inventory.get("sim_telarray", []):
+        matching_files = _matching_output_files(output_path, file_inventory)
+        event_counts = _reduced_event_counts(output_directory, matching_files)
+        if event_counts is None:
+            event_counts = _sim_telarray_log_event_counts(output_directory, matching_files)
+        if event_counts is not None:
+            statistics[output_path] = event_counts
+    return {"outputs": statistics} if statistics else None
+
+
+def _matching_output_files(output_path, file_inventory):
+    """Return event-data and log files associated with one sim_telarray output."""
+    output_path = Path(output_path)
+    output_stem = _strip_known_suffix(output_path.name, product_suffixes("sim_telarray_output"))
+    if output_stem is None:
+        return {}
+    matching_files = {}
+    for file_type, product in (
+        ("reduced_event_data", "sim_telarray_event_data"),
+        ("sim_telarray_log", "sim_telarray_log"),
+    ):
+        suffixes = product_suffixes(product)
+        matching_files[file_type] = [
+            path
+            for path in file_inventory.get(file_type, [])
+            if Path(path).parent == output_path.parent
+            and _strip_known_suffix(Path(path).name, suffixes) == output_stem
+        ]
+    return matching_files
+
+
+def _strip_known_suffix(filename, suffixes):
+    """Remove one known production-file suffix from a name."""
+    return next(
+        (filename.removesuffix(suffix) for suffix in suffixes if filename.endswith(suffix)), None
     )
 
 
 def _reduced_event_counts(output_directory, file_inventory):
-    """Read event counts from reduced-event HDF5 tables when available."""
+    """Read event counts from associated reduced-event HDF5 tables."""
     paths = file_inventory.get("reduced_event_data", [])
     if not paths:
         return None
@@ -303,7 +375,7 @@ def _reduced_event_counts(output_directory, file_inventory):
 
 
 def _sim_telarray_log_event_counts(output_directory, file_inventory):
-    """Extract event counts from sim_telarray log footers as a fallback."""
+    """Extract event counts from associated sim_telarray logs as a fallback."""
     counts = []
     for relative_path in file_inventory.get("sim_telarray_log", []):
         try:

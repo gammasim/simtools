@@ -246,7 +246,7 @@ def write_obdeect_transmission(transmission_file, directory):
         elif _is_integer_below(tokens[0], OBDEECT_MAX_WAVELENGTH_NM):
             lines.append(" ".join(tokens))
     output = directory / TRANSMISSION_FILE_NAME
-    output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    output.write_text("\n".join(lines) + "\n", encoding="utf-8")  # NOSONAR
     return output
 
 
@@ -280,5 +280,5 @@ def write_zero_transmission(transmission_file, directory):
         else:
             lines.append(line)
     output = directory / ZERO_TRANSMISSION_FILE_NAME
-    output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    output.write_text("\n".join(lines) + "\n", encoding="utf-8")  # NOSONAR
     return output

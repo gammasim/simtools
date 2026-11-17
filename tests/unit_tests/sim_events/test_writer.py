@@ -104,7 +104,10 @@ def test_iter_table_chunks(
     assert "telescope_list" in tables[1].colnames
     assert one_two_three in tables[1]["telescope_list"]
     assert tables[2]["run_number"][0] == 123
-    assert lookup_table_generator.get_simulation_input_metadata()[0]["run_number"] == 123
+    input_metadata = lookup_table_generator.get_simulation_input_metadata()[0]
+    assert input_metadata["run_number"] == 123
+    assert input_metadata["simulated_events"] == 2
+    assert input_metadata["triggered_events"] == len(tables[1])
 
 
 def test_no_input_files():

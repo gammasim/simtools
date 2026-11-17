@@ -359,7 +359,7 @@ def _validate_manifest_structure(data, manifest_path):
             raise malformed(f"missing '{key}'.")
     product_type = data["product_type"]
     if product_type in _MANIFEST_SCHEMAS:
-        supported = {get_manifest_schema_metadata(product_type)["schema_version"]}
+        supported = _supported_manifest_versions(product_type)
     else:
         supported = {get_manifest_schema_metadata(t)["schema_version"] for t in _MANIFEST_SCHEMAS}
     if str(data["schema_version"]) not in supported:
@@ -379,6 +379,16 @@ def _validate_manifest_structure(data, manifest_path):
         schema.validate_dict_using_schema(
             ascii_handler.to_builtin(data), schema_file=SCHEMA_PATH / schema_file, offline=True
         )
+
+
+def _supported_manifest_versions(product_type):
+    """Return schema versions supported by the manifest product."""
+    schema_documents = ascii_handler.collect_data_from_file(
+        SCHEMA_PATH / _MANIFEST_SCHEMAS[product_type]
+    )
+    if isinstance(schema_documents, dict):
+        schema_documents = [schema_documents]
+    return {str(document["schema_version"]) for document in schema_documents}
 
 
 def _parse_selection(selection):

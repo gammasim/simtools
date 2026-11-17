@@ -416,14 +416,10 @@ def _resource_row(manifest, role, label, comparison_role=None):
     energy_min = _quantity_value(configuration["energy_min"], u.GeV)
     energy_max = _quantity_value(configuration["energy_max"], u.GeV)
     output_sizes = _output_sizes(manifest, role)
-    triggered_events = _event_count(manifest.data.get("statistics", {}).get("triggered_events"))
-    if role == "sim_telarray" and triggered_events is None:
-        event_counts = get_sim_telarray_event_counts(manifest.directory, manifest.data["files"])
-        triggered_events = _event_count(
-            event_counts.get("triggered_events") if event_counts else None
-        )
-    if role != "sim_telarray":
-        triggered_events = None
+    statistics = manifest.data.get("statistics", {})
+    triggered_events = (
+        _simtel_triggered_events(manifest, statistics) if role == "sim_telarray" else None
+    )
     cpu_time = _sum_or_none(record.get("user_cpu_seconds"), record.get("system_cpu_seconds"))
     storage_sizes = [output_sizes[key] for key in _STORAGE_OUTPUT_TYPES]
     storage_size = (
@@ -489,6 +485,33 @@ def _resource_row(manifest, role, label, comparison_role=None):
         ),
         "resource_record": ";".join(str(path) for path in record_paths),
     }
+
+
+def _simtel_triggered_events(manifest, statistics):
+    """Return a triggered-event count when it belongs to one simtel output."""
+    simtel_outputs = manifest.data["files"].get("sim_telarray", [])
+    output_counts = statistics.get("outputs")
+    if output_counts is not None:
+        return _single_output_triggered_events(manifest, output_counts)
+
+    triggered_events = _event_count(statistics.get("triggered_events"))
+    if triggered_events is not None:
+        return triggered_events if len(simtel_outputs) == 1 else None
+
+    event_counts = get_sim_telarray_event_counts(manifest.directory, manifest.data["files"])
+    output_counts = event_counts.get("outputs", {}) if event_counts else {}
+    return _single_output_triggered_events(manifest, output_counts)
+
+
+def _single_output_triggered_events(manifest, output_counts):
+    """Return counts only when one manifest output has one matching statistics entry."""
+    simtel_outputs = manifest.data["files"].get("sim_telarray", [])
+    if len(simtel_outputs) != 1 or len(output_counts) != 1:
+        return None
+    output_path = simtel_outputs[0]
+    if output_path not in output_counts:
+        return None
+    return _event_count(output_counts[output_path].get("triggered_events"))
 
 
 def _execution_environment(record):
