@@ -89,6 +89,13 @@ def build_simulation_metadata(
             "arrays": model_exports,
         },
     }
+    count_fields = ("simulated_events", "triggered_events")
+    if input_files and all(
+        all(field in record for field in count_fields) for record in input_files
+    ):
+        metadata["statistics"] = {
+            field: sum(record[field] for record in input_files) for field in count_fields
+        }
     if not model_exports:
         metadata["models"]["reason"] = "No resolved ArrayModel snapshot was supplied."
     validate_simulation_metadata(metadata)

@@ -53,6 +53,17 @@ def test_build_simulation_metadata_marks_missing_models_unavailable():
     assert metadata["inputs"]["files"][0]["run_number"] == 12
 
 
+def test_build_simulation_metadata_sums_per_input_event_counts():
+    metadata = build_simulation_metadata(
+        [
+            {"simulated_events": 3, "triggered_events": 2},
+            {"simulated_events": 4, "triggered_events": 1},
+        ]
+    )
+
+    assert metadata["statistics"] == {"simulated_events": 7, "triggered_events": 3}
+
+
 def test_build_simulation_metadata_marks_supplied_models_complete():
     metadata = build_simulation_metadata(
         [{"run_number": 12}], array_models=[{"layout_name": "alpha"}], simulation_software="corsika"

@@ -13,7 +13,8 @@ uses the authoritative ECSV job grid to reconstruct each job configuration and d
 files below each `job-*` directory, including the standard `sim_telarray/runNNNNNN` and
 `corsika/runNNNNNN` subdirectories.
 When reduced-event data or sim_telarray logs are available, the generated manifest also records
-simulated and triggered event counts under `statistics` without reading the simtel event output.
+simulated and triggered event counts per output under `statistics` without reading the simtel
+event output.
 
 Use `--check` to validate manifests that already exist. In write mode, use `--overwrite` to
 replace existing manifests.

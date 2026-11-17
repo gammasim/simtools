@@ -12,9 +12,13 @@ The default, `waveform`, estimates the pedestal separately for each event from t
 last 10 waveform samples; a pulse tail in that window can bias the estimate.
 The monitoring option requires valid monitoring data for every selected event.
 
-The `signal_vs_radius` and `peak_vs_radius` plots show per-pixel integrated signal
-and peak sample index against distance from the camera centre in metres. The peak
-plot uses the same `--sum_threshold` selection as `peak_timing`.
+The `pedestals`, `signals` and `peak_timing` plots show a camera image, a pixel histogram,
+and pixel values against distance from the camera centre for each selected event.
+The `signal_vs_radius` and `peak_vs_radius` choices provide separate radial plots.
+Signal is the pedestal-subtracted integrated high-gain waveform in digital counts;
+peak timing is the sample index of the waveform maximum. Timing plots include only
+pixels passing `--sum_threshold`. Use `--max_events` or `--event_id` to inspect
+multiple events; these plots do not average over a run.
 
 For flat-fielding events, use `--plots all --flat_fielding` to include normalized
 charge plots, or select `--plots normalized_signal normalized_signal_vs_radius`.
