@@ -1394,3 +1394,22 @@ def test_reduced_filename_is_independent_of_input_format(file_name):
     assert Simulator._build_output_file_for_input_batch("output", [file_name]) == Path(
         "output/run.reduced_event_data.hdf5"
     )
+
+
+@pytest.mark.parametrize(
+    ("run_mode", "software", "expected"),
+    [
+        ("direct_injection", ["light_emission", "sim_telarray"], ["corsika", "sim_telarray"]),
+        ("direct_injection", None, ["corsika", "sim_telarray"]),
+        ("full_simulation", ["light_emission", "sim_telarray"], ["light_emission", "sim_telarray"]),
+        ("full_simulation", None, ["corsika", "sim_telarray"]),
+    ],
+)
+def test_chain_software(mocker, run_context, run_mode, software, expected):
+    simulator = Simulator.__new__(Simulator)
+    args = {"run_mode": run_mode}
+    if software is not None:
+        args["simulation_software"] = software
+    simulator.context = run_context.replace(args=args)
+    simulator.run_mode = run_mode
+    assert list(simulator._chain_software()) == expected

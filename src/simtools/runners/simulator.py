@@ -146,15 +146,10 @@ class Simulator:
 
         self.site = self.context.args.get("site", None)
         self.model_version = self.context.args.get("model_version", None)
-        self.chain_spec = chain_spec.parse_chain(
-            self.context.args.get(
-                "simulation_software",
-                software_catalog.default_chain(software_catalog.AIR_SHOWER_SOURCE),
-            )
-        )
+        self.run_mode = self.context.args.get("run_mode", None)
+        self.chain_spec = chain_spec.parse_chain(self._chain_software())
         self.chain = self.chain_spec.chain()
         self.logger.info("Simulation software: %s", " -> ".join(self.chain.stages))
-        self.run_mode = self.context.args.get("run_mode", None)
         self.io_handler = self.context.paths
 
         self._extra_commands = extra_commands
@@ -172,6 +167,13 @@ class Simulator:
             context=self.context,
         )
         self.file_list = self.runner_service.load_files(self.run_number)
+
+    def _chain_software(self):
+        """Return the simulation chain; direct injection runs its own air-shower chain."""
+        default_chain = software_catalog.default_chain(software_catalog.AIR_SHOWER_SOURCE)
+        if self.run_mode == "direct_injection":
+            return default_chain
+        return self.context.args.get("simulation_software", default_chain)
 
     def _initialize_from_tool_configuration(self):
         """Initialize run number from the tool configuration."""
