@@ -274,7 +274,7 @@ def _get_ctao_output_metadata(output_directory, file_inventory):
         output_path = resolve_relative_manifest_path(output_directory, relative_path)
         try:
             global_metadata, _ = read_sim_telarray_metadata(output_path)
-        except (OSError, ValueError) as exc:
+        except (AttributeError, OSError, ValueError) as exc:
             _logger.warning("Unable to read CTAO metadata from %s: %s", output_path, exc)
             continue
         if not global_metadata:
@@ -307,8 +307,10 @@ def get_sim_telarray_event_counts(output_directory, file_inventory):
     Returns
     -------
     dict or None
-        Mapping from sim_telarray output paths to event counts when counts can
-        be recovered from matching reduced-event HDF5 files or sim_telarray logs.
+        Mapping with an ``outputs`` key whose value maps each sim_telarray output
+        path to its ``simulated_events`` and ``triggered_events`` counts. Returns
+        None when counts cannot be recovered from matching reduced-event HDF5
+        files or sim_telarray logs.
     """
     output_directory = Path(output_directory)
     statistics = {}

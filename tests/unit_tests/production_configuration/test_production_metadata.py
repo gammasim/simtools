@@ -1,5 +1,6 @@
 """Tests for production metadata backfill and validation workflows."""
 
+import struct
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -355,6 +356,32 @@ def test_filter_ctao_metadata_keeps_registry_scalar_values():
         "dataid": "id-1",
         "simzen": 20.0,
     }
+
+
+def test_manifest_records_ctao_metadata_and_skips_missing_global_metadata(
+    tmp_test_directory, caplog
+):
+    output_directory = Path(tmp_test_directory)
+    valid = output_directory / "valid.simtel"
+    incomplete = output_directory / "incomplete.simtel"
+    payload = b"\x02\x06dataid\x04id-1\x06simzen\x0220"
+    valid.write_bytes(struct.pack("<IIiI", 0xD41F8A37, 75, -1, len(payload)) + payload)
+    incomplete.write_bytes(struct.pack("<IIiI", 0xD41F8A37, 75, 1, len(payload)) + payload)
+
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            simulation_software="corsika_sim_telarray",
+        ),
+        _simulator("MSTS-01", run_number=12),
+        output_directory,
+    )
+
+    assert manifest["ctao_metadata"] == {valid.name: {"dataid": "id-1", "simzen": "20"}}
+    assert "Unable to read CTAO metadata" in caplog.text
+    assert incomplete.name in caplog.text
 
 
 def test_build_production_job_manifest_uses_resolved_angles_from_input_file(tmp_test_directory):
