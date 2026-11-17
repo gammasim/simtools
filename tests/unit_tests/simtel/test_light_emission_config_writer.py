@@ -260,6 +260,14 @@ def test__add_illuminator_command_options_with_custom_position_and_pointing(simu
         assert result[8] == "-a uniform"  # angular distribution
 
 
+def test__add_flasher_command_options_above_focal_surface_raises(simulator_instance):
+    with (
+        patch.object(simulator_instance, "flasher_above_focal_surface", return_value=True),
+        pytest.raises(ValueError, match=r"ff-1m has no direction option.*obdeect"),
+    ):
+        get_light_source_writer(simulator_instance).add_flasher_command_options()
+
+
 def test__add_flasher_command_options(simulator_instance):
 
     # Mock calibration model methods

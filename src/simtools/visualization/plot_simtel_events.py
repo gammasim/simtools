@@ -412,10 +412,17 @@ class PlotSimtelEvent:
             "std": float(np.std(values)),
         }
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4), dpi=300)
-
-        plot_pixel_layout_with_image(self.camera, image=values, ax=ax1, color_bar_label=x_label)
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 4), dpi=300)
+        image = np.full(self.event_data[event_index].number_of_pixels, np.nan)
+        image[pix_ids] = values
+        plot_pixel_layout_with_image(
+            self.camera, image=np.ma.masked_invalid(image), ax=ax1, color_bar_label=x_label
+        )
         self._plot_histogram(ax2, values, edges, stats, x_label, y_label)
+        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"])
+        ax3.scatter(radius[pix_ids], values, s=5, alpha=0.6)
+        ax3.set_xlabel("Distance from camera centre [cm]")
+        ax3.set_ylabel(x_label)
 
         fig.suptitle(self._make_title(x_label, event_index))
         fig.tight_layout()
