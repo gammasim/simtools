@@ -166,7 +166,7 @@ def prepare_test(bundle, site, test_id, application_args, run_id):
     )
 
 
-def execute_tests(tests, catalogue, release_dir, run_id, overwrite=False):
+def execute_tests(tests, catalogue, release_dir, run_id, overwrite=False, recover_production=False):
     """Execute prepared tests in order, blocking tests whose selected dependencies failed.
 
     Parameters
@@ -206,12 +206,12 @@ def execute_tests(tests, catalogue, release_dir, run_id, overwrite=False):
             )
             continue
         _log_test(result, "Running")
-        run_test(test, release_dir, run_id, overwrite)
+        run_test(test, release_dir, run_id, overwrite, recover_production)
         results.append(result)
     return results
 
 
-def run_test(test, release_dir, run_id, overwrite=False):
+def run_test(test, release_dir, run_id, overwrite=False, recover_production=False):
     """Execute one prepared test, evaluate its products, and publish its report.
 
     Parameters
@@ -237,7 +237,7 @@ def run_test(test, release_dir, run_id, overwrite=False):
             test.workflow[_APPLICATIONS],
             [replacements[defs.CANDIDATE_SITE_PATH], replacements[defs.BASELINE_SITE_PATH]],
         )
-        result.update(_execute(test, overwrite))
+        result.update(_execute(test, overwrite, recover_production))
     except AcceptanceError as exc:
         result.update(status="warn", reason=f"Acceptance warning: {exc}")
     except (
@@ -268,11 +268,11 @@ def _log_test(result, action):
     logger.info("  Output: %s", ", ".join(result[_OUTPUT_PATHS]))
 
 
-def _execute(test, overwrite):
+def _execute(test, overwrite, recover_production=False):
     """Collect, reuse, or execute the workflow and return its evaluated status."""
     definition, replacements, args = test.definition, test.replacements, test.args
     if definition.get(_COLLECT_PRODUCTION):
-        collected = collect_production(definition, replacements)
+        collected = collect_production(definition, replacements, recover=recover_production)
         if collected.get(STATUS) == _PENDING:
             return collected
         return evaluate_products(definition, replacements) | collected

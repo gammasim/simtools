@@ -641,6 +641,9 @@ class HTCondorBackend:
                 "request_disk": config.get("request_disk"),
                 "priority": config.get("priority"),
                 "container_image": config.get("container_image"),
+                "container_target_dir": config.get("container_target_dir"),
+                "python_executable": config.get("python_executable"),
+                "extra_submit_attributes": config.get("extra_submit_attributes", {}),
                 "environment_file": str(config["environment_file"])
                 if config.get("environment_file")
                 else None,
@@ -821,6 +824,19 @@ class HTCondorBackend:
             raise BackendExecutionError("HTCondor job failure(s): " + "; ".join(failures))
         self._cleanup_successful_artifacts(submission)
         return sorted(results, key=lambda result: result.index)
+
+    @staticmethod
+    def failed_job_ids(submission):
+        """Return job IDs without a successful result and all declared outputs."""
+        results, _ = HTCondorBackend._load_results(submission)
+        successful = {result.job_id for result in results}
+        outputs = submission.metadata.get("expected_outputs", {})
+        return {
+            job_id
+            for job_id in submission.job_ids
+            if job_id not in successful
+            or any(not Path(path).exists() for path in outputs.get(job_id, ()))
+        }
 
     def is_finished(self, submission):
         """Confirm every submitted process has left the queue and reached a terminal state.

@@ -2,6 +2,7 @@
 
 import json
 import logging
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -18,7 +19,7 @@ from simtools.job_execution.job import (
     JobSpec,
     SubmissionHandle,
 )
-from simtools.job_execution.worker import execute_command
+from simtools.job_execution.worker import execute_command, load_job_payload
 from simtools.model_repository.reader import with_resolved_model_reader
 from simtools.runtime.context import RunContext
 
@@ -218,6 +219,121 @@ def collect_submission(submission, *, backend=None):
         raise
     _mark_submission(submission, "completed")
     return results
+
+
+def recover_submission(submission, recovery_root, *, max_attempts=3):
+    """Retry failed jobs of a finished HTCondor submission and persist retry progress.
+
+    Successful jobs are retained. Failed job specifications are loaded from the original
+    trusted worker payloads and submitted with their original commands and output paths.
+
+    Returns ``False`` while an original or retry cluster is active, and ``True`` when every
+    job has a successful result and its declared outputs exist.
+    """
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be at least 1.")
+    if submission.backend != "htcondor":
+        raise ValueError(f"Recovery is not supported for backend {submission.backend}.")
+    backend = get_backend(submission.backend)
+    if not backend.is_finished(submission):
+        return False
+    state = submission.metadata.get("recovery", {"attempt": 0})
+    if state.get("handle"):
+        retry = SubmissionHandle.from_dict(state["handle"])
+        retry_backend = get_backend(retry.backend)
+        if not retry_backend.is_finished(retry):
+            return False
+        failed = retry_backend.failed_job_ids(retry)
+        _copy_successful_retry_results(submission, retry, failed)
+        try:
+            collect_submission(retry, backend=retry_backend)
+            failed = set()
+        except OSError, RuntimeError, ValueError:
+            pass
+        state["handle"] = None
+        state["failed_job_ids"] = sorted(failed)
+        submission.metadata["recovery"] = state
+        _write_manifest(submission)
+    else:
+        failed = backend.failed_job_ids(submission)
+        state["failed_job_ids"] = sorted(failed)
+    if not state["failed_job_ids"]:
+        return True
+    if state["attempt"] >= max_attempts:
+        state["last_error"] = f"Recovery exhausted with failed jobs: {state['failed_job_ids']}"
+        submission.metadata["recovery"] = state
+        _write_manifest(submission)
+        raise RuntimeError(
+            f"Recovery exhausted {max_attempts} attempts; failed jobs: {state['failed_job_ids']}"
+        )
+    attempt = state["attempt"] + 1
+    job_specs = [
+        load_job_payload(submission.work_dir / "inputs" / f"{job_id}.pkl")
+        for job_id in state["failed_job_ids"]
+    ]
+    if any(
+        job.job_id != job_id for job, job_id in zip(job_specs, state["failed_job_ids"], strict=True)
+    ):
+        raise ValueError("Stored worker payload job ID does not match its submission manifest.")
+    archive_root = Path(recovery_root) / "attempts" / str(attempt)
+    _archive_retry_outputs(job_specs, archive_root)
+    config_keys = (
+        "request_cpus",
+        "request_memory",
+        "request_disk",
+        "priority",
+        "container_image",
+        "container_target_dir",
+        "python_executable",
+        "environment_file",
+        "poll_interval",
+        "timeout",
+        "cancel_on_interrupt",
+        "keep_successful_artifacts",
+        "extra_submit_attributes",
+    )
+    backend_config = {
+        key: submission.metadata[key] for key in config_keys if key in submission.metadata
+    }
+    retry_options = ExecutionOptions(
+        backend="htcondor",
+        work_dir=Path(recovery_root) / "submissions" / str(attempt),
+        backend_config=backend_config,
+    )
+    retry = submit_jobs(job_specs, retry_options)
+    state.setdefault("history", []).append(
+        {
+            "attempt": attempt,
+            "job_ids": [job.job_id for job in job_specs],
+            "archived_outputs": str(archive_root),
+        }
+    )
+    state.update({"attempt": attempt, "handle": retry.as_dict(), "failed_job_ids": []})
+    submission.metadata["recovery"] = state
+    _write_manifest(submission)
+    return False
+
+
+def _copy_successful_retry_results(original, retry, failed_job_ids):
+    """Promote only successful retry result payloads into the original submission."""
+    original_results = original.work_dir / "results"
+    original_results.mkdir(parents=True, exist_ok=True)
+    retry_results = retry.work_dir / "results"
+    for job_id in set(retry.job_ids) - set(failed_job_ids):
+        source = retry_results / f"{job_id}.pkl"
+        if source.is_file():
+            shutil.copy2(source, original_results / source.name)
+
+
+def _archive_retry_outputs(job_specs, archive_root):
+    """Move pre-existing failed-job output paths aside before rerunning the commands."""
+    for job in job_specs:
+        for index, output in enumerate(job.output_paths):
+            path = Path(output)
+            if path.exists():
+                destination = archive_root / job.job_id / f"output-{index}-{path.name}"
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(path, destination)
 
 
 def load_submission(path):

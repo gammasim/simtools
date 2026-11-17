@@ -174,6 +174,11 @@ def _load_job_payload(path):
     return job_spec
 
 
+def load_job_payload(path):
+    """Load a versioned JobSpec payload from a trusted execution work directory."""
+    return _load_job_payload(path)
+
+
 def _job_file(run_directory, directory, job_id):
     """Resolve a job-owned path below the private run directory."""
     validate_job_id(job_id)

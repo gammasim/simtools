@@ -19,6 +19,7 @@ from simtools.job_execution.execution import (
     load_submission,
     map_ordered,
     options_from_args,
+    recover_submission,
     submit_jobs,
     wait_for_submission,
 )
@@ -69,6 +70,48 @@ def test_run_command_returns_captured_output_and_runtime():
     assert result.return_code == 0
     assert result.output.strip() == "captured"
     assert result.runtime >= 0
+
+
+def test_recover_submission_retries_only_failed_jobs_and_persists_handle(
+    tmp_test_directory, mocker
+):
+    work_dir = Path(tmp_test_directory) / "original"
+    work_dir.mkdir()
+    submission = SubmissionHandle(
+        "htcondor", work_dir, ("job-1", "job-2"), metadata={"expected_outputs": {}}
+    )
+    backend = mocker.Mock()
+    backend.is_finished.return_value = True
+    backend.failed_job_ids.return_value = {"job-2"}
+    mocker.patch("simtools.job_execution.execution.get_backend", return_value=backend)
+    job = JobSpec("job-2", 1, command=("true",))
+    mocker.patch("simtools.job_execution.execution.load_job_payload", return_value=job)
+    retry = SubmissionHandle("htcondor", Path(tmp_test_directory) / "retry", ("job-2",))
+    submit = mocker.patch("simtools.job_execution.execution.submit_jobs", return_value=retry)
+
+    finished = recover_submission(submission, Path(tmp_test_directory) / "recovery")
+
+    assert not finished
+    assert [item.job_id for item in submit.call_args.args[0]] == ["job-2"]
+    assert submission.metadata["recovery"]["attempt"] == 1
+    assert submission.metadata["recovery"]["handle"]["job_ids"] == ["job-2"]
+
+
+def test_recover_submission_does_not_resubmit_active_retry(tmp_test_directory, mocker):
+    retry = SubmissionHandle("htcondor", Path(tmp_test_directory) / "retry", ("job-2",))
+    submission = SubmissionHandle(
+        "htcondor",
+        Path(tmp_test_directory) / "original",
+        ("job-2",),
+        metadata={"recovery": {"attempt": 1, "handle": retry.as_dict()}},
+    )
+    backend = mocker.Mock()
+    backend.is_finished.side_effect = [True, False]
+    mocker.patch("simtools.job_execution.execution.get_backend", return_value=backend)
+    submit = mocker.patch("simtools.job_execution.execution.submit_jobs")
+
+    assert not recover_submission(submission, Path(tmp_test_directory) / "recovery")
+    submit.assert_not_called()
 
 
 def test_run_command_errors_include_return_code_and_log_excerpt(tmp_test_directory):

@@ -4,6 +4,7 @@
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
@@ -27,6 +28,8 @@ from simtools.production_configuration.production_metadata import build_producti
 from simtools.runners.simulator import Simulator
 
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
+_DEFAULT_SUBMISSION_BURST_SIZE = 50
+_DEFAULT_SUBMISSION_BURST_DELAY = 5.0
 
 _ARGUMENTS = (
     cli.SIMULATION_FILE_FORMAT,
@@ -138,6 +141,18 @@ _ARGUMENTS = (
         default=False,
         help="Wait for submitted backend jobs to finish before exiting.",
     ),
+    cli.ArgumentDefinition(
+        "submission_burst_size",
+        help="Maximum number of job-grid jobs submitted per burst (default 50).",
+        type=bounded_int(1, 1000000),
+        default=_DEFAULT_SUBMISSION_BURST_SIZE,
+    ),
+    cli.ArgumentDefinition(
+        "submission_burst_delay_seconds",
+        help="Delay between job-grid submission bursts in seconds (default 5).",
+        type=float,
+        default=_DEFAULT_SUBMISSION_BURST_DELAY,
+    ),
 )
 
 
@@ -182,10 +197,20 @@ def _execute_job_grid(args_dict):
         work_dir=Path(args_dict["output_path"]),
     )
     job_specs = prepare_jobs(job_specs, args_dict, options)
-    if args_dict.get("wait", False):
-        execute_jobs(job_specs, options)
-    else:
-        submit_jobs(job_specs, options)
+    burst_size = args_dict.get("submission_burst_size", _DEFAULT_SUBMISSION_BURST_SIZE)
+    delay = args_dict.get("submission_burst_delay_seconds", _DEFAULT_SUBMISSION_BURST_DELAY)
+    if burst_size < 1 or delay < 0:
+        raise ValueError("Submission burst size must be positive and delay must be non-negative.")
+    bursts = [
+        job_specs[index : index + burst_size] for index in range(0, len(job_specs), burst_size)
+    ]
+    for index, burst in enumerate(bursts):
+        if args_dict.get("wait", False):
+            execute_jobs(burst, options)
+        else:
+            submit_jobs(burst, options)
+        if index + 1 < len(bursts) and delay:
+            time.sleep(delay)
 
 
 def _write_job_metadata(args_dict, simulator, output_directory):

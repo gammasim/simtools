@@ -616,6 +616,41 @@ def test_htcondor_load_results_reports_invalid_payloads(tmp_test_directory):
     assert "worker failed" in failures[4]
 
 
+def test_htcondor_failed_job_ids_includes_worker_and_output_failures(tmp_test_directory):
+    work_dir = Path(tmp_test_directory)
+    results = work_dir / "results"
+    results.mkdir()
+    for job_id, payload in (
+        ("succeeded", {"ok": True, "value": None}),
+        ("failed", {"ok": False, "message": "worker failed"}),
+        ("missing-output", {"ok": True, "value": None}),
+    ):
+        with (results / f"{job_id}.pkl").open("wb") as handle:
+            pickle.dump(payload, handle)
+    expected = work_dir / "expected.dat"
+    expected.touch()
+    submission = SubmissionHandle(
+        backend="htcondor",
+        work_dir=work_dir,
+        job_ids=("succeeded", "failed", "missing-output"),
+        process_ids={
+            job_id: index for index, job_id in enumerate(("succeeded", "failed", "missing-output"))
+        },
+        metadata={
+            "indices": {
+                job_id: index
+                for index, job_id in enumerate(("succeeded", "failed", "missing-output"))
+            },
+            "expected_outputs": {
+                "succeeded": [str(expected)],
+                "missing-output": [str(work_dir / "absent.dat")],
+            },
+        },
+    )
+
+    assert HTCondorBackend.failed_job_ids(submission) == {"failed", "missing-output"}
+
+
 @pytest.mark.parametrize("method", ["wait", "collect"])
 def test_htcondor_wait_cleans_transient_artifacts_after_success(
     monkeypatch, tmp_test_directory, method

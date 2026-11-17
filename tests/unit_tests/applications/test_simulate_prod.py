@@ -374,6 +374,30 @@ def test_execute_job_grid_submits_or_waits(mocker, tmp_test_directory, wait):
     (submit if wait else execute).assert_not_called()
 
 
+def test_execute_job_grid_submits_in_paced_bursts(mocker, tmp_test_directory):
+    jobs = [MagicMock() for _ in range(5)]
+    mocker.patch.object(app, "prepare_jobs", side_effect=lambda specs, *_: specs)
+    mocker.patch(
+        "simtools.applications.simulate_prod.build_simulate_prod_job_specs", return_value=jobs
+    )
+    mocker.patch("simtools.applications.simulate_prod.options_from_args")
+    submit = mocker.patch("simtools.applications.simulate_prod.submit_jobs")
+    sleep = mocker.patch("simtools.applications.simulate_prod.time.sleep")
+
+    app._execute_job_grid(
+        {
+            "_job_grid_rows": [{}],
+            "_job_grid_metadata": {},
+            "output_path": tmp_test_directory,
+            "submission_burst_size": 2,
+            "submission_burst_delay_seconds": 3,
+        }
+    )
+
+    assert [call.args[0] for call in submit.call_args_list] == [jobs[:2], jobs[2:4], jobs[4:]]
+    assert sleep.call_args_list == [((3.0,),), ((3.0,),)]
+
+
 @patch("simtools.applications.simulate_prod.Simulator")
 @patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_uses_explicit_application_definition(mock_application_start, mock_simulator_class):
