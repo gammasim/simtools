@@ -29,7 +29,7 @@ permissions: {}
 
 jobs:
   check_unit_test_files:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
 
@@ -65,7 +65,7 @@ jobs:
           PY
 
   ctao_datamodel_compatibility:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     continue-on-error: ${{ matrix.monitoring }}
     permissions:
       contents: read
@@ -109,7 +109,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-26.04
             python-version: "3.14"
             extra-args: ["random-order"]
 
@@ -158,7 +158,7 @@ jobs:
       github.event_name == 'pull_request'
       || github.ref_type == 'tag'
       || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     env:
