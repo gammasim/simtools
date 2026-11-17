@@ -12,6 +12,16 @@ The default, `waveform`, estimates the pedestal separately for each event from t
 last 10 waveform samples; a pulse tail in that window can bias the estimate.
 The monitoring option requires valid monitoring data for every selected event.
 
+The `signal_vs_radius` and `peak_vs_radius` plots show per-pixel integrated signal
+and peak sample index against distance from the camera centre in metres. The peak
+plot uses the same `--sum_threshold` selection as `peak_timing`.
+
+For flat-fielding events, use `--plots all --flat_fielding` to include normalized
+charge plots, or select `--plots normalized_signal normalized_signal_vs_radius`.
+For each event, charges are divided by the median of finite, enabled pixel charges.
+The camera geometry read from sim_telarray currently marks all pixels enabled;
+outliers remain visible. The plots are skipped if the median is not positive.
+
 ```{eval-rst}
 Produces diagnostic figures from sim_telarray (.simtel.zst) files.
 Meant to run after simulations (e.g., simtools-simulate-flasher,
@@ -31,8 +41,11 @@ simtel_file (str, required)
 telescope (str, required)
     Telescope name to process (e.g., LSTN-04, MSTN-01).
 plots (list, optional)
-    Which plots to generate. Choices: pedestals, signals, peak_timing, time_traces,
+    Which plots to generate. Choices: pedestals, signals, signal_vs_radius, peak_timing,
+    peak_vs_radius, normalized_signal, normalized_signal_vs_radius, time_traces,
     waveforms, step_traces, all. Default: all.
+flat_fielding (flag, optional)
+    Include normalized charge plots with all plots. Default: false.
 number_of_pixels (int, optional)
     For time_traces: number of brightest pixel traces to plot. Default: 3.
 pixel_step (int, optional)
@@ -42,7 +55,7 @@ max_pixels (int, optional)
 vmax (float, optional)
     For waveforms: upper limit of color scale. Default: None (auto-scale).
 sum_threshold (float, optional)
-    For peak_timing: minimum pixel sum to consider. Default: 10.0.
+    For peak_timing and peak_vs_radius: minimum pixel sum to consider. Default: 10.0.
 timing_bins (int, optional)
     For peak_timing: number of histogram bins. Default: None (unit-width bins).
 event_id (int or list, optional)

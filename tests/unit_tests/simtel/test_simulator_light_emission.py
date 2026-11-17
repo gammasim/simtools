@@ -79,6 +79,14 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
         assert "Bypass_Optics=1" not in options
 
 
+@pytest.mark.parametrize(("mirror_class", "expected"), [(1, 1), (2, 2)])
+def test_flasher_bypasses_mirrors(simulator_instance, mirror_class, expected):
+    simulator_instance.telescope_model.get_parameter_value.return_value = mirror_class
+    simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
+
+    assert simulator_instance._bypass_optics() == expected
+
+
 def test__make_simtel_script_uses_generated_atmospheric_transmission_file(simulator_instance):
     simulator_instance.telescope_model.config_file_path = "/mock/config/CTAO-MSTN-04.cfg"
     simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2200 * u.m

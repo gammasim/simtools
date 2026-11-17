@@ -273,9 +273,12 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _bypass_optics(self):
         """Return sim_telarray's Bypass_Optics value: photons arrive at the camera entrance."""
-        if self._backend() is not None:
+        if (
+            self._backend() is not None
+            or self.light_emission_config[LIGHT_SOURCE_TYPE] == FLAT_FIELDING
+        ):
             return bypass_optics_level(self._dual_mirror())
-        return 1 if self.light_emission_config[LIGHT_SOURCE_TYPE] == FLAT_FIELDING else 0
+        return 0
 
     def _write_camera_photons(self, iact_output):
         """Write the photons the ray-tracing backend brings to the camera entrance."""
