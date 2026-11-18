@@ -354,13 +354,10 @@ def test_scan_config_contains_curve_overwrite_and_trigger_scan(tmp_test_director
         == f"Tune for {'NSB' if curve_name == 'nsb' else 'proton'} telescope trigger scan"
     )
     assert overwrite["changes"]["OBS-North"] == {"nsb_scaling_factor": {"value": 2}}
-    if curve_name == "nsb":
-        assert overwrite["changes"]["LSTN-01"] == {
-            "min_photons": {"value": 0},
-            "min_photoelectrons": {"value": 0},
-        }
-    else:
-        assert overwrite["changes"]["LSTN-01"] == {}
+    assert overwrite["changes"]["LSTN-01"] == {
+        "min_photons": {"value": 0},
+        "min_photoelectrons": {"value": 0},
+    }
     assert scan_config["parameter_scan"]["parameters"] == [
         {
             "name": "asum_threshold",
