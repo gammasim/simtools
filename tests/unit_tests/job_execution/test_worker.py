@@ -1,6 +1,7 @@
 """Tests for serialized remote worker execution."""
 
 import pickle
+import shlex
 import sys
 from pathlib import Path
 
@@ -222,6 +223,43 @@ def test_worker_stages_selected_tables_for_non_epos_model(tmp_test_directory, mo
         destination, _ = staged
         assert (destination / "qgsdat-III").is_file()
         assert not (destination / "epos.iniev").exists()
+
+
+def test_table_source_prefers_configuration_then_command_over_environment(monkeypatch):
+    monkeypatch.setenv("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH", "environment")
+    job = JobSpec(
+        "job",
+        0,
+        command=("simulate", "--corsika_interaction_table_path=command"),
+        options=CommandOptions(env={"SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH": "job-env"}),
+    )
+    assert worker._corsika_table_source(job) == "command"
+    job = JobSpec(
+        "job",
+        0,
+        command=job.command,
+        options=CommandOptions(configuration={"corsika_interaction_table_path": "configuration"}),
+    )
+    assert worker._corsika_table_source(job) == "configuration"
+
+
+def test_shell_command_receives_staged_path_after_explicit_argument(tmp_test_directory):
+    script = Path(tmp_test_directory) / "show args.py"
+    script.write_text("import sys\nprint(sys.argv[-1])\n", encoding="utf-8")
+    shared = Path(tmp_test_directory) / "shared tables"
+    staged = Path(tmp_test_directory) / "staged tables"
+    job = JobSpec(
+        "job",
+        0,
+        command=f"{shlex.quote(sys.executable)} {shlex.quote(str(script))} "
+        f"--corsika_interaction_table_path {shlex.quote(str(shared))}",
+        options=CommandOptions(capture_output=True),
+    )
+    assert worker._corsika_table_source(job) == str(shared)
+    local_job = worker._job_with_table_path(job, staged)
+    return_code, _, output, _ = execute_command(local_job)
+    assert return_code == 0
+    assert output.strip() == str(staged)
 
 
 def test_command_job_without_options_inherits_output(capfd):

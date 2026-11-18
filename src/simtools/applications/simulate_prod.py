@@ -13,7 +13,13 @@ from simtools.configuration.argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
+from simtools.job_execution.backends.registry import get_backend
+from simtools.job_execution.execution import (
+    execute_jobs,
+    options_from_args,
+    submit_jobs,
+    wait_for_submission,
+)
 from simtools.production_configuration.compatibility import prepare_jobs
 from simtools.production_configuration.jobs_io import (
     build_simulate_prod_job_specs,
@@ -204,13 +210,19 @@ def _execute_job_grid(args_dict):
     bursts = [
         job_specs[index : index + burst_size] for index in range(0, len(job_specs), burst_size)
     ]
+    wait = args_dict.get("wait", False)
+    scheduler = getattr(get_backend(options.backend), "supports_submit_only", False)
+    submissions = []
     for index, burst in enumerate(bursts):
-        if args_dict.get("wait", False):
+        if wait and not scheduler:
             execute_jobs(burst, options)
         else:
-            submit_jobs(burst, options)
+            submissions.append(submit_jobs(burst, options))
         if index + 1 < len(bursts) and delay:
             time.sleep(delay)
+    if wait and scheduler:
+        for submission in submissions:
+            wait_for_submission(submission, options=options)
 
 
 def _write_job_metadata(args_dict, simulator, output_directory):

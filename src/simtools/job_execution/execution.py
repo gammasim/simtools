@@ -4,6 +4,7 @@ import json
 import logging
 import shutil
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 
@@ -324,7 +325,13 @@ def _copy_successful_retry_results(original, retry, failed_job_ids):
     for job_id in set(retry.job_ids) - set(failed_job_ids):
         source = retry_results / f"{job_id}.pkl"
         if source.is_file():
-            shutil.copy2(source, original_results / source.name)
+            with tempfile.NamedTemporaryFile(dir=original_results, delete=False) as temporary:
+                temporary_path = Path(temporary.name)
+            try:
+                shutil.copy2(source, temporary_path)
+                temporary_path.replace(original_results / source.name)
+            finally:
+                temporary_path.unlink(missing_ok=True)
 
 
 def _archive_retry_outputs(job_specs, archive_root):

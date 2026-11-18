@@ -123,6 +123,28 @@ def test_recover_submission_does_not_resubmit_active_retry(tmp_test_directory, m
     submit.assert_not_called()
 
 
+def test_retry_result_replaces_read_only_original(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    original = SubmissionHandle("htcondor", root / "original", ("job",))
+    retry = SubmissionHandle("htcondor", root / "retry", ("job",))
+    original_results = original.work_dir / "results"
+    retry_results = retry.work_dir / "results"
+    original_results.mkdir(parents=True)
+    retry_results.mkdir(parents=True)
+    old = original_results / "job.pkl"
+    old.write_bytes(b"failed")
+    old.chmod(0o444)
+    successful = retry_results / "job.pkl"
+    successful.write_bytes(b"success")
+    successful.chmod(0o644)
+
+    execution._copy_successful_retry_results(original, retry, set())
+
+    assert old.read_bytes() == b"success"
+    assert old.stat().st_mode & 0o777 == 0o644
+    assert list(original_results.iterdir()) == [old]
+
+
 def test_run_command_errors_include_return_code_and_log_excerpt(tmp_test_directory):
     stderr = Path(tmp_test_directory) / "error.log"
     with pytest.raises(JobExecutionError, match="Error log excerpt"):

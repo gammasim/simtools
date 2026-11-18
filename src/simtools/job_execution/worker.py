@@ -90,7 +90,10 @@ def execute_command(job_spec):
         command = [*prefix, command]
     if job_spec.options.configuration:
         args = _configuration_arguments(job_spec.options.configuration)
-        command = [command, *args] if isinstance(command, str) else [*command, *args]
+        if isinstance(command, str):
+            command = f"{command} {shlex.join(args)}"
+        else:
+            command = [*command, *args]
     environment = os.environ.copy()
     environment.update(job_spec.options.env or {})
     started = time.perf_counter()
@@ -187,13 +190,18 @@ def _stage_tables_for_job(job_spec, scratch_directory=None):
 
 def _corsika_table_source(job_spec):
     """Return the configured shared interaction-table source for a job."""
-    environment = job_spec.options.env or {}
-    source = environment.get("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
-    if source:
-        return source
+    configuration = job_spec.options.configuration or {}
+    source = configuration.get("corsika_interaction_table_path")
+    source = source or _command_option(
+        _command_tokens(job_spec.command), "corsika_interaction_table_path"
+    )
     context_args = (job_spec.context_spec or {}).get("args", {})
-    return context_args.get("corsika_interaction_table_path") or os.environ.get(
-        "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
+    environment = job_spec.options.env or {}
+    return (
+        source
+        or context_args.get("corsika_interaction_table_path")
+        or environment.get("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
+        or os.environ.get("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
     )
 
 
