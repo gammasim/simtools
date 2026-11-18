@@ -236,6 +236,31 @@ def test_generate_scan_grids_generates_both_curves_without_mutating_args(
     assert mock_expand.call_count == 2
 
 
+def test_bias_curve_grid_uses_curve_specific_job_sizes(tmp_test_directory, run_context):
+    args = _base_args(tmp_test_directory) | {
+        "nsb_showers_per_run": 2000,
+        "nsb_number_of_runs": 38,
+        "proton_showers_per_run": 7500,
+        "proton_number_of_runs": 10,
+        "threshold_parameter": "asum_threshold",
+    }
+    paths = OutputPaths(output_path=Path(args["output_path"]).resolve())
+    with (
+        patch(f"{_MODULE}.generate_job_grid") as generate,
+        patch(f"{_MODULE}.expand_job_grid_with_scan"),
+    ):
+        for curve, definition in (
+            ("nsb", ("gamma", "nsb_energy_range")),
+            ("proton", ("proton", "proton_energy_range")),
+        ):
+            parameter_scans._generate_scan_grid(
+                curve, definition, args, "LSTN-01", paths, run_context
+            )
+    nsb, proton = (call.args[0] for call in generate.call_args_list)
+    assert (nsb["showers_per_run"], nsb["number_of_runs"]) == (2000, 38)
+    assert (proton["showers_per_run"], proton["number_of_runs"]) == (7500, 10)
+
+
 def test_generate_scan_grid_writes_scan_config_and_expands_grid(tmp_test_directory, run_context):
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()

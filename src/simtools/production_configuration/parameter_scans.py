@@ -259,8 +259,15 @@ def _generate_scan_grid(curve_name, curve_definition, args, telescope, io_handle
         _scan_config(curve_name, telescope, args), scan_config_file, sort_keys=False
     )
     primary, energy_range_arg = curve_definition
+    curve_args = dict(args)
+    for key in ("showers_per_run", "number_of_runs"):
+        override = args.get(f"{curve_name}_{key}")
+        if override is not None:
+            curve_args[key] = override
     production_configuration = {
-        key: args[key] for key in _PRODUCTION_GRID_ARGS if args.get(key) not in (None, "")
+        key: curve_args[key]
+        for key in _PRODUCTION_GRID_ARGS
+        if curve_args.get(key) not in (None, "")
     }
     production_configuration.update(
         {
