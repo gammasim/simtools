@@ -33,6 +33,7 @@ def pulse_model():
         "fadc_max_signal": 100,
         "fadc_lg_max_signal": -1,
         "transit_time_jitter": 0,
+        "fadc_pulse_shape": "pulse.ecsv",
     }
     model.get_parameter_value.side_effect = parameters.__getitem__
     rows = []
@@ -95,10 +96,39 @@ def test_first_response_level_uses_table(pulse_model):
     assert hg[PEAK].tolist() == pytest.approx([18, 16, 16.0014])
 
 
-def test_template_response_scan_requires_unified_parameter(pulse_model):
-    pulse_model.get_parameter_table.return_value = Table({"time": [0, 1], AMPLITUDE: [0, 1]})
-    with pytest.raises(ValueError, match="requires unified"):
-        pulse_response.template_responses(pulse_model, [1])
+@pytest.mark.parametrize("low_gain", [True, False])
+def test_template_response_scan_with_linear_table(pulse_model, low_gain):
+    data = {"time": [0, 1, 2, 3, 4], AMPLITUDE: [0, 0, 1, 0, 0]}
+    if low_gain:
+        data["amplitude_low_gain"] = [0, 1, 1, 0, 0]
+    pulse_model.get_parameter_table.return_value = Table(data)
+    table, waves = pulse_response.template_responses(pulse_model, [5, 10])
+    assert set(table[RESPONSE]) == {"linear_clipped"}
+    assert len(table) == len(waves) == 4
+    assert table[PEAK].tolist() == pytest.approx([10, 20, 5, 10])
+    assert table[ADC_SUM][-1] == pytest.approx(20 if low_gain else 10)
+
+
+@pytest.mark.parametrize("low_gain", [True, False])
+def test_template_response_scan_with_dictionary_pulse(pulse_model, low_gain):
+    columns = ["time", AMPLITUDE]
+    rows = [[0, 0], [1, 0], [2, 1], [3, 0], [4, 0]]
+    if low_gain:
+        columns.append("amplitude (low gain)")
+        for row, amplitude in zip(rows, [0, 1, 1, 0, 0], strict=True):
+            row.append(amplitude)
+    value = {
+        "columns": columns,
+        "column_units": ["ns"] + ["dimensionless"] * (len(columns) - 1),
+        "rows": rows,
+    }
+    original = pulse_model.get_parameter_value.side_effect
+    pulse_model.get_parameter_value.side_effect = lambda name: (
+        value if name == "fadc_pulse_shape" else original(name)
+    )
+    table, _ = pulse_response.template_responses(pulse_model, [10])
+    lg = table[table["gain"] == "LG"]
+    assert lg[ADC_SUM][0] == pytest.approx(20 if low_gain else 10)
 
 
 def test_template_clipping(pulse_model):
