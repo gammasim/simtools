@@ -455,11 +455,11 @@ class HTCondorBackend:
 
     @staticmethod
     def _create_work_dir(options):
-        """Create the shared, private run directory."""
+        """Create shared work directories traversable by the submit and execute users."""
         root = Path(options.work_dir or Path.cwd() / "simtools-jobs").expanduser().resolve()
         root.mkdir(parents=True, exist_ok=True)
         work_dir = root / f"htcondor-{uuid.uuid4().hex}"
-        work_dir.mkdir(mode=0o700)
+        HTCondorBackend._create_shared_directory(work_dir)
         for directory in (
             work_dir / "inputs",
             work_dir / "results",
@@ -467,8 +467,14 @@ class HTCondorBackend:
             work_dir / "stderr",
             work_dir / "logs",
         ):
-            directory.mkdir(parents=True, exist_ok=True)
+            HTCondorBackend._create_shared_directory(directory)
         return work_dir
+
+    @staticmethod
+    def _create_shared_directory(path):
+        """Create a setgid directory accessible to members of its inherited group."""
+        path.mkdir(mode=0o2770, parents=True, exist_ok=True)
+        path.chmod(0o2770)
 
     @staticmethod
     def _serialize_jobs(jobs, work_dir):
@@ -546,6 +552,13 @@ class HTCondorBackend:
             shlex.quote("--log-file"),
             str(work_dir / "logs" / "$(job_id).log"),
         ]
+        if uses_container:
+            worker_arguments.extend(
+                (
+                    shlex.quote("--scratch-directory"),
+                    shlex.quote(config.get("container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR)),
+                )
+            )
         return {
             "executable": _CONTAINER_LAUNCHER if uses_container else sys.executable,
             "arguments": " ".join(worker_arguments),
@@ -776,9 +789,12 @@ class HTCondorBackend:
         for job_id, process_id in submission.process_ids.items():
             result_path = submission.work_dir / "results" / f"{job_id}.pkl"
             if not result_path.exists():
+                worker_log = submission.work_dir / "logs" / f"{job_id}.log"
+                stdout_path = submission.work_dir / "stdout" / f"{job_id}.out"
                 stderr_path = submission.work_dir / "stderr" / f"{job_id}.err"
                 failures.append(
-                    f"process {process_id}: missing result {result_path}; stderr {stderr_path}"
+                    f"process {process_id}: missing result {result_path}; "
+                    f"stdout {stdout_path}; stderr {stderr_path}; worker log {worker_log}"
                 )
                 continue
             try:

@@ -1,3 +1,4 @@
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -44,7 +45,8 @@ def _write_interaction_table_manifest(table_path):
             "qgs3": [
                 {"path": "qgsdat-III", "size": 6},
                 {"path": "sectnu-III", "size": 7},
-            ]
+            ],
+            "epos": [{"path": "epos.iniev", "size": 8}],
         },
     }
     manifest = {"schema_version": "1.0.0", "files": groups}
@@ -53,9 +55,12 @@ def _write_interaction_table_manifest(table_path):
         groups["electromagnetic"]["egs4"],
         groups["low_energy"]["urqmd"],
         groups["high_energy"]["qgs3"],
+        groups["high_energy"]["epos"],
     ):
         for entry in entries:
-            (table_path / entry["path"]).write_bytes(b"x" * entry["size"])
+            content = b"x" * entry["size"]
+            (table_path / entry["path"]).write_bytes(content)
+            entry["sha256"] = hashlib.sha256(content).hexdigest()
     (table_path / "manifest.yaml").write_text(yaml.safe_dump(manifest), encoding="utf-8")
 
 
@@ -301,6 +306,47 @@ def test_validate_corsika_interaction_tables_reports_manifest_read_error(tmp_tes
     """A missing manifest is reported as a table validation error."""
     with pytest.raises(ValueError, match="cannot read manifest"):
         _validate_corsika_interaction_tables(Path(tmp_test_directory) / "missing")
+
+
+def test_stage_corsika_interaction_tables_copies_selected_files_with_verified_checksums(
+    tmp_test_directory,
+):
+    from simtools.runtime.dependencies import stage_corsika_interaction_tables
+
+    source = Path(tmp_test_directory) / "source"
+    destination = Path(tmp_test_directory) / "staged"
+    source.mkdir()
+    _write_interaction_table_manifest(source)
+
+    result = stage_corsika_interaction_tables(source, destination, "qgs3", "urqmd")
+
+    assert result == destination
+    assert {path.name for path in destination.iterdir()} == {
+        "common.dat",
+        "egs.dat",
+        "urqmd.dat",
+        "qgsdat-III",
+        "sectnu-III",
+        "manifest.yaml",
+    }
+    assert (destination / "qgsdat-III").read_bytes() == (source / "qgsdat-III").read_bytes()
+
+
+def test_stage_corsika_interaction_tables_rejects_source_that_does_not_match_manifest(
+    tmp_test_directory,
+):
+    from simtools.runtime.dependencies import stage_corsika_interaction_tables
+
+    source = Path(tmp_test_directory) / "source"
+    destination = Path(tmp_test_directory) / "staged"
+    source.mkdir()
+    _write_interaction_table_manifest(source)
+    (source / "common.dat").write_bytes(b"other")
+
+    with pytest.raises(ValueError, match=r"SHA-256 mismatch.*common.dat"):
+        stage_corsika_interaction_tables(source, destination, "qgs3", "urqmd")
+
+    assert not (destination / "common.dat").exists()
 
 
 def test_get_version_string(mocker, run_context):

@@ -1,6 +1,7 @@
 """Tests for HTCondor backend validation and event handling."""
 
 import pickle
+import stat
 import sys
 import types
 from pathlib import Path
@@ -109,6 +110,7 @@ def test_htcondor_container_does_not_use_submitter_pythonpath(tmp_test_directory
     )
     assert "PYTHONPATH" not in _environment_entries(submit_values["environment"])
     assert submit_values["arguments"].startswith("python -P -m simtools.job_execution.worker")
+    assert "--scratch-directory /simtools-run" in submit_values["arguments"]
     assert submit_values["container_target_dir"] == "/simtools-run"
 
 
@@ -198,6 +200,17 @@ def test_htcondor_build_config_uses_the_single_backend_configuration_source():
     assert config["extra_submit_attributes"] == {}
     with pytest.raises(BackendConfigurationError, match="request_cpus"):
         HTCondorBackend._validate_config(config)
+
+
+def test_htcondor_keeps_scheduler_streams_in_shared_work_directory(tmp_test_directory):
+    work_dir = Path(tmp_test_directory)
+
+    submit_values = HTCondorBackend._build_worker_submit_values(
+        {}, work_dir, work_dir / "scheduler.log", work_dir, False
+    )
+
+    assert submit_values["output"] == str(work_dir / "stdout" / "$(job_id).out")
+    assert submit_values["error"] == str(work_dir / "stderr" / "$(job_id).err")
 
 
 @pytest.mark.parametrize("attribute", ["output", "environment", "universe", "request_cpus"])
@@ -406,6 +419,10 @@ def test_htcondor_creates_work_directory_and_serializes_jobs(tmp_test_directory)
     assert all(
         (work_dir / name).is_dir() for name in ("inputs", "results", "stdout", "stderr", "logs")
     )
+    assert stat.S_IMODE(work_dir.stat().st_mode) & 0o070 == 0o070
+    assert stat.S_IMODE(work_dir.stat().st_mode) & stat.S_ISGID
+    for name in ("results", "logs"):
+        assert stat.S_IMODE((work_dir / name).stat().st_mode) & 0o070 == 0o070
     assert (work_dir / "inputs" / "job-000000.pkl").is_file()
 
 
@@ -611,6 +628,7 @@ def test_htcondor_load_results_reports_invalid_payloads(tmp_test_directory):
     assert len(failures) == 5
     assert "missing job index" in failures[0]
     assert "missing result" in failures[1]
+    assert "worker log" in failures[1]
     assert "unreadable result" in failures[2]
     assert "invalid result payload" in failures[3]
     assert "worker failed" in failures[4]

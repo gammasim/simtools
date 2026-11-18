@@ -4,6 +4,7 @@ import pickle
 import sys
 from pathlib import Path
 
+from simtools.job_execution import worker
 from simtools.job_execution.job import CommandOptions, JobSpec
 from simtools.job_execution.worker import execute_command, execute_job_spec, run, write_job_payload
 
@@ -141,6 +142,86 @@ def test_write_job_payload_is_readable_by_worker(tmp_test_directory):
         payload = pickle.load(handle)
     assert payload["job_spec"] == job
     assert payload["payload_version"] == 1
+
+
+def test_worker_stages_tables_for_corsika_command_and_passes_local_path(
+    tmp_test_directory, mocker, capfd, monkeypatch
+):
+    """CORSIKA worker commands use a checksummed worker-local interaction-table path."""
+    run_directory = Path(tmp_test_directory)
+    source = run_directory / "source-tables"
+    scratch = run_directory / "scratch"
+    source.mkdir()
+    scratch.mkdir()
+    (run_directory / "inputs").mkdir()
+    monkeypatch.setenv("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH", str(source))
+    from tests.unit_tests.runtime.test_dependencies import _write_interaction_table_manifest
+
+    _write_interaction_table_manifest(source)
+    job = JobSpec(
+        "job-000000",
+        0,
+        command=(
+            sys.executable,
+            "-c",
+            "import os; print(os.environ['SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH'])",
+            "--simulation_software",
+            "corsika_sim_telarray",
+            "--corsika_he_interaction",
+            "epos",
+            "--corsika_le_interaction",
+            "urqmd",
+        ),
+    )
+    worker.write_job_payload(job, run_directory / "inputs" / "job-000000.pkl")
+
+    assert worker.run(run_directory, "job-000000", scratch_directory=scratch) == 0
+
+    result = capfd.readouterr()
+    assert str(scratch) in result.out
+    assert not list(scratch.iterdir())
+    assert (run_directory / "results" / "job-000000.pkl").is_file()
+
+
+def test_worker_does_not_stage_tables_for_non_corsika_job(tmp_test_directory, mocker):
+    """Non-CORSIKA worker jobs do not copy interaction tables."""
+    run_directory = Path(tmp_test_directory)
+    source = run_directory / "source-tables"
+    source.mkdir()
+    (run_directory / "inputs").mkdir()
+    mocker.patch.dict("os.environ", {"SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH": str(source)})
+    job = JobSpec("job-000000", 0, command=(sys.executable, "-c", "pass"))
+    worker.write_job_payload(job, run_directory / "inputs" / "job-000000.pkl")
+
+    assert worker.run(run_directory, "job-000000") == 0
+
+
+def test_worker_stages_selected_tables_for_non_epos_model(tmp_test_directory, monkeypatch):
+    """The manifest selects the requested model, excluding other models."""
+    from tests.unit_tests.runtime.test_dependencies import _write_interaction_table_manifest
+
+    root = Path(tmp_test_directory)
+    source = root / "source-tables"
+    source.mkdir()
+    _write_interaction_table_manifest(source)
+    monkeypatch.setenv("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH", str(source))
+    job = JobSpec(
+        "job-000000",
+        0,
+        command=(
+            "simulate",
+            "--simulation_software",
+            "corsika",
+            "--corsika_he_interaction",
+            "qgs3",
+            "--corsika_le_interaction",
+            "urqmd",
+        ),
+    )
+    with worker._stage_tables_for_job(job, root) as staged:
+        destination, _ = staged
+        assert (destination / "qgsdat-III").is_file()
+        assert not (destination / "epos.iniev").exists()
 
 
 def test_command_job_without_options_inherits_output(capfd):
