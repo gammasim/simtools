@@ -27,7 +27,7 @@ Each output file contains the following root-level datasets:
   including particle, energy, viewcone, core-scatter, pointing, and NSB values.
 - ``METADATA``: standard simtools product metadata.
 - ``SIMULATION_METADATA``: versioned provenance for the input files and simulation
-  software.
+  software, including counts of simulated and triggered records for the output and each input.
 
 The ``file_id`` column joins ``SHOWERS`` and ``TRIGGERS`` to ``FILE_INFO``;
 ``TRIGGERS`` can contain fewer rows than ``SHOWERS`` because it records only

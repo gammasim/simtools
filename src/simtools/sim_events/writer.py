@@ -132,7 +132,10 @@ class EventDataWriter:
                     yield [self._create_chunk(table_name, data[table_name])]
                     data[table_name].clear()
             self._validate_file_chunk_data(file, counts["SHOWERS"], counts["TRIGGERS"])
-            self.input_metadata.append(reader.read_metadata())
+            input_metadata = reader.read_metadata()
+            input_metadata["simulated_events"] = counts["SHOWERS"]
+            input_metadata["triggered_events"] = counts["TRIGGERS"]
+            self.input_metadata.append(input_metadata)
             yield [self._create_chunk(name, rows) for name, rows in data.items() if rows]
             self._reset_data()
 
