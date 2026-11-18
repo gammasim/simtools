@@ -43,6 +43,7 @@ on:
       - 'v*-rc*'
     paths:
       - docker/Dockerfile-simtools-prod
+      - docker/check_component_architecture.py
       - .github/scripts/install_python_dependencies.sh
       - pyproject.toml
       - dependency_versions.yml

@@ -20,6 +20,7 @@ FROM ${SIMTEL_IMAGE} AS simtel_img
 
 FROM ${BASE_IMAGE}
 ARG PYTHON_VERSION
+ARG TARGETARCH
 ARG SIMTOOLS_GIT_REVISION
 ARG CORSIKA_IMAGE
 ARG SIMTEL_IMAGE
@@ -49,6 +50,12 @@ RUN microdnf update -y && microdnf install -y \
     printf '%s\n' "git config --global --add safe.directory \"/workdir/external\""; \
     printf '%s\n' "git config --global --add safe.directory \"/workdir/external/simtools\""; \
 } > /etc/profile.d/git_safe_dir.sh
+
+COPY docker/check_component_architecture.py /tmp/check_component_architecture.py
+RUN python"${PYTHON_VERSION}" /tmp/check_component_architecture.py "${TARGETARCH}" \
+    /workdir/simulation_software/sim_telarray/bin/sim_telarray \
+    /workdir/simulation_software/corsika7 && \
+    rm /tmp/check_component_architecture.py
 
 # Install the simtools development environment without installing simtools itself.
 WORKDIR /workdir

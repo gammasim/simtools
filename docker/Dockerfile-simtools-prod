@@ -16,6 +16,7 @@ FROM ${SIMTEL_IMAGE} AS simtel_img
 
 FROM ${BASE_IMAGE}
 ARG PYTHON_VERSION
+ARG TARGETARCH
 ARG SIMTOOLS_VERSION
 ARG SIMTOOLS_GIT_REVISION
 ARG CORSIKA_IMAGE
@@ -42,6 +43,12 @@ RUN microdnf update -y && microdnf install -y \
     --create-home --home-dir "/home/${CONTAINER_USER}" --shell /bin/bash "${CONTAINER_USER}" && \
   echo /usr/local/lib > /etc/ld.so.conf.d/local.conf && \
   ldconfig
+
+COPY docker/check_component_architecture.py /tmp/check_component_architecture.py
+RUN python"${PYTHON_VERSION}" /tmp/check_component_architecture.py "${TARGETARCH}" \
+  /workdir/simulation_software/sim_telarray/bin/sim_telarray \
+  /workdir/simulation_software/corsika7 && \
+  rm /tmp/check_component_architecture.py
 
 WORKDIR /workdir
 
