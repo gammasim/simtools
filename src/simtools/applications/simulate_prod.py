@@ -28,7 +28,7 @@ from simtools.production_configuration.production_metadata import build_producti
 from simtools.runners.simulator import Simulator
 
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
-_DEFAULT_SUBMISSION_BURST_SIZE = 50
+_DEFAULT_SUBMISSION_BURST_SIZE = 250
 _DEFAULT_SUBMISSION_BURST_DELAY = 5.0
 
 _ARGUMENTS = (
