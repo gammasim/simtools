@@ -118,10 +118,37 @@ def _pulse_model(source):
     )
 
 
+def test_dictionary_pulse_output_validation(tmp_test_directory):
+    """Validate linear-only outputs for an inline pulse parameter."""
+
+    class DictionaryModel:
+        def get_parameter_value(self, _name):
+            return {"columns": ["time", "amplitude"], "rows": [[0, 1]]}
+
+        def get_parameter_version(self, _name):
+            return "2.0.0"
+
+    directory = Path(tmp_test_directory)
+    table = Table(
+        rows=[
+            (gain, LINEAR, level, level, level, level, 1)
+            for gain in ("HG", "LG")
+            for level in (1, 2)
+        ],
+        names=("gain", RESPONSE, INTENSITY, PEAK, ADC_SUM, WIDTH, "event_count"),
+    )
+    table.write(directory / "pulse_response.ecsv")
+    table.write(directory / "pulse_response_summary.ecsv")
+    (directory / "linear").mkdir()
+    table.write(directory / "linear" / "pulse_response_summary.ecsv")
+    model = DictionaryModel()
+    _check_template_rows(directory, model, {"configuration": {"illumination": [1, 2]}})
+    _check_response_curves(directory, True, model)
+
+
 def _check_template_rows(directory, model, application):
     """Check all expected gain, response and illumination combinations."""
-    pulse = model.get_parameter_table("fadc_pulse_shape")
-    responses = {LINEAR, NONLINEAR} if "template_kind" in pulse.colnames else {LINEAR}
+    responses = {LINEAR, NONLINEAR} if _has_nonlinear_pulse(model) else {LINEAR}
     levels = application["configuration"]["illumination"]
     expected = {
         (gain, response, level)
@@ -157,7 +184,15 @@ def _check_response_curves(directory, template, model):
         response_hg.sort(INTENSITY)
         linear_hg.sort(INTENSITY)
         assert np.array_equal(response_hg[INTENSITY], linear_hg[INTENSITY])
-        if "template_kind" in model.get_parameter_table("fadc_pulse_shape").colnames:
+        if _has_nonlinear_pulse(model):
             assert not np.allclose(response_hg[PEAK], linear_hg[PEAK])
         elif model.get_parameter_version("fadc_pulse_shape") == "2.0.0":
             assert np.allclose(response_hg[PEAK], linear_hg[PEAK])
+
+
+def _has_nonlinear_pulse(model):
+    """Identify pulse tables containing nonlinear templates."""
+    value = model.get_parameter_value("fadc_pulse_shape")
+    if isinstance(value, dict):
+        return "template_kind" in value["columns"]
+    return "template_kind" in model.get_parameter_table("fadc_pulse_shape").colnames
