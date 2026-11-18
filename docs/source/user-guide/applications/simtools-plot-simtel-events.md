@@ -14,10 +14,17 @@ The monitoring option requires valid monitoring data for every selected event.
 
 The `pedestals`, `signals` and `peak_timing` plots show a camera image, a pixel histogram,
 and pixel values against distance from the camera centre for each selected event.
+The `signal_vs_radius` and `peak_vs_radius` choices provide separate radial plots.
 Signal is the pedestal-subtracted integrated high-gain waveform in digital counts;
 peak timing is the sample index of the waveform maximum. Timing plots include only
 pixels passing `--sum_threshold`. Use `--max_events` or `--event_id` to inspect
 multiple events; these plots do not average over a run.
+
+For flat-fielding events, use `--plots all --flat_fielding` to include normalized
+charge plots, or select `--plots normalized_signal normalized_signal_vs_radius`.
+For each event, charges are divided by the median of finite, enabled pixel charges.
+The camera geometry read from sim_telarray currently marks all pixels enabled;
+outliers remain visible. The plots are skipped if the median is not positive.
 
 ```{eval-rst}
 Produces diagnostic figures from sim_telarray (.simtel.zst) files.
@@ -38,8 +45,11 @@ simtel_file (str, required)
 telescope (str, required)
     Telescope name to process (e.g., LSTN-04, MSTN-01).
 plots (list, optional)
-    Which plots to generate. Choices: pedestals, signals, peak_timing, time_traces,
+    Which plots to generate. Choices: pedestals, signals, signal_vs_radius, peak_timing,
+    peak_vs_radius, normalized_signal, normalized_signal_vs_radius, time_traces,
     waveforms, step_traces, all. Default: all.
+flat_fielding (flag, optional)
+    Include normalized charge plots with all plots. Default: false.
 number_of_pixels (int, optional)
     For time_traces: number of brightest pixel traces to plot. Default: 3.
 pixel_step (int, optional)
@@ -49,7 +59,7 @@ max_pixels (int, optional)
 vmax (float, optional)
     For waveforms: upper limit of color scale. Default: None (auto-scale).
 sum_threshold (float, optional)
-    For peak_timing: minimum pixel sum to consider. Default: 10.0.
+    For peak_timing and peak_vs_radius: minimum pixel sum to consider. Default: 10.0.
 timing_bins (int, optional)
     For peak_timing: number of histogram bins. Default: None (unit-width bins).
 event_id (int or list, optional)

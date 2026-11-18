@@ -311,11 +311,18 @@ class ModelSource:
             raw = self.storage.read_bytes(path)
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Model file not found in {self.source_name}: {path}") from exc
-        return validate_table_asset(
-            Table.read(io.BytesIO(raw), format="ascii.ecsv"),
-            schema_entry=entries[0] if entries else None,
-            parameter_data=parameter_data,
-        )
+        try:
+            return validate_table_asset(
+                Table.read(io.BytesIO(raw), format="ascii.ecsv"),
+                schema_entry=entries[0] if entries else None,
+                parameter_data=parameter_data,
+            )
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid model table asset {path} (site: {parameter_data.get('site')}, "
+                f"instrument: {parameter_data.get('instrument')}, "
+                f"parameter: {parameter_data.get('parameter')}): {exc}"
+            ) from exc
 
     def export_model_files(self, parameters=None, file_names=None, dest=None):
         """Copy referenced model files to a destination directory."""

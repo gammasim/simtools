@@ -89,6 +89,11 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "save_pngs", action="store_true", help="Also save individual PNG images per plot"
     ),
+    cli.ArgumentDefinition(
+        "flat_fielding",
+        action="store_true",
+        help="Include median-normalized charge plots when using --plots all",
+    ),
 )
 
 

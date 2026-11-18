@@ -256,7 +256,7 @@ jobs:
     name: download simulation models
     runs-on: ubuntu-26.04
     env:
-      SIMULATION_MODELS_FLAVOR: production
+      SIMULATION_MODELS_FLAVOR: development
 
     defaults:
       run:
@@ -307,7 +307,7 @@ jobs:
           FLAVOR: ${{ steps.simulation_model_repository.outputs.flavor }}
         run: |
           if [[ -z "$BRANCH" && "$FLAVOR" == development ]]; then
-            BRANCH=main
+            BRANCH=sst-flasher
           fi
           BRANCH="${BRANCH:-$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION}"
           git check-ref-format --branch "$BRANCH"

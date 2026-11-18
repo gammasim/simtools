@@ -132,10 +132,33 @@ def _validate_parameter(parameter_data, reader, destination, output_stem):
     return generated_names
 
 
-def _production_parameters(reader):
+@pytest.mark.parametrize("selection_count", [None, 1, 2])
+def test_production_parameters_respects_model_version(selection_count):
+    """Select only the requested production versions, or all versions by default."""
+
+    versions = [f"{number}.0.0" for number in range(1, 3)]
+
+    class ModelReader:
+        def get_model_versions(self, _collection):
+            return versions
+
+        def get_array_elements(self, _version, _collection):
+            return ["LSTN-01"]
+
+        def get_model_parameters(self, _site, _element, _collection, version):
+            return {"example": {"parameter": "example", "parameter_version": version}}
+
+    selected = versions[:selection_count] if selection_count else versions
+    selection = ",".join(selected) if selection_count else None
+    parameters = list(_production_parameters(ModelReader(), selection))
+    assert {parameter["parameter_version"] for parameter, _ in parameters} == set(selected)
+
+
+def _production_parameters(reader, selection):
     """Yield each resolved production parameter asset once."""
     seen = set()
-    for model_version in reader.get_model_versions("telescopes"):
+    versions = selection.split(",") if selection else reader.get_model_versions("telescopes")
+    for model_version in versions:
         yield from _version_parameters(reader, model_version, seen)
 
 
@@ -166,10 +189,10 @@ def _element_parameters(reader, model_version, array_element, seen):
                 yield parameter_data, f"{model_version}-{array_element}-{site}"
 
 
-def _serialize_production_assets(reader, destination):
+def _serialize_production_assets(reader, destination, selection):
     """Serialize production assets and verify generated names are unique."""
     generated_names = set()
-    for parameter_data, output_stem in _production_parameters(reader):
+    for parameter_data, output_stem in _production_parameters(reader, selection):
         for generated_name in _validate_parameter(parameter_data, reader, destination, output_stem):
             assert generated_name not in generated_names
             generated_names.add(generated_name)
@@ -186,7 +209,7 @@ def test_production_model_parameter_assets_are_canonical(
     reader = create_model_reader_from_configuration(source_configuration)
     destination = Path(tmp_test_directory) / "model-assets"
     destination.mkdir()
-    _serialize_production_assets(reader, destination)
+    _serialize_production_assets(reader, destination, request.config.getoption("model_version"))
 
 
 def test_fadc_template_assets_are_canonical(request, simtools_root_path, tmp_test_directory):

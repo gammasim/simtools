@@ -65,7 +65,7 @@ def mock_camera():
     camera.number_of_pixels = 100
     camera.pixel_x_pos = rng.uniform(-1, 1, 100)
     camera.pixel_y_pos = rng.uniform(-1, 1, 100)
-    camera.pixels = {"x": camera.pixel_x_pos, "y": camera.pixel_y_pos}
+    camera.pixels = {"x": camera.pixel_x_pos, "y": camera.pixel_y_pos, "pix_on": np.ones(100)}
     camera.camera_name = "TestCamera"
     return camera
 
@@ -253,7 +253,83 @@ def test_plots_to_run_all(mock_plotter):
     plots = mock_plotter._plots_to_run(["all"])
     assert "pedestals" in plots
     assert SIGNALS in plots
-    assert len(plots) == 6
+    assert len(plots) == 8
+
+
+def test_flat_fielding_adds_normalized_plots_to_all(mock_plotter):
+    plots = mock_plotter._plots_to_run(["all"], flat_fielding=True)
+    assert "normalized_signal" in plots
+    assert "normalized_signal_vs_radius" in plots
+
+
+def test_normalized_signal_uses_median_and_excludes_disabled_and_nonfinite(mock_plotter):
+    event = mock_plotter.event_data[0]
+    event.image = np.full(100, 10.0)
+    event.image[:4] = [0.0, 1000.0, np.nan, 50.0]
+    mock_plotter.camera.pixels["pix_on"][3] = 0
+    values, pixel_ids = mock_plotter._normalized_signal(0)
+
+    np.testing.assert_array_equal(pixel_ids[:3], [0, 1, 4])
+    np.testing.assert_allclose(values[:2], [0.0, 100.0])
+    assert np.median(values) == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("charge", [0.0, -1.0, np.nan])
+def test_normalized_signal_rejects_invalid_median(mock_plotter, charge, caplog):
+    mock_plotter.event_data[0].image = np.full(100, charge)
+    assert mock_plotter.plot_normalized_signal_vs_radius(0) is None
+    assert "normaliz" in caplog.text
+
+
+def test_normalized_signal_vs_radius_keeps_outliers(mock_plotter):
+    mock_plotter.event_data[0].image = np.full(100, 10.0)
+    mock_plotter.event_data[0].image[2] = 1000.0
+    figure = mock_plotter.plot_normalized_signal_vs_radius(0)
+    points = figure.axes[0].collections[0].get_offsets()
+    assert points[2, 1] == pytest.approx(100.0)
+    plt.close(figure)
+
+
+def test_normalized_signal_camera_masks_disabled_pixels(mock_plotter):
+    mock_plotter.event_data[0].image = np.full(100, 10.0)
+    mock_plotter.camera.pixels["pix_on"][2] = 0
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"
+    ) as draw:
+        figure = mock_plotter.plot_normalized_signal(0)
+    image = draw.call_args.kwargs["image"]
+    assert image.mask[2]
+    assert image[0] == pytest.approx(1.0)
+    plt.close(figure)
+
+
+def test_signal_vs_radius_uses_camera_positions_and_integrated_signal(mock_plotter):
+    event = mock_plotter.event_data[0]
+    figure = mock_plotter.plot_signal_vs_radius(event_index=0)
+    points = figure.axes[0].collections[0].get_offsets()
+
+    np.testing.assert_allclose(
+        points[:, 0], np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"])
+    )
+    np.testing.assert_allclose(points[:, 1], event.image)
+    plt.close(figure)
+
+
+def test_peak_vs_radius_uses_selected_pixel_positions(mock_plotter):
+    event = mock_plotter.event_data[0]
+    threshold = np.median(event.adc_samples.sum(axis=1))
+    peaks, pixel_ids, _ = mock_plotter.trace_maxima(event.adc_samples, threshold)
+    figure = mock_plotter.plot_peak_vs_radius(event_index=0, sum_threshold=threshold)
+    points = figure.axes[0].collections[0].get_offsets()
+
+    radius = np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"])
+    np.testing.assert_allclose(points[:, 0], radius[pixel_ids])
+    np.testing.assert_allclose(points[:, 1], peaks)
+    plt.close(figure)
+
+
+def test_peak_vs_radius_no_pixels(mock_plotter):
+    assert mock_plotter.plot_peak_vs_radius(event_index=0, sum_threshold=1e12) is None
 
 
 def test_plots_to_run_specific(mock_plotter):
@@ -374,6 +450,7 @@ def test_plot_camera_image_and_histogram(mock_plotter):
         )
         assert fig is not None
         assert len(fig.axes) == 3
+        assert fig.axes[2].get_xlabel() == "Distance from camera centre [m]"
         plt.close(fig)
 
 
