@@ -15,5 +15,7 @@ backend that traces calibration light sources also implements
    in `LightSourceRayTracingBackend` and set `traces_light_sources` to `True`.
 4. Add the backend name and its `module:class` path to `RAY_TRACING_BACKEND_CLASSES` in
    `simtools.constants`. Imports are lazy, so optional dependencies are needed
-   only when the selected backend is loaded.
+   only when the selected backend is loaded. The backend is also a catalog stage in
+   `src/simtools/resources/simulation_software.yml` that produces `star_images`; the
+   backend name is the stage's `software` value.
 5. Add a contract test that checks the backend methods and their signatures.

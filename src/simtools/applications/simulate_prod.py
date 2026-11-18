@@ -217,7 +217,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SHOWER_ARGUMENTS,
         *cli.CORSIKA_INTERACTION_ARGUMENTS,
         *cli.SIM_TELARRAY_ARGUMENTS,
-        cli.RAY_TRACING_BACKEND,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         *cli.CORSIKA_PATH_ARGUMENTS,

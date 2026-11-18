@@ -4,6 +4,7 @@ import copy
 
 import pytest
 
+from simtools.runners.stages import SimulationChain
 from simtools.runtime import software_catalog
 
 
@@ -158,3 +159,33 @@ def test_file_references_are_checked():
 
     with pytest.raises(ValueError, match="Unknown file product 'no_such_file'"):
         software_catalog._check_references(data)  # pylint: disable=protected-access
+
+
+def test_star_stages_are_declared_and_validated():
+    assert software_catalog.stage_spec("obdeect_star").produces == "star_images"
+    assert software_catalog.stage_spec("sim_telarray_star").software == {"sim_telarray"}
+    assert software_catalog.product("star_images")["format"] == "table"
+
+
+@pytest.mark.parametrize(
+    ("items", "backend"),
+    [
+        (None, None),
+        ([], None),
+        ("sim_telarray_star", "sim_telarray"),
+        (["obdeect_star"], "obdeect"),
+        (["corsika", "sim_telarray"], None),
+    ],
+)
+def test_star_backend(items, backend):
+    assert software_catalog.star_backend(items) == backend
+
+
+def test_star_backend_rejects_several_star_stages():
+    with pytest.raises(ValueError, match="Only one ray-tracing stage"):
+        software_catalog.star_backend(["sim_telarray_star", "obdeect_star"])
+
+
+def test_star_stages_are_not_run_in_a_chain():
+    with pytest.raises(ValueError, match="selects a ray-tracing backend"):
+        SimulationChain(("obdeect_star",))

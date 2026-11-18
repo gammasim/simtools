@@ -328,8 +328,6 @@ class ShowerRouting:
             _absolute_path_argument(output_file),
             "--corsika-card",
             _absolute_path_argument(str(card_file)),
-            "--ray-tracing-backend",
-            "obdeect",
             "--seed",
             str(instrument_seed),
             "--tracing-seed",

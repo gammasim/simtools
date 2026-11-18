@@ -144,10 +144,14 @@ def _catalog_stage_class(spec):
 
 @lru_cache(maxsize=1)
 def _catalog_stages():
-    """Return the classes of the catalog stages by name (imported once)."""
+    """Return the classes of the catalog stages by name (imported once).
+
+    Ray-tracing stages (see ``software_catalog.is_star_stage``) select a backend and get no class.
+    """
     return {
         name: _catalog_stage_class(software_catalog.stage_spec(name))
         for name in software_catalog.stage_names()
+        if not software_catalog.is_star_stage(name)
     }
 
 
@@ -388,6 +392,9 @@ class SimulationChain:
         """Check that each stage consumes what the previous stage produces."""
         if not self.stages:
             raise ValueError("A simulation chain needs at least one stage.")
+        for name in self.stages:  # ray-tracing stages select a backend; they are not run
+            if software_catalog.is_star_stage(name):
+                raise ValueError(f"Stage {name!r} selects a ray-tracing backend, not a chain step.")
         classes = [get_stage_class(name) for name in self.stages]
         for upstream, downstream in pairwise(classes):
             if not connects(upstream, downstream):

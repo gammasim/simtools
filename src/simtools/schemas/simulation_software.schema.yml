@@ -48,7 +48,7 @@ properties:
       properties:
         description: {type: string}
         frame: {enum: [sky, ground, telescope, camera]}
-        format: {enum: [iact, stream, events]}
+        format: {enum: [iact, stream, events, table]}
   software:
     type: object
     minProperties: 1

@@ -14,7 +14,11 @@ applications:
     telescope: SSTS-17
     flasher_photons: 1e9
     log_level: DEBUG
-    ray_tracing_backend: obdeect
+    simulation_software:
+    - obdeect_illuminator
+    - obdeect_atmosphere
+    - obdeect_optics
+    - sim_telarray:bypass_optics=1
     instrument_seed: 1
     simulation_seed: 1
   integration_tests:

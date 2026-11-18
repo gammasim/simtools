@@ -33,8 +33,8 @@ low- and high-energy models. If omitted, the selected CORSIKA build default is r
 
 ## Shower ray tracing
 
-For CORSIKA and sim_telarray simulations, use `--ray_tracing_backend obdeect` to trace
-shower photons before sim_telarray. `--shower_route_mode stream` pipes the photons through
+For CORSIKA and sim_telarray simulations, include the obdeect stages (such as
+`obdeect_optics`) in `--simulation_software` to trace shower photons before sim_telarray. `--shower_route_mode stream` pipes the photons through
 the tracer; `disk` retains the CORSIKA IACT file and writes camera photon-bunch files for
 each telescope type. Each model version has a telescope map, and each route produces a log
 and a resources JSON file. A failing route stops the job and prints its log to the job output.

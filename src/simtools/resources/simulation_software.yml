@@ -37,6 +37,9 @@ products:
     description: Camera-frame photons as IACT photon bunches, for sim_telarray with bypassed optics.
     frame: camera
     format: iact
+  star_images:
+    description: Star images of one telescope model (ray tracing).
+    format: table
   camera_events:
     description: Camera events written by sim_telarray.
     format: events
@@ -287,6 +290,18 @@ stages:
     options_from_arguments: true
     files:
       output: photon_stream
+
+  obdeect_star:
+    description: Star images and incidence angles traced in process by obdeect (ray-tracing backend; selects the backend, not run by the chain runner).
+    software: obdeect
+    implementation: simtools.ray_tracing.backends.obdeect:ObdeectBackend
+    produces: star_images
+
+  sim_telarray_star:
+    description: Star images and incidence angles traced in process by sim_telarray (ray-tracing backend; selects the backend, not run by the chain runner).
+    software: sim_telarray
+    implementation: simtools.ray_tracing.backends.sim_telarray:SimtelBackend
+    produces: star_images
 
   corsika_to_stream:
     description: CORSIKA photon bunches to a photon stream.

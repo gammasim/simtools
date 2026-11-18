@@ -837,11 +837,6 @@ def parse_args(argv=None):
         help="Simulation models root (default: SIMTOOLS_SIMULATION_MODELS_PATH).",
     )
     parser.add_argument(
-        "--ray-tracing-backend",
-        default=constants.SHOWER_PHOTON_RAY_TRACING_BACKEND,
-        help="Ray-tracing backend of the route.",
-    )
-    parser.add_argument(
         "--output-path",
         type=Path,
         default=None,
@@ -880,7 +875,6 @@ def main(argv=None, *, inputs_factory=create_route_inputs):
     inputs = inputs_factory(
         selected,
         simulation_models_path=args.simulation_models_path,
-        backend=args.ray_tracing_backend,
         context=context,
     )
     route_stream(

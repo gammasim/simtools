@@ -49,7 +49,6 @@ def test_activity_generates_an_id_when_none_is_given():
 def test_simulation_software_prefers_arguments_over_environment(monkeypatch, tmp_test_directory):
     monkeypatch.setenv("SIMTOOLS_SIM_TELARRAY_PATH", "/from/environment")
     monkeypatch.setenv("SIMTOOLS_CORSIKA_HE_INTERACTION", "EPOS")
-    monkeypatch.setenv("SIMTOOLS_RAY_TRACING_BACKEND", "sim_telarray")
 
     software = SimulationSoftware.from_arguments(
         {"sim_telarray_path": str(tmp_test_directory), "corsika_path": None}
@@ -57,13 +56,22 @@ def test_simulation_software_prefers_arguments_over_environment(monkeypatch, tmp
 
     assert software.sim_telarray_path == Path(tmp_test_directory)
     assert software.corsika_interaction_models[0] == "epos"
-    assert software.ray_tracing_backend == "sim_telarray"
     assert software.corsika_dummy_file == Path(tmp_test_directory) / "run9991.corsika.gz"
 
 
-def test_simulation_software_rejects_unknown_ray_tracing_backend():
-    with pytest.raises(ValueError, match="ray_tracing_backend must be one of"):
-        SimulationSoftware.from_arguments({"ray_tracing_backend": "unknown"})
+@pytest.mark.parametrize(
+    ("args", "backend"),
+    [
+        ({"simulation_software": ["obdeect_star"]}, "obdeect"),
+        ({"simulation_software": ["sim_telarray_star"]}, "sim_telarray"),
+        ({"simulation_software": ["corsika", "sim_telarray"]}, "sim_telarray"),
+        ({}, "sim_telarray"),
+        (None, "sim_telarray"),
+    ],
+)
+def test_ray_tracing_backend_follows_simulation_software(args, backend):
+    assert SimulationSoftware.from_arguments(args).ray_tracing_backend == backend
+    assert RunContext.from_arguments(args).ray_tracing_backend == backend
 
 
 def test_simulation_software_reports_missing_installations(tmp_test_directory):

@@ -13,6 +13,7 @@ from types import MappingProxyType
 from simtools import constants
 from simtools.constants import RAY_TRACING_BACKENDS
 from simtools.io.output_paths import OutputPaths
+from simtools.runtime import software_catalog
 from simtools.utils.general import find_executable_in_dir, get_uuid
 
 
@@ -72,17 +73,11 @@ class SimulationSoftware:
         args : Mapping, optional
             Parsed arguments.
         """
-        ray_tracing_backend = _config_value(
-            args,
-            "ray_tracing_backend",
-            "SIMTOOLS_RAY_TRACING_BACKEND",
-            default=RAY_TRACING_BACKENDS[0],
+        # the ray-tracing backend is the star stage of simulation_software (default: first backend)
+        ray_tracing_backend = (
+            software_catalog.star_backend((args or {}).get("simulation_software"))
+            or RAY_TRACING_BACKENDS[0]
         )
-        if ray_tracing_backend not in RAY_TRACING_BACKENDS:
-            raise ValueError(
-                f"ray_tracing_backend must be one of {RAY_TRACING_BACKENDS}, "
-                f"got '{ray_tracing_backend}'"
-            )
         return cls(
             sim_telarray_root=_config_value(
                 args, "sim_telarray_path", "SIMTOOLS_SIM_TELARRAY_PATH"

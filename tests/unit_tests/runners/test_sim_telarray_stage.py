@@ -11,6 +11,7 @@ from simtools.runners import stages
 from simtools.runners.chain_spec import ChainSpec
 from simtools.runners.sim_telarray_stage import LightSimTelArrayStage
 from simtools.runners.stages import STDIN, StageInputs, StreamTo, get_stage_class
+from simtools.runtime import software_catalog
 
 CAMERA_PHOTONS_IACT = "camera_photons_iact"
 CHERENKOV_PHOTONS = "cherenkov_photons"
@@ -137,7 +138,10 @@ def test_instances_configure_shower_routing(corsika_config_mock_array_model, mod
 
     config = corsika_config_mock_array_model
     context = config.context.replace(
-        software=replace(config.context.software, ray_tracing_backend="obdeect")
+        software=replace(
+            config.context.software,
+            ray_tracing_backend=software_catalog.star_backend(["obdeect_star"]),
+        )
     )
     inputs = StageInputs(
         array_models=(config.array_model,),
@@ -156,7 +160,10 @@ def test_instances_reject_invalid_shower_route_mode(corsika_config_mock_array_mo
 
     config = corsika_config_mock_array_model
     context = config.context.replace(
-        software=replace(config.context.software, ray_tracing_backend="obdeect")
+        software=replace(
+            config.context.software,
+            ray_tracing_backend=software_catalog.star_backend(["obdeect_star"]),
+        )
     )
     inputs = StageInputs(
         array_models=(config.array_model,),

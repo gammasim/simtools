@@ -4,8 +4,9 @@
 imaging atmospheric Cherenkov telescopes. It is a backend for the
 ray-tracing applications of simtools (PSF, effective mirror area, effective
 focal length, incident angles) and for the calibration light of flashers and
-illuminators. Select it with `--ray_tracing_backend obdeect` or set
-`SIMTOOLS_RAY_TRACING_BACKEND=obdeect`; `sim_telarray` remains the default.
+illuminators. The ray-tracing tools select it with `--simulation_software obdeect_star`
+(`sim_telarray_star` is the default); simulation chains use the obdeect stages
+(`obdeect_flasher`, `obdeect_illuminator`, `obdeect_optics`) in `--simulation_software`.
 
 The ray-tracing applications describe what to trace (star position, source
 distance, photons, seeds and parameter changes such as the single-mirror mode)
@@ -71,8 +72,8 @@ The whole chain runs as one pipe, also for several telescopes: one `obdeect_opti
 traces every telescope of the array with its own optical model and writes the camera photons in
 event order.
 
-The calibration applications use obdeect with `--ray_tracing_backend` (next section) or with
-`--simulation_software` (default `light_emission sim_telarray`), which runs the stages for one
+The calibration applications use obdeect through `--simulation_software` (default
+`light_emission sim_telarray`; see the next section), which runs the stages for one
 telescope: a calibration chain starts with `light_emission`, `obdeect_flasher` or
 `obdeect_illuminator` and has no `corsika` stage. The option `bypass_optics` of `sim_telarray` is
 required when the photons come from obdeect (camera-frame photons); after `light_emission` it
@@ -98,7 +99,8 @@ simtools-simulate-illuminator --simulation_software obdeect_illuminator obdeect_
 
 ## Flashers and illuminators
 
-With `--ray_tracing_backend obdeect`, `simtools-simulate-flasher --run_mode
+With the obdeect stages (`obdeect_flasher`, `obdeect_illuminator`) in `--simulation_software`,
+`simtools-simulate-flasher --run_mode
 full_simulation` and `simtools-simulate-illuminator` split the simulation into
 stages: obdeect generates the photons of the calibration device and traces them
 to the camera entrance, simtools writes the photons as photon bunches

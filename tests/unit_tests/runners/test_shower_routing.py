@@ -15,6 +15,7 @@ import pytest
 
 from simtools.job_execution.runner_services import RunnerServices
 from simtools.runners.shower_routing import ShowerRouting, _shower_route_seeds, route_threads
+from simtools.runtime import software_catalog
 
 SHOWER_ROUTE_MODULE = "simtools.simtel.shower_route"
 PIPE_SEPARATOR = " | "
@@ -66,7 +67,10 @@ class _SimulatorArray:
 def route_inputs(corsika_config_mock_array_model):
     config = corsika_config_mock_array_model
     context = config.context.replace(
-        software=replace(config.context.software, ray_tracing_backend="obdeect")
+        software=replace(
+            config.context.software,
+            ray_tracing_backend=software_catalog.star_backend(["obdeect_star"]),
+        )
     )
     return _Routing(config, context), _SimulatorArray(config, context)
 
@@ -108,7 +112,6 @@ def test_routing_commands_by_telescope_type(route_inputs, input_file):
     for args in route_args:
         assert _option(args, "--seed") == "11"
         assert _option(args, "--tracing-seed") == "22"
-        assert _option(args, "--ray-tracing-backend") == "obdeect"
     if streamed:
         for args in route_args:
             assert _option(args, "--input") == "-"
@@ -212,7 +215,7 @@ def test_chain_writes_routing_at_the_correct_stage(
             software=SimpleNamespace(
                 **{
                     **vars(corsika_stage_mock_array_model.context.software),
-                    "ray_tracing_backend": "obdeect",
+                    "ray_tracing_backend": software_catalog.star_backend(["obdeect_star"]),
                 }
             )
         ),

@@ -20,6 +20,8 @@ _SCHEMA = "schemas/simulation_software.schema.yml"
 #: Kinds of photons a first stage generates.
 AIR_SHOWER_SOURCE = "air_shower"
 LIGHT_SOURCE = "light_source"
+#: Data product of the ray-tracing stages; they select the ray-tracing backend, not run in a chain.
+STAR_IMAGES = "star_images"
 #: Python types of the option types.
 _OPTION_TYPES = {
     "integer": (int,),
@@ -276,6 +278,41 @@ def light_source(name):
 def light_source_names():
     """Return the names of the light-source types."""
     return tuple(catalog().get("light_sources", {}))
+
+
+def is_star_stage(name):
+    """Return True if a catalog stage produces star images, i.e. selects a ray-tracing backend."""
+    return name in stage_names() and stage_spec(name).produces == STAR_IMAGES
+
+
+def star_backend(items=None):
+    """
+    Return the ray-tracing backend selected by the star stages of a list of stages.
+
+    Parameters
+    ----------
+    items : str, list of str or None
+        Stage items as in ``simulation_software`` (e.g. ``["sim_telarray_star"]``).
+
+    Returns
+    -------
+    str or None
+        Software of the star stage; None if the list has no star stage.
+
+    Raises
+    ------
+    ValueError
+        If the list has more than one star stage.
+    """
+    if not items:
+        return None
+    # stage names only: parse_chain would look up stage classes, and star stages have none
+    items = [items] if isinstance(items, str) else list(items)
+    names = [item.split(":")[0] for item in items]  # STAGE or STAGE:KEY=VALUE,...
+    star = [stage_spec(name) for name in names if is_star_stage(name)]
+    if len(star) > 1:
+        raise ValueError(f"Only one ray-tracing stage is allowed, got {[s.name for s in star]}.")
+    return next(iter(star[0].software)) if star else None
 
 
 def load_object(path):

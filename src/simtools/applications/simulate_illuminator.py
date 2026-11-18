@@ -100,7 +100,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         cli.INSTRUMENT_SEED,
         cli.SIMULATION_SEED,
-        cli.RAY_TRACING_BACKEND,
         cli.SIMULATION_SOFTWARE(
             default=list(software_catalog.default_chain(software_catalog.LIGHT_SOURCE)),
             help=(

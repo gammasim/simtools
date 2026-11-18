@@ -180,14 +180,6 @@ MAX_WORKERS = _argument(
 
 SIM_TELARRAY_PATH_ARGUMENTS = (SIM_TELARRAY_PATH,)
 
-RAY_TRACING_BACKEND = _argument(
-    "ray_tracing_backend",
-    "ray tracing configuration",
-    help=f"Optical ray-tracing backend (default: {constants.RAY_TRACING_BACKENDS[0]}).",
-    choices=constants.RAY_TRACING_BACKENDS,
-    default=None,
-)
-
 # Seeds of every simulation backend alike: the instrument seed randomises the instrument
 # (mirror deviations, gains, ...) of each random instrument instance, the simulation seed the
 # simulated events and photons.
@@ -224,16 +216,6 @@ SIMULATION_SEED = _argument(
 )
 
 SEED_ARGUMENTS = (INSTRUMENT_SEED, RANDOM_INSTRUMENT_INSTANCES, SIMULATION_SEED)
-
-RAY_TRACING_ARGUMENTS = (
-    RAY_TRACING_BACKEND,
-    INSTRUMENT_SEED,
-    RANDOM_INSTRUMENT_INSTANCES(
-        default=constants.RAY_TRACING_INSTRUMENT_INSTANCES,
-        help="Number of random instrument instances (random mirror realisations) per image.",
-    ),
-    SIMULATION_SEED,
-)
 
 CORSIKA_PATH_ARGUMENTS = (CORSIKA_PATH, CORSIKA_INTERACTION_TABLE_PATH)
 
@@ -631,6 +613,20 @@ SIMULATION_SOFTWARE = _argument(
     type=str,
     nargs="+",
     default=list(defaults.SIMULATION_SOFTWARE_DEFAULT),
+)
+
+# Ray-tracing backend: a star stage of simulation_software (see software_catalog.star_backend).
+RAY_TRACING_ARGUMENTS = (
+    SIMULATION_SOFTWARE(
+        default=["sim_telarray_star"],
+        help="Ray-tracing backend as a stage: sim_telarray_star or obdeect_star.",
+    ),
+    INSTRUMENT_SEED,
+    RANDOM_INSTRUMENT_INSTANCES(
+        default=constants.RAY_TRACING_INSTRUMENT_INSTANCES,
+        help="Number of random instrument instances (random mirror realisations) per image.",
+    ),
+    SIMULATION_SEED,
 )
 
 SIMULATION_FILE_FORMAT = _argument(

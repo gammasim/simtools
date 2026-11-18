@@ -14,7 +14,9 @@ applications:
     run_number: 10
     flasher_photons: 1e6
     log_level: DEBUG
-    ray_tracing_backend: obdeect
+    simulation_software:
+    - obdeect_flasher
+    - sim_telarray:bypass_optics=3
     instrument_seed: 1
     simulation_seed: 1
   integration_tests:

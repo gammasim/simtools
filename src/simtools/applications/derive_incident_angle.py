@@ -48,7 +48,10 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
-        cli.RAY_TRACING_BACKEND,
+        cli.SIMULATION_SOFTWARE(
+            default=["sim_telarray_star"],
+            help="Ray-tracing backend stage: sim_telarray_star or obdeect_star.",
+        ),
         cli.INSTRUMENT_SEED,
         cli.SIMULATION_SEED,
         cli.MODEL_VERSION,
