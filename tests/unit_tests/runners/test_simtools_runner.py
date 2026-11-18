@@ -1107,6 +1107,50 @@ def test_container_mounts_environment_model_source(
     assert runtime[-1] == "image"
 
 
+def test_container_model_provenance_uses_host_checkout(monkeypatch, tmp_test_directory):
+    host = Path(tmp_test_directory) / "models"
+    host.mkdir()
+    subprocess.run(["git", "init", "-q", str(host)], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(host),
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.org",
+            "commit",
+            "--allow-empty",
+            "-qm",
+            "initial",
+        ],
+        check=True,
+    )
+    commit = subprocess.run(
+        ["git", "-C", str(host), "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    log = Path(tmp_test_directory) / "workflow.log"
+    configs = [
+        {
+            "application": TELESCOPE_THROUGHPUT_APPLICATION,
+            "run_application": True,
+            "configuration": {},
+        }
+    ]
+    _patch_run_dependencies(monkeypatch, configs, log)
+    args = {
+        **_runner_args(),
+        SIMULATION_MODELS_PATH: str(host),
+        "_metadata_configuration_sources": {SIMULATION_MODELS_PATH: "environment"},
+        "provenance_path": False,
+        "runtime_environment": {"image": "image"},
+    }
+    simtools_runner.run_applications(args, run_time=["podman", "run", "image"])
+    assert f"Simulation models commit: {commit}" in log.read_text()
+    assert "Simulation models checkout: clean" in log.read_text()
+
+
 def test_container_model_mount_rejects_missing_host_path(tmp_test_directory):
     host = Path(tmp_test_directory) / "missing"
     args = {"_metadata_configuration_sources": {SIMULATION_MODELS_GIT_PATH: "environment"}}

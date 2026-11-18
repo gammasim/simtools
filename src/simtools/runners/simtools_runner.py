@@ -101,6 +101,9 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
         **_runtime_model_source_options(effective_runtime, explicit_source_options),
         **explicit_source_options,
     }
+    provenance_configurations = deepcopy(configurations)
+    apply_execution_overrides(provenance_configurations, args_dict, source_options, None)
+    model_provenance = _model_provenance(provenance_configurations, source_options)
 
     if args_dict["ignore_runtime_environment"]:
         run_time = []
@@ -127,7 +130,7 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
         file.write(_runtime_environment_header(effective_runtime, source_options))
-        file.write(_model_provenance(configurations, source_options))
+        file.write(model_provenance)
         try:
             versions = dependencies.get_version_string(
                 run_time, include_software_versions=True, context=context
