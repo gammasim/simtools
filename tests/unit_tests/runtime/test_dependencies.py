@@ -253,6 +253,8 @@ def test_manifest_entries_rejects_invalid_groups(manifest, category, model, mess
         ({"path": "nested/file", "size": 1}, "invalid manifest table path"),
         ({"path": "file", "size": -1}, "invalid manifest table size"),
         ({"path": "file", "size": "1"}, "invalid manifest table size"),
+        ({"path": "file", "size": 1}, "missing or invalid SHA-256 digest"),
+        ({"path": "file", "size": 1, "sha256": "invalid"}, "missing or invalid SHA-256 digest"),
     ],
 )
 def test_validate_table_entry_rejects_invalid_entries(entry, message, tmp_test_directory):

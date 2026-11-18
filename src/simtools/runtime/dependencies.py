@@ -379,26 +379,11 @@ def _validate_table_entries(entries, table_path):
 
 
 def _validate_table_entry(entry, table_path):
-    """Check one manifest entry's file presence, size, and optional SHA-256 digest.
-
-    Entries without a digest receive an installation sanity check only; their content
-    is not verified.
-    """
-    if not isinstance(entry, dict):
-        return "invalid manifest table entry"
-    path_value = entry.get("path")
-    expected_size = entry.get("size")
-    if not isinstance(path_value, str) or Path(path_value).name != path_value:
-        return f"invalid manifest table path: {path_value!r}"
-    if not isinstance(expected_size, int) or expected_size < 0:
-        return f"invalid manifest table size for {path_value}"
-    expected_digest = entry.get("sha256")
-    if expected_digest is not None and (
-        not isinstance(expected_digest, str)
-        or len(expected_digest) != 64
-        or any(character not in "0123456789abcdefABCDEF" for character in expected_digest)
-    ):
-        return f"invalid SHA-256 digest for {path_value}"
+    """Check one manifest entry's file presence, size, and SHA-256 digest."""
+    try:
+        path_value, expected_size, expected_digest = _table_copy_metadata(entry)
+    except ValueError as exc:
+        return str(exc)
     return _validate_table_file(table_path / path_value, expected_size, expected_digest)
 
 

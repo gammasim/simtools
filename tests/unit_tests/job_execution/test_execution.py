@@ -78,7 +78,15 @@ def test_recover_submission_retries_only_failed_jobs_and_persists_handle(
     work_dir = Path(tmp_test_directory) / "original"
     work_dir.mkdir()
     submission = SubmissionHandle(
-        "htcondor", work_dir, ("job-1", "job-2"), metadata={"expected_outputs": {}}
+        "htcondor",
+        work_dir,
+        ("job-1", "job-2"),
+        metadata={
+            "expected_outputs": {},
+            "container_target_dir": None,
+            "python_executable": None,
+            "priority": 0,
+        },
     )
     backend = mocker.Mock()
     backend.is_finished.return_value = True
@@ -93,6 +101,7 @@ def test_recover_submission_retries_only_failed_jobs_and_persists_handle(
 
     assert not finished
     assert [item.job_id for item in submit.call_args.args[0]] == ["job-2"]
+    assert submit.call_args.args[1].backend_config == {"priority": 0}
     assert submission.metadata["recovery"]["attempt"] == 1
     assert submission.metadata["recovery"]["handle"]["job_ids"] == ["job-2"]
 

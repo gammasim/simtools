@@ -293,7 +293,9 @@ def recover_submission(submission, recovery_root, *, max_attempts=3):
         "extra_submit_attributes",
     )
     backend_config = {
-        key: submission.metadata[key] for key in config_keys if key in submission.metadata
+        key: submission.metadata[key]
+        for key in config_keys
+        if submission.metadata.get(key) is not None
     }
     retry_options = ExecutionOptions(
         backend="htcondor",
