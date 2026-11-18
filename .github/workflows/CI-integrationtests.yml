@@ -256,8 +256,7 @@ jobs:
     name: download simulation models
     runs-on: ubuntu-26.04
     env:
-      # Set to production before merging development work.
-      SIMULATION_MODELS_FLAVOR: development
+      SIMULATION_MODELS_FLAVOR: production
 
     defaults:
       run:
