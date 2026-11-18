@@ -49,8 +49,17 @@ jobs:
           python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   build-simtools-dev:
-    runs-on: ubuntu-26.04
+    runs-on: ${{ matrix.runner }}
     needs: dependency-config
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-26.04
+            suffix: ''
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            suffix: -arm64
     permissions:
       contents: read
       packages: write
@@ -87,17 +96,17 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
             latest=${{ !(startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
+            suffix=${{ matrix.suffix }},onlatest=true
 
       - name: Build and push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7
         with:
           context: .
-          # arm64 is paused: the sim_telarray and CORSIKA component images are amd64 only
-          platforms: linux/amd64
+          platforms: linux/${{ matrix.arch }}
           build-args: |
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
-            CORSIKA_IMAGE=${{ needs.dependency-config.outputs.dev_corsika_image }}
-            SIMTEL_IMAGE=${{ needs.dependency-config.outputs.dev_simtel_image }}
+            CORSIKA_IMAGE=${{ needs.dependency-config.outputs.dev_corsika_image }}${{ matrix.suffix }}
+            SIMTEL_IMAGE=${{ needs.dependency-config.outputs.dev_simtel_image }}${{ matrix.suffix }}
             PYTHON_VERSION=${{ needs.dependency-config.outputs.python_version }}
             SIMTOOLS_GIT_REVISION=${{ env.SIMTOOLS_GIT_REVISION }}
           push: ${{ github.repository == 'gammasim/simtools' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc'))) }}
