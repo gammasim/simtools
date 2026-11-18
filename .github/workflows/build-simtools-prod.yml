@@ -43,6 +43,7 @@ on:
       - 'v*-rc*'
     paths:
       - docker/Dockerfile-simtools-prod
+      - docker/check_component_architecture.py
       - .github/scripts/install_python_dependencies.sh
       - pyproject.toml
       - dependency_versions.yml
@@ -64,6 +65,10 @@ env:
 
 permissions: {}
 
+concurrency:
+  group: build-simtools-prod
+  cancel-in-progress: false
+
 jobs:
   dependency-config:
     runs-on: ubuntu-26.04
@@ -73,6 +78,8 @@ jobs:
       base_image: ${{ steps.config.outputs.base_image }}
       python_version: ${{ steps.config.outputs.python_version }}
       production_matrix: ${{ steps.config.outputs.production_matrix }}
+      generic_matrix: ${{ steps.config.outputs.generic_matrix }}
+      build_date: ${{ steps.config.outputs.build_date }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - id: config
@@ -136,16 +143,25 @@ jobs:
             printf 'production_matrix=%s\n' "${production_matrix}" >> filtered-output
             mv filtered-output dependency-output
           fi
-          cat dependency-output >> "$GITHUB_OUTPUT"
+          production_matrix=$(sed -n 's/^production_matrix=//p' dependency-output | jq -c '
+            map(. + {arch: "amd64", runner: "ubuntu-26.04", arch_suffix: (if .avx_flag == "generic" then "-amd64" else "" end)}) |
+            . + [ .[] | select(.avx_flag == "generic") |
+              .arch = "arm64" | .runner = "ubuntu-26.04-arm" | .arch_suffix = "-arm64" |
+              .corsika_image |= (if contains("@") then . else . + "-arm64" end) |
+              .simtel_image |= (if contains("@") then . else . + "-arm64" end) ]')
+          {
+            sed '/^production_matrix=/d' dependency-output
+            printf 'production_matrix=%s\n' "${production_matrix}"
+            printf 'generic_matrix=%s\n' "$(jq -c '[.[] | select(.avx_flag == "generic" and .arch == "amd64")]' <<< "$production_matrix")"
+            echo "build_date=$(date -u +%Y%m%d)"
+          } >> "$GITHUB_OUTPUT"
 
   build-simtools-prod:
-    runs-on: ubuntu-26.04
+    runs-on: ${{ matrix.runner }}
     needs: dependency-config
     permissions:
       contents: read
       packages: write
-    outputs:
-      generic_tag: ${{ steps.export-tags.outputs.generic_tag }}
     strategy:
       matrix:
         include: ${{ fromJSON(needs.dependency-config.outputs.production_matrix) }}
@@ -190,12 +206,11 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
             latest=false
-            suffix=-v${{ matrix.corsika_build_id }}-${{ matrix.simtel_build_id }}-${{ matrix.avx_flag }}
+            suffix=-v${{ matrix.corsika_build_id }}-${{ matrix.simtel_build_id }}-${{ matrix.avx_flag }}${{ matrix.arch_suffix }},onlatest=true
           tags: |
             type=ref,event=pr
             type=semver,pattern={{version}},prefix=v
-            type=schedule,pattern={{date 'YYYYMMDD'}}
-            type=raw,value={{date 'YYYYMMDD'}}
+            type=raw,value=${{ needs.dependency-config.outputs.build_date }}
             type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.release.prerelease == false }}
 
       - name: Bound production image tags
@@ -219,24 +234,12 @@ jobs:
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
-      - name: Export generic tag for testing
-        id: export-tags
-        if: matrix.avx_flag == 'generic'
-        env:
-          IMAGE_TAGS: ${{ steps.image-tags.outputs.tags }}
-        run: |
-          TAG=$(head -n1 <<< "$IMAGE_TAGS")
-          TAG=${TAG##*:}
-          echo "generic_tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Exported generic tag: $TAG"
-
       - name: Build and push
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7
         with:
           context: .
-          # arm64 is paused: the sim_telarray and CORSIKA component images are amd64 only
-          platforms: linux/amd64
+          platforms: linux/${{ matrix.arch }}
           build-args: |
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
             CORSIKA_IMAGE=${{ matrix.corsika_image }}
@@ -249,19 +252,90 @@ jobs:
           tags: ${{ steps.image-tags.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+  publish-generic:
+    needs: [dependency-config, build-simtools-prod]
+    if: ${{ (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc'))) && (github.event_name != 'workflow_dispatch' || contains(fromJSON('["all","generic"]'), github.event.inputs.avx_flag || 'all')) }}
+    runs-on: ubuntu-26.04
+    permissions:
+      packages: write
+    outputs:
+      generic_tag: ${{ steps.publish.outputs.generic_tag }}
+    strategy:
+      matrix:
+        include: ${{ fromJSON(needs.dependency-config.outputs.generic_matrix) }}
+    steps:
+      - name: Require a fresh workflow run
+        if: github.run_attempt != 1
+        run: |
+          echo "::error::Start a new workflow to publish matching images for both architectures."
+          exit 1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6  # v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract generic metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6
+        with:
+          images: ${{ env.REGISTRY }}/gammasim/simtools-prod
+          flavor: |
+            latest=false
+            suffix=-v${{ matrix.corsika_build_id }}-${{ matrix.simtel_build_id }}-generic,onlatest=true
+          tags: |
+            type=ref,event=pr
+            type=semver,pattern={{version}},prefix=v
+            type=raw,value=${{ needs.dependency-config.outputs.build_date }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.release.prerelease == false }}
+
+      - name: Publish multi-platform generic images
+        id: publish
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          bound_tag() {
+            local tag="$1" digest
+            if (( ${#tag} > 128 )); then
+              digest=$(printf '%s' "$tag" | sha256sum)
+              tag="${tag:0:111}-${digest:0:16}"
+            fi
+            printf '%s' "$tag"
+          }
+          first=true
+          while IFS= read -r image; do
+            [[ -n "$image" ]] || continue
+            name=${image%:*}
+            tag=${image##*:}
+            target=$(bound_tag "$tag")
+            amd64=$(bound_tag "$tag-amd64")
+            arm64=$(bound_tag "$tag-arm64")
+            docker buildx imagetools create --tag "$name:$target" \
+              "$name:$amd64" "$name:$arm64"
+            if [[ "$first" == true ]]; then
+              echo "generic_tag=$target" >> "$GITHUB_OUTPUT"
+              first=false
+            fi
+          done <<< "$IMAGE_TAGS"
+
   test-simtools-prod:
     permissions:
       contents: read
-    needs: build-simtools-prod
+    needs: publish-generic
     if: ${{ (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc'))) && (github.event_name != 'workflow_dispatch' || contains(fromJSON('["all","generic"]'), github.event.inputs.avx_flag || 'all')) }}
     uses: ./.github/workflows/CI-integrationtests.yml
     with:
-      container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
+      container_image: ghcr.io/gammasim/simtools-prod:${{ needs.publish-generic.outputs.generic_tag }}
       simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
       simtools_tests_branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
       model_versions: '["7.0.0"]'
-      # arm64 is paused: the sim_telarray and CORSIKA component images are amd64 only
-      runner_labels: '["ubuntu-26.04"]'
+      runner_labels: '["ubuntu-26.04", "ubuntu-26.04-arm"]'
     secrets:
       CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
 
