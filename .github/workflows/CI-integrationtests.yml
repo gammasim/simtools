@@ -55,7 +55,7 @@ on:
         description: 'Model versions to test'
         required: false
         type: string
-        default: '["8.0.0","7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]'
+        default: '["8.0.0","7.0.0","6.0.2","6.0.2,6.1.1"]'
       runner_labels:
         description: 'GitHub-hosted runner labels to test'
         required: false
@@ -480,7 +480,7 @@ jobs:
       fail-fast: false
       matrix:
         runner: ${{ fromJSON(inputs.runner_labels || '["ubuntu-26.04"]') }}
-        model_version: ${{ fromJSON(inputs.model_versions || '["8.0.0","7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]') }}
+        model_version: ${{ fromJSON(inputs.model_versions || '["8.0.0","7.0.0","6.0.2","6.0.2,6.1.1"]') }}
         model_source: [git]
 
     defaults:
