@@ -21,6 +21,7 @@ from simtools.production_configuration.trigger_histograms import (
     _create_trigger_topology_count_table,
     _execute_production_job,
     _format_trigger_histogram_inspection,
+    _group_job,
     _group_output_stem,
     _relative_to_directory,
     _resolve_group_telescope_configs,
@@ -732,3 +733,23 @@ def test_inspect_trigger_histogram_file_reports_reference_mismatches(tmp_path):
     assert report["orphan_dense_reference_ids"] == ["ref-3"]
     assert "missing dense payloads for metadata ids: ref-2" in formatted
     assert "orphan dense payload ids without metadata rows: ref-3" in formatted
+
+
+def test_local_group_job_preserves_model_source(monkeypatch, tmp_test_directory):
+    from simtools.job_execution.worker import _initialize_runtime
+    from simtools.model_repository.reader import SimulationModelReader, resolve_model_reader
+    from simtools.runtime.context import RunContext
+
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", "None")
+    for name in ("productions", "model_parameters"):
+        (Path(tmp_test_directory) / "simulation-models" / name).mkdir(parents=True)
+    context = RunContext.from_arguments(
+        {"output_path": str(tmp_test_directory)},
+        model_reader=SimulationModelReader.from_files(tmp_test_directory),
+    )
+    job = _group_job(0, {"backend": "local"}, context, {}, (), ())
+
+    restored = _initialize_runtime(job)
+    assert (
+        resolve_model_reader(context=restored).source_config == context.model_reader.source_config
+    )
