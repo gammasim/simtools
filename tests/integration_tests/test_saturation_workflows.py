@@ -20,6 +20,7 @@ from simtools.simtel.pulse_response import (
     RESPONSE,
     WIDTH,
 )
+from simtools.simtel.simtel_config_writer import INCOMPATIBLE_SIMTEL_MARKER
 from simtools.testing import options
 from simtools.testing.output_validation.runner import validate_application_output
 
@@ -89,6 +90,7 @@ def test_saturation_workflow(
         text=True,
         check=False,
     )
+    _skip_incompatible_simtel(result)
     assert result.returncode == 0, result.stdout + result.stderr
     applications, *_ = prepare_workflow(args, replacements=replacements)
     for application in applications:
@@ -99,6 +101,13 @@ def test_saturation_workflow(
     _check_response_curves(
         Path(replacements[OUTPUT_PLACEHOLDER]), workflow == "validate_pulse_response", model
     )
+
+
+def _skip_incompatible_simtel(result):
+    """Skip a workflow when its simulator is incompatible with its model."""
+    if result.returncode != 0 and INCOMPATIBLE_SIMTEL_MARKER in result.stderr:
+        reason = result.stderr.rsplit(INCOMPATIBLE_SIMTEL_MARKER, 1)[1].splitlines()[0].strip()
+        pytest.skip(reason)
 
 
 def _pulse_model(source):
