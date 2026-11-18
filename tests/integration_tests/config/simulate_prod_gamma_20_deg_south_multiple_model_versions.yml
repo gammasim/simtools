@@ -45,8 +45,6 @@ applications:
     - path_descriptor: grid_output_path
       file: gamma_run000001_za20deg_azm085deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.simtel.log.gz
     - path_descriptor: grid_output_path
-      file: gamma_run000001_za20deg_azm085deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.hdata.zst
-    - path_descriptor: grid_output_path
       file: gamma_run000001_za20deg_azm085deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.simtel.zst
       validations:
       - type: simtel
@@ -69,8 +67,6 @@ applications:
       file: gamma_run000001_za20deg_azm085deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.corsika.zst
     - path_descriptor: grid_output_path
       file: gamma_run000001_za20deg_azm085deg_South_CTAO-South-Alpha_6.1_multiple_model_versions.simtel.log.gz
-    - path_descriptor: grid_output_path
-      file: gamma_run000001_za20deg_azm085deg_South_CTAO-South-Alpha_6.1_multiple_model_versions.hdata.zst
     - path_descriptor: grid_output_path
       file: gamma_run000001_za20deg_azm085deg_South_CTAO-South-Alpha_6.1_multiple_model_versions.simtel.zst
     - path_descriptor: grid_output_path

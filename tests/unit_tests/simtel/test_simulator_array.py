@@ -40,7 +40,9 @@ def test_init_simulator_array(corsika_config_mock_array_model, run_context):
 
 def test_make_run_command_calibration_simulation(simtel_runner, mocker):
     simtel_runner.runner_service = mocker.Mock()
-    simtel_runner.runner_service.load_files.return_value = {}
+    simtel_runner.runner_service.load_files.return_value = {
+        "sim_telarray_histogram": "unused.hdata"
+    }
     simtel_runner.simulation_parameters.is_calibration_run = mocker.Mock(return_value=True)
 
     # Mock the methods
@@ -58,6 +60,7 @@ def test_make_run_command_calibration_simulation(simtel_runner, mocker):
     assert "-C" in result
     assert "show=all" in result
     assert "test.corsika" in result
+    assert "sim_telarray_histogram" not in simtel_runner.file_list
 
 
 def test_make_run_command_for_calibration_simulations_basic(simtel_runner, mocker):
@@ -169,6 +172,7 @@ def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker):
     result = simtel_runner._common_run_command(run_number=1)
 
     assert isinstance(result, list)
+    assert "histogram_file=/dev/null" in result
     assert "-W" in result
     assert any("telescope_theta=25.0" in str(item) for item in result)
 

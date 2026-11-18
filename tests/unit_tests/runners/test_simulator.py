@@ -228,9 +228,7 @@ def test_pack_for_register(
         directory_for_grid_upload / log_file.name, "rt", encoding=TEXT_ENCODING
     ) as handle:
         assert handle.read() == "log"
-    assert (directory_for_grid_upload / histogram_file.name).read_text(
-        encoding=TEXT_ENCODING
-    ) == "hist"
+    assert not (directory_for_grid_upload / histogram_file.name).exists()
     with gzip.open(
         directory_for_grid_upload / corsika_log_file.name, "rt", encoding=TEXT_ENCODING
     ) as handle:

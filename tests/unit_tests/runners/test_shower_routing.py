@@ -59,7 +59,16 @@ class _SimulatorArray:
 
     def make_run_command(self, run_number, input_file):
         self.file_list = self.runner_service.load_files(run_number=run_number)
-        return ["sim_telarray", "-C", "output_file=output.simtel", "-C", "show=all", input_file]
+        return [
+            "sim_telarray",
+            "-C",
+            "output_file=output.simtel",
+            "-C",
+            "histogram_file=/dev/null",
+            "-C",
+            "show=all",
+            input_file,
+        ]
 
 
 @pytest.fixture
@@ -119,6 +128,7 @@ def test_routing_commands_by_telescope_type(route_inputs, input_file):
 
     # sim_telarray reads from stdin for streams, and from the camera bunch file otherwise.
     for text in simtel_texts:
+        assert "histogram_file=/dev/null" in shlex.split(text)
         last_argument = shlex.split(text)[-1]
         if streamed:
             assert "env -u MULTIPIPE_SEQUENTIAL" in text

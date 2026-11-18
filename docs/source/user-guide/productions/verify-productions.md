@@ -14,7 +14,7 @@ simulation outputs, reports the run status, and can write lists of output and lo
 Production verification should include:
 
 - checking CORSIKA, sim_telarray, and simtools log files for failed runs
-- checking that expected eventio, histogram, reduced-event, and registration files exist
+- checking that expected eventio, reduced-event, and registration files exist
 - verifying sim_telarray meta-parameters and generated configuration values
 - comparing selected output distributions with a baseline production
 - documenting failed jobs, resubmissions, and accepted deviations

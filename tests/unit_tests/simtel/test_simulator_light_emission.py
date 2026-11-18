@@ -934,8 +934,10 @@ def test_run_script_separates_diagnostics(
         "simtools.simtel.simulator_light_emission.sim_telarray_env_as_string", return_value=""
     )
 
+    command = "".join(simulator_instance.make_run_command())
+    assert "histogram_file=/dev/null" in command
     result = subprocess.run(
-        ["bash", "-c", "".join(simulator_instance.make_run_command())],
+        ["bash", "-c", command],
         capture_output=True,
         check=False,
         timeout=20,

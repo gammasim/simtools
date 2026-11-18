@@ -172,7 +172,7 @@ class ShowerRouting:
         bypass_level: int or None
             Value of sim_telarray's Bypass_Optics (None: optics not bypassed).
         group: str or None
-            Telescope type; if given, the output, histogram, log and resource files are named
+            Telescope type; if given, the output, log and resource files are named
             after it (several sim_telarray processes of one model version).
 
         Returns
@@ -209,11 +209,11 @@ class ShowerRouting:
 
     @staticmethod
     def _group_output_option(argument, group):
-        """Return a sim_telarray option with the output or histogram file named after a group."""
-        for key in ("output_file=", "histogram_file="):
-            if argument.startswith(key):
-                path = Path(argument[len(key) :])
-                return f"{key}{path.with_name(f'{group}_{path.name}')}"
+        """Return a sim_telarray option with the output file named after a group."""
+        key = "output_file="
+        if argument.startswith(key):
+            path = Path(argument[len(key) :])
+            return f"{key}{path.with_name(f'{group}_{path.name}')}"
         return argument
 
     def _write_telescope_route_map(self, simulator_array, run_number):
