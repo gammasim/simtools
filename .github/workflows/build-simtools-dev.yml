@@ -59,7 +59,7 @@ jobs:
             runner: ubuntu-26.04
             suffix: ''
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
             suffix: -arm64
     permissions:
       contents: read

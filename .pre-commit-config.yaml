@@ -68,7 +68,7 @@ repos:
   rev: v1.7.12
   hooks:
   - id: actionlint
-    args: ["-ignore", "label \"ubuntu-26.04\" is unknown"]
+    args: ["-ignore", "label \"ubuntu-26.04\" is unknown", "-ignore", "label \"ubuntu-26.04-arm\" is unknown"]
 # https://pyproject-fmt.readthedocs.io/en/latest/
 - repo: https://github.com/tox-dev/pyproject-fmt
   rev: "v2.30.3"

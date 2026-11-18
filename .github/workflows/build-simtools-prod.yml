@@ -140,7 +140,7 @@ jobs:
           production_matrix=$(sed -n 's/^production_matrix=//p' dependency-output | jq -c '
             map(. + {arch: "amd64", runner: "ubuntu-26.04", arch_suffix: ""}) |
             . + [ .[] | select(.avx_flag == "generic") |
-              .arch = "arm64" | .runner = "ubuntu-24.04-arm" | .arch_suffix = "-arm64" |
+              .arch = "arm64" | .runner = "ubuntu-26.04-arm" | .arch_suffix = "-arm64" |
               .corsika_image += "-arm64" | .simtel_image += "-arm64" ]')
           sed '/^production_matrix=/d' dependency-output >> "$GITHUB_OUTPUT"
           printf 'production_matrix=%s\n' "${production_matrix}" >> "$GITHUB_OUTPUT"
