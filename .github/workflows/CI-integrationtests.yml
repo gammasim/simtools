@@ -60,7 +60,7 @@ on:
         description: 'GitHub-hosted runner labels to test'
         required: false
         type: string
-        default: '["ubuntu-24.04"]'
+        default: '["ubuntu-26.04"]'
       benchmark:
         description: 'Run serial resource measurements and upload benchmark artifacts'
         required: false
@@ -89,7 +89,7 @@ jobs:
 
   test_building:
     if: ${{ github.event_name != 'workflow_call' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     defaults:
       run:
@@ -117,7 +117,7 @@ jobs:
 
   prepare_interaction_tables:
     name: download CORSIKA interaction tables
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       IT_NAME: "corsika7-interaction-tables"
       # For testing, overwrite CORSIKA_TABLES with branch name
@@ -254,7 +254,7 @@ jobs:
 
   prepare_simulation_models:
     name: download simulation models
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       # Set to production before merging development work.
       SIMULATION_MODELS_FLAVOR: development
@@ -414,7 +414,7 @@ jobs:
 
   prepare_test_resources:
     name: download test resources
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       test_resources_version: ${{ steps.test_resources.outputs.resource_version }}
 
@@ -479,7 +479,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: ${{ fromJSON(inputs.runner_labels || '["ubuntu-24.04"]') }}
+        runner: ${{ fromJSON(inputs.runner_labels || '["ubuntu-26.04"]') }}
         model_version: ${{ fromJSON(inputs.model_versions || '["8.0.0","7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]') }}
         model_source: [git]
 
