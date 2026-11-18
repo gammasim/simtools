@@ -691,6 +691,8 @@ def test_htcondor_wait_cleans_transient_artifacts_after_success(
 
     assert [result.value for result in getattr(backend, method)(submission)] == [4]
     assert not (work_dir / "results").exists()
+    assert (work_dir / "stdout").is_dir()
+    assert (work_dir / "stderr").is_dir()
 
 
 def test_htcondor_submission_failure_is_wrapped(monkeypatch, tmp_test_directory):

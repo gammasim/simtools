@@ -697,10 +697,10 @@ class HTCondorBackend:
 
     @staticmethod
     def _cleanup_successful_artifacts(submission):
-        """Remove transient payload and stream files after successful execution."""
+        """Remove transient payload files after successful execution."""
         if submission.metadata.get("keep_successful_artifacts"):
             return
-        for directory in ("inputs", "results", "stdout", "stderr"):
+        for directory in ("inputs", "results"):
             shutil.rmtree(submission.work_dir / directory, ignore_errors=True)
 
     def _wait_for_processes(self, submission):
