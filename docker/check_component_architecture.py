@@ -3,6 +3,8 @@
 import sys
 from pathlib import Path
 
+import yaml
+
 
 def main():
     """Fail if a component executable does not match the target architecture."""
@@ -10,9 +12,18 @@ def main():
     machines = {"amd64": 62, "arm64": 183}
     if target not in machines:
         raise SystemExit(f"Unsupported target architecture: {target}")
-    corsika_executables = sorted(Path(corsika).glob("corsika_*"))
-    if not corsika_executables:
-        raise SystemExit(f"No CORSIKA executables found in {corsika}")
+    corsika_directory = Path(corsika)
+    manifest = corsika_directory / "build_opts.yml"
+    with manifest.open(encoding="utf-8") as stream:
+        options = yaml.safe_load(stream)
+    if not isinstance(options, dict) or not isinstance(options.get("variant"), list):
+        raise SystemExit(f"No CORSIKA variant list in {manifest}")
+    variants = options["variant"]
+    if not variants or any(
+        not isinstance(entry, dict) or not entry.get("executable") for entry in variants
+    ):
+        raise SystemExit(f"No CORSIKA executables declared in {manifest}")
+    corsika_executables = [corsika_directory / entry["executable"] for entry in variants]
     for executable in [Path(simtel), *corsika_executables]:
         with executable.open("rb") as stream:
             header = stream.read(20)

@@ -147,7 +147,8 @@ jobs:
             map(. + {arch: "amd64", runner: "ubuntu-26.04", arch_suffix: (if .avx_flag == "generic" then "-amd64" else "" end)}) |
             . + [ .[] | select(.avx_flag == "generic") |
               .arch = "arm64" | .runner = "ubuntu-26.04-arm" | .arch_suffix = "-arm64" |
-              .corsika_image += "-arm64" | .simtel_image += "-arm64" ]')
+              .corsika_image |= (if contains("@") then . else . + "-arm64" end) |
+              .simtel_image |= (if contains("@") then . else . + "-arm64" end) ]')
           {
             sed '/^production_matrix=/d' dependency-output
             printf 'production_matrix=%s\n' "${production_matrix}"
