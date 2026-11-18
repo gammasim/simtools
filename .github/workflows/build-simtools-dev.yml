@@ -32,6 +32,10 @@ env:
 
 permissions: {}
 
+concurrency:
+  group: build-simtools-dev
+  cancel-in-progress: false
+
 jobs:
   dependency-config:
     runs-on: ubuntu-26.04
@@ -96,7 +100,7 @@ jobs:
             type=raw,value={{date 'YYYYMMDD'}}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
-            latest=${{ !(startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
+            latest=false
             suffix=${{ matrix.suffix }},onlatest=true
 
       - name: Build and push
@@ -112,5 +116,36 @@ jobs:
             SIMTOOLS_GIT_REVISION=${{ env.SIMTOOLS_GIT_REVISION }}
           push: ${{ github.repository == 'gammasim/simtools' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc'))) }}
           file: ./docker/Dockerfile-simtools-dev
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ${{ !(startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) && format('ghcr.io/gammasim/simtools-dev:latest-{0}', matrix.arch) || '' }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  publish-latest:
+    needs: build-simtools-dev
+    if: ${{ github.repository == 'gammasim/simtools' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch') && !(startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
+    runs-on: ubuntu-26.04
+    permissions:
+      packages: write
+    steps:
+      - name: Require a fresh workflow run
+        if: github.run_attempt != 1
+        run: |
+          echo "::error::Start a new workflow to publish matching images for both architectures."
+          exit 1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6  # v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish multi-platform latest
+        run: |
+          image="ghcr.io/gammasim/simtools-dev"
+          docker buildx imagetools create --tag "$image:latest" \
+            "$image:latest-amd64" "$image:latest-arm64"
