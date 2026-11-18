@@ -12,7 +12,7 @@ on:
 jobs:
 
   docs:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
 
@@ -93,7 +93,7 @@ jobs:
           retention-days: 1
 
   deploy:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: docs
     if: >-
       github.event_name == 'release' ||

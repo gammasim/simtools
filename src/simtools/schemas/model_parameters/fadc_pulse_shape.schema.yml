@@ -4,7 +4,7 @@ title: Schema for unified fadc_pulse_shape templates
 schema_version: 0.4.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
-meta_schema_version: 0.1.0
+meta_schema_version: 0.3.0
 name: fadc_pulse_shape
 description: >-
   Linear single-photoelectron reference pulses (template_kind=single_pe, intensity 1,
@@ -50,6 +50,7 @@ activity:
 source: [Calibration]
 simulation_software:
   - name: sim_telarray
+    incompatible_tags: [v2025-11-30-rc]
     table_format: fadc_templates
     meta_parameter_mode: add
     serialization:
