@@ -7,8 +7,9 @@ ECSV metadata (``model_parameter_sets``); every expanded row references its set
 via ``model_parameter_set`` and carries the combination name in ``scan_label``.
 
 Bias curves use two scans (NSB and proton), each with a production grid, a scan
-configuration, and the expanded scan grid. Both curves set ``min_photons``
-and ``min_photoelectrons`` to zero and set ``nsb_scaling_factor``.
+configuration, and the expanded scan grid. NSB and proton scans set
+``min_photons`` to 0 and 50 and ``min_photoelectrons`` to 0 and 10,
+respectively. Both set ``nsb_scaling_factor``.
 """
 
 import itertools
@@ -224,7 +225,10 @@ def _scan_config(curve_name, telescope, args):
         "model_version_history": [args["model_version"]],
         "description": f"Tune for {'NSB' if nsb else 'proton'} telescope trigger scan",
         "changes": {
-            telescope: {"min_photons": {"value": 0}, "min_photoelectrons": {"value": 0}},
+            telescope: {
+                "min_photons": {"value": 0 if nsb else 50},
+                "min_photoelectrons": {"value": 0 if nsb else 10},
+            },
             f"OBS-{args['site']}": {"nsb_scaling_factor": {"value": args["nsb_scaling_factor"]}},
         },
     }

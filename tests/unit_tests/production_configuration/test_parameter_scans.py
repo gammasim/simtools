@@ -342,8 +342,12 @@ def test_invalid_configured_thresholds_are_rejected(trigger_thresholds, error):
         parameter_scans._threshold_values(trigger_thresholds)
 
 
-@pytest.mark.parametrize("curve_name", ["nsb", "proton"])
-def test_scan_config_contains_curve_overwrite_and_trigger_scan(tmp_test_directory, curve_name):
+@pytest.mark.parametrize(
+    ("curve_name", "min_photons", "min_photoelectrons"), [("nsb", 0, 0), ("proton", 50, 10)]
+)
+def test_scan_config_contains_curve_overwrite_and_trigger_scan(
+    tmp_test_directory, curve_name, min_photons, min_photoelectrons
+):
     args = {**_base_args(tmp_test_directory), "threshold_parameter": "asum_threshold"}
     scan_config = parameter_scans._scan_config(curve_name, "LSTN-01", args)
 
@@ -355,8 +359,8 @@ def test_scan_config_contains_curve_overwrite_and_trigger_scan(tmp_test_director
     )
     assert overwrite["changes"]["OBS-North"] == {"nsb_scaling_factor": {"value": 2}}
     assert overwrite["changes"]["LSTN-01"] == {
-        "min_photons": {"value": 0},
-        "min_photoelectrons": {"value": 0},
+        "min_photons": {"value": min_photons},
+        "min_photoelectrons": {"value": min_photoelectrons},
     }
     assert scan_config["parameter_scan"]["parameters"] == [
         {
