@@ -1,0 +1,46 @@
+%YAML 1.2
+---
+title: Schema for camera_window_internal_transmittance model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_window_internal_transmittance
+description: >-
+  Internal transmittance of the camera window at normal incidence for the
+  thickness given in camera_window_parameters, excluding the reflection losses
+  at its two surfaces (these follow from the Fresnel equations and
+  camera_window_refractive_index). For a path length L the transmittance is
+  scaled as transmittance^(L / thickness).
+short_description: Internal transmittance of the camera window, excluding surface reflection.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: wavelength
+        description: Wavelength
+        type: float64
+        unit: nm
+        required: true
+      - name: transmittance
+        description: Internal transmittance at normal incidence
+        type: float64
+        unit: dimensionless
+        required: true
+        allowed_range: {min: 0, max: 1}
+instrument: {class: Camera}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert]
+source: [External]
+simulation_software: [{name: obdeect}]
+plot_configuration:
+  - type: camera_window_internal_transmittance
+    title: Camera window internal transmittance
+    xtitle: Wavelength (nm)
+    ytitle: Internal transmittance
+    no_markers: true
+    tables:
+      - parameter: camera_window_internal_transmittance
+        column_x: wavelength
+        column_y: transmittance

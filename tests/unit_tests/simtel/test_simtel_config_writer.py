@@ -768,6 +768,30 @@ def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer
         simtel_config_writer._get_sim_telarray_metadata("unknown", None, None)
 
 
+@pytest.mark.parametrize(
+    "parameter_name",
+    [
+        "camera_window_parameters",
+        "camera_window_refractive_index",
+        "camera_window_internal_transmittance",
+    ],
+)
+def test_camera_window_parameters_are_not_written_to_simtel(
+    simtel_config_writer, tmp_test_directory, parameter_name
+):
+    parameters = {
+        parameter_name: {
+            "value": "camera-window.ecsv" if parameter_name != "camera_window_parameters" else {},
+        }
+    }
+
+    simtel_parameters = simtel_config_writer._get_parameters_for_sim_telarray(
+        parameters, Path(tmp_test_directory) / "LSTN-01.cfg"
+    )
+
+    assert parameter_name not in simtel_parameters
+
+
 def test_get_sim_telarray_metadata_includes_falsey_additional_metadata(simtel_config_writer):
     metadata = simtel_config_writer._get_sim_telarray_metadata(
         "site",

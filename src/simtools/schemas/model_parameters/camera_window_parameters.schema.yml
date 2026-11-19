@@ -1,0 +1,60 @@
+%YAML 1.2
+---
+title: Schema for camera_window_parameters model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_window_parameters
+description: >-
+  Geometry of a camera window (e.g. a PMMA dome) traced in front of the focal
+  plane: shape (flat plate or spherical shell, convex towards the mirror), radius
+  of curvature of the outer surface, uniform thickness, diameter of the clear
+  aperture, outer diameter (photons between aperture and outer diameter are
+  absorbed), and distance of the flange plane in front of the focal plane.
+  When the window is traced, camera_filter must not include the window
+  transmission.
+short_description: Geometry of the camera window in front of the focal plane.
+data:
+  - type: dict
+    json_schema:
+      type: object
+      required:
+        - shape
+        - thickness_cm
+        - aperture_diameter_cm
+        - outer_diameter_cm
+        - flange_offset_cm
+      additionalProperties: false
+      properties:
+        shape:
+          type: string
+          enum: [flat, sphere]
+        radius_of_curvature_cm:
+          type: number
+          exclusiveMinimum: 0
+        thickness_cm:
+          type: number
+          exclusiveMinimum: 0
+        aperture_diameter_cm:
+          type: number
+          exclusiveMinimum: 0
+        outer_diameter_cm:
+          type: number
+          exclusiveMinimum: 0
+        flange_offset_cm:
+          type: number
+          minimum: 0
+      oneOf:
+        - properties:
+            shape: {const: flat}
+          not: {required: [radius_of_curvature_cm]}
+        - properties:
+            shape: {const: sphere}
+          required: [radius_of_curvature_cm]
+instrument: {class: Camera}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert]
+source: [Initial instrument setup]
+simulation_software: [{name: obdeect}]
