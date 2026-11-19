@@ -128,6 +128,81 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
         schema.validate_dict_using_schema(invalid_data, schema_file)
 
 
+@pytest.mark.parametrize(
+    "window_parameters",
+    [
+        {
+            "shape": "sphere",
+            "radius_of_curvature_cm": 350.0,
+            "thickness_cm": 0.5,
+            "aperture_diameter_cm": 235.15,
+            "outer_diameter_cm": 250.34,
+            "flange_offset_cm": 2.0,
+        },
+        {
+            "shape": "flat",
+            "thickness_cm": 0.5,
+            "aperture_diameter_cm": 235.15,
+            "outer_diameter_cm": 250.34,
+            "flange_offset_cm": 2.0,
+        },
+    ],
+)
+def test_camera_window_parameters_schema_accepts_valid_shapes(window_parameters):
+    parameter_schema = schema.get_model_parameter_schema("camera_window_parameters", "0.1.0")
+    schema.validate_dict_using_schema(
+        window_parameters,
+        json_schema=parameter_schema["data"][0]["json_schema"],
+        offline=True,
+    )
+
+
+@pytest.mark.parametrize(
+    ("window_parameters", "error"),
+    [
+        (
+            {
+                "shape": "dome",
+                "thickness_cm": 0.5,
+                "aperture_diameter_cm": 235.15,
+                "outer_diameter_cm": 250.34,
+                "flange_offset_cm": 2.0,
+            },
+            "not valid under any|not one of",
+        ),
+        (
+            {
+                "shape": "sphere",
+                "thickness_cm": 0.5,
+                "aperture_diameter_cm": 235.15,
+                "outer_diameter_cm": 250.34,
+                "flange_offset_cm": 2.0,
+            },
+            "radius_of_curvature_cm",
+        ),
+        (
+            {
+                "shape": "flat",
+                "radius_of_curvature_cm": 350.0,
+                "thickness_cm": 0.5,
+                "aperture_diameter_cm": 235.15,
+                "outer_diameter_cm": 250.34,
+                "flange_offset_cm": 2.0,
+            },
+            "not valid under any",
+        ),
+    ],
+)
+def test_camera_window_parameters_schema_rejects_invalid_shapes(window_parameters, error):
+    parameter_schema = schema.get_model_parameter_schema("camera_window_parameters", "0.1.0")
+    with pytest.raises(jsonschema.ValidationError, match=error):
+        schema.validate_dict_using_schema(
+            window_parameters,
+            json_schema=parameter_schema["data"][0]["json_schema"],
+            offline=True,
+        )
+
+
 def _output_validation_workflow(*validations):
     """Build a minimal workflow containing composable output validators."""
     return {

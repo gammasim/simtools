@@ -1,0 +1,44 @@
+%YAML 1.2
+---
+title: Schema for camera_window_refractive_index model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_window_refractive_index
+description: >-
+  Refractive index of the camera window material as a function of wavelength,
+  used for refraction (Snell's law), Fresnel reflection losses and the photon
+  delay inside the window.
+short_description: Refractive index of the camera window material.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: wavelength
+        description: Wavelength
+        type: float64
+        unit: nm
+        required: true
+      - name: refractive_index
+        description: Refractive index
+        type: float64
+        unit: dimensionless
+        required: true
+        allowed_range: {min: 1}
+instrument: {class: Camera}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert]
+source: [External]
+simulation_software: [{name: obdeect}]
+plot_configuration:
+  - type: camera_window_refractive_index
+    title: Camera window refractive index
+    xtitle: Wavelength (nm)
+    ytitle: Refractive index
+    no_markers: true
+    tables:
+      - parameter: camera_window_refractive_index
+        column_x: wavelength
+        column_y: refractive_index
