@@ -582,13 +582,12 @@ def _prepare_bias_curve_plot(
     ):
         if stats:
             _add_bias_curve_series(data, styles, stats, factor, label, marker, color)
-    positive_rates = [
-        rate
-        for label, table in data.items()
-        if not label.startswith("_")
-        for rate in table["rate"]
-        if np.isfinite(rate) and rate > 0
-    ]
+    positive_rates = []
+    for table in data.values():
+        rates = table["rate"]
+        errors = table["error"] if "error" in table.dtype.names else 0
+        for values in (rates, rates - errors, rates + errors):
+            positive_rates.extend(values[np.isfinite(values) & (values > 0)])
     ylim = (config.get("ymin", 1), config.get("ymax", 1e6))
     if positive_rates:
         ylim = (min(positive_rates) * 0.9, max(positive_rates) * 1.1)
@@ -613,6 +612,7 @@ def _prepare_bias_curve_plot(
         "xtitle": f"Threshold [{threshold_unit}]" if threshold_unit else "Threshold",
         "ytitle": "Trigger Rate [Hz]",
         "yscale": "log",
+        "xlim": _bias_curve_threshold_limits(nsb_stats, proton_stats),
         "ylim": ylim,
         "error_type": "errorbar",
         "legend_fontsize": 11,
@@ -620,6 +620,14 @@ def _prepare_bias_curve_plot(
         "figsize": (10, 7),
         "series_options": styles,
     }
+
+
+def _bias_curve_threshold_limits(nsb_stats, proton_stats):
+    """Use the simulated threshold range when it has distinct endpoints."""
+    thresholds = [value for value in (*nsb_stats, *proton_stats) if np.isfinite(value)]
+    if thresholds and min(thresholds) < max(thresholds):
+        return min(thresholds), max(thresholds)
+    return None, None
 
 
 def _add_bias_curve_series(data, styles, stats, scale, label, marker, color):

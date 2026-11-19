@@ -759,10 +759,26 @@ def test_prepare_bias_curve_plot(scale, fraction):
     marker = data[f"Trigger Threshold: {threshold:.1f}"]
     assert marker["threshold"] == pytest.approx([threshold, threshold])
     assert marker["rate"] == pytest.approx(config["ylim"])
-    assert config["ylim"] == pytest.approx([9 * fraction * scale, 110])
+    assert config["ylim"] == pytest.approx([8.1 * fraction * scale, 112.2])
     assert config["yscale"] == "log"
     assert config["series_options"]["NSB"]["linestyle"] == "None"
     assert config["series_options"]["_NSB fit"]["linestyle"] == "--"
+
+
+def test_bias_curve_plot_limits_cover_simulations_and_uncertainties():
+    nsb = {10: {"rate_hz": 100, "error_hz": 90}, 20: {"rate_hz": 10, "error_hz": 2}}
+    proton = {12: {"rate_hz": 2, "error_hz": 1}, 18: {"rate_hz": 200, "error_hz": 100}}
+    data, config = bias_curve_generator._prepare_bias_curve_plot(
+        nsb, proton, {"title": "Bias", "proton_intersection_fraction": 0.5}, 30
+    )
+    assert config["xlim"] == (10, 20)
+    for label, table in data.items():
+        if label.startswith("Trigger Threshold"):
+            continue
+        errors = table["error"] if "error" in table.dtype.names else 0
+        lower = table["rate"] - errors
+        assert np.all(lower[lower > 0] >= config["ylim"][0])
+        assert np.all(table["rate"] + errors <= config["ylim"][1])
 
 
 @pytest.mark.parametrize(
