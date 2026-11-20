@@ -591,7 +591,7 @@ def _prepare_bias_curve_plot(
             positive_rates.extend(values[np.isfinite(values) & (values > 0)])
     ylim = (config.get("ymin", 1), config.get("ymax", 1e6))
     if positive_rates:
-        ylim = (min(positive_rates) / 2, max(positive_rates) * 2)
+        ylim = (max(1, min(positive_rates) / 2), max(positive_rates) * 2)
     if not data:
         _logger.warning("No NSB or proton rates found; writing empty bias-curve plot")
         data["_empty"] = np.empty(0, dtype=[("threshold", float), ("rate", float)])

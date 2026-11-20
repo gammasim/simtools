@@ -757,7 +757,7 @@ def test_prepare_bias_curve_plot(scale, fraction):
     marker = data[f"Trigger Threshold: {threshold:.1f}"]
     assert marker["threshold"] == pytest.approx([threshold, threshold])
     assert marker["rate"] == pytest.approx(config["ylim"])
-    assert config["ylim"] == pytest.approx([4.5 * fraction * scale, 204])
+    assert config["ylim"] == pytest.approx([max(1, 4.5 * fraction * scale), 204])
     assert config["yscale"] == "log"
     assert config["series_options"]["NSB"]["linestyle"] == "None"
     assert config["series_options"]["_NSB fit"]["linestyle"] == "--"
@@ -775,7 +775,10 @@ def test_bias_curve_plot_limits_cover_simulations_and_uncertainties():
             continue
         errors = table["error"] if "error" in table.dtype.names else 0
         lower = table["rate"] - errors
-        assert np.all(lower[lower > 0] >= config["ylim"][0])
+        if config["ylim"][0] > 1:
+            assert np.all(lower[lower > 0] >= config["ylim"][0])
+        else:
+            assert config["ylim"][0] == 1
         assert np.all(table["rate"] + errors <= config["ylim"][1])
 
 
