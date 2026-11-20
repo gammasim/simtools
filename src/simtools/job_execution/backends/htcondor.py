@@ -348,9 +348,9 @@ class HTCondorBackend:
     def submit(self, job_specs, options):
         """Create and submit a shared-filesystem HTCondor cluster."""
         config = self._build_config(options)
+        working_directory = Path(config.pop("working_directory", Path.cwd())).resolve()
         self._validate_config(config)
         jobs = self._prepare_jobs(job_specs, options, config)
-        working_directory = Path.cwd().resolve()
         if not jobs:
             return SubmissionHandle(
                 backend="htcondor",
@@ -517,6 +517,11 @@ class HTCondorBackend:
             python_path=source_path,
             implicit_bind_path=working_directory if uses_container else None,
         )
+        if uses_container:
+            scratch = config.get("container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR)
+            environment = ";".join(
+                filter(None, (environment, f"SIMTOOLS_WORKER_SCRATCH_DIRECTORY={scratch}"))
+            )
         if environment:
             submit_values["environment"] = environment
         self._add_extra_submit_attributes(submit_values, self._validate_extra_attributes(config))
@@ -552,13 +557,6 @@ class HTCondorBackend:
             shlex.quote("--log-file"),
             str(work_dir / "logs" / "$(job_id).log"),
         ]
-        if uses_container:
-            worker_arguments.extend(
-                (
-                    shlex.quote("--scratch-directory"),
-                    shlex.quote(config.get("container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR)),
-                )
-            )
         return {
             "executable": _CONTAINER_LAUNCHER if uses_container else sys.executable,
             "arguments": " ".join(worker_arguments),

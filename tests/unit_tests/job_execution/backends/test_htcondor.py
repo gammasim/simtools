@@ -110,7 +110,11 @@ def test_htcondor_container_does_not_use_submitter_pythonpath(tmp_test_directory
     )
     assert "PYTHONPATH" not in _environment_entries(submit_values["environment"])
     assert submit_values["arguments"].startswith("python -P -m simtools.job_execution.worker")
-    assert "--scratch-directory /simtools-run" in submit_values["arguments"]
+    assert "--scratch-directory" not in submit_values["arguments"]
+    assert (
+        _environment_entries(submit_values["environment"])["SIMTOOLS_WORKER_SCRATCH_DIRECTORY"]
+        == "/simtools-run"
+    )
     assert submit_values["container_target_dir"] == "/simtools-run"
 
 

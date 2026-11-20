@@ -104,6 +104,24 @@ def test_validate_simulation_dependencies_accepts_manifest(tmp_test_directory, r
     validate_simulation_dependencies("corsika", context=context)
 
 
+def test_validate_simulation_dependencies_accepts_manifest_without_digests(
+    tmp_test_directory, run_context
+):
+    _write_interaction_table_manifest(tmp_test_directory)
+    manifest_path = tmp_test_directory / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    for group in manifest["files"].values():
+        for entries in group.values() if isinstance(group, dict) else [group]:
+            for entry in entries:
+                entry.pop("sha256")
+    manifest_path.write_text(yaml.safe_dump(manifest), encoding="utf-8")
+    context = _mock_corsika_config(run_context, tmp_test_directory)
+    validate_simulation_dependencies("corsika", context=context)
+    (Path(tmp_test_directory) / "common.dat").write_bytes(b"x")
+    with pytest.raises(ValueError, match="size mismatch"):
+        validate_simulation_dependencies("corsika", context=context)
+
+
 def test_validate_simulation_dependencies_uses_curved_corsika_executable(
     tmp_test_directory, run_context
 ):
@@ -253,7 +271,6 @@ def test_manifest_entries_rejects_invalid_groups(manifest, category, model, mess
         ({"path": "nested/file", "size": 1}, "invalid manifest table path"),
         ({"path": "file", "size": -1}, "invalid manifest table size"),
         ({"path": "file", "size": "1"}, "invalid manifest table size"),
-        ({"path": "file", "size": 1}, "missing or invalid SHA-256 digest"),
         ({"path": "file", "size": 1, "sha256": "invalid"}, "missing or invalid SHA-256 digest"),
     ],
 )

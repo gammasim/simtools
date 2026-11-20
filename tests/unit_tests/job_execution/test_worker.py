@@ -79,6 +79,36 @@ def test_execute_command_applies_runtime_streams_environment_and_configuration(
     stdin.close()
 
 
+def test_execute_command_script_with_spaces_and_configuration(tmp_test_directory):
+    script = Path(tmp_test_directory) / "script with spaces.sh"
+    script.write_text('#!/bin/sh\nprintf "%s" "$1"\n', encoding="utf-8")
+    job = JobSpec(
+        "job",
+        0,
+        command=str(script),
+        options=CommandOptions(configuration={"enabled": True}, capture_output=True),
+    )
+    code, _, output, _ = execute_command(job)
+    assert code == 0
+    assert output == "--enabled"
+
+
+def test_corsika_settings_use_job_environment(monkeypatch):
+    monkeypatch.setenv("SIMTOOLS_CORSIKA_HE_INTERACTION", "epos")
+    job = JobSpec(
+        "job",
+        0,
+        command=("simulate",),
+        options=CommandOptions(
+            env={
+                "SIMTOOLS_SIMULATION_SOFTWARE": "corsika",
+                "SIMTOOLS_CORSIKA_HE_INTERACTION": "qgs3",
+            }
+        ),
+    )
+    assert worker._corsika_job_settings(job)[:2] == ("corsika", "qgs3")
+
+
 def test_execute_job_spec_initializes_serialized_runtime(mocker):
     """Function jobs receive a rebuilt run context in the worker interpreter."""
     function = mocker.Mock(return_value=4)

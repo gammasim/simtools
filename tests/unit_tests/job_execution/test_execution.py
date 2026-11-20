@@ -86,13 +86,15 @@ def test_recover_submission_retries_only_failed_jobs_and_persists_handle(
             "container_target_dir": None,
             "python_executable": None,
             "priority": 0,
+            "working_directory": str(work_dir),
         },
     )
     backend = mocker.Mock()
     backend.is_finished.return_value = True
     backend.failed_job_ids.return_value = {"job-2"}
     mocker.patch("simtools.job_execution.execution.get_backend", return_value=backend)
-    job = JobSpec("job-2", 1, command=("true",))
+    (work_dir / "partial.dat").write_text("partial", encoding="utf-8")
+    job = JobSpec("job-2", 1, command=("true",), output_paths=(Path("partial.dat"),))
     mocker.patch("simtools.job_execution.execution.load_job_payload", return_value=job)
     retry = SubmissionHandle("htcondor", Path(tmp_test_directory) / "retry", ("job-2",))
     submit = mocker.patch("simtools.job_execution.execution.submit_jobs", return_value=retry)
@@ -101,7 +103,12 @@ def test_recover_submission_retries_only_failed_jobs_and_persists_handle(
 
     assert not finished
     assert [item.job_id for item in submit.call_args.args[0]] == ["job-2"]
-    assert submit.call_args.args[1].backend_config == {"priority": 0}
+    assert submit.call_args.args[0][0].output_paths == (work_dir / "partial.dat",)
+    assert not (work_dir / "partial.dat").exists()
+    assert submit.call_args.args[1].backend_config == {
+        "priority": 0,
+        "working_directory": str(work_dir),
+    }
     assert submission.metadata["recovery"]["attempt"] == 1
     assert submission.metadata["recovery"]["handle"]["job_ids"] == ["job-2"]
 
@@ -121,6 +128,38 @@ def test_recover_submission_does_not_resubmit_active_retry(tmp_test_directory, m
 
     assert not recover_submission(submission, Path(tmp_test_directory) / "recovery")
     submit.assert_not_called()
+
+
+@pytest.mark.parametrize("failed", [False, True])
+def test_recover_submission_finished_retry_promotes_results_and_exhausts(
+    tmp_test_directory, mocker, failed
+):
+    root = Path(tmp_test_directory)
+    retry = SubmissionHandle("htcondor", root / "retry", ("job",))
+    submission = SubmissionHandle(
+        "htcondor",
+        root / "original",
+        ("job",),
+        metadata={"recovery": {"attempt": 1, "handle": retry.as_dict()}},
+    )
+    result_dir = retry.work_dir / "results"
+    result_dir.mkdir(parents=True)
+    (result_dir / "job.pkl").write_bytes(b"result")
+    backend = mocker.Mock()
+    backend.is_finished.return_value = True
+    backend.failed_job_ids.return_value = {"job"} if failed else set()
+    if failed:
+        backend.collect.side_effect = RuntimeError("failed retry")
+    mocker.patch("simtools.job_execution.execution.get_backend", return_value=backend)
+    submit = mocker.patch("simtools.job_execution.execution.submit_jobs")
+    if failed:
+        with pytest.raises(RuntimeError, match="Recovery exhausted"):
+            recover_submission(submission, root / "recovery", max_attempts=1)
+    else:
+        assert recover_submission(submission, root / "recovery", max_attempts=1)
+        assert (submission.work_dir / "results" / "job.pkl").read_bytes() == b"result"
+    submit.assert_not_called()
+    backend.collect.assert_called_once()
 
 
 def test_retry_result_replaces_read_only_original(tmp_test_directory):

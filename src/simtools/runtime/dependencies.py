@@ -283,7 +283,7 @@ def _copy_verified_table_file(source_dir, destination_dir, entry):
     ) from last_error
 
 
-def _table_copy_metadata(entry):
+def _table_copy_metadata(entry, require_digest=True):
     """Validate and return the path, size, and digest for one manifest entry."""
     if not isinstance(entry, dict):
         raise ValueError("invalid manifest table entry")
@@ -294,8 +294,9 @@ def _table_copy_metadata(entry):
         raise ValueError(f"invalid manifest table path: {file_name!r}")
     if not isinstance(expected_size, int) or expected_size < 0:
         raise ValueError(f"invalid manifest table size for {file_name}")
-    if not isinstance(expected_sha256, str) or not re.fullmatch(
-        r"[0-9a-fA-F]{64}", expected_sha256
+    if (expected_sha256 is not None or require_digest) and (
+        not isinstance(expected_sha256, str)
+        or not re.fullmatch(r"[0-9a-fA-F]{64}", expected_sha256)
     ):
         raise ValueError(f"missing or invalid SHA-256 digest for {file_name}")
     return file_name, expected_size, expected_sha256
@@ -381,7 +382,9 @@ def _validate_table_entries(entries, table_path):
 def _validate_table_entry(entry, table_path):
     """Check one manifest entry's file presence, size, and SHA-256 digest."""
     try:
-        path_value, expected_size, expected_digest = _table_copy_metadata(entry)
+        path_value, expected_size, expected_digest = _table_copy_metadata(
+            entry, require_digest=False
+        )
     except ValueError as exc:
         return str(exc)
     return _validate_table_file(table_path / path_value, expected_size, expected_digest)

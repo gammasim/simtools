@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+from dataclasses import replace
 from pathlib import Path
 
 import yaml
@@ -276,9 +277,19 @@ def recover_submission(submission, recovery_root, *, max_attempts=3):
         job.job_id != job_id for job, job_id in zip(job_specs, state["failed_job_ids"], strict=True)
     ):
         raise ValueError("Stored worker payload job ID does not match its submission manifest.")
+    working_directory = Path(submission.metadata.get("working_directory", Path.cwd()))
+    job_specs = [
+        replace(
+            job,
+            output_paths=tuple(working_directory / path for path in job.output_paths),
+            mount_paths=tuple(working_directory / path for path in job.mount_paths),
+        )
+        for job in job_specs
+    ]
     archive_root = Path(recovery_root) / "attempts" / str(attempt)
     _archive_retry_outputs(job_specs, archive_root)
     config_keys = (
+        "working_directory",
         "request_cpus",
         "request_memory",
         "request_disk",

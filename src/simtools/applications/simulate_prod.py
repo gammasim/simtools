@@ -149,7 +149,7 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "submission_burst_size",
-        help="Maximum number of job-grid jobs submitted per burst (default 50).",
+        help="Maximum number of job-grid jobs submitted per burst.",
         type=bounded_int(1, 1000000),
         default=_DEFAULT_SUBMISSION_BURST_SIZE,
     ),

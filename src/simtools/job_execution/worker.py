@@ -83,11 +83,11 @@ def execute_command(job_spec):
     if isinstance(command, (str, Path)) and Path(command).is_file():
         command_path = Path(command)
         command_path.chmod(command_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
-        command = str(command_path)
+        command = [str(command_path)]
     if job_spec.options.runtime_environment:
         runtime = job_spec.options.runtime_environment
         prefix = list(runtime) if isinstance(runtime, (tuple, list)) else [runtime]
-        command = [*prefix, command]
+        command = [*prefix, *(command if isinstance(command, (list, tuple)) else [command])]
     if job_spec.options.configuration:
         args = _configuration_arguments(job_spec.options.configuration)
         if isinstance(command, str):
@@ -174,7 +174,12 @@ def _stage_tables_for_job(job_spec, scratch_directory=None):
     source_path = Path(source_path)
     if (source_path / "interaction-tables").is_dir():
         source_path /= "interaction-tables"
-    scratch_path = scratch_directory or os.environ.get("_CONDOR_SCRATCH_DIR") or None
+    scratch_path = (
+        scratch_directory
+        or os.environ.get("SIMTOOLS_WORKER_SCRATCH_DIRECTORY")
+        or os.environ.get("_CONDOR_SCRATCH_DIR")
+        or None
+    )
     with tempfile.TemporaryDirectory(prefix="simtools-corsika-tables-", dir=scratch_path) as temp:
         destination = Path(temp) / "interaction-tables"
         stage_corsika_interaction_tables(source_path, destination, he_model, le_model)
@@ -215,12 +220,14 @@ def _corsika_job_settings(job_spec):
         if value is not None:
             settings[name] = value
     settings.update(job_spec.options.configuration or {})
+    environment = os.environ.copy()
+    environment.update(job_spec.options.env or {})
     defaults = {
-        "simulation_software": os.environ.get("SIMTOOLS_SIMULATION_SOFTWARE", ""),
-        "corsika_he_interaction": os.environ.get(
+        "simulation_software": environment.get("SIMTOOLS_SIMULATION_SOFTWARE", ""),
+        "corsika_he_interaction": environment.get(
             "SIMTOOLS_CORSIKA_HE_INTERACTION", constants.CORSIKA_HE_INTERACTION
         ),
-        "corsika_le_interaction": os.environ.get(
+        "corsika_le_interaction": environment.get(
             "SIMTOOLS_CORSIKA_LE_INTERACTION", constants.CORSIKA_LE_INTERACTION
         ),
     }

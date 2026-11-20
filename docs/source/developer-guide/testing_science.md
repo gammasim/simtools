@@ -100,7 +100,7 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
-Job grids are submitted in bursts of 50 with a 5 second pause between bursts. Override these
+Job grids are submitted in bursts of 250 with a 5 second pause between bursts. Override these
 defaults with `submission_burst_size` and `submission_burst_delay_seconds` in the production
 workflow configuration. To recover a failed collection, rerun its collect test with
 `--recover_production`; this retries failed jobs only, up to three attempts, and preserves
