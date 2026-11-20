@@ -28,7 +28,7 @@ on:
         description: 'simtools-tests branch'
         required: false
         type: string
-        default: 'main'
+        default: 'updated-simulation-chain'
   workflow_call:
     inputs:
       simulation_model_repository:
