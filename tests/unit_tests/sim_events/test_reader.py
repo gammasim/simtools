@@ -158,6 +158,18 @@ def test_get_reduced_simulation_info(mock_hdf5_file):
     assert info["nsb_level"] == pytest.approx(1.0)
 
 
+def test_get_reduced_simulation_info_preserves_energy_bounds(mock_hdf5_file):
+    reader = EventDataReader(mock_hdf5_file)
+    file_info, _, _, _ = reader.read_event_data(mock_hdf5_file)
+    file_info["energy_min"] = [0.00002] * u.TeV
+    file_info["energy_max"] = [0.000025] * u.TeV
+
+    info = reader.get_reduced_simulation_file_info(file_info)
+
+    assert_quantity_allclose(info["energy_min"], 0.00002 * u.TeV)
+    assert_quantity_allclose(info["energy_max"], 0.000025 * u.TeV)
+
+
 @patch("simtools.sim_events.reader.PrimaryParticle")
 def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_hdf5_file, caplog):
 

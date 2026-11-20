@@ -692,6 +692,7 @@ class EventDataHistograms:
         index_arrays = []
         for value, edges, size in zip(value_arrays, edge_arrays, accumulator["count"].shape):
             indices = np.digitize(value, edges) - 1
+            indices[value == edges[-1]] = size - 1
             valid &= np.isfinite(value) & (indices >= 0) & (indices < size)
             index_arrays.append(indices)
         self._accumulate_reuse_bin_values(
@@ -850,8 +851,8 @@ class EventDataHistograms:
         """
         Return bins for the energy histogram.
 
-        Align bins to full decades of energy, using the configured bins per decade,
-        and ensure that the range covers the energy range of the events.
+        Use logarithmically spaced interior edges with the configured bins per decade.
+        Bound the first and last bins by the energies recorded in the simulation metadata.
 
         Returns
         -------
@@ -862,16 +863,15 @@ class EventDataHistograms:
 
         energy_min = self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value
         energy_max = self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value
-        energy_min = max(energy_min, 1e-3)
-        energy_max = max(energy_max, 10 * energy_min)
+        if not 0 < energy_min < energy_max < np.inf:
+            raise ValueError("Simulation energy bounds must be finite, positive and increasing.")
 
         lower_decade = np.floor(np.log10(energy_min))
         upper_decade = np.ceil(np.log10(energy_max))
-        if upper_decade <= lower_decade:
-            upper_decade = lower_decade + 1
-
         n_bins = int((upper_decade - lower_decade) * self.energy_bins_per_decade)
-        return np.logspace(lower_decade, upper_decade, n_bins + 1)
+        edges = np.logspace(lower_decade, upper_decade, n_bins + 1)
+        interior_edges = edges[(edges > energy_min) & (edges < energy_max)]
+        return np.concatenate(([energy_min], interior_edges, [energy_max]))
 
     @property
     def core_distance_bins(self):

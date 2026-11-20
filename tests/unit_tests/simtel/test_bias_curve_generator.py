@@ -68,18 +68,27 @@ def test_calculate_time_window_requires_telescope(tmp_path, run_context):
         bias_curve_generator._calculate_time_window(args, run_context)
 
 
-def test_calculate_time_window_reads_telescope_model(tmp_path, run_context):
-    args = _base_args(tmp_path)
+@pytest.mark.parametrize(
+    ("disc_bins", "fadc_bins", "effective_bins"), [(68, 75, 75), (100, 75, 100)]
+)
+def test_calculate_time_window_reads_telescope_model(
+    tmp_test_directory, run_context, disc_bins, fadc_bins, effective_bins
+):
+    args = _base_args(tmp_test_directory)
 
     telescope_model = MagicMock()
-    telescope_model.get_parameter_value.side_effect = [68, 1024]
+    telescope_model.get_parameter_value.side_effect = {
+        "disc_bins": disc_bins,
+        "fadc_bins": fadc_bins,
+        "fadc_mhz": 1024,
+    }.__getitem__
 
     with (
         patch("simtools.simtel.bias_curve_generator.TelescopeModel", return_value=telescope_model),
     ):
         time_window = bias_curve_generator._calculate_time_window(args, run_context)
 
-    assert time_window == pytest.approx(68 / (1024 * 1e6))
+    assert time_window == pytest.approx(effective_bins / (1024 * 1e6))
 
 
 def test_extract_nsb_rates_uses_gamma_hdf5(tmp_path):

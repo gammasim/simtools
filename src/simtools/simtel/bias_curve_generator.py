@@ -88,8 +88,8 @@ def _calculate_time_window(args, context):
     """
     Calculate time window from telescope parameters.
 
-    Gets telescope from args and retrieves its parameters.
-    time_window = disc_bins / (fadc_mhz x 1e6)
+    Use the longer of the discriminator and FADC simulation windows, assuming
+    the configured bin counts fit within the sim_telarray build limits.
 
     Parameters
     ----------
@@ -118,12 +118,13 @@ def _calculate_time_window(args, context):
     )
 
     disc_bins = telescope_model.get_parameter_value("disc_bins")
+    fadc_bins = telescope_model.get_parameter_value("fadc_bins")
     fadc_mhz = telescope_model.get_parameter_value("fadc_mhz")
-    time_window = disc_bins / (fadc_mhz * u.MHz)
+    time_window = max(disc_bins, fadc_bins) / (fadc_mhz * u.MHz)
 
     _logger.info(
-        f"Telescope {telescope_name}: disc_bins={disc_bins}, "
-        f"fadc_mhz={fadc_mhz} MHz, time_window={time_window.to_value(u.s):.2f} s"
+        f"Telescope {telescope_name}: disc_bins={disc_bins}, fadc_bins={fadc_bins}, "
+        f"fadc_mhz={fadc_mhz} MHz, time_window={time_window.to_value(u.ns):.2f} ns"
     )
 
     return time_window.to_value(u.s)
