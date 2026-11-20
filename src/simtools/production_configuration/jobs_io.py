@@ -36,7 +36,8 @@ _SIMULATE_PROD_PATH_FIELDS = (
 ).split()
 _SIMULATE_PROD_CONTROLLER_FIELDS = frozenset(
     """activity_id application_label backend backend_config config data_search_path env_file
-    job_grid_file job_grid_row list_available_corsika_models""".split()
+    job_grid_file job_grid_row list_available_corsika_models wait submission_burst_size
+    submission_burst_delay_seconds""".split()
 )
 
 

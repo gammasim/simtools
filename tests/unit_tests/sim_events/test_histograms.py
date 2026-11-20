@@ -62,6 +62,26 @@ def test_energy_bins(mock_reader, hdf5_file_name):
     assert np.allclose(np.diff(np.log10(bins)), 0.1)
 
 
+@pytest.mark.parametrize(("energy_min", "energy_max"), [(0.003, 20.0), (2e-5, 2.5e-5)])
+def test_energy_bins_span_simulated_range(energy_min, energy_max):
+    histograms = EventDataHistograms.create_accumulator()
+    histograms.file_info = {"energy_min": energy_min * u.TeV, "energy_max": energy_max * u.TeV}
+
+    bins = histograms.energy_bins
+
+    assert bins[0] == pytest.approx(energy_min)
+    assert bins[-1] == pytest.approx(energy_max)
+    assert np.all(np.diff(bins) > 0)
+
+
+def test_energy_bins_reject_empty_simulated_range():
+    histograms = EventDataHistograms.create_accumulator()
+    histograms.file_info = {"energy_min": 1.0 * u.TeV, "energy_max": 1.0 * u.TeV}
+
+    with pytest.raises(ValueError, match="Simulation energy bounds"):
+        _ = histograms.energy_bins
+
+
 def test_core_distance_bins(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
     mock_reader.return_value.triggered_shower_data.core_distance_shower = np.array([10, 20, 30])
@@ -355,7 +375,7 @@ def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
     event_data = mocker.Mock(
         file_id=np.array([0, 0, 0]),
         shower_id=np.array([1, 1, 2]),
-        simulated_energy=np.array([0.2, 0.2, 2.0]),
+        simulated_energy=np.array([0.2, 0.2, 100.0]),
         core_distance_shower=np.array([10.0, 20.0, 10.0]),
     )
     triggered_data = mocker.Mock(
@@ -368,17 +388,17 @@ def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
 
     np.testing.assert_allclose(
         histograms.histograms["reuse_mean_vs_energy"].values,
-        np.array([2.0, 1.0, np.nan]),
+        np.array([2.0, np.nan, 1.0]),
         equal_nan=True,
     )
     np.testing.assert_allclose(
         histograms.histograms["reuse_max_vs_energy"].values,
-        np.array([2.0, 1.0, np.nan]),
+        np.array([2.0, np.nan, 1.0]),
         equal_nan=True,
     )
     np.testing.assert_allclose(
         histograms.histograms["reuse_std_vs_energy"].values,
-        np.array([0.0, 0.0, np.nan]),
+        np.array([0.0, np.nan, 0.0]),
         equal_nan=True,
     )
     np.testing.assert_allclose(
@@ -401,8 +421,8 @@ def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
         np.array([5.0 / 3.0, np.nan]),
         equal_nan=True,
     )
-    expected_2d_mean = np.array([[2.0, 1.0, np.nan], [np.nan, np.nan, np.nan]])
-    expected_2d_std = np.array([[0.0, 0.0, np.nan], [np.nan, np.nan, np.nan]])
+    expected_2d_mean = np.array([[2.0, np.nan, 1.0], [np.nan, np.nan, np.nan]])
+    expected_2d_std = np.array([[0.0, np.nan, 0.0], [np.nan, np.nan, np.nan]])
     np.testing.assert_allclose(
         histograms.histograms["reuse_mean_vs_core_distance_vs_energy"].values,
         expected_2d_mean,
@@ -415,7 +435,7 @@ def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
     )
     np.testing.assert_allclose(
         histograms.histograms["reuse_max_vs_angular_distance_vs_energy"].values,
-        np.array([[2.0, 1.0, np.nan], [np.nan, np.nan, np.nan]]),
+        expected_2d_mean,
         equal_nan=True,
     )
 

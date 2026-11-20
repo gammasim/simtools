@@ -57,10 +57,9 @@ proton_energy_range (str)
     Proton energy range (default: "2 GeV 2000 GeV").
 nsb_scaling_factor (float)
     NSB scaling factor used for both curves (default: 2).
-trigger_thresholds (float, int, float, optional)
+trigger_thresholds (float, int, float)
     Three values defining the trigger-threshold scan used for both curves:
-    minimum threshold, number of thresholds, and step size. Trigger-dependent
-    defaults are used when omitted.
+    minimum threshold, number of thresholds, and step size.
 output_path (Path)
     Root output directory; nsb/ and proton/ sub-dirs are created inside it
     (provided by framework, default: ./simtools-output/).

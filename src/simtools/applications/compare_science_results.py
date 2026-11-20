@@ -1,14 +1,14 @@
 #!/usr/bin/python3
-"""Compare telescope-throughput results of two releases.
+"""Compare science results of two releases.
 
-Reads the combined summaries and wavelength tables written by
-``simtools-validate-telescope-throughput`` and compares them telescope by telescope
-without rerunning any calculation. Writes ``science-comparison.json`` and ``report.pdf``
-to the output path.
+Compares telescope-throughput summaries or derived bias-curve tables telescope by telescope
+without rerunning a calculation. Writes ``science-comparison.json`` and ``report.pdf`` to the
+output path.
 """
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.science_tests import bias_curve_comparison
 from simtools.science_tests import telescope_throughput as throughput
 from simtools.visualization import plot_science_comparison as plots
 from simtools.visualization.visualize import pdf_report
@@ -21,8 +21,9 @@ _TELESCOPES = "telescopes"
 _COMPARE_BY = "compare_by"
 _TOLERANCE = "tolerance"
 _REQUIRE_TABLES = "require_wavelength_tables"
+_COMPARISON_TYPE = "comparison_type"
 _APPEND = "append"
-_PATH_HELP = "Combined summary, telescope result directory, or directory of telescope results"
+_PATH_HELP = "Summary or result file, telescope result directory, or directory of telescope results"
 _REPORT_FILE = "report.pdf"
 _STATUS = "status"
 _DIAGNOSTICS = "diagnostics"
@@ -36,6 +37,13 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.ArgumentDefinition(_CANDIDATE_PATH, type=str, required=True, help=f"{_PATH_HELP}."),
         cli.ArgumentDefinition(_BASELINE_LABEL, type=str, default=throughput.BASELINE),
         cli.ArgumentDefinition(_CANDIDATE_LABEL, type=str, default=throughput.CANDIDATE),
+        cli.ArgumentDefinition(
+            _COMPARISON_TYPE,
+            type=str,
+            choices=("telescope_throughput", "bias_curves"),
+            default="telescope_throughput",
+            help="Type of science results to compare.",
+        ),
         cli.ArgumentDefinition(
             _TELESCOPES,
             type=str,
@@ -82,14 +90,17 @@ def main():
         "report": _REPORT_FILE,
     }
     try:
-        baselines = throughput.load_results(args[_BASELINE_PATH])
-        candidates = throughput.load_results(args[_CANDIDATE_PATH])
         tolerances = throughput.parse_tolerances(args[_TOLERANCE])
         with pdf_report(output / _REPORT_FILE) as pdf_pages:
-            for telescope in args[_TELESCOPES] or sorted(set(baselines) | set(candidates)):
-                result[_COMPARISONS][telescope] = _compare_telescope(
-                    telescope, baselines, candidates, tolerances, args, pdf_pages
-                )
+            if args.get(_COMPARISON_TYPE, "telescope_throughput") == "bias_curves":
+                _compare_bias_curve_results(args, tolerances, result, pdf_pages)
+            else:
+                baselines = throughput.load_results(args[_BASELINE_PATH])
+                candidates = throughput.load_results(args[_CANDIDATE_PATH])
+                for telescope in args[_TELESCOPES] or sorted(set(baselines) | set(candidates)):
+                    result[_COMPARISONS][telescope] = _compare_telescope(
+                        telescope, baselines, candidates, tolerances, args, pdf_pages
+                    )
     except (OSError, ValueError) as exc:
         result[_DIAGNOSTICS].append(str(exc))
     result[_DIAGNOSTICS].extend(
@@ -100,6 +111,42 @@ def main():
     if result[_COMPARISONS] and not result[_DIAGNOSTICS]:
         result[_STATUS] = throughput.COMPLETE
     throughput.write_json(output / "science-comparison.json", result)
+
+
+def _compare_bias_curve_results(args, tolerances, result, pdf_pages):
+    """Compare and plot bias curves keyed by telescope."""
+    baselines = bias_curve_comparison.load_results(args[_BASELINE_PATH], args[_TELESCOPES])
+    candidates = bias_curve_comparison.load_results(args[_CANDIDATE_PATH], args[_TELESCOPES])
+    telescopes = args[_TELESCOPES] or sorted(set(baselines) | set(candidates))
+    for telescope in telescopes:
+        if telescope not in baselines or telescope not in candidates:
+            result[_COMPARISONS][telescope] = {
+                _STATUS: throughput.INCOMPLETE,
+                _DIAGNOSTICS: ["Missing baseline or candidate bias curve."],
+            }
+            continue
+        try:
+            changes = bias_curve_comparison.compare_results(
+                baselines[telescope], candidates[telescope], tolerances
+            )
+            bias_curve_comparison.plot_comparison(
+                baselines[telescope],
+                candidates[telescope],
+                telescope,
+                (args[_BASELINE_LABEL], args[_CANDIDATE_LABEL]),
+                pdf_pages,
+            )
+            result[_COMPARISONS][telescope] = {
+                _STATUS: throughput.COMPLETE,
+                "changes": changes,
+                _DIAGNOSTICS: [],
+            }
+        except (KeyError, ValueError) as exc:
+            result[_COMPARISONS][telescope] = {
+                _STATUS: throughput.INCOMPLETE,
+                "changes": {},
+                _DIAGNOSTICS: [str(exc)],
+            }
 
 
 def _compare_telescope(telescope, baselines, candidates, tolerances, args, pdf_pages):

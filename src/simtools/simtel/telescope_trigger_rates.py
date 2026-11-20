@@ -74,6 +74,7 @@ def telescope_trigger_rates(args_dict, context=None):
         histograms = EventDataHistograms(
             args_dict["event_data_file"], array_name=array_name, telescope_list=telescope_ids
         )
+        histograms.energy_only = not args_dict.get("plot_histograms")
         histograms.fill()
 
         _, _, trigger_rate = _calculate_trigger_rates(
