@@ -18,6 +18,12 @@ _LIGHT_SOURCE_GEOMETRY_GROUP = (
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
+        "write_hdata",
+        help="Write sim_telarray hdata histogram files.",
+        action="store_true",
+        default=False,
+    ),
+    cli.ArgumentDefinition(
         "light_source",
         help="Illuminator name, e.g. ILLN-01. Required for single-pair mode.",
         type=str,
