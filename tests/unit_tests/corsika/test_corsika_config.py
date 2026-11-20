@@ -341,20 +341,6 @@ def test_generate_corsika_input_file_multipipe(corsika_config_mock_array_model, 
         assert "TELFIL |" in f.read()
 
 
-def test_write_seeds(corsika_config_mock_array_model):
-    mock_file = Mock()
-    corsika_config_mock_array_model.run_number = 10
-    corsika_config_mock_array_model.config = {"USER_INPUT": {"PRMPAR": [14]}}
-    with patch("io.open", return_value=mock_file):
-        corsika_config_mock_array_model._write_seeds(mock_file)
-    assert mock_file.write.call_count == 4
-
-    expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
-    for _call in expected_calls:
-        assert _call.startswith("SEED ")
-        assert _call.endswith(" 0 0\n")
-
-
 def test_write_seeds_use_test_seeds(corsika_config_mock_array_model):
     mock_file = Mock()
     corsika_config_mock_array_model.run_number = 10

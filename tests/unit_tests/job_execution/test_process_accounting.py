@@ -188,13 +188,14 @@ def test_read_peak_rss_bytes_returns_none_without_memory_data():
 def test_start_process_closes_opened_files_on_error(tmp_test_directory, mocker):
     input_file = Path(tmp_test_directory) / "input.eventio"
     input_file.write_bytes(b"eventio")
-    mocker.patch(
+    popen = mocker.patch(
         "simtools.job_execution.process_accounting.subprocess.Popen",
         side_effect=FileNotFoundError("simulation not found"),
     )
 
     with pytest.raises(FileNotFoundError, match="simulation not found"):
         process_accounting._start_process([SIMULATION_COMMAND], None, input_file, None)
+    assert popen.call_args.kwargs["stdin"].closed
 
 
 def test_main_requires_executable(mocker):

@@ -349,7 +349,9 @@ def test_build_observing_location_uses_site_model(mock_site_model):
 
     location = build_observing_location("North", ["7.0.0"])
 
-    assert isinstance(location, EarthLocation)
+    assert_quantity_allclose(location.lat, 1 * u.deg)
+    assert_quantity_allclose(location.lon, 2 * u.deg)
+    assert_quantity_allclose(location.height, 3 * u.m, atol=1e-6 * u.m)
     mock_site_model.assert_called_once_with(model_version="7.0.0", site="North", context=None)
 
 
@@ -422,14 +424,20 @@ def test_build_production_grid_engine_raises_without_site_for_nsb_rate():
 
 
 @pytest.mark.parametrize(
-    ("energy_range", "expected_length"),
+    ("energy_range", "expected"),
     [
-        ((30 * u.GeV, 100 * u.GeV), 1),
-        ([[30 * u.GeV, 100 * u.GeV], [100 * u.GeV, 1 * u.TeV]], 2),
+        ((30 * u.GeV, 100 * u.GeV), [(30 * u.GeV, 100 * u.GeV)]),
+        (
+            [[30 * u.GeV, 100 * u.GeV], [100 * u.GeV, 1 * u.TeV]],
+            [(30 * u.GeV, 100 * u.GeV), (100 * u.GeV, 1 * u.TeV)],
+        ),
     ],
 )
-def test_normalize_energy_ranges_accepts_supported_shapes(energy_range, expected_length):
-    assert len(normalize_energy_ranges(energy_range)) == expected_length
+def test_normalize_energy_ranges_accepts_supported_shapes(energy_range, expected):
+    actual = normalize_energy_ranges(energy_range)
+    assert len(actual) == len(expected)
+    for actual_pair, expected_pair in zip(actual, expected, strict=True):
+        assert_quantity_allclose(actual_pair, expected_pair)
 
 
 def test_calculate_log_energy_midpoint_returns_geometric_mean():
@@ -992,7 +1000,11 @@ def test_generate_target_values_supports_log_and_inverse_cos_scaling():
     )
 
     assert_quantity_allclose(engine.target_values["energy"], [1, 10, 100] * u.TeV)
-    assert len(engine.target_values["zenith_angle"]) == 3
+    assert_quantity_allclose(
+        engine.target_values["zenith_angle"],
+        [0, np.degrees(np.arccos(2 / 3)), 60] * u.deg,
+        atol=1e-10 * u.deg,
+    )
 
 
 def test_add_lookup_limits_to_point_uses_engine_lookup_nsb_rate():

@@ -102,26 +102,29 @@ def test_color_normalization_none_image():
 
 def test_plot_layout_with_no_image(simple_camera):
     fig = plot_pixel_layout_with_image(simple_camera, image=None)
-    assert fig is not None
+    assert len(fig.axes) == 1
+    assert len(fig.axes[0].collections[0].get_paths()) == 3
+    plt.close(fig)
 
 
 def test_color_normalization_linear():
     image = np.array([0.0, 0.5, 1.0])
-    colors, _, _ = _color_normalization(image, "viridis", norm_type="lin")
-    assert colors is not None
-    assert len(colors) == 3
+    colors, cmap, norm = _color_normalization(image, "viridis", norm_type="lin")
+    np.testing.assert_allclose(norm(image), [0.0, 0.5, 1.0])
+    np.testing.assert_allclose(colors, cmap([0.0, 0.5, 1.0]))
 
 
 def test_color_normalization_log():
     image = np.array([1.0, 10.0, 100.0])
-    colors, _, _ = _color_normalization(image, "viridis", norm_type="log")
-    assert colors is not None
+    colors, cmap, norm = _color_normalization(image, "viridis", norm_type="log")
+    np.testing.assert_allclose(norm(image), [0.0, 0.5, 1.0])
+    np.testing.assert_allclose(colors, cmap([0.0, 0.5, 1.0]))
 
 
 def test_setup_camera_axis_with_scale_factor(camera_hexagon):
     ax = MagicMock()
     setup_camera_axis_properties(ax, camera_hexagon, y_scale_factor=1.42)
-    ax.axis.assert_called_once()
+    ax.axis.assert_called_once_with([-1.0, 1.0, -1.42, 1.42])
 
 
 def test_setup_camera_axis_grid_no_alpha(camera_hexagon):
@@ -138,14 +141,26 @@ def test_setup_camera_axis_below(camera_hexagon):
 
 def test_plot_layout_with_image_values(simple_camera):
     image = np.array([0.0, 0.5, 1.0])
-    fig = plot_pixel_layout_with_image(simple_camera, image=image)
-    assert fig is not None
+    with patch("matplotlib.figure.Figure.colorbar") as colorbar:
+        fig = plot_pixel_layout_with_image(simple_camera, image=image)
+    colorbar.assert_called_once()
+    colorbar.return_value.set_label.assert_called_once_with("Pixel Value", fontsize=10)
+    np.testing.assert_allclose(
+        fig.axes[0].collections[0].get_facecolors(), plt.get_cmap("viridis")(image)
+    )
+    plt.close(fig)
 
 
 def test_plot_layout_with_image_no_bar(camera_square):
     image = np.array([0.0, 0.5, 1.0])
-    fig = plot_pixel_layout_with_image(camera_square, image=image, add_color_bar=False)
-    assert fig is not None
+    with patch("matplotlib.figure.Figure.colorbar") as colorbar:
+        fig = plot_pixel_layout_with_image(camera_square, image=image, add_color_bar=False)
+    colorbar.assert_not_called()
+    assert len(fig.axes) == 1
+    np.testing.assert_allclose(
+        fig.axes[0].collections[0].get_facecolors(), plt.get_cmap("viridis")(image)
+    )
+    plt.close(fig)
 
 
 def test_plot_layout_with_image_axes(camera_square):
@@ -161,13 +176,17 @@ def test_plot_layout_with_image_axes(camera_square):
 def test_plot_one_axis_no_invert():
     plt_mock = MagicMock()
     _plot_one_axis_def(plt_mock, "X", "Y", 0.7, 0.12, 0.0, "black", False)
-    assert plt_mock.gca.return_value.annotate.call_count == 2
+    calls = plt_mock.gca.return_value.annotate.call_args_list
+    assert _axis_direction(calls[0]) == pytest.approx([0.1, 0.0], abs=1e-12)
+    assert _axis_direction(calls[1]) == pytest.approx([0.0, 0.1], abs=1e-12)
 
 
 def test_plot_one_axis_with_invert():
     plt_mock = MagicMock()
     _plot_one_axis_def(plt_mock, "X", "Y", 0.8, 0.12, np.pi / 2, "blue", True)
-    assert plt_mock.gca.return_value.annotate.call_count == 2
+    calls = plt_mock.gca.return_value.annotate.call_args_list
+    assert _axis_direction(calls[0]) == pytest.approx([0.0, 0.1], abs=1e-12)
+    assert _axis_direction(calls[1]) == pytest.approx([0.1, 0.0], abs=1e-12)
 
 
 def _axis_direction(annotation_call):

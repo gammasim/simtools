@@ -270,7 +270,7 @@ def test_get_telescope_list_from_input_card_input_card_no_match(monkeypatch):
     class FakeInputCard:
         def parse(self):
             # No telescope lines matching the regex
-            return b"TELESCOPE -70.91E2 -52.35E2 45.00E2 12.50E2 # (ID=1) ACT 01 2B5\n"
+            return b"TELESCOPE malformed telescope record\n"
 
     class FakeEventIOFile:
         def __init__(self, *args, **kwargs):  # test init
@@ -283,6 +283,7 @@ def test_get_telescope_list_from_input_card_input_card_no_match(monkeypatch):
             pass
 
     monkeypatch.setattr(simtel_io_metadata, "EventIOFile", FakeEventIOFile)
+    monkeypatch.setattr(simtel_io_metadata, "InputCard", FakeInputCard)
     result = simtel_io_metadata._get_telescope_list_from_input_card("dummy.simtel")
     assert result == []
 
