@@ -12,6 +12,7 @@ import pytest
 
 from simtools.io import log_inspector
 from simtools.reporting.docs_pages import read_version_switcher
+from simtools.simtel.simtel_config_writer import INCOMPATIBLE_SIMTEL_MARKER
 from simtools.testing import configuration, helpers, options
 from simtools.testing.output_validation.runner import validate_application_output
 
@@ -284,6 +285,9 @@ def test_applications_from_config(
         cwd=simtools_root_path,
     )
     msg = f"Command {cmd!r} failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    if result.returncode != 0 and INCOMPATIBLE_SIMTEL_MARKER in result.stderr:
+        reason = result.stderr.rsplit(INCOMPATIBLE_SIMTEL_MARKER, 1)[1].splitlines()[0].strip()
+        pytest.skip(reason)
     if result.returncode != 0 and config.get("xfail_network_error"):
         combined_output = result.stdout + result.stderr
         network_error_patterns = (

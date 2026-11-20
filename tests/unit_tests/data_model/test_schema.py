@@ -21,10 +21,10 @@ _INTEGRATION_CONFIG_FILES = sorted(
 )
 
 
-@pytest.mark.parametrize("version", ["0.1.0", "0.2.0"])
+@pytest.mark.parametrize("version", ["0.1.0", "0.2.0", "0.3.0"])
 @pytest.mark.parametrize("case_sensitive", [True, False])
 def test_model_parameter_metaschema_accepts_case_sensitive(version, case_sensitive):
-    """Both metaschema versions accept a boolean case-comparison option."""
+    """Metaschema versions accept a boolean case-comparison option."""
     metaschema = schema.load_schema(
         SCHEMA_PATH / "model_parameter_and_data_schema.metaschema.yml", version
     )
@@ -35,6 +35,19 @@ def test_model_parameter_metaschema_accepts_case_sensitive(version, case_sensiti
 
     parameter_schema["data"][0]["case_sensitive"] = "yes"
     with pytest.raises(jsonschema.ValidationError, match="not valid under any"):
+        jsonschema.Draft6Validator(metaschema).validate(parameter_schema)
+
+
+def test_metaschema_validates_incompatible_tags():
+    """Simulator tag exclusions are strings in the current metaschema."""
+    metaschema = schema.load_schema(
+        SCHEMA_PATH / "model_parameter_and_data_schema.metaschema.yml", "0.3.0"
+    )
+    parameter_schema = schema.get_model_parameter_schema("fadc_pulse_shape", "0.4.0")
+    parameter_schema.pop("plot_configuration")
+    jsonschema.Draft6Validator(metaschema).validate(parameter_schema)
+    parameter_schema["simulation_software"][0]["incompatible_tags"] = [42]
+    with pytest.raises(jsonschema.ValidationError, match="not of type 'string'"):
         jsonschema.Draft6Validator(metaschema).validate(parameter_schema)
 
 

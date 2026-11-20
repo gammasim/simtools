@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from unittest.mock import patch
 
 import astropy.units as u
@@ -137,13 +138,20 @@ def test_telescope_filtering_rejects_zero_minimum(mock_hdf5_file):
         )
 
 
-def test_shower_coordinate_transformation(mock_hdf5_file):
-    reader = EventDataReader(mock_hdf5_file)
-    _, _, triggered_shower, _ = reader.read_event_data(mock_hdf5_file)
+def test_shower_coordinate_transformation(mock_tables, tmp_test_directory):
+    shower, triggers, file_info = mock_tables
+    shower["shower_azimuth"] = [0.0, 0.0]
+    shower["shower_altitude"] = [30.0, 30.0]
+    path = Path(tmp_test_directory) / "coordinates.hdf5"
+    write_tables([shower, triggers, file_info], path, file_type="HDF5")
+    reader = EventDataReader(path)
+    _, _, triggered_shower, _ = reader.read_event_data(path)
 
-    assert hasattr(triggered_shower, "x_core_shower")
-    assert hasattr(triggered_shower, "y_core_shower")
-    assert hasattr(triggered_shower, "core_distance_shower")
+    np.testing.assert_allclose(triggered_shower.x_core_shower, [50.0, 100.0])
+    np.testing.assert_allclose(triggered_shower.y_core_shower, [150.0, 250.0])
+    np.testing.assert_allclose(
+        triggered_shower.core_distance_shower, np.hypot([50, 100], [150, 250])
+    )
 
 
 def test_get_reduced_simulation_info(mock_hdf5_file):

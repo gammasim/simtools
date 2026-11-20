@@ -11,6 +11,7 @@ from simtools.data_model import schema
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.simtel import segmentation, table_serializers
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.testing import options
 from simtools.utils import names
 
@@ -52,6 +53,8 @@ def _simtel_contract(parameter_data):
 
 def _write_deterministic_table(table, contract, destination, output_name):
     """Write a table twice after permuting input layout and compare bytes."""
+    if contract["table_format"] == "fadc_templates":
+        return _write_deterministic_fadc_templates(table, contract, destination, output_name)
     first = destination / f"first-{output_name}"
     second = destination / f"second-{output_name}"
     table_serializers.write_simtel_table(
@@ -63,6 +66,25 @@ def _write_deterministic_table(table, contract, destination, output_name):
     )
     assert first.read_bytes() == second.read_bytes()
     return {first.name, second.name}
+
+
+def _write_deterministic_fadc_templates(table, contract, destination, output_name):
+    """Compare all three sim_telarray FADC files after permuting the input."""
+    table_serializers.validate_simtel_serialization(table, contract)
+    permuted = Table(table[table.colnames[::-1]][::-1], copy=True)
+    names = set()
+    for suffix, gain in (("reference", None), ("HG", "HG"), ("LG", "LG")):
+        first = destination / f"first-{suffix}-{output_name}"
+        second = destination / f"second-{suffix}-{output_name}"
+        if gain is None:
+            SimtelConfigWriter._write_fadc_reference_template(table, first)
+            SimtelConfigWriter._write_fadc_reference_template(permuted, second)
+        else:
+            SimtelConfigWriter._write_fadc_gain_response(table, gain, first)
+            SimtelConfigWriter._write_fadc_gain_response(permuted, gain, second)
+        assert first.read_bytes() == second.read_bytes()
+        names.update((first.name, second.name))
+    return names
 
 
 def _validate_parameter(parameter_data, reader, destination, output_stem):
@@ -165,3 +187,22 @@ def test_production_model_parameter_assets_are_canonical(
     destination = Path(tmp_test_directory) / "model-assets"
     destination.mkdir()
     _serialize_production_assets(reader, destination)
+
+
+def test_fadc_template_assets_are_canonical(request, simtools_root_path, tmp_test_directory):
+    """Validate all simulator files for the selected LST pulse asset."""
+    source_configuration = _model_source_configuration(request, simtools_root_path)
+    if source_configuration is None:
+        pytest.skip("No simulation-model repository is configured")
+    reader = create_model_reader_from_configuration(source_configuration)
+    if "8.0.0" not in reader.get_model_versions("telescopes"):
+        pytest.skip("The selected model repository does not contain model 8.0.0")
+    parameters = reader.get_model_parameters("North", "LSTN-01", "telescopes", "8.0.0")
+    parameter = parameters["fadc_pulse_shape"]
+    if parameter.get("model_parameter_schema_version") != "0.4.0":
+        pytest.skip("The selected model does not provide unified FADC templates")
+    destination = Path(tmp_test_directory) / "fadc-assets"
+    destination.mkdir()
+    names_written = _validate_parameter(parameter, reader, destination, "lst")
+    assert len(names_written) == 6
+    assert all((destination / name).stat().st_size > 0 for name in names_written)

@@ -60,7 +60,7 @@ def test_interpolate_valid_altitude(tmp_test_directory):
 
     result = profile.interpolate(0.5 * u.km, column="thick")
 
-    assert 950.0 < result < 1000.0
+    assert result == pytest.approx(975.0)
 
 
 def test_interpolate_altitude_below_minimum(tmp_test_directory):

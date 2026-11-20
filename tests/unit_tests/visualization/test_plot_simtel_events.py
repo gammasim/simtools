@@ -537,8 +537,7 @@ def test_streamed_plot_closes_figure_on_pdf_error(mock_plotter, io_handler, tmp_
         def __exit__(self, *_args):
             return None
 
-        def add(self, figure):
-            plt.close(figure)
+        def add(self, _figure):
             raise RuntimeError(PDF_SAVE_FAILED)
 
     with (

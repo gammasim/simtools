@@ -180,7 +180,7 @@ def test_export_model_file_with_model_export_path(tmp_test_directory):
 
 def test_read_table_and_normalize(tmp_test_directory):
     test_file = Path(tmp_test_directory) / "single_pe.csv"
-    test_file.write_text("0.0,0.5\n1.0,1.0\n", encoding="utf-8")
+    test_file.write_text("amplitude,response\n0.0,1.0\n1.0,2.0\n", encoding="utf-8")
     config = {
         "tables": [
             {
@@ -195,7 +195,7 @@ def test_read_table_and_normalize(tmp_test_directory):
     }
     data = plot_tables.read_table_data(config, tmp_test_directory)
     assert isinstance(data, dict)
-    assert data["test_table"]["response"].max() == pytest.approx(1.0)
+    assert data["test_table"]["response"].tolist() == pytest.approx([0.5, 1.0])
 
 
 @pytest.mark.parametrize(

@@ -87,9 +87,11 @@ def test_prepare_stream_saves_corsika_output(corsika_stage_mock_array_model):
 
 
 def test_corsika_executable(corsika_stage_mock_array_model):
-    assert corsika_stage_mock_array_model._corsika_executable() is not None
-    corsika_stage_mock_array_model.corsika_config.use_curved_atmosphere = True
-    assert corsika_stage_mock_array_model._corsika_executable() is not None
+    stage = corsika_stage_mock_array_model
+    stage.corsika_config.use_curved_atmosphere = False
+    assert stage._corsika_executable() == stage.context.software.corsika_path / "corsika"
+    stage.corsika_config.use_curved_atmosphere = True
+    assert stage._corsika_executable() == stage.context.software.corsika_path / "corsika_curved"
 
 
 @pytest.mark.parametrize("transition_energy", [None, 120 * u.GeV])

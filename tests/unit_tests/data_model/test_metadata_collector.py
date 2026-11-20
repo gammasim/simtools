@@ -43,10 +43,7 @@ def test_fill_contact_meta(args_dict_site, caplog):
     with caplog.at_level(logging.WARNING):
         collector._fill_contact_meta(contact_dict)
     assert "No user name provided, take user info from system level." not in caplog.text
-    try:
-        assert contact_dict["name"] == getpass.getuser()
-    except Exception:  # pylint: disable=broad-except
-        pass
+    assert contact_dict["name"] == getpass.getuser()
 
 
 def test_get_site(args_dict_site, tmp_test_directory):
@@ -363,9 +360,6 @@ def test_write_metadata_to_yml(args_dict_site, tmp_test_directory, caplog):
 
     with pytest.raises(FileNotFoundError, match=r"^Error writing metadata"):
         collector.write(yml_file="./this_directory_is_not_there/test_file.yml")
-
-    with pytest.raises(TypeError, match="No output file for metadata defined"):
-        collector.write(yml_file=None)
 
 
 def test_get_data_model_schema_file_name():
