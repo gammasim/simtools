@@ -100,6 +100,17 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
+Job grids are submitted in bursts of 250 with a 5 second pause between bursts. Override these
+defaults with `submission_burst_size` and `submission_burst_delay_seconds` in the production
+workflow configuration. To recover a failed collection, rerun its collect test with
+`--recover_production`; this retries failed jobs only, up to three attempts, and preserves
+successful jobs and archived partial outputs.
+
+```console
+simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --test production.gamma.collect --recover_production
+```
+
 Use `--run_label non-linear` to isolate candidate products and reports under `variants/non-linear/`.
 Use the same label for dependent tests and collection; explicitly configured paths are not redirected.
 

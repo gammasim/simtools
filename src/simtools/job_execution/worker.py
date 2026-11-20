@@ -1,22 +1,28 @@
 """Execute one serialized job specification for a remote backend."""
 
 import argparse
+import copy
 import inspect
 import json
 import logging
 import os
 import pickle
 import re
+import shlex
 import stat
 import subprocess
+import tempfile
 import time
 import traceback
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
+from dataclasses import replace
 from pathlib import Path
 
+from simtools import constants
 from simtools.job_execution.job import JobSpec
 from simtools.model_repository.reader import create_model_reader_from_source_config
 from simtools.runtime.context import RunContext
+from simtools.runtime.dependencies import stage_corsika_interaction_tables
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +35,7 @@ def _parser():
     parser.add_argument("--run-directory", type=Path, required=True)
     parser.add_argument("--job-id", required=True)
     parser.add_argument("--log-file", type=Path)
+    parser.add_argument("--scratch-directory", type=Path)
     return parser
 
 
@@ -76,14 +83,17 @@ def execute_command(job_spec):
     if isinstance(command, (str, Path)) and Path(command).is_file():
         command_path = Path(command)
         command_path.chmod(command_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
-        command = str(command_path)
+        command = [str(command_path)]
     if job_spec.options.runtime_environment:
         runtime = job_spec.options.runtime_environment
         prefix = list(runtime) if isinstance(runtime, (tuple, list)) else [runtime]
-        command = [*prefix, command]
+        command = [*prefix, *(command if isinstance(command, (list, tuple)) else [command])]
     if job_spec.options.configuration:
         args = _configuration_arguments(job_spec.options.configuration)
-        command = [command, *args] if isinstance(command, str) else [*command, *args]
+        if isinstance(command, str):
+            command = f"{command} {shlex.join(args)}"
+        else:
+            command = [*command, *args]
     environment = os.environ.copy()
     environment.update(job_spec.options.env or {})
     started = time.perf_counter()
@@ -152,6 +162,112 @@ def _initialize_runtime(job_spec):
     )
 
 
+@contextmanager
+def _stage_tables_for_job(job_spec, scratch_directory=None):
+    """Stage and verify CORSIKA interaction tables for one CORSIKA simulation job."""
+    software, he_model, le_model = _corsika_job_settings(job_spec)
+    source_path = _corsika_table_source(job_spec)
+    if not software or not software.startswith("corsika") or not source_path:
+        yield None
+        return
+
+    source_path = Path(source_path)
+    if (source_path / "interaction-tables").is_dir():
+        source_path /= "interaction-tables"
+    scratch_path = (
+        scratch_directory
+        or os.environ.get("SIMTOOLS_WORKER_SCRATCH_DIRECTORY")
+        or os.environ.get("_CONDOR_SCRATCH_DIR")
+        or None
+    )
+    with tempfile.TemporaryDirectory(prefix="simtools-corsika-tables-", dir=scratch_path) as temp:
+        destination = Path(temp) / "interaction-tables"
+        stage_corsika_interaction_tables(source_path, destination, he_model, le_model)
+        logger.info(
+            "Staged verified CORSIKA tables for %s/%s from %s to %s",
+            he_model,
+            le_model,
+            source_path,
+            destination,
+        )
+        yield destination, _job_with_table_path(job_spec, destination)
+
+
+def _corsika_table_source(job_spec):
+    """Return the configured shared interaction-table source for a job."""
+    configuration = job_spec.options.configuration or {}
+    source = configuration.get("corsika_interaction_table_path")
+    source = source or _command_option(
+        _command_tokens(job_spec.command), "corsika_interaction_table_path"
+    )
+    context_args = (job_spec.context_spec or {}).get("args", {})
+    environment = job_spec.options.env or {}
+    return (
+        source
+        or context_args.get("corsika_interaction_table_path")
+        or environment.get("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
+        or os.environ.get("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
+    )
+
+
+def _corsika_job_settings(job_spec):
+    """Return simulation software and hadronic models selected by a job."""
+    names = ("simulation_software", "corsika_he_interaction", "corsika_le_interaction")
+    settings = (job_spec.context_spec or {}).get("args", {}).copy()
+    tokens = _command_tokens(job_spec.command)
+    for name in names:
+        value = _command_option(tokens, name)
+        if value is not None:
+            settings[name] = value
+    settings.update(job_spec.options.configuration or {})
+    environment = os.environ.copy()
+    environment.update(job_spec.options.env or {})
+    defaults = {
+        "simulation_software": environment.get("SIMTOOLS_SIMULATION_SOFTWARE", ""),
+        "corsika_he_interaction": environment.get(
+            "SIMTOOLS_CORSIKA_HE_INTERACTION", constants.CORSIKA_HE_INTERACTION
+        ),
+        "corsika_le_interaction": environment.get(
+            "SIMTOOLS_CORSIKA_LE_INTERACTION", constants.CORSIKA_LE_INTERACTION
+        ),
+    }
+    return tuple(str(settings.get(name) or defaults[name]).lower() for name in names)
+
+
+def _command_tokens(command):
+    """Return a job command as tokens for option lookup."""
+    if isinstance(command, str):
+        return shlex.split(command)
+    if isinstance(command, Path):
+        return [str(command)]
+    return list(command or ())
+
+
+def _command_option(tokens, name):
+    """Return the last value for one command-line option, if present."""
+    option = f"--{name}"
+    value = None
+    for index, token in enumerate(tokens):
+        if token == option and index + 1 < len(tokens):
+            value = tokens[index + 1]
+        elif token.startswith(f"{option}="):
+            value = token.partition("=")[2]
+    return value
+
+
+def _job_with_table_path(job_spec, table_path):
+    """Override shared table paths in the worker environment and job arguments."""
+    environment = dict(job_spec.options.env or {})
+    environment["SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"] = str(table_path)
+    configuration = dict(job_spec.options.configuration or {})
+    configuration["corsika_interaction_table_path"] = str(table_path)
+    options = replace(job_spec.options, env=environment, configuration=configuration)
+    context_spec = copy.deepcopy(job_spec.context_spec)
+    if context_spec is not None:
+        context_spec.setdefault("args", {})["corsika_interaction_table_path"] = str(table_path)
+    return replace(job_spec, options=options, context_spec=context_spec)
+
+
 def write_job_payload(job_spec, path):
     """Serialize a versioned worker payload."""
     payload = {
@@ -174,6 +290,11 @@ def _load_job_payload(path):
     return job_spec
 
 
+def load_job_payload(path):
+    """Load a versioned JobSpec payload from a trusted execution work directory."""
+    return _load_job_payload(path)
+
+
 def _job_file(run_directory, directory, job_id):
     """Resolve a job-owned path below the private run directory."""
     validate_job_id(job_id)
@@ -194,17 +315,22 @@ def _write_result(path, payload):
     temporary.replace(path)
 
 
-def run(run_directory, job_id, log_file=None):
+def run(run_directory, job_id, log_file=None, scratch_directory=None):
     """Run one serialized job and write its result or failure record."""
     run_directory = Path(run_directory)
     input_path = _job_file(run_directory, "inputs", job_id)
     result_path = _job_file(run_directory, "results", job_id)
     result_path.parent.mkdir(parents=True, exist_ok=True)
     file_handler = None
+    previous_table_path = os.environ.get("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
     try:
         file_handler = _configure_worker_logging(log_file)
         job_spec = _load_job_payload(input_path)
-        value = execute_job_spec(job_spec)
+        with _stage_tables_for_job(job_spec, scratch_directory) as staged_tables:
+            if staged_tables is not None:
+                table_path, job_spec = staged_tables
+                os.environ["SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"] = str(table_path)
+            value = execute_job_spec(job_spec)
         _write_result(result_path, {"ok": True, "value": value})
         return 0
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -218,6 +344,10 @@ def run(run_directory, job_id, log_file=None):
         _write_result(result_path, payload)
         return 1
     finally:
+        if previous_table_path is None:
+            os.environ.pop("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH", None)
+        else:
+            os.environ["SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"] = previous_table_path
         if file_handler is not None:
             logging.getLogger().removeHandler(file_handler)
             file_handler.close()
@@ -226,7 +356,7 @@ def run(run_directory, job_id, log_file=None):
 def main():
     """Run the worker CLI."""
     args = _parser().parse_args()
-    raise SystemExit(run(args.run_directory, args.job_id, args.log_file))
+    raise SystemExit(run(args.run_directory, args.job_id, args.log_file, args.scratch_directory))
 
 
 if __name__ == "__main__":

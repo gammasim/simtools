@@ -557,10 +557,9 @@ class EventDataReader:
                 key=key,
                 dtype=np.float64,
             )
-            if key == "energy_min":
-                float_arrays[key] = np.unique(np.round(column_values, decimals=3))
-            else:
-                float_arrays[key] = np.unique(np.round(column_values, decimals=2))
+            if key not in ("energy_min", "energy_max"):
+                column_values = np.round(column_values, decimals=2)
+            float_arrays[key] = np.unique(column_values)
 
         if any(len(arr) > 1 for arr in (particle_id, *float_arrays.values())):
             self._logger.warning("Simulation file info has non-unique values.")

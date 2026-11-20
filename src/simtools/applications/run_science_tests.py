@@ -70,6 +70,14 @@ APPLICATION = ApplicationDefinition.for_module(
             action="store_true",
             help="Rebuild derived products, or archive and retry failed production after jobs end.",
         ),
+        cli.ArgumentDefinition(
+            "recover_production",
+            action="store_true",
+            help=(
+                "Retry failed jobs of finished HTCondor productions during collection; "
+                "successful jobs are retained."
+            ),
+        ),
         cli.ArgumentDefinition("dry_run", action="store_true", help="Validate without writes."),
         cli.ArgumentDefinition(
             "allow_production",
@@ -115,6 +123,7 @@ def main():
         allow_production=args.get("allow_production", False),
         preflight=args.get("preflight", False),
         overwrite=args.get("overwrite", False),
+        recover_production=args.get("recover_production", False),
         application_args=args,
     )
 
