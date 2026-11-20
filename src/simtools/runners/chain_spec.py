@@ -227,7 +227,7 @@ def _checked(stage, options):
 
 def _with_converters(stages):
     """Return the stages with the converter inserted between stages whose products differ."""
-    completed = [stages[0]]
+    completed = list(stages[:1])
     for downstream in stages[1:]:
         converter = _converter_between(completed[-1], downstream)
         if converter is not None:

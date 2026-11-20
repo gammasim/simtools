@@ -86,7 +86,6 @@ def test_catalog_stage_defaults():
     stage = CatalogStage()
 
     assert stage.environment() == {}
-    assert stage.get_resources(runtime=3.0) == {}
     assert stage.get_resources() == {}
 
 

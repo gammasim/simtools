@@ -114,7 +114,7 @@ class CatalogStage:
         """Return environment variables needed to run the stage (none)."""
         return {}
 
-    def get_resources(self, runtime=None):  # pylint: disable=unused-argument
+    def get_resources(self):
         """Return computing resources used (none: the first stage of a chain reports them)."""
         return {}
 
