@@ -281,48 +281,6 @@ def test_chain_without_bypass_mode_3_does_not_probe_sim_telarray(
     assert stage.bypass_optics is None
 
 
-def test_mode_3_refused_by_installed_release(corsika_config_mock_array_model, mocker, monkeypatch):
-    monkeypatch.delenv("SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX", raising=False)
-    run = mocker.patch(
-        "simtools.runtime.dependencies.subprocess.run", return_value=_release_output("2024.271.0")
-    )
-    config = corsika_config_mock_array_model
-
-    with pytest.raises(ValueError, match=r"Bypass_Optics=3 is not supported.*2024\.271\.0") as exc:
-        SimTelArrayStage.instances(_bypass_inputs(config, {"bypass_optics": 3}))
-
-    assert "SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX" in str(exc.value)
-    run.assert_called_once()
-
-
-def test_mode_3_accepted_with_override_without_probe(
-    corsika_config_mock_array_model, mocker, monkeypatch
-):
-    monkeypatch.setenv("SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX", "3")
-    run = mocker.patch("simtools.runtime.dependencies.subprocess.run")
-    config = corsika_config_mock_array_model
-
-    (stage,) = SimTelArrayStage.instances(_bypass_inputs(config, {"bypass_optics": 3}))
-
-    run.assert_not_called()
-    assert stage.bypass_optics == 3
-
-
-def test_mode_3_accepted_by_release_table(corsika_config_mock_array_model, mocker, monkeypatch):
-    monkeypatch.delenv("SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX", raising=False)
-    monkeypatch.setattr(
-        "simtools.simtel.sim_telarray_capabilities.BYPASS_OPTICS_MODE_3_MIN_VERSION", "2026.300.0"
-    )
-    mocker.patch(
-        "simtools.runtime.dependencies.subprocess.run", return_value=_release_output("2026.301.0")
-    )
-    config = corsika_config_mock_array_model
-
-    (stage,) = SimTelArrayStage.instances(_bypass_inputs(config, {"bypass_optics": 3}))
-
-    assert stage.bypass_optics == 3
-
-
 @pytest.mark.parametrize(
     ("mode", "telescopes", "expected"),
     [
@@ -333,10 +291,8 @@ def test_mode_3_accepted_by_release_table(corsika_config_mock_array_model, mocke
     ],
 )
 def test_instances_bypass_level_from_mode(
-    corsika_config_mock_array_model, mode, telescopes, expected, monkeypatch
+    corsika_config_mock_array_model, mode, telescopes, expected
 ):
-    # Mode 3 is gated by the sim_telarray capability; the override avoids running sim_telarray.
-    monkeypatch.setenv("SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX", "3")
     config = corsika_config_mock_array_model
     config.array_model.telescope_models = {
         f"tel-{index}": _Telescope(mirror_class) for index, mirror_class in enumerate(telescopes)
@@ -446,15 +402,13 @@ def test_light_instances_bypass_level_from_option(light_simulation, mirror_class
     assert stage.bypass_optics == level
 
 
-def test_light_instances_bypass_level_three_checks_capability(light_simulation):
+def test_light_instances_bypass_level_three(light_simulation):
     inputs = _light_inputs(
         light_simulation,
         ("obdeect_illuminator", "stream_to_simtel", "sim_telarray"),
         {"bypass_optics": 3},
     )
-    with patch("simtools.runners.sim_telarray_stage.check_bypass_optics") as check:
-        (stage,) = SimTelArrayStage.instances(inputs)
-    check.assert_called_once_with(3, light_simulation.context)
+    (stage,) = SimTelArrayStage.instances(inputs)
     assert stage.bypass_optics == 3
 
 
@@ -694,3 +648,36 @@ def test_prepare_without_envelope_sets_no_include_directories(sim_telarray_stage
     sim_telarray_stage.prepare(run_number=1, input_file=STDIN)
 
     assert sim_telarray_stage.simulator_array.include_directories == ()
+
+
+@pytest.mark.parametrize("tag", ["v2025-11-30-rc", "development"])
+def test_mode_3_checks_simtel_build_tag(corsika_config_mock_array_model, run_context, tag):
+    from dataclasses import replace
+
+    (run_context.software.sim_telarray_path / "build_opts.yml").write_text(
+        f"simtel_tag: {tag}\n", encoding="utf-8"
+    )
+    inputs = replace(
+        _bypass_inputs(corsika_config_mock_array_model, {"bypass_optics": 3}),
+        context=run_context,
+    )
+    if tag == "v2025-11-30-rc":
+        with pytest.raises(ValueError, match=r"incompatible.*v2025-11-30-rc"):
+            SimTelArrayStage.instances(inputs)
+    else:
+        (stage,) = SimTelArrayStage.instances(inputs)
+        assert stage.bypass_optics == 3
+
+
+def test_mode_3_warns_when_build_tag_unavailable(
+    corsika_config_mock_array_model, run_context, caplog
+):
+    from dataclasses import replace
+
+    inputs = replace(
+        _bypass_inputs(corsika_config_mock_array_model, {"bypass_optics": 3}),
+        context=run_context,
+    )
+    (stage,) = SimTelArrayStage.instances(inputs)
+    assert stage.bypass_optics == 3
+    assert "build tag unavailable" in caplog.text

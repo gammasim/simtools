@@ -15,9 +15,8 @@ from simtools.runners.stages import (
     get_stage_class,
     stages_with,
 )
-from simtools.runtime import software_catalog
+from simtools.runtime import dependencies, software_catalog
 from simtools.simtel.photon_bunch_file import bypass_optics_level
-from simtools.simtel.sim_telarray_capabilities import check_bypass_optics
 from simtools.simtel.simtel_runner import SIM_TELARRAY_ENV, sim_telarray_env_as_string
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.simulation_software import efficiency
@@ -25,7 +24,7 @@ from simtools.simulation_software.atmosphere import export_atmosphere_files, wri
 
 #: Chain option: 0 (default) runs sim_telarray's optics on CORSIKA photons; 1 or 2 gives photons
 #: at the camera entrance (Bypass_Optics from the mirror class of the telescopes); 3 is
-#: Bypass_Optics=3 (only with a sim_telarray build that supports it, see sim_telarray_capabilities).
+#: Bypass_Optics=3 (requires a compatible sim_telarray build).
 BYPASS_OPTICS_OPTION = "bypass_optics"
 #: sim_telarray min_photons when an upstream stage thins photons. sim_telarray skips a telescope
 #: event below min_photons, counted on the thinned photons, so the cut is disabled (the
@@ -35,8 +34,8 @@ _logger = logging.getLogger(__name__)
 #: Output directory of the zero-depth transmission table (sim_telarray, bypass 1 or 2). Separate
 #: from the atmosphere stage: exporting the site table here must not overwrite its table.
 ZERO_TRANSMISSION_DIRECTORY = "atmosphere_zero"
-_BYPASS_MODE_CAPABILITY_CHECK = 3
 _DUAL_MIRROR_CLASS = 2
+_MODE_3_INCOMPATIBLE_TAGS = frozenset({"v2025-11-30-rc"})
 
 
 def _bypass_mode(spec, options):
@@ -138,6 +137,24 @@ def _configure_shower_routing(stages, inputs, label):
         stage.streams = mode == "stream"
 
 
+def _check_camera_only_build(context):
+    """Reject known sim_telarray builds incompatible with camera-only simulation."""
+    try:
+        tag = dependencies.get_build_options(run_time=context.run_time, context=context).get(
+            "simtel_tag"
+        )
+    except FileNotFoundError:
+        tag = None
+    if not tag:
+        _logger.warning(
+            "Cannot check camera-only sim_telarray compatibility: build tag unavailable"
+        )
+    elif tag in _MODE_3_INCOMPATIBLE_TAGS:
+        raise ValueError(
+            f"Bypass_Optics=3 is incompatible with sim_telarray {tag}; use a compatible build."
+        )
+
+
 class SimTelArrayStage(CatalogStage):
     """
     sim_telarray array simulation stage, one instance per array model.
@@ -190,9 +207,8 @@ class SimTelArrayStage(CatalogStage):
         """Return one sim_telarray stage per array model (one for a light-emission run)."""
         options = inputs.options_of(cls.name)
         mode = _bypass_mode(cls.spec, options)
-        if mode == _BYPASS_MODE_CAPABILITY_CHECK:
-            # Checked before any stage is built, so no job is written for an unsupported level.
-            check_bypass_optics(mode, inputs.context)
+        if mode == 3:
+            _check_camera_only_build(inputs.context)
         zero_extinction = bool(
             cls.spec.skipped_factors(options, _upstream_factors(inputs, cls.name))
         )

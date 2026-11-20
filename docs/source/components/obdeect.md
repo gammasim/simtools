@@ -64,9 +64,9 @@ simtools inserts the converter between two stages with different photon formats
 `stream_to_simtel:allow_pending=[atmosphere]`. A chain in
 which two stages apply the same efficiency factor (for example the atmospheric extinction in
 `obdeect_atmosphere` and in sim_telarray) is rejected. `Bypass_Optics=3` makes sim_telarray
-simulate the camera only. simtools checks that the installed sim_telarray release supports it
-before any job is written; for a locally patched build, `SIMTOOLS_SIM_TELARRAY_BYPASS_OPTICS_MAX=3`
-states the highest supported level.
+simulate the camera only. Use a sim_telarray build that supports this mode, such as the
+corresponding development image. Known incompatible build tags are rejected; an unknown tag
+does not establish compatibility.
 
 The whole chain runs as one pipe, also for several telescopes: one `obdeect_optics` process
 traces every telescope of the array with its own optical model and writes the camera photons in

@@ -126,13 +126,6 @@ incomplete contracts and invalid matrix grids before creating a configuration.
    :members:
 ```
 
-## sim_telarray_capabilities
-
-```{eval-rst}
-.. automodule:: simtel.sim_telarray_capabilities
-   :members:
-```
-
 ## file_inspector
 
 ```{eval-rst}
