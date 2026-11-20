@@ -645,11 +645,15 @@ class SimulatorLightEmission(SimtelRunner):
         input_file = self.runner_service.get_file_name(file_type="iact_output")
         output_file = self.runner_service.get_file_name(file_type="sim_telarray_output")
 
+        histogram_file = "/dev/null"
+        if self.context.args.get("write_hdata"):
+            histogram_file = self.runner_service.get_file_name(file_type="sim_telarray_histogram")
+
         options += [
             ("power_law", "2.68"),
             ("input_file", f"{input_file}"),
             ("output_file", f"{output_file}"),
-            ("histogram_file", "/dev/null"),
+            ("histogram_file", f"{histogram_file}"),
         ]
 
         for key, value in options:

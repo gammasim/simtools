@@ -169,9 +169,13 @@ def test_get_files_returns_empty_list_for_unknown_type(array_simulator):
     assert array_simulator.get_files("unknown_file_type") == []
 
 
+@pytest.mark.parametrize("write_hdata", [False, True])
 def test_pack_for_register(
-    array_simulator, mocker, model_version, caplog, tmp_test_directory, request
+    array_simulator, mocker, model_version, caplog, tmp_test_directory, request, write_hdata
 ):
+    array_simulator.context = array_simulator.context.replace(
+        args={**array_simulator.context.args, "write_hdata": write_hdata}
+    )
     source_dir = Path(str(tmp_test_directory)) / "source"
     source_dir.mkdir(parents=True, exist_ok=True)
     output_file = source_dir / f"output_file_{model_version}_simtel.zst"
@@ -238,7 +242,7 @@ def test_pack_for_register(
         directory_for_grid_upload / log_file.name, "rt", encoding=TEXT_ENCODING
     ) as handle:
         assert handle.read() == "log"
-    assert not (directory_for_grid_upload / histogram_file.name).exists()
+    assert (directory_for_grid_upload / histogram_file.name).exists() is write_hdata
     with gzip.open(
         directory_for_grid_upload / corsika_log_file.name, "rt", encoding=TEXT_ENCODING
     ) as handle:

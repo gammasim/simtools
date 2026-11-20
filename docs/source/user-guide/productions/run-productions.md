@@ -19,11 +19,11 @@ The selected `simulation_software` controls which part of the chain is executed:
 Typical outputs are:
 
 - CORSIKA, sim_telarray, and simtools log files
-- sim_telarray eventio files
+- sim_telarray eventio files and optional histogram files (`--write_hdata`)
 - reduced event-data HDF5 files (enabled by default; disable with `--reduced_event_lists`)
 - `simulate_prod_job_metadata.yml`, containing the resolved job configuration and output inventory
 - output and log file lists when `--save_file_lists` is used
-- copied grid output files, including logs, model archives, moved event files,
+- copied grid output files, including logs, optional histogram files, model archives, moved event files,
   and `simtools.log.gz`, when `--grid_output_path` is configured
 
 CORSIKA and sim_telarray stdout is saved in `.log.gz` files; matching `.err.gz` files

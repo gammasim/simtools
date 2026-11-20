@@ -210,10 +210,10 @@ class ShowerRouting:
     @staticmethod
     def _group_output_option(argument, group):
         """Return a sim_telarray option with the output file named after a group."""
-        key = "output_file="
-        if argument.startswith(key):
-            path = Path(argument[len(key) :])
-            return f"{key}{path.with_name(f'{group}_{path.name}')}"
+        for key in ("output_file=", "histogram_file="):
+            if argument.startswith(key) and argument != "histogram_file=/dev/null":
+                path = Path(argument[len(key) :])
+                return f"{key}{path.with_name(f'{group}_{path.name}')}"
         return argument
 
     def _write_telescope_route_map(self, simulator_array, run_number):

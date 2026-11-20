@@ -280,3 +280,12 @@ def test_route_shell_text_passes_on_success(tmp_test_directory):
 
     assert result.returncode == 0
     assert log_file.exists()
+
+
+def test_group_histogram_output_option():
+    assert ShowerRouting._group_output_option("histogram_file=/output/events.hdata.zst", "LST") == (
+        "histogram_file=/output/LST_events.hdata.zst"
+    )
+    assert ShowerRouting._group_output_option("histogram_file=/dev/null", "LST") == (
+        "histogram_file=/dev/null"
+    )

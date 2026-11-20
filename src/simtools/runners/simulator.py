@@ -654,6 +654,8 @@ class Simulator:
             "sim_telarray_err",
             "corsika_err",
         )
+        if self.context.args.get("write_hdata"):
+            files_to_copy += self._files("sim_telarray_histogram")
         for model in self.array_models:
             files_to_copy += value_conversion.ensure_list(model.pack_model_files())
 

@@ -29,6 +29,12 @@ from simtools.runners.simulator import Simulator
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "write_hdata",
+        help="Write sim_telarray hdata histogram files.",
+        action="store_true",
+        default=False,
+    ),
     cli.SIMULATION_FILE_FORMAT,
     cli.ArgumentDefinition(
         "list_available_corsika_models",

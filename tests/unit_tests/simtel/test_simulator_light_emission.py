@@ -883,9 +883,10 @@ def test_run_command_preserves_pipeline_failure(
         assert handle.read() == "diagnostic\n"
 
 
+@pytest.mark.parametrize("write_hdata", [False, True])
 @pytest.mark.parametrize(FAILING_STAGE_PARAMETER, [None, EMISSION_STAGE, SIMTEL_STAGE])
 def test_run_script_separates_diagnostics(
-    simulator_instance, tmp_test_directory, mocker, failing_stage
+    simulator_instance, tmp_test_directory, mocker, failing_stage, write_hdata
 ):
     root = Path(tmp_test_directory) / "simulation with spaces"
     source = root / "LightEmission" / FLASHER_APPLICATION
@@ -934,8 +935,12 @@ def test_run_script_separates_diagnostics(
         "simtools.simtel.simulator_light_emission.sim_telarray_env_as_string", return_value=""
     )
 
+    simulator_instance.context = simulator_instance.context.replace(
+        args={"write_hdata": write_hdata}
+    )
     command = "".join(simulator_instance.make_run_command())
-    assert "histogram_file=/dev/null" in command
+    histogram = file_names["sim_telarray_histogram"] if write_hdata else "/dev/null"
+    assert f"histogram_file={histogram}" in command
     result = subprocess.run(
         ["bash", "-c", command],
         capture_output=True,
