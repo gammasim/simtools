@@ -186,6 +186,7 @@ class EventDataHistograms:
             self._validate_core_distance_bin_width(core_distance_bin_width),
         )
         self.histograms = {}
+        self.energy_only = False
         self.file_info = {}
         self.data_ranges = {}
         self.loaded_bin_edges = {}
@@ -399,9 +400,16 @@ class EventDataHistograms:
         self._update_file_info(file_info_table, source_file=source_file)
         self._update_data_range("angular_distance", triggered_data.angular_distance)
         current_histograms = self._define_histograms(event_data, triggered_data, shower_data)
+        if self.energy_only:
+            current_histograms = {
+                name: spec
+                for name, spec in current_histograms.items()
+                if name in ("energy", "energy_mc")
+            }
         self._merge_histograms(current_histograms)
         self._fill_current_histograms()
-        self._accumulate_reuse_histograms(event_data, triggered_data)
+        if not self.energy_only:
+            self._accumulate_reuse_histograms(event_data, triggered_data)
         if self._fill_state.release_event_data_after_fill:
             self._release_event_data()
         self._fill_state.filled_data_sets += 1

@@ -28,6 +28,12 @@ _ARGUMENTS = (
         type=str,
         default=None,
     ),
+    cli.ArgumentDefinition(
+        "representative_threshold",
+        help="Plot only the middle threshold of a threshold scan.",
+        action="store_true",
+        default=False,
+    ),
 )
 
 
@@ -47,14 +53,12 @@ _THRESHOLD_UNITS = {
 }
 _TRIGGERED_DISTRIBUTIONS = {
     "energy",
-    "core_distance",
-    "angular_distance",
     "core_distance_vs_energy",
     "angular_distance_vs_energy",
 }
 
 
-def _plot_threshold_scan(pattern, output_dir, array_name):
+def _plot_threshold_scan(pattern, output_dir, array_name, representative_threshold=False):
     """Plot triggered distributions for each threshold in histogram product manifests."""
     if not array_name:
         raise ValueError("array_layout_name is required for a threshold scan")
@@ -64,6 +68,7 @@ def _plot_threshold_scan(pattern, output_dir, array_name):
     if not paths:
         raise FileNotFoundError(f"No trigger-histogram files match {pattern}")
     directories = set()
+    products = []
     for path in paths:
         metadata = yaml.safe_load(path.with_suffix(".yml").read_text(encoding="utf-8"))
         overrides = metadata["configuration"]["model_parameter_overrides"][array_name]
@@ -77,6 +82,13 @@ def _plot_threshold_scan(pattern, output_dir, array_name):
         if directory in directories:
             raise ValueError(f"Duplicate threshold output directory: {directory}")
         directories.add(directory)
+        products.append((float(value), path, directory))
+
+    if representative_threshold:
+        products.sort(key=lambda product: product[0])
+        products = [products[len(products) // 2]]
+
+    for _, path, directory in products:
         loaded = load_event_data_histograms(path, array_names=[array_name])
         if len(loaded) != 1:
             raise ValueError(f"Expected one histogram for {array_name} in {path}")
@@ -104,7 +116,10 @@ def main():
     selected_names = [array_layout_name] if array_layout_name else None
     if glob.has_magic(app_context.args["trigger_histogram_file"]):
         _plot_threshold_scan(
-            app_context.args["trigger_histogram_file"], output_dir, array_layout_name
+            app_context.args["trigger_histogram_file"],
+            output_dir,
+            array_layout_name,
+            app_context.args["representative_threshold"],
         )
         return
     loaded_histograms = load_event_data_histograms(

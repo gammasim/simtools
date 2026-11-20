@@ -591,7 +591,7 @@ def _prepare_bias_curve_plot(
             positive_rates.extend(values[np.isfinite(values) & (values > 0)])
     ylim = (config.get("ymin", 1), config.get("ymax", 1e6))
     if positive_rates:
-        ylim = (min(positive_rates) * 0.9, max(positive_rates) * 1.1)
+        ylim = (min(positive_rates) / 2, max(positive_rates) * 2)
     if not data:
         _logger.warning("No NSB or proton rates found; writing empty bias-curve plot")
         data["_empty"] = np.empty(0, dtype=[("threshold", float), ("rate", float)])
@@ -624,10 +624,13 @@ def _prepare_bias_curve_plot(
 
 
 def _bias_curve_threshold_limits(nsb_stats, proton_stats):
-    """Use the simulated threshold range when it has distinct endpoints."""
-    thresholds = [value for value in (*nsb_stats, *proton_stats) if np.isfinite(value)]
-    if thresholds and min(thresholds) < max(thresholds):
-        return min(thresholds), max(thresholds)
+    """Extend the simulated range by the adjacent threshold spacing at each end."""
+    thresholds = sorted({value for value in (*nsb_stats, *proton_stats) if np.isfinite(value)})
+    if len(thresholds) > 1:
+        return (
+            thresholds[0] - (thresholds[1] - thresholds[0]),
+            thresholds[-1] + (thresholds[-1] - thresholds[-2]),
+        )
     return None, None
 
 

@@ -166,6 +166,21 @@ def test_get_reduced_simulation_info(mock_hdf5_file):
     assert info["nsb_level"] == pytest.approx(1.0)
 
 
+def test_energy_only_histograms_match_full_results(mock_hdf5_file):
+    from simtools.sim_events.histograms import EventDataHistograms
+
+    full = EventDataHistograms(mock_hdf5_file)
+    full.fill()
+    energy_only = EventDataHistograms(mock_hdf5_file)
+    energy_only.energy_only = True
+    energy_only.fill()
+    for name in ("energy", "energy_mc", "energy_eff"):
+        np.testing.assert_array_equal(
+            energy_only.histograms[name].values, full.histograms[name].values
+        )
+    assert "core_distance" not in energy_only.histograms
+
+
 def test_get_reduced_simulation_info_preserves_energy_bounds(mock_hdf5_file):
     reader = EventDataReader(mock_hdf5_file)
     file_info, _, _, _ = reader.read_event_data(mock_hdf5_file)
