@@ -78,6 +78,9 @@ Three modes of operation are supported:
         --telescope MSTN-04 --site North \
         --model_version 7.0.0 --wavelength 355 nm 473 nm
 
+   Add ``--write_hdata`` to any illuminator command to write sim_telarray
+   histogram files alongside the simulation output.
+
 8. Simulate all pairs for all wavelengths in model (no wavelength specified):
 
     .. code-block:: console

@@ -645,7 +645,6 @@ class Simulator:
         simtools_log_file = _simtools_log_file_path()
         files_to_copy = self._files(
             "sim_telarray_log",
-            "sim_telarray_histogram",
             "corsika_log",
             "corsika_resources",
             "sim_telarray_resources",
@@ -655,6 +654,8 @@ class Simulator:
             "sim_telarray_err",
             "corsika_err",
         )
+        if self.context.args.get("write_hdata"):
+            files_to_copy += self._files("sim_telarray_histogram")
         for model in self.array_models:
             files_to_copy += value_conversion.ensure_list(model.pack_model_files())
 
@@ -751,7 +752,7 @@ class Simulator:
             )
 
     def update_file_lists(self):
-        """Update file lists with the data, log, histogram and submission files."""
+        """Update file lists with the data, log and submission files."""
         if self.file_list is None:
             self.file_list = self._simulation_runner.file_list
         else:

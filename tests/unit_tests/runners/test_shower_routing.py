@@ -59,7 +59,16 @@ class _SimulatorArray:
 
     def make_run_command(self, run_number, input_file):
         self.file_list = self.runner_service.load_files(run_number=run_number)
-        return ["sim_telarray", "-C", "output_file=output.simtel", "-C", "show=all", input_file]
+        return [
+            "sim_telarray",
+            "-C",
+            "output_file=output.simtel",
+            "-C",
+            "histogram_file=/dev/null",
+            "-C",
+            "show=all",
+            input_file,
+        ]
 
 
 @pytest.fixture
@@ -119,6 +128,7 @@ def test_routing_commands_by_telescope_type(route_inputs, input_file):
 
     # sim_telarray reads from stdin for streams, and from the camera bunch file otherwise.
     for text in simtel_texts:
+        assert "histogram_file=/dev/null" in shlex.split(text)
         last_argument = shlex.split(text)[-1]
         if streamed:
             assert "env -u MULTIPIPE_SEQUENTIAL" in text
@@ -270,3 +280,12 @@ def test_route_shell_text_passes_on_success(tmp_test_directory):
 
     assert result.returncode == 0
     assert log_file.exists()
+
+
+def test_group_histogram_output_option():
+    assert ShowerRouting._group_output_option("histogram_file=/output/events.hdata.zst", "LST") == (
+        "histogram_file=/output/LST_events.hdata.zst"
+    )
+    assert ShowerRouting._group_output_option("histogram_file=/dev/null", "LST") == (
+        "histogram_file=/dev/null"
+    )

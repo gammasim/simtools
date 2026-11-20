@@ -38,6 +38,12 @@ _DEFAULT_SUBMISSION_BURST_SIZE = 250
 _DEFAULT_SUBMISSION_BURST_DELAY = 5.0
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "write_hdata",
+        help="Write sim_telarray hdata histogram files.",
+        action="store_true",
+        default=False,
+    ),
     cli.SIMULATION_FILE_FORMAT,
     cli.ArgumentDefinition(
         "list_available_corsika_models",
