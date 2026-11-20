@@ -596,20 +596,31 @@ def test_get_sim_telarray_event_counts_matches_same_run_outputs_by_full_basename
     assert get_sim_telarray_event_counts(output_directory, inventory) == {"outputs": expected}
 
 
-def test_get_sim_telarray_event_counts_rejects_paths_outside_job_directory(
-    tmp_test_directory,
-):
-    (Path(tmp_test_directory) / "run000001.simtel.zst").touch()
-    assert (
-        get_sim_telarray_event_counts(
-            Path(tmp_test_directory),
-            {
-                "reduced_event_data": ["../outside.hdf5"],
-                "sim_telarray_log": ["../outside.simtel.log"],
-            },
-        )
-        is None
+def test_get_sim_telarray_event_counts_rejects_paths_outside_job_directory(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    job = root / "job"
+    job.mkdir()
+    with h5py.File(root / "run000001.reduced_event_data.hdf5", "w") as data_file:
+        data_file.create_dataset("SHOWERS", shape=(25,), dtype="i8")
+        data_file.create_dataset("TRIGGERS", shape=(9,), dtype="i8")
+    (root / "run000001.simtel.log").write_text(
+        "Sim_telarray finished after 1/2/3/4 tel., 100/17 events\n", encoding="utf-8"
     )
+    inventory = {
+        "sim_telarray": ["../run000001.simtel.zst"],
+        "reduced_event_data": ["../run000001.reduced_event_data.hdf5"],
+        "sim_telarray_log": ["../run000001.simtel.log"],
+    }
+
+    assert get_sim_telarray_event_counts(
+        root, {key: [Path(value[0]).name] for key, value in inventory.items()}
+    ) == {"outputs": {"run000001.simtel.zst": {"simulated_events": 25, "triggered_events": 9}}}
+    assert get_sim_telarray_event_counts(job, inventory) is None
+    log_only = {key: value for key, value in inventory.items() if key != "reduced_event_data"}
+    assert get_sim_telarray_event_counts(
+        root, {key: [Path(value[0]).name] for key, value in log_only.items()}
+    ) == {"outputs": {"run000001.simtel.zst": {"simulated_events": 100, "triggered_events": 17}}}
+    assert get_sim_telarray_event_counts(job, log_only) is None
 
 
 def test_build_production_job_manifest_discovers_all_packaged_outputs(tmp_test_directory):

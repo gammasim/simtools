@@ -174,7 +174,6 @@ def test_validate_data_type():
         ("float", None, float, False, True),
         ("str", None, str, False, True),
         ("bool", None, bool, False, True),
-        ("bool", None, bool, False, True),
         # Test allow_subtypes=True
         ("float", 5, None, True, True),
         ("float", [1, 2, 3], None, True, True),
@@ -401,57 +400,6 @@ def test_remove_key_from_dict():
     input_data = ["value1", {"key_to_remove": "value2"}, "value3"]
     expected_output = ["value1", {}, "value3"]
     assert value_conversion.remove_key_from_dict(input_data, "key_to_remove") == expected_output
-
-
-def test_find_differences_dict():
-    # Test with two identical dictionaries
-    obj1 = {"key1": "value1", "key2": "value2"}
-    obj2 = {"key1": "value1", "key2": "value2"}
-    diffs = []
-    compare_productions._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == []
-
-    # Test with a key added in obj2
-    obj1 = {"key1": "value1"}
-    obj2 = {"key1": "value1", "key2": "value2"}
-    diffs = []
-    compare_productions._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == [KEY2_ADDED]
-
-    # Test with a key removed in obj2
-    obj1 = {"key1": "value1", "key2": "value2"}
-    obj2 = {"key1": "value1"}
-    diffs = []
-    compare_productions._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == [KEY2_REMOVED]
-
-    # Test with nested dictionaries
-    obj1 = {"key1": {"nested_key1": "value1"}}
-    obj2 = {"key1": {"nested_key1": "value2"}}
-    diffs = []
-    compare_productions._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == ["['key1']['nested_key1']: value changed from value1 to value2"]
-
-    # Test with a key added in a nested dictionary
-    obj1 = {"key1": {"nested_key1": "value1"}}
-    obj2 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
-    diffs = []
-    compare_productions._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == ["['key1']['nested_key2']: added in second object"]
-
-    # Test with a key removed in a nested dictionary
-    obj1 = {"key1": {"nested_key1": "value1", "nested_key2": "value2"}}
-    obj2 = {"key1": {"nested_key1": "value1"}}
-    diffs = []
-    compare_productions._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == ["['key1']['nested_key2']: removed in second object"]
-
-    # Test with completely different dictionaries
-    obj1 = {"key1": "value1"}
-    obj2 = {"key2": "value2"}
-    diffs = []
-    compare_productions._find_differences_dict(obj1, obj2, "", diffs)
-    assert diffs == [KEY1_REMOVED, KEY2_ADDED]
 
 
 def test_find_differences_in_json_objects():

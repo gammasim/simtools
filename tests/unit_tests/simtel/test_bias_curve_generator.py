@@ -68,18 +68,27 @@ def test_calculate_time_window_requires_telescope(tmp_path, run_context):
         bias_curve_generator._calculate_time_window(args, run_context)
 
 
-def test_calculate_time_window_reads_telescope_model(tmp_path, run_context):
-    args = _base_args(tmp_path)
+@pytest.mark.parametrize(
+    ("disc_bins", "fadc_bins", "effective_bins"), [(68, 75, 75), (100, 75, 100)]
+)
+def test_calculate_time_window_reads_telescope_model(
+    tmp_test_directory, run_context, disc_bins, fadc_bins, effective_bins
+):
+    args = _base_args(tmp_test_directory)
 
     telescope_model = MagicMock()
-    telescope_model.get_parameter_value.side_effect = [68, 1024]
+    telescope_model.get_parameter_value.side_effect = {
+        "disc_bins": disc_bins,
+        "fadc_bins": fadc_bins,
+        "fadc_mhz": 1024,
+    }.__getitem__
 
     with (
         patch("simtools.simtel.bias_curve_generator.TelescopeModel", return_value=telescope_model),
     ):
         time_window = bias_curve_generator._calculate_time_window(args, run_context)
 
-    assert time_window == pytest.approx(68 / (1024 * 1e6))
+    assert time_window == pytest.approx(effective_bins / (1024 * 1e6))
 
 
 def test_extract_nsb_rates_uses_gamma_hdf5(tmp_path):
@@ -107,22 +116,25 @@ def test_extract_nsb_rates_raises_when_no_logs(tmp_path):
         bias_curve_generator._extract_nsb_rates(args, time_window=0.001)
 
 
-def test_group_hdf5_files_by_threshold_and_run(tmp_path):
-    valid = tmp_path / "proton_run000001_asum220.reduced_event_data.hdf5"
-    _write_file_info_hdf5(valid, "proton_run000001_asum220.simtel.zst")
+@pytest.mark.parametrize("include_proton", [False, True])
+def test_group_hdf5_files_by_threshold_and_run(tmp_test_directory, include_proton):
+    directory = Path(tmp_test_directory)
+    valid = directory / "proton_run000001_asum220.reduced_event_data.hdf5"
+    if include_proton:
+        _write_file_info_hdf5(valid, "proton_run000001_asum220.simtel.zst")
     _write_file_info_hdf5(
-        tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5",
+        directory / "gamma_run000001_asum220.reduced_event_data.hdf5",
         "gamma_run000001_asum220.simtel.zst",
     )
     _write_file_info_hdf5(
-        tmp_path / "proton_missing_threshold.reduced_event_data.hdf5",
+        directory / "proton_missing_threshold.reduced_event_data.hdf5",
         "proton_run000001.simtel.zst",
         threshold=None,
     )
 
-    grouped = bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
+    grouped = bias_curve_generator._group_hdf5_files_by_threshold_and_run(directory)
 
-    assert grouped == {220: {1: valid}}
+    assert grouped == ({220: {1: valid}} if include_proton else {})
 
 
 def test_group_hdf5_files_by_threshold_and_run_rejects_duplicates(tmp_path):
@@ -649,20 +661,6 @@ def test_calculate_proton_rate_for_file_returns_none_for_errors(tmp_path, run_co
             tmp_path / "events.hdf5", args, run_context
         )
         assert result is None
-
-
-def test_group_hdf5_files_skips_non_proton_files(tmp_test_directory):
-    """Test that _group_hdf5_files_by_threshold_and_run skips non-proton files."""
-    from pathlib import Path
-
-    tmp_path = Path(str(tmp_test_directory))
-    _write_file_info_hdf5(
-        tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5",
-        "gamma_run000001_asum220.simtel.zst",
-    )
-
-    result = bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
-    assert result == {}  # No proton files, should return empty dict
 
 
 def test_group_hdf5_files_skips_missing_metadata(tmp_test_directory):

@@ -26,6 +26,7 @@ from simtools.simtel import (
 from simtools.utils import names, value_conversion
 
 logger = logging.getLogger(__name__)
+INCOMPATIBLE_SIMTEL_MARKER = "SIMTOOLS_INCOMPATIBLE_SIMTEL:"
 
 _CAMERA_COMPONENT_PARAMETERS = (
     "camera_rotate",
@@ -213,6 +214,7 @@ class SimtelConfigWriter:
 
     def _write_fadc_templates(self, parameter_data, config_file_path):
         """Write unified reference and response rows to sim_telarray's three inputs."""
+        self._check_simtel_tag(parameter_data)
         table = self._read_parameter_table(parameter_data)
         destination = Path(config_file_path).parent
         suffix = Path(config_file_path).stem
@@ -229,6 +231,36 @@ class SimtelConfigWriter:
         ):
             self._write_fadc_gain_response(table, gain, destination / outputs[simtel_name])
         return outputs
+
+    def _check_simtel_tag(self, parameter_data):
+        """Reject known incompatible builds for this parameter schema."""
+        version = parameter_data.get("model_parameter_schema_version")
+        definition = schema.get_model_parameter_schema("fadc_pulse_shape", version)
+        incompatible = next(
+            (
+                item.get("incompatible_tags", [])
+                for item in definition.get("simulation_software", [])
+                if item.get("name") == "sim_telarray"
+            ),
+            [],
+        )
+        if not incompatible:
+            return
+        try:
+            tag = dependencies.get_build_options(
+                run_time=self._context.run_time, context=self._context
+            ).get("simtel_tag")
+        except FileNotFoundError:
+            logger.warning("Cannot check sim_telarray compatibility: build options unavailable")
+            return
+        if not tag:
+            logger.warning("Cannot check sim_telarray compatibility: build tag unavailable")
+            return
+        if tag in incompatible:
+            raise ValueError(
+                f"{INCOMPATIBLE_SIMTEL_MARKER} fadc_pulse_shape schema {version} "
+                f"is incompatible with sim_telarray {tag}; use a compatible build."
+            )
 
     @staticmethod
     def _write_fadc_reference_template(table, output_path):

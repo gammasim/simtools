@@ -99,7 +99,7 @@ def test_run_command_captures_error_output_and_reads_stdin_path(tmp_test_directo
 
 
 def test_map_ordered_returns_input_order():
-    assert map_ordered(_square, [3, 1, 2], max_workers=2) == [9, 1, 4]
+    assert map_ordered(abs, [-9, -1, -4], max_workers=2, mp_start_method="spawn") == [9, 1, 4]
 
 
 def test_map_ordered_serializes_runtime_for_remote_jobs(mocker, run_context):

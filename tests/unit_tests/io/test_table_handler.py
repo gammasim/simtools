@@ -575,26 +575,16 @@ def test_read_table_list_fits_with_indexed(mocker):
     }
 
 
-def test_read_table_from_hdf5_with_units(mocker):
-    # Mock Table.read
-    mock_table = mocker.MagicMock(spec=Table)
-    mock_table.colnames = ["col1"]
-    mocker.patch(ASTROPY_TABLE_READ, return_value=mock_table)
+def test_read_table_from_hdf5_with_units(tmp_test_directory):
+    path = tmp_test_directory / "table.hdf5"
+    Table({"col1": [1.0, 2.0]}).write(path, path=TEST_TABLE_NAME)
+    with h5py.File(path, "a") as handle:
+        handle[TEST_TABLE_NAME].attrs["col1_unit"] = "m"
 
-    # Mock h5py.File context
-    mock_file = mocker.MagicMock()
-    mock_dataset = mocker.MagicMock()
-    mock_dataset.attrs = {"col1_unit": "m"}
-    mock_file.__getitem__.return_value = mock_dataset
-    mock_context = mocker.MagicMock()
-    mock_context.__enter__.return_value = mock_file
-    mocker.patch(H5PY_FILE, return_value=mock_context)
+    result = read_table_from_hdf5(path, TEST_TABLE_NAME)
 
-    result = read_table_from_hdf5(TEST_H5, TEST_TABLE_NAME)
-
-    # Verify unit assignment
-    mock_table.__getitem__.assert_called_once_with("col1")
-    assert result == mock_table
+    assert result["col1"].unit == u.m
+    np.testing.assert_array_equal(result["col1"], [1.0, 2.0])
 
 
 def test_read_table_from_hdf5_with_selected_columns(mocker):

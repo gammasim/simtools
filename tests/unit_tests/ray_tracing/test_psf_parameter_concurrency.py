@@ -1,9 +1,9 @@
 """Verify concurrent PSF evaluations, isolation, caching, and error handling."""
 
-import os
+import json
 import pickle
-import time
-from multiprocessing import get_context
+import subprocess
+import sys
 from pathlib import Path
 from types import MappingProxyType, SimpleNamespace
 
@@ -26,6 +26,24 @@ SIGMA = "sigma"
 OTHER_PARAMETER = "other"
 BACKEND = "backend"
 SOURCE_CONFIG = {"kind": "test"}
+
+
+def _run_in_fresh_process(scenario, output_dir):
+    """Run fork-dependent work outside the multithreaded xdist worker."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).with_name("psf_concurrency_worker.py")),
+            scenario,
+            str(output_dir),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return json.loads(result.stdout)
 
 
 @pytest.fixture
@@ -137,23 +155,12 @@ def test_monte_carlo_aggregates_successes_in_order(optimizer, mocker):
     assert result[8] == [2.0, 6.0]
 
 
-def test_real_local_workers_overlap(optimizer, monkeypatch):
+def test_real_local_workers_overlap(tmp_test_directory):
     """A barrier requires two real processes to run evaluation work simultaneously."""
-    barrier = get_context("fork").Barrier(2, timeout=10)
-
-    def simulate(*_args, **_kwargs):
-        started = time.monotonic()
-        barrier.wait()
-        return os.getpid(), started, time.monotonic(), None
-
-    monkeypatch.setattr(psf, INITIALIZE_MODELS, lambda **_kwargs: (None, None, None))
-    monkeypatch.setattr(psf, SIMULATE, simulate)
-    # The worker runtime and model source are unrelated to process-pool scheduling.
-    monkeypatch.setattr(INITIALIZE_RUNTIME, lambda _job: None)
-    optimizer.max_workers = 2
-    values = optimizer._run_parameter_batch([{}, {}], False)
+    result = _run_in_fresh_process("overlap", tmp_test_directory)
+    values = result["values"]
     assert values[0][0] != values[1][0]
-    assert all(value[0] != os.getpid() for value in values)
+    assert all(value[0] != result["parent_pid"] for value in values)
     assert max(value[1] for value in values) <= min(value[2] for value in values)
 
 
@@ -167,7 +174,15 @@ def test_gradient_step_does_not_retry_backend_failure(optimizer, mocker):
 
 
 @pytest.mark.parametrize("workers", [1, 2])
-def test_serial_and_parallel_gradient_match_analytic_result(optimizer, monkeypatch, workers):
+def test_serial_and_parallel_gradient_match_analytic_result(
+    optimizer, monkeypatch, workers, tmp_test_directory
+):
+    if workers > 1:
+        gradient = _run_in_fresh_process("gradient", tmp_test_directory)
+        assert gradient[SIGMA] == pytest.approx(3.0)
+        assert gradient[OTHER_PARAMETER] == pytest.approx(0.0)
+        return
+
     def simulate(_telescope, _site, _args, parameters, *_rest, **_kwargs):
         return 1.0, 3.0 * parameters[SIGMA], None, None
 

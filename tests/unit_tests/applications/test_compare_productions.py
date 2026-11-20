@@ -116,7 +116,8 @@ def test_main_delegates_to_production_comparison_workflow(mocker, tmp_test_direc
     mock_write.assert_called_once_with(app_context.args, output_directory)
 
 
-def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
+@pytest.mark.parametrize("with_plots", [True, False])
+def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory, with_plots):
     output_directory = Path(tmp_test_directory) / "comparison"
     statistics_file = output_directory / "LSTN-01" / "comparison_statistics.json"
     app_context = mocker.MagicMock()
@@ -124,8 +125,9 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
         "comparison_level": "signal",
         "production": ["baseline", "baseline.simtel", "candidate", "candidate.simtel"],
         "array_layout_name": ["LSTN-01"],
-        "figure_format": ["pdf"],
     }
+    if with_plots:
+        app_context.args["figure_format"] = ["pdf"]
     app_context.paths.get_output_directory.return_value = output_directory
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
     mock_application.start.return_value = app_context
@@ -133,47 +135,23 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
     mock_collect = mocker.patch("simtools.applications.compare_productions.collect_signal_metrics")
     mock_plot = mocker.patch(
         "simtools.applications.compare_productions.plot_production_comparison.plot_signal_level_comparison",
-        return_value=[statistics_file],
+        return_value=[statistics_file] if with_plots else [],
     )
     mock_dump = mocker.patch("simtools.applications.compare_productions.MetadataCollector.dump")
 
     compare_productions.main()
 
-    mock_collect.assert_called_once_with(
-        mocker.ANY,
-        telescope_names=["LSTN-01"],
-    )
-    mock_dump.assert_called_once()
-    assert mock_dump.call_args.args[1] == statistics_file
+    mock_collect.assert_called_once_with(mocker.ANY, telescope_names=["LSTN-01"])
+    if with_plots:
+        mock_dump.assert_called_once()
+        assert mock_dump.call_args.args[1] == statistics_file
+    else:
+        mock_dump.assert_not_called()
     mock_plot.assert_called_once_with(
         mocker.ANY,
         output_path=output_directory,
-        figure_format=["pdf"],
+        figure_format=["pdf"] if with_plots else None,
     )
-
-
-def test_signal_comparison_uses_array_layout_name_as_telescope_selection(
-    mocker, tmp_test_directory
-):
-    app_context = mocker.MagicMock()
-    app_context.args = {
-        "comparison_level": "signal",
-        "array_layout_name": ["LSTN-03"],
-        "production": ["baseline", "baseline.simtel", "candidate", "candidate.simtel"],
-    }
-    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
-    mock_application.start.return_value = app_context
-    app_context.paths.get_output_directory.return_value = Path(tmp_test_directory)
-    mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
-    mock_collect = mocker.patch("simtools.applications.compare_productions.collect_signal_metrics")
-    mocker.patch(
-        "simtools.applications.compare_productions.plot_production_comparison.plot_signal_level_comparison",
-        return_value=[],
-    )
-
-    compare_productions.main()
-
-    mock_collect.assert_called_once_with(mocker.ANY, telescope_names=["LSTN-03"])
 
 
 def test_application_exposes_events_comparison_level_without_unused_output_arguments():

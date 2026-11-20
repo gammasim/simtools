@@ -66,9 +66,11 @@ pull the image itself, so provide a local SIF file or an Apptainer-supported OCI
 If the ``ignore_runtime_environment`` flag is set, the application will run in the current
 environment, ignoring any definitions in the configuration file.
 
-When ``--env_file`` is supplied to ``simtools-run-application``, that file is passed to each
-child application and is used instead of the child's default ``.env`` file. Environment variables
-already present in the process environment remain available.
+Host ``SIMTOOLS_`` environment settings, including values loaded from ``.env`` or the file
+selected by ``--env_file``, are passed to container applications. Host model-source paths are
+mounted read-only and translated to a container path. Other host paths must be accessible in the
+container. Values already set in the host process take precedence over the file. For local runs,
+``--env_file`` is passed to each child application.
 
 If the ``overwrite_collection_files`` flag is set, files collected in the optional
 ``collection`` block of the workflow configuration are allowed to overwrite existing

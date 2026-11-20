@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from astropy.table import Table
@@ -17,6 +18,12 @@ INTENSITY = "intensity"
 SCAN_FILE = "scan.simtel"
 PEAK = "peak_adc"
 ADC_SUM = "adc_sum"
+_CAPTURED_FIGURES = []
+
+
+def _capture_figure(figure):
+    """Keep figures for checking their labels after PDF export."""
+    _CAPTURED_FIGURES.append(figure)
 
 
 @pytest.fixture
@@ -33,6 +40,7 @@ def pulse_model():
         "fadc_max_signal": 100,
         "fadc_lg_max_signal": -1,
         "transit_time_jitter": 0,
+        "fadc_pulse_shape": "pulse.ecsv",
     }
     model.get_parameter_value.side_effect = parameters.__getitem__
     rows = []
@@ -95,10 +103,39 @@ def test_first_response_level_uses_table(pulse_model):
     assert hg[PEAK].tolist() == pytest.approx([18, 16, 16.0014])
 
 
-def test_template_response_scan_requires_unified_parameter(pulse_model):
-    pulse_model.get_parameter_table.return_value = Table({"time": [0, 1], AMPLITUDE: [0, 1]})
-    with pytest.raises(ValueError, match="requires unified"):
-        pulse_response.template_responses(pulse_model, [1])
+@pytest.mark.parametrize("low_gain", [True, False])
+def test_template_response_scan_with_linear_table(pulse_model, low_gain):
+    data = {"time": [0, 1, 2, 3, 4], AMPLITUDE: [0, 0, 1, 0, 0]}
+    if low_gain:
+        data["amplitude_low_gain"] = [0, 1, 1, 0, 0]
+    pulse_model.get_parameter_table.return_value = Table(data)
+    table, waves = pulse_response.template_responses(pulse_model, [5, 10])
+    assert set(table[RESPONSE]) == {"linear_clipped"}
+    assert len(table) == len(waves) == 4
+    assert table[PEAK].tolist() == pytest.approx([10, 20, 5, 10])
+    assert table[ADC_SUM][-1] == pytest.approx(20 if low_gain else 10)
+
+
+@pytest.mark.parametrize("low_gain", [True, False])
+def test_template_response_scan_with_dictionary_pulse(pulse_model, low_gain):
+    columns = ["time", AMPLITUDE]
+    rows = [[0, 0], [1, 0], [2, 1], [3, 0], [4, 0]]
+    if low_gain:
+        columns.append("amplitude (low gain)")
+        for row, amplitude in zip(rows, [0, 1, 1, 0, 0], strict=True):
+            row.append(amplitude)
+    value = {
+        "columns": columns,
+        "column_units": ["ns"] + ["dimensionless"] * (len(columns) - 1),
+        "rows": rows,
+    }
+    original = pulse_model.get_parameter_value.side_effect
+    pulse_model.get_parameter_value.side_effect = lambda name: (
+        value if name == "fadc_pulse_shape" else original(name)
+    )
+    table, _ = pulse_response.template_responses(pulse_model, [10])
+    lg = table[table["gain"] == "LG"]
+    assert lg[ADC_SUM][0] == pytest.approx(20 if low_gain else 10)
 
 
 def test_template_clipping(pulse_model):
@@ -212,12 +249,21 @@ def test_scan_rejects_ambiguous_steps():
 
 
 def test_summary_and_outputs(pulse_model, tmp_test_directory):
-    table, waves = pulse_response.template_responses(pulse_model, [5, 15])
-    path = pulse_response.write_response(table, waves, tmp_test_directory, RESPONSE)
+    table, waves = pulse_response.template_responses(pulse_model, [5, 15], threshold_adc=0.5)
+    try:
+        with plt.rc_context({"figure.hooks": [f"{__name__}:_capture_figure"]}):
+            path = pulse_response.write_response(table, waves, tmp_test_directory, RESPONSE)
+        assert len(_CAPTURED_FIGURES) == 2
+        assert all(
+            figure.axes[2].get_ylabel() == "Width above 0.5 ADC [ns]"
+            for figure in _CAPTURED_FIGURES
+        )
+    finally:
+        _CAPTURED_FIGURES.clear()
     loaded = Table.read(path)
     summary = Table.read(tmp_test_directory / "response_summary.ecsv")
     assert len(loaded) == len(summary) == 8
-    assert path.with_suffix(".pdf").is_file()
+    assert path.with_suffix(".pdf").read_bytes().startswith(b"%PDF-")
     assert summary["event_count"].tolist() == [1] * 8
     assert np.allclose(summary["peak_adc_std"], 0)
 

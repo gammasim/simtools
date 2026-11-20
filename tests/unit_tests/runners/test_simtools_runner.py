@@ -30,6 +30,19 @@ def test_runner_imports_in_fresh_process():
     subprocess.run([sys.executable, "-c", "import simtools.runners.simtools_runner"], check=True)
 
 
+@pytest.mark.parametrize("engine", ["podman", "docker", "apptainer", "singularity"])
+@pytest.mark.parametrize("absolute", [False, True])
+def test_unit_tests_reject_unmocked_container_engines(engine, absolute):
+    executable = Path("/usr/bin") / engine if absolute else engine
+    with pytest.raises(RuntimeError, match=f"Unit tests must mock container engine: {engine}"):
+        subprocess.run([executable, "run", "example"], check=True)
+
+
+def test_unit_tests_reject_container_engine_executable_override():
+    with pytest.raises(RuntimeError, match="Unit tests must mock container engine: podman"):
+        subprocess.run(["wrapper"], executable="/usr/bin/podman", check=True)
+
+
 def _runner_args(config_file="dummy_config.yml", steps=None, ignore_runtime_environment=False):
     return {
         "config_file": config_file,
@@ -41,6 +54,15 @@ def _runner_args(config_file="dummy_config.yml", steps=None, ignore_runtime_envi
 def _patch_run_dependencies(
     monkeypatch, mock_configurations, log_file_path, collection_config=None, submit_mock=None
 ):
+    original_run = subprocess.run
+
+    def run_with_container_manifest(args, *run_args, **run_kwargs):
+        if args and Path(args[0]).name in {"podman", "docker", "apptainer", "singularity"}:
+            assert args[-2] == "cat"
+            return subprocess.CompletedProcess(args, 0, stdout="{}", stderr="")
+        return original_run(args, *run_args, **run_kwargs)
+
+    monkeypatch.setattr(subprocess, "run", run_with_container_manifest)
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._read_application_configuration",
         mock.Mock(
@@ -1069,3 +1091,161 @@ def test_model_provenance_handles_unavailable_catalog(tmp_test_directory, monkey
         catalog.write_text(contents)
     monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(catalog))
     assert "commit: unavailable" in simtools_runner._model_source_provenance(None, "/models", None)
+
+
+@pytest.mark.parametrize(
+    ("engine", "flag"), [("podman", "--volume"), ("docker", "--volume"), ("apptainer", "--bind")]
+)
+@pytest.mark.parametrize("source", [SIMULATION_MODELS_PATH, SIMULATION_MODELS_GIT_PATH])
+def test_container_mounts_environment_model_source(
+    monkeypatch, tmp_test_directory, engine, flag, source
+):
+    host = str(Path(tmp_test_directory).resolve())
+    submit = mock.Mock(return_value=mock.Mock(output="", error_output=""))
+    configs = [
+        {
+            "application": TELESCOPE_THROUGHPUT_APPLICATION,
+            "run_application": True,
+            "configuration": {},
+        }
+    ]
+    log = Path(tmp_test_directory) / "workflow.log"
+    _patch_run_dependencies(monkeypatch, configs, log, submit_mock=submit)
+    args = {
+        **_runner_args(),
+        source: host,
+        "_metadata_configuration_sources": {source: "environment"},
+        "provenance_path": False,
+        "runtime_environment": {"image": "image", "container_engine": engine},
+    }
+    simtools_runner.run_applications(
+        args, run_time=[engine, "exec" if engine == "apptainer" else "run", "image"]
+    )
+    call = submit.call_args.kwargs
+    assert call["configuration"][source] == "/workdir/external/simulation-models"
+    runtime = call["runtime_environment"]
+    index = runtime.index(flag)
+    assert runtime[index + 1] == f"{host}:/workdir/external/simulation-models:ro"
+    assert runtime[-1] == "image"
+
+
+def test_container_model_provenance_uses_host_checkout(monkeypatch, tmp_test_directory):
+    host = Path(tmp_test_directory) / "models"
+    host.mkdir()
+    subprocess.run(["git", "init", "-q", str(host)], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(host),
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.org",
+            "commit",
+            "--allow-empty",
+            "-qm",
+            "initial",
+        ],
+        check=True,
+    )
+    commit = subprocess.run(
+        ["git", "-C", str(host), "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    log = Path(tmp_test_directory) / "workflow.log"
+    configs = [
+        {
+            "application": TELESCOPE_THROUGHPUT_APPLICATION,
+            "run_application": True,
+            "configuration": {},
+        }
+    ]
+    _patch_run_dependencies(monkeypatch, configs, log)
+    args = {
+        **_runner_args(),
+        SIMULATION_MODELS_PATH: str(host),
+        "_metadata_configuration_sources": {SIMULATION_MODELS_PATH: "environment"},
+        "provenance_path": False,
+        "runtime_environment": {"image": "image"},
+    }
+    simtools_runner.run_applications(args, run_time=["podman", "run", "image"])
+    assert f"Simulation models commit: {commit}" in log.read_text()
+    assert "Simulation models checkout: clean" in log.read_text()
+
+
+def test_container_model_mount_rejects_missing_host_path(tmp_test_directory):
+    host = Path(tmp_test_directory) / "missing"
+    args = {"_metadata_configuration_sources": {SIMULATION_MODELS_GIT_PATH: "environment"}}
+    with pytest.raises(FileNotFoundError, match="Simulation models host path does not exist"):
+        simtools_runner._mount_environment_model_source(
+            args, {SIMULATION_MODELS_GIT_PATH: str(host)}, ["podman", "run", "image"]
+        )
+
+
+def test_container_model_mount_leaves_non_environment_source_unchanged():
+    source = {SIMULATION_MODELS_GIT_PATH: "/container/models"}
+    runtime = ["podman", "run", "image"]
+    assert simtools_runner._mount_environment_model_source({}, source, runtime) == (source, runtime)
+
+
+@pytest.mark.parametrize("engine", ["podman", "docker", "apptainer"])
+def test_container_inherits_simtools_environment(monkeypatch, tmp_test_directory, engine):
+    monkeypatch.setenv("SIMTOOLS_USER_NAME", "Test User")
+    monkeypatch.setenv("SIMTOOLS_CUSTOM_SETTING", "a value")
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", "/host/models")
+    monkeypatch.setenv("UNRELATED_SECRET", "secret")
+    submit = mock.Mock(return_value=mock.Mock(output="", error_output=""))
+    configs = [
+        {
+            "application": TELESCOPE_THROUGHPUT_APPLICATION,
+            "run_application": True,
+            "configuration": {},
+        }
+    ]
+    log = Path(tmp_test_directory) / "workflow.log"
+    _patch_run_dependencies(monkeypatch, configs, log, submit_mock=submit)
+    args = {
+        **_runner_args(),
+        "provenance_path": False,
+        "runtime_environment": {"image": "image", "container_engine": engine},
+    }
+    simtools_runner.run_applications(
+        args, run_time=[engine, "exec" if engine == "apptainer" else "run", "image"]
+    )
+    call = submit.call_args.kwargs
+    if engine == "apptainer":
+        assert call["env"]["APPTAINERENV_SIMTOOLS_USER_NAME"] == "Test User"
+        assert call["env"]["APPTAINERENV_SIMTOOLS_CUSTOM_SETTING"] == "a value"
+        assert "APPTAINERENV_UNRELATED_SECRET" not in call["env"]
+        assert "APPTAINERENV_SIMTOOLS_SIMULATION_MODELS_GIT_PATH" not in call["env"]
+    else:
+        runtime = call["runtime_environment"]
+        assert ["--env", "SIMTOOLS_USER_NAME"] == runtime[
+            runtime.index("SIMTOOLS_USER_NAME") - 1 : runtime.index("SIMTOOLS_USER_NAME") + 1
+        ]
+        assert "SIMTOOLS_CUSTOM_SETTING" in runtime
+        assert "SIMTOOLS_SIMULATION_MODELS_GIT_PATH" not in runtime
+        assert "UNRELATED_SECRET" not in runtime
+
+
+def test_container_does_not_pass_host_env_file_to_child(monkeypatch, tmp_test_directory):
+    submit = mock.Mock(return_value=mock.Mock(output="", error_output=""))
+    configs = [
+        {
+            "application": TELESCOPE_THROUGHPUT_APPLICATION,
+            "run_application": True,
+            "configuration": {},
+        }
+    ]
+    _patch_run_dependencies(
+        monkeypatch, configs, Path(tmp_test_directory) / "workflow.log", submit_mock=submit
+    )
+    args = {
+        **_runner_args(),
+        "env_file": "/host/private.env",
+        "_metadata_configuration_sources": {"env_file": "cli"},
+        "provenance_path": False,
+        "runtime_environment": {"image": "image"},
+    }
+    simtools_runner.run_applications(args, run_time=["podman", "run", "image"])
+    assert "env_file" not in submit.call_args.kwargs["configuration"]

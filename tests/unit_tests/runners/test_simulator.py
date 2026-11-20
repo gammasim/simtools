@@ -11,6 +11,7 @@ from unittest.mock import call
 import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.runners import simulator as simulator_module
 from simtools.runners.simulator import Simulator
 from simtools.runners.stages import SimulationChain, StageInputs
 from simtools.sim_events import file_info
@@ -141,10 +142,19 @@ def calibration_simulator(make_simulator):
     )
 
 
-def test_init_simulator(shower_simulator, array_simulator, shower_array_simulator):
-    assert shower_simulator._simulation_runner is not None
-    assert shower_array_simulator._simulation_runner is not None
-    assert array_simulator._simulation_runner is not None
+@pytest.mark.parametrize("software", ["corsika", "sim_telarray", "corsika_sim_telarray"])
+def test_init_simulator(make_simulator, software):
+    simulator = make_simulator(software, f"test-{software}")
+    runner_factory = simulator_module.ChainRunner
+    chain, inputs = runner_factory.call_args.args
+
+    assert chain is simulator.chain
+    assert inputs.array_models == tuple(simulator.array_models)
+    assert inputs.simulation_parameters == tuple(simulator.simulation_parameters)
+    assert inputs.args["simulation_software"] == software
+    assert inputs.context is simulator.context
+    assert runner_factory.call_args.kwargs["label"] == f"test-{software}"
+    assert simulator._simulation_runner is runner_factory.return_value
 
 
 def test_simulation_software_of_fixtures(array_simulator, shower_simulator, shower_array_simulator):

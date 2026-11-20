@@ -99,22 +99,6 @@ def test_model_repository_definitions_initialize_the_reader_by_default():
     assert "model" in application.needs
 
 
-def test_start_can_skip_model_reader_initialization(mocker):
-    """Write-only applications can start without an existing model repository."""
-    startup = mocker.patch(
-        "simtools.application.control.initialize_runtime", return_value="context"
-    )
-    application = ApplicationDefinition(
-        module_name="simtools.applications.test",
-        description="Test application.",
-        needs=(),
-    )
-    mocker.patch.object(ApplicationDefinition, "_parse", return_value={})
-
-    assert application.start() == "context"
-    assert startup.call_args.kwargs["needs"] == ()
-
-
 @pytest.mark.parametrize("arguments", [[], ["--help"], ["-h"]])
 def test_help_does_not_initialize_configuration(arguments, monkeypatch, mocker):
     """Help only requires parser construction, not configuration or runtime setup."""

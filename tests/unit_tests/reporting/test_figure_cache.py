@@ -39,7 +39,8 @@ def test_figure_cache_key_tracks_data_configuration_and_rendering_inputs(
     assert figure_cache.figure_cache_key(**changed_renderer) != initial_key
 
     kwargs["context"] = run_context.replace(args={"figure_dpi": 240})
-    assert figure_cache.figure_cache_key(**kwargs) != initial_key
+    high_dpi_key = figure_cache.figure_cache_key(**kwargs)
+    assert high_dpi_key != initial_key
 
     monkeypatch.setattr(visualize, "BACKEND_NAME", "svg")
-    assert figure_cache.figure_cache_key(**kwargs) != initial_key
+    assert figure_cache.figure_cache_key(**kwargs) != high_dpi_key
