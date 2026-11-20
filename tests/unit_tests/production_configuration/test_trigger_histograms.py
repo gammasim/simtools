@@ -271,7 +271,15 @@ def test_event_data_histograms_hdf5_filter_by_array_name(tmp_test_directory):
             "array_name": "MSTS-01",
             "telescope_ids": ["MSTS-01"],
             "histograms": histograms,
-        }
+        },
+        {
+            "reference_id": "ref-2",
+            "production_index": 1,
+            "site": "North",
+            "array_name": "MSTS-02",
+            "telescope_ids": ["MSTS-02"],
+            "histograms": histograms,
+        },
     ]
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
     output_file = tmp_test_directory / "trigger_histograms.hdf5"

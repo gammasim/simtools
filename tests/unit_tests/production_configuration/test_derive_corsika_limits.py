@@ -435,15 +435,9 @@ def test_compute_lower_energy_limit(mocker):
     assert result.unit == u.TeV
     assert result.value > 0
 
-    expected = (
-        derive_corsika_limits._find_low_energy_threshold_from_histogram(
-            mock_hist,
-            mock_bins,
-            threshold_fraction=0.2,
-        )
-        * u.TeV
-    )
-    assert result == expected
+    # The stable peak is (12 + 20 + 12) / 3; the first lower bin
+    # below 20% of that peak is the first bin, with lower edge 0.001 TeV.
+    assert_quantity_allclose(result, 0.001 * u.TeV)
 
 
 def test_compute_lower_energy_limit_never_below_broad_range_min(mocker):

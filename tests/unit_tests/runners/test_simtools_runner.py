@@ -30,6 +30,19 @@ def test_runner_imports_in_fresh_process():
     subprocess.run([sys.executable, "-c", "import simtools.runners.simtools_runner"], check=True)
 
 
+@pytest.mark.parametrize("engine", ["podman", "docker", "apptainer", "singularity"])
+@pytest.mark.parametrize("absolute", [False, True])
+def test_unit_tests_reject_unmocked_container_engines(engine, absolute):
+    executable = Path("/usr/bin") / engine if absolute else engine
+    with pytest.raises(RuntimeError, match=f"Unit tests must mock container engine: {engine}"):
+        subprocess.run([executable, "run", "example"], check=True)
+
+
+def test_unit_tests_reject_container_engine_executable_override():
+    with pytest.raises(RuntimeError, match="Unit tests must mock container engine: podman"):
+        subprocess.run(["wrapper"], executable="/usr/bin/podman", check=True)
+
+
 def _runner_args(config_file="dummy_config.yml", steps=None, ignore_runtime_environment=False):
     return {
         "config_file": config_file,
@@ -41,6 +54,15 @@ def _runner_args(config_file="dummy_config.yml", steps=None, ignore_runtime_envi
 def _patch_run_dependencies(
     monkeypatch, mock_configurations, log_file_path, collection_config=None, submit_mock=None
 ):
+    original_run = subprocess.run
+
+    def run_with_container_manifest(args, *run_args, **run_kwargs):
+        if args and Path(args[0]).name in {"podman", "docker", "apptainer", "singularity"}:
+            assert args[-2] == "cat"
+            return subprocess.CompletedProcess(args, 0, stdout="{}", stderr="")
+        return original_run(args, *run_args, **run_kwargs)
+
+    monkeypatch.setattr(subprocess, "run", run_with_container_manifest)
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._read_application_configuration",
         mock.Mock(

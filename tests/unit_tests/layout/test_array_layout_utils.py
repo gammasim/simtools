@@ -700,6 +700,8 @@ def test_create_regular_array_star_shape(mocker):
     assert len(table) == 4
     assert table.meta["array_name"] == "4LST"
     assert set(table["telescope_name"]) == {f"LST_North_0{i}" for i in range(1, 5)}
+    assert table["position_x"].to_value(u.m).tolist() == [150, 0, -150, 0]
+    assert table["position_y"].to_value(u.m).tolist() == [0, 150, 0, -150]
     assert all(z.value == 0 for z in table["position_z"])
 
 
