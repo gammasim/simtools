@@ -142,9 +142,16 @@ def calibration_simulator(make_simulator):
     )
 
 
-@pytest.mark.parametrize("software", ["corsika", "sim_telarray", "corsika_sim_telarray"])
-def test_init_simulator(make_simulator, software):
-    simulator = make_simulator(software, f"test-{software}")
+@pytest.mark.parametrize(
+    ("software", "label"),
+    [
+        (["corsika"], "corsika"),
+        (["sim_telarray"], "simtel"),
+        (["corsika", "sim_telarray"], "combined"),
+    ],
+)
+def test_init_simulator(make_simulator, software, label):
+    simulator = make_simulator(software, f"test-{label}")
     runner_factory = simulator_module.ChainRunner
     chain, inputs = runner_factory.call_args.args
 
@@ -153,7 +160,7 @@ def test_init_simulator(make_simulator, software):
     assert inputs.simulation_parameters == tuple(simulator.simulation_parameters)
     assert inputs.args["simulation_software"] == software
     assert inputs.context is simulator.context
-    assert runner_factory.call_args.kwargs["label"] == f"test-{software}"
+    assert runner_factory.call_args.kwargs["label"] == f"test-{label}"
     assert simulator._simulation_runner is runner_factory.return_value
 
 
@@ -182,10 +189,10 @@ def test_simulation_software_single_stage(make_simulator, single_stage):
 def test_simulation_software_options_reach_stage_inputs(make_simulator, mocker):
     stage_inputs = mocker.patch("simtools.runners.simulator.StageInputs", wraps=StageInputs)
 
-    simulator = make_simulator(["corsika", "sim_telarray:bypass_optics=3"], "test-chain-options")
+    simulator = make_simulator(["corsika", "sim_telarray:bypass_optics=0"], "test-chain-options")
 
-    assert simulator.chain_spec.options == {"sim_telarray": {"bypass_optics": 3}}
-    assert stage_inputs.call_args.kwargs["chain_options"] == {"sim_telarray": {"bypass_optics": 3}}
+    assert simulator.chain_spec.options == {"sim_telarray": {"bypass_optics": 0}}
+    assert stage_inputs.call_args.kwargs["chain_options"] == {"sim_telarray": {"bypass_optics": 0}}
     assert stage_inputs.call_args.kwargs["stages"] == ("corsika", "sim_telarray")
 
 

@@ -342,3 +342,12 @@ def test_parameter_scan_overwrites_assign_merge_or_skip(row_updates, expected):
     args = jobs_io.job_grid_row_to_simulate_prod_args({**_job_rows()[0], **row_updates}, metadata)
 
     assert args.get("overwrite_model_parameters") == expected
+
+
+def test_job_grid_requires_stage_list():
+    with pytest.raises(ValueError, match=r"simulation_software.*list"):
+        jobs_io.job_grid_row_to_simulate_prod_args(
+            _job_rows()[0], {"simulation_software": "corsika_sim_telarray"}
+        )
+    args = jobs_io.job_grid_row_to_simulate_prod_args(_job_rows()[0], _metadata())
+    assert args["simulation_software"] == ["corsika", "sim_telarray"]

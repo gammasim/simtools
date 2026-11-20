@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import json
+import math
 import shlex
 from pathlib import Path
 
@@ -354,3 +356,27 @@ def test_flasher_chain_through_light_emission_simulation(
     assert f"-C input_file={camera_iact}" in lines[4]
     assert "-C Bypass_Optics=1" in lines[4]
     assert len(lines) == 5
+
+
+def test_flasher_worker_receives_resolved_model_source(light_source_context):
+    source = {"type": "git", "repository": "https://example.test/models.git", "commit": "a" * 40}
+    light_source_context.model_reader.source_config = source
+    context = light_source_context.replace(
+        args={**light_source_context.args, "overwrite_model_parameters": {"LSTN-01": {}}}
+    )
+    (stage,) = FlasherSourceStage.instances(_inputs(context, light_source=_FLASHER))
+    tokens = shlex.split(stage.prepare(1)[0])
+    environment = next(token for token in tokens if token.startswith("SIMTOOLS_FLASHER_CONTEXT="))
+    payload = json.loads(Path(environment.split("=", 1)[1]).read_text(encoding="utf-8"))
+    assert payload["model_source"] == source
+    assert payload["overwrite_model_parameters"] == {"LSTN-01": {}}
+
+
+def test_worker_model_uses_parent_overrides(light_source_context):
+    from simtools.simulation_software.flasher_stream import create_telescope_model
+
+    (stage,) = FlasherSourceStage.instances(_inputs(light_source_context, light_source=_FLASHER))
+    overrides = {"LSTN-01": {"mirror_offset": {"value": 65.0, "unit": "cm"}}}
+    context = light_source_context.replace(args={"overwrite_model_parameters": overrides})
+    telescope = create_telescope_model(stage.request, context=context)
+    assert math.isclose(telescope.get_parameter_value("mirror_offset"), 65.0)

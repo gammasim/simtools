@@ -287,6 +287,7 @@ def validate_dependency_catalog(catalog):
         catalog = dict(catalog)
         catalog[MODEL_KEY] = catalog.pop(LEGACY_MODEL_KEY)
     schema_version = catalog.get("schema_version")
+    catalog = _normalize_legacy_simtel_catalog(catalog, schema_version)
     missing = sorted(_required_catalog_keys(schema_version) - catalog.keys())
     if missing:
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
@@ -304,6 +305,25 @@ def validate_dependency_catalog(catalog):
     return catalog
 
 
+def _normalize_legacy_simtel_catalog(catalog, schema_version):
+    """Normalize the historical sim_telarray key for catalog consumers."""
+    if schema_version == "0.9.0" or "sim-telarray" not in catalog:
+        return catalog
+    if "sim_telarray" in catalog:
+        raise ValueError("Catalog declares both sim-telarray and sim_telarray keys.")
+    catalog = dict(catalog)
+    catalog["sim_telarray"] = catalog.pop("sim-telarray")
+    if "production-combinations" in catalog:
+        catalog["production-combinations"] = [
+            {
+                ("sim_telarray" if key == "sim-telarray" else key): value
+                for key, value in combination.items()
+            }
+            for combination in catalog["production-combinations"]
+        ]
+    return catalog
+
+
 def _required_catalog_keys(schema_version):
     """Return the top-level keys required by the schema of a catalog version.
 
@@ -313,7 +333,11 @@ def _required_catalog_keys(schema_version):
     schemas = _dependency_schemas()
     if schema_version not in schemas:
         schema_version = max(schemas, key=lambda version: tuple(map(int, version.split("."))))
-    return set(schemas[schema_version]["required"])
+    required = set(schemas[schema_version]["required"])
+    if "sim-telarray" in required:
+        required.remove("sim-telarray")
+        required.add("sim_telarray")
+    return required
 
 
 def _validate_images(images):

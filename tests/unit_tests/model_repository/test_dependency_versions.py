@@ -1000,3 +1000,39 @@ def test_image_tag_suffix_rejects_non_ascii_and_malformed(suffix):
 def test_image_tag_suffix_accepts_ascii(suffix):
     """Valid ASCII suffixes pass."""
     assert dependency_versions.IMAGE_TAG_SUFFIX_PATTERN.fullmatch(suffix) is not None
+
+
+def test_legacy_catalog_uses_original_sim_telarray_key():
+    catalog = _legacy_catalog("0.2.0")
+    catalog["sim-telarray"] = catalog.pop("sim_telarray")
+    for combination in catalog["production-combinations"]:
+        combination["sim-telarray"] = combination.pop("sim_telarray")
+    validated = dependency_versions.validate_dependency_catalog(catalog)
+    assert validated["sim_telarray"][0]["version"] == "v1.0.0"
+    assert validated["production-combinations"][0]["sim_telarray"] == "v1.0.0"
+
+
+def test_legacy_catalog_rejects_ambiguous_simtel_keys():
+    catalog = _legacy_catalog("0.2.0")
+    catalog["sim-telarray"] = catalog["sim_telarray"]
+    with pytest.raises(ValueError, match="both sim-telarray and sim_telarray"):
+        dependency_versions.validate_dependency_catalog(catalog)
+
+
+def test_dependency_schemas_preserve_old_simtel_spelling():
+    schemas = _schema_documents()
+    for version, schema in schemas.items():
+        if version == "0.9.0":
+            assert "sim_telarray" in schema["required"]
+        else:
+            assert "sim-telarray" in schema["required"]
+
+
+def test_legacy_catalog_still_requires_production_combinations():
+    catalog = _legacy_catalog("0.2.0")
+    catalog["sim-telarray"] = catalog.pop("sim_telarray")
+    catalog.pop("production-combinations")
+    with pytest.raises(
+        ValueError, match="Missing dependency catalog keys: production-combinations"
+    ):
+        dependency_versions.validate_dependency_catalog(catalog)

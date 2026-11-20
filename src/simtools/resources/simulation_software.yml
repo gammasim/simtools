@@ -338,7 +338,7 @@ stages:
       efficiency_envelope:
         type: string
         enum: [qe, none]
-        description: Thin photons by the quantum-efficiency bound (default on for camera-only chains).
+        description: Thin photons by the quantum-efficiency bound (default on for camera-only air-shower chains).
     files:
       output: photon_stream
 

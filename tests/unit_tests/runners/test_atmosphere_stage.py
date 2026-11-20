@@ -513,3 +513,32 @@ def test_instances_reject_invalid_envelope_option(array_model_north, run_context
 
     with pytest.raises(ValueError, match=r"Invalid efficiency_envelope option of stage"):
         ObdeectAtmosphereStage.instances(inputs)
+
+
+@pytest.mark.parametrize("option", [{}, {"efficiency_envelope": "none"}])
+def test_calibration_does_not_thin_by_qe_envelope(run_context, option):
+    inputs = StageInputs(
+        array_models=(),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+        calibration=object(),
+        stages=("obdeect_illuminator", "obdeect_atmosphere", "obdeect_optics", "sim_telarray"),
+        chain_options={"obdeect_atmosphere": option, "sim_telarray": {"bypass_optics": 3}},
+    )
+    assert not ObdeectAtmosphereStage.efficiency_envelope(inputs)
+
+
+def test_calibration_rejects_explicit_qe_envelope(run_context):
+    inputs = StageInputs(
+        array_models=(),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+        context=run_context,
+        calibration=object(),
+        chain_options={"obdeect_atmosphere": {"efficiency_envelope": "qe"}},
+    )
+    with pytest.raises(ValueError, match=r"efficiency envelope.*calibration"):
+        ObdeectAtmosphereStage.efficiency_envelope(inputs)

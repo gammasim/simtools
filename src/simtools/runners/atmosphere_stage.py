@@ -116,10 +116,16 @@ class ObdeectAtmosphereStage(CatalogStage):
         Return True if the stage thins the photons by the efficiency envelope.
 
         The option ``efficiency_envelope`` decides; without it, the envelope is on for a chain
-        whose last stage simulates the camera only.
+        whose last stage simulates the camera only; it is disabled for calibration chains.
         """
         default = efficiency.ENVELOPE_ON if ends_camera_only(inputs) else efficiency.ENVELOPE_OFF
         options = cls.stage_options(inputs)
+        if inputs.calibration is not None:
+            default = efficiency.ENVELOPE_OFF
+            if efficiency.envelope_setting(options, default=default):
+                raise ValueError(
+                    "The QE efficiency envelope is not supported for calibration chains."
+                )
         return efficiency.envelope_setting(options, default=default)
 
     def __init__(

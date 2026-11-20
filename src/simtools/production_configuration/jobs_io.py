@@ -256,6 +256,10 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     args.update({key: job_row[key] for key in ("ha", "dec") if job_row.get(key) is not None})
 
     metadata = metadata or {}
+    if metadata.get("simulation_software") and not isinstance(
+        metadata["simulation_software"], list
+    ):
+        raise ValueError("Job grid simulation_software must be a list of stage names.")
     args.update(
         {key: metadata[key] for key in ("site", "simulation_software") if metadata.get(key)}
     )

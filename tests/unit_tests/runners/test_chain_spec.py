@@ -285,3 +285,15 @@ def test_chain_without_fitting_converter_is_rejected():
 
     with pytest.raises(ValueError, match="consumes"):
         spec.chain()
+
+
+@pytest.mark.parametrize(
+    "items",
+    [
+        ["obdeect_flasher", "sim_telarray:bypass_optics=0"],
+        ["corsika", "sim_telarray:bypass_optics=1"],
+    ],
+)
+def test_rejects_incompatible_photon_frame(items):
+    with pytest.raises(ValueError, match=r"photon.*bypass_optics"):
+        chain_spec.parse_chain(items).chain()

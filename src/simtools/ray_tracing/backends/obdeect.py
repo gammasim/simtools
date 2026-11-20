@@ -29,8 +29,6 @@ from simtools.simtel.simulator_ray_tracing import telescope_pointing
 from simtools.utils import geometry
 
 _SPEED_OF_LIGHT_M_PER_NS = speed_of_light.to_value(u.m / u.ns)
-# obdeect photon ids are (event number << 32) | photon index; each light pulse is an event.
-_PULSE_ID_SHIFT = 32
 
 
 def star_direction(zenith_angle, off_axis_x, off_axis_y):
@@ -175,14 +173,20 @@ class ObdeectRayTracer:
             if request.inside_telescope
             else None  # The telescope entrance.
         )
+        axis = request.axis
+        if request.inside_telescope:
+            axis = (0.0, 0.0, 1.0 if request.position_m[2] < plane_z else -1.0)
         for pulse_number, photons in enumerate(request.photons_per_pulse):
+            pulse_seed = int(
+                np.random.SeedSequence((simulation_seed, pulse_number)).generate_state(1)[0]
+            )
             blocks = model.trace_emitter_blocks(
                 photons,
-                seed=simulation_seed,
-                first_id=pulse_number << _PULSE_ID_SHIFT,
+                seed=pulse_seed,
+                first_id=0,
                 position_m=request.position_m,
                 intensity=request.angular_profile,
-                axis=request.axis,
+                axis=axis,
                 pulse=request.pulse,
                 wavelength_nm=request.wavelength_nm,
                 disk=disk,

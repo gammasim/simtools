@@ -1,12 +1,16 @@
 """Calibration light sources as photon-stream stages and sim_telarray LightEmission stages."""
 
 import dataclasses
+import json
 import shlex
 from pathlib import Path
 
 import astropy.units as u
 
-from simtools.model.model_utils import initialize_simulation_models
+from simtools.model.model_utils import (
+    initialize_simulation_models,
+    read_overwrite_model_parameter_dict,
+)
 from simtools.runners.stages import (
     CatalogStage,
     StreamTo,
@@ -93,6 +97,7 @@ class LightSourceStage(CatalogStage):
         self.executable = executable
         self.simulation_models_path = simulation_models_path
         self.file_list = None
+        self._context = None
 
     @classmethod
     def instances(cls, inputs, label=None):
@@ -144,16 +149,16 @@ class LightSourceStage(CatalogStage):
         )
         token = _file_token(telescope, config.get("light_source"), request.wavelength_nm)
         work_directory = context.paths.get_output_directory(LIGHT_EMISSION_DIRECTORY)
-        return [
-            cls(
-                request,
-                work_directory,
-                token,
-                executable=config.get("executable"),
-                simulation_models_path=config.get("simulation_models_path"),
-                run_files=files_of_run(inputs, label, required=False),
-            )
-        ]
+        stage = cls(
+            request,
+            work_directory,
+            token,
+            executable=config.get("executable"),
+            simulation_models_path=config.get("simulation_models_path"),
+            run_files=files_of_run(inputs, label, required=False),
+        )
+        stage._context = context
+        return [stage]
 
     def output_file(self, run_number):
         """Return the photon-stream file written when the output is not streamed."""
@@ -196,6 +201,16 @@ class LightSourceStage(CatalogStage):
                 simulation_models_path=self.simulation_models_path,
             )
         )
+        if self.spec.light_source == "flasher" and self._context is not None:
+            source = getattr(self._context.model_reader, "source_config", None)
+            overrides = read_overwrite_model_parameter_dict(context=self._context)
+            if isinstance(source, dict) or overrides:
+                path = self.work_directory / f"flasher_model_context{self.file_token}.json"
+                path.write_text(
+                    json.dumps({"model_source": source, "overwrite_model_parameters": overrides}),
+                    encoding="utf-8",
+                )
+                command = f"env {shlex.quote(f'SIMTOOLS_FLASHER_CONTEXT={path}')} {command}"
         return [f"{command} | {downstream}"] if streamed else [command]
 
     def environment(self):

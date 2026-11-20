@@ -1,5 +1,7 @@
 """Tests for shared command-line argument definitions."""
 
+import pytest
+
 from simtools import constants
 from simtools.configuration import arguments
 from simtools.configuration.commandline_parser import CommandLineParser
@@ -97,3 +99,19 @@ def test_seed_arguments_canonical_names():
     assert args.instrument_seed == 5
     assert args.simulation_seed == [9]
     assert args.random_instrument_instances == constants.RAY_TRACING_INSTRUMENT_INSTANCES
+
+
+@pytest.mark.parametrize("items", [["obdeect_starr"], ["obdeect_star", "sim_telarray_star"]])
+def test_ray_tracing_rejects_invalid_stages(items):
+    parser = CommandLineParser()
+    parser.add_argument_definitions(arguments.RAY_TRACING_ARGUMENTS)
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--simulation_software", *items])
+
+
+@pytest.mark.parametrize("value", ["obdeect_starr", ["obdeect_star", "sim_telarray_star"]])
+def test_ray_tracing_rejects_invalid_configuration_values(value):
+    from simtools.configuration.argument_helpers import coerce
+
+    with pytest.raises(ValueError, match="simulation_software"):
+        coerce(arguments.RAY_TRACING_ARGUMENTS[0], value, "configuration")

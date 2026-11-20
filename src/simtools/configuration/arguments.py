@@ -619,6 +619,8 @@ SIMULATION_SOFTWARE = _argument(
 RAY_TRACING_ARGUMENTS = (
     SIMULATION_SOFTWARE(
         default=["sim_telarray_star"],
+        choices=("sim_telarray_star", "obdeect_star"),
+        nargs=1,
         help="Ray-tracing backend as a stage: sim_telarray_star or obdeect_star.",
     ),
     INSTRUMENT_SEED,

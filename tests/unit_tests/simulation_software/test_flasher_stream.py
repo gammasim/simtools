@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from pathlib import Path
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -203,3 +205,42 @@ def test_create_telescope_model_from_files_reader(mocker):
         model_reader=reader.from_files.return_value,
         context=None,
     )
+
+
+def test_main_receives_model_context(toy_telescope, tmp_test_directory, monkeypatch):
+    import json
+
+    root = Path(tmp_test_directory)
+    request_file = request_to_json(_request(), root / "request.json")
+    context_file = root / "context.json"
+    overrides = {"TOY-01": {"mirror_offset": {"value": 12, "unit": "cm"}}}
+    context_file.write_text(
+        json.dumps({"model_source": None, "overwrite_model_parameters": overrides}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SIMTOOLS_FLASHER_CONTEXT", str(context_file))
+    seen = {}
+
+    def factory(request, simulation_models_path=None, context=None):
+        seen["overrides"] = context.args["overwrite_model_parameters"]
+        seen["request"] = request
+        seen["path"] = simulation_models_path
+        return toy_telescope
+
+    assert (
+        flasher_stream.main(
+            [
+                "--request",
+                str(request_file),
+                "--output",
+                str(root / "out.pst"),
+                "--output-path",
+                str(root),
+            ],
+            telescope_model_factory=factory,
+        )
+        == 0
+    )
+    assert seen["overrides"] == overrides
+    assert seen["request"] == _request()
+    assert seen["path"] is None

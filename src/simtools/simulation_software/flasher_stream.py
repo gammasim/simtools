@@ -1,7 +1,9 @@
 """Trace flasher light through telescope obscurers and write camera-frame photon streams."""
 
 import argparse
+import json
 import logging
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -10,8 +12,13 @@ import astropy.units as u
 import numpy as np
 
 from simtools.io.output_paths import OutputPaths
+from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.model.telescope_model import TelescopeModel
-from simtools.model_repository.reader import SimulationModelReader, resolve_model_reader
+from simtools.model_repository.reader import (
+    SimulationModelReader,
+    create_model_reader_from_source_config,
+    resolve_model_reader,
+)
 from simtools.ray_tracing.backends.interface import LightSourceRequest
 from simtools.runtime.context import RunContext
 from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
@@ -153,7 +160,15 @@ def create_telescope_model(request, simulation_models_path=None, context=None):
         reader = SimulationModelReader.from_files(simulation_models_path)
     else:
         reader = resolve_model_reader(None, context)
+    overrides = (
+        {}
+        if context is None
+        else {
+            "overwrite_model_parameter_dict": read_overwrite_model_parameter_dict(context=context)
+        }
+    )
     return TelescopeModel(
+        **overrides,
         site=request.site,
         telescope_name=request.telescope,
         model_version=request.model_version,
@@ -207,6 +222,17 @@ def main(argv=None, *, telescope_model_factory=create_telescope_model):
     context = RunContext.from_arguments(
         {"output_path": str(work_path)}, paths=OutputPaths(output_path=str(work_path))
     )
+    context_file = os.environ.get("SIMTOOLS_FLASHER_CONTEXT")
+    if context_file:
+        payload = json.loads(Path(context_file).read_text(encoding="utf-8"))
+        source = payload.get("model_source")
+        reader = create_model_reader_from_source_config(source) if source else None
+        if reader is not None:
+            args.simulation_models_path = None
+        context = context.replace(
+            model_reader=reader,
+            args={"overwrite_model_parameters": payload.get("overwrite_model_parameters", {})},
+        )
     request = flasher_request_from_json(args.request)
     model = telescope_model_factory(
         request, simulation_models_path=args.simulation_models_path, context=context

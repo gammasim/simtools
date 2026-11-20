@@ -39,7 +39,22 @@ class ChainSpec:
         """Return the ``SimulationChain``; raise if stages mismatch or duplicate a factor."""
         chain = SimulationChain(self.stages)
         self.check_applied_factors()
+        self._check_simtel_photon_frame()
         return chain
+
+    def _check_simtel_photon_frame(self):
+        """Ensure sim_telarray bypass matches its upstream photon product."""
+        if "sim_telarray" not in self.stages:
+            return
+        index = self.stages.index("sim_telarray")
+        if index == 0 or self.stages[index - 1] == "light_emission":
+            return
+        product = get_stage_class(self.stages[index - 1]).produces
+        mode = self.stage_options("sim_telarray").get("bypass_optics", 0)
+        if (product == "camera_photons_iact" and mode == 0) or (
+            product == "cherenkov_photons" and mode != 0
+        ):
+            raise ValueError(f"Incompatible photon product {product!r} for bypass_optics={mode}.")
 
     @property
     def software(self):

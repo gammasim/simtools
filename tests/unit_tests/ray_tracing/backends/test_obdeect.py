@@ -285,3 +285,19 @@ def test_at_plane():
     # Backwards along the direction: earlier.
     light_speed = speed_of_light.to_value(u.m / u.ns)
     assert moved["time_ns"] == pytest.approx([-1.0 / light_speed, 10.0 - 0.2 / light_speed])
+
+
+def test_flasher_pulses_keep_photon_ids_bounded(backend):
+    request = _light_source(photons_per_pulse=(0,) * 256 + (2e5,))
+    pulses = list(backend.camera_photons(request))
+    photons = list(pulses[-1])
+    assert sum(len(block["weight"]) for block in photons) > 0
+
+
+def test_flasher_above_camera_points_towards_plane(backend):
+    plane = backend._tracer.optical_model(0.0, 3).focal_surface_z_m
+    (photons,) = _pulses(
+        backend, _light_source(position_m=(0.0, 0.0, plane + 0.5), photons_per_pulse=(2e5,))
+    )
+    assert len(photons["weight"]) > 0
+    assert np.all(photons["direction"][:, 2] < 0.0)
