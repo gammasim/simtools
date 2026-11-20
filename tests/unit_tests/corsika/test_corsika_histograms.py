@@ -330,10 +330,13 @@ def test_fill_runs_and_updates_hist(monkeypatch, tmp_path, photon_dtype):
     ch = CorsikaHistograms(dummy_file)
     ch.fill()
 
-    assert ch.events is not None
-    # Check that histograms are filled
-    for key in ["counts_xy", "density_xy", "counts_r"]:
-        assert ch.hist[key]["hist_values"].shape[1:] == ch.hist[key]["histogram"].view().T.shape
+    assert ch.events["num_photons"][0] == pytest.approx(1.0)
+    counts = ch.hist["counts_xy"]
+    x_bin = np.searchsorted(counts["x_bin_edges"][0], 0.1, side="right") - 1
+    y_bin = np.searchsorted(counts["y_bin_edges"][0], 0.2, side="right") - 1
+    assert counts["hist_values"][0, y_bin, x_bin] == pytest.approx(1.0)
+    assert counts["uncertainties"][0, y_bin, x_bin] == pytest.approx(1.0)
+    assert counts["hist_values"].sum() == pytest.approx(1.0)
 
 
 def test_corsika_histograms_init_file_not_exists(tmp_path):

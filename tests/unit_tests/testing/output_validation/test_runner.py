@@ -124,17 +124,30 @@ def test_runner_creates_one_reader_for_model_validations(tmp_test_directory, moc
     assert all(call.args[2]["model_reader"] is reader for call in dispatch.call_args_list)
 
 
-def test_runner_skips_when_top_level_versions_do_not_match(mocker):
-    """Skip all validations when the requested model versions do not match."""
-    dispatch = mocker.patch("simtools.testing.output_validation.runner.run_validator")
+def test_runner_skips_when_top_level_versions_do_not_match(tmp_test_directory):
+    """Only matching model versions run validations on an existing output."""
+    output = Path(tmp_test_directory) / "result.txt"
+    output.write_text("not JSON", encoding="utf-8")
+    config = {
+        "configuration": {"output_path": tmp_test_directory},
+        "integration_tests": [
+            {
+                "test_outputs": [
+                    {
+                        "path_descriptor": "output_path",
+                        "file": output.name,
+                        "validations": [{"type": "format", "format": "json"}],
+                    }
+                ]
+            }
+        ],
+    }
 
-    runner.validate_application_output(
-        {"configuration": {}, "integration_tests": []},
-        from_command_line="7.0.0",
-        from_config_file="6.0.0",
-    )
-
-    dispatch.assert_not_called()
+    runner.validate_application_output(config, from_command_line="7.0.0", from_config_file="6.0.0")
+    with pytest.raises(AssertionError, match="not json format"):
+        runner.validate_application_output(
+            config, from_command_line="7.0.0", from_config_file="7.0.0"
+        )
 
 
 def test_runner_skips_configuration_without_application_configuration(mocker):

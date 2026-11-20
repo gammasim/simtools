@@ -13,6 +13,12 @@ env:
 on:
   workflow_dispatch:
     inputs:
+      simulation_model_repository:
+        description: 'Simulation model repository (configured, production, or development)'
+        required: false
+        type: choice
+        default: configured
+        options: [configured, production, development]
       simulation_model_branch:
         description: 'Simulation model branch'
         required: false
@@ -25,6 +31,11 @@ on:
         default: 'main'
   workflow_call:
     inputs:
+      simulation_model_repository:
+        description: 'Simulation model repository (production or development)'
+        required: false
+        type: string
+        default: ''
       simulation_model_branch:
         description: 'Simulation model branch'
         required: false
@@ -44,7 +55,7 @@ on:
         description: 'Model versions to test'
         required: false
         type: string
-        default: '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]'
+        default: '["8.0.0","7.0.0","6.0.2","6.0.2,6.1.1"]'
       runner_labels:
         description: 'GitHub-hosted runner labels to test'
         required: false
@@ -245,8 +256,7 @@ jobs:
     name: download simulation models
     runs-on: ubuntu-26.04
     env:
-      SIM_MODELS_REPO: "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
-      SIM_MODELS_MIRROR_REPO: "https://github.com/gammasim/simulations-models.git"
+      SIMULATION_MODELS_FLAVOR: production
 
     defaults:
       run:
@@ -260,11 +270,45 @@ jobs:
           bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
 
+      - name: Select simulation model repository
+        id: simulation_model_repository
+        env:
+          REQUESTED_FLAVOR: ${{ inputs.simulation_model_repository || 'configured' }}
+        run: |
+          FLAVOR="$REQUESTED_FLAVOR"
+          if [[ "$FLAVOR" == configured ]]; then
+            FLAVOR="$SIMULATION_MODELS_FLAVOR"
+          fi
+          case "$FLAVOR" in
+            production)
+              REPO="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
+              MIRROR="https://github.com/gammasim/simulations-models.git"
+              ;;
+            development)
+              REPO="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models-dev.git"
+              MIRROR="https://github.com/gammasim/simulation-models-dev.git"
+              ;;
+            *)
+              echo "Unknown simulation model repository: $FLAVOR" >&2
+              exit 1
+              ;;
+          esac
+          {
+            echo "SIM_MODELS_REPO=$REPO"
+            echo "SIM_MODELS_MIRROR_REPO=$MIRROR"
+          } >> "$GITHUB_ENV"
+          echo "flavor=$FLAVOR" >> "$GITHUB_OUTPUT"
+          echo "Selected $FLAVOR simulation models: $REPO (mirror: $MIRROR)"
+
       - name: Determine simulation model branch
         id: simulation_model_branch
         env:
           BRANCH: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
+          FLAVOR: ${{ steps.simulation_model_repository.outputs.flavor }}
         run: |
+          if [[ -z "$BRANCH" && "$FLAVOR" == development ]]; then
+            BRANCH=main
+          fi
           BRANCH="${BRANCH:-$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION}"
           git check-ref-format --branch "$BRANCH"
           echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$BRANCH" >> "$GITHUB_ENV"
@@ -276,9 +320,9 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: simulation-models.git
-          key: simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}
+          key: simulation-models-git-${{ steps.simulation_model_repository.outputs.flavor }}-${{ steps.simulation_model_branch.outputs.branch }}
           restore-keys: |
-            simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}-
+            simulation-models-git-${{ steps.simulation_model_repository.outputs.flavor }}-${{ steps.simulation_model_branch.outputs.branch }}-
 
       - name: Clone simulation models repository
         # if: github.event_name != 'schedule'
@@ -349,7 +393,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: simulation-models.git
-          key: simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}
+          key: simulation-models-git-${{ steps.simulation_model_repository.outputs.flavor }}-${{ steps.simulation_model_branch.outputs.branch }}
 
       - name: Package simulation models repository
         run: |
@@ -435,7 +479,7 @@ jobs:
       fail-fast: false
       matrix:
         runner: ${{ fromJSON(inputs.runner_labels || '["ubuntu-26.04"]') }}
-        model_version: ${{ fromJSON(inputs.model_versions || '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]') }}
+        model_version: ${{ fromJSON(inputs.model_versions || '["8.0.0","7.0.0","6.0.2","6.0.2,6.1.1"]') }}
         model_source: [git]
 
     defaults:
