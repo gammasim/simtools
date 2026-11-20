@@ -35,7 +35,7 @@ dependencies = [
   "jsonschema",
   "matplotlib",
   "numpy",
-  "obdeect>=0.9.2",
+  "obdeect>=0.10.1",
   "packaging",
   "particle",
   "pillow",
