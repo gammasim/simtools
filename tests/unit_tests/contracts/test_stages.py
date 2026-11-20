@@ -6,7 +6,8 @@ import pytest
 
 from simtools.runners import stages
 from simtools.runners.chain_runner import ChainRunner
-from simtools.runners.stages import SimulationChain, StageInputs, get_stage_class
+from simtools.runners.chain_spec import parse_chain
+from simtools.runners.stages import StageInputs, get_stage_class
 from tests.unit_tests.fakes.stages import FakeShowerStage, FakeTelescopeStage
 
 
@@ -31,7 +32,7 @@ def test_fake_stage_chain_writes_products_and_run_script(tmp_test_directory):
     stages.register_stage(FakeShowerStage)
     stages.register_stage(FakeTelescopeStage)
     try:
-        chain = SimulationChain(("fake_shower", "fake_telescope"))
+        chain = parse_chain(["fake_shower", "fake_telescope"])
         inputs = StageInputs((), (), (), {"output_directory": tmp_test_directory})
         script = Path(tmp_test_directory) / "run.sh"
         runner = ChainRunner(chain, inputs)

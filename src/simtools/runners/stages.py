@@ -8,15 +8,14 @@ The stages are declared in ``resources/simulation_software.yml`` (see
 ``simtools.runtime.software_catalog``): name, software, products, options, files and role. The
 class of a stage is its catalog ``implementation``; it holds only how the stage runs. Other code
 asks a stage for its role (:func:`stages_with`, :func:`stage_role`) instead of naming it.
-``SimulationChain`` checks that each stage consumes the data product of the stage before it
-when the chain is created. Converter stages only change the format of photons; a chain may leave
-them out (see ``simtools.runners.chain_spec``).
+``simtools.runners.chain_spec.SimulationChain`` checks that each stage consumes the data product
+of the stage before it when the chain is created. Converter stages only change the format of
+photons; a chain may leave them out.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import lru_cache
-from itertools import pairwise
-from typing import Protocol
+from typing import Any, Protocol
 
 from simtools.job_execution.runner_services import RunnerServices
 from simtools.runners import stage_types
@@ -35,13 +34,17 @@ class StageInputs:
     shower_configurations: tuple
     args: dict
     context: object = None
-    chain_options: dict = field(default_factory=dict, hash=False, compare=False)
-    stages: tuple = ()
+    chain: Any = None  # SimulationChain (simtools.runners.chain_spec)
     calibration: object = None
 
+    @property
+    def stages(self):
+        """Return the stage names of the chain (empty without a chain)."""
+        return () if self.chain is None else self.chain.stages
+
     def options_of(self, stage):
-        """Return the options of a stage given in the chain spec (empty if there are none)."""
-        return dict(self.chain_options.get(stage, {}))
+        """Return the checked options of a stage, with their defaults (empty without a chain)."""
+        return {} if self.chain is None else self.chain.stage_options(stage)
 
 
 class SimulationStage(Protocol):
@@ -52,7 +55,7 @@ class SimulationStage(Protocol):
     ``simtools.runtime.software_catalog.StageSpec``) come from the software catalog. The roles a
     stage can have in a chain are catalog fields (:func:`stage_role`): ``software``, ``source``
     (``air_shower`` or ``light_source``), ``converter``, ``thins_photons``,
-    ``routes_shower_photons``, ``required_arguments``, ``production_result`` and the efficiency
+    ``single_array_model``, ``required_arguments``, ``production_result`` and the efficiency
     factors it applies.
     """
 
@@ -107,10 +110,13 @@ class CatalogStage:
     spec = None
     streams = True
 
-    @classmethod
-    def stage_options(cls, inputs):
-        """Return the options of the stage in the chain, checked and with their defaults."""
-        return cls.spec.checked_options(inputs.options_of(cls.name))
+    def environment(self):
+        """Return environment variables needed to run the stage (none)."""
+        return {}
+
+    def get_resources(self, runtime=None):  # pylint: disable=unused-argument
+        """Return computing resources used (none: the first stage of a chain reports them)."""
+        return {}
 
 
 AIR_SHOWER_SOURCE = software_catalog.AIR_SHOWER_SOURCE
@@ -144,14 +150,10 @@ def _catalog_stage_class(spec):
 
 @lru_cache(maxsize=1)
 def _catalog_stages():
-    """Return the classes of the catalog stages by name (imported once).
-
-    Ray-tracing stages (see ``software_catalog.is_star_stage``) select a backend and get no class.
-    """
+    """Return the classes of the catalog stages by name (imported once)."""
     return {
         name: _catalog_stage_class(software_catalog.stage_spec(name))
         for name in software_catalog.stage_names()
-        if not software_catalog.is_star_stage(name)
     }
 
 
@@ -226,14 +228,10 @@ def applied_factors_of(stage, options, upstream=frozenset()):
     """
     Return the efficiency factors a stage applies, given the factors applied upstream.
 
-    A stage class may compute them (method ``applied_factors``); otherwise they follow its
-    catalog declaration (``applies``, ``applies_by_option``, ``skips_if_applied_upstream``).
+    The factors follow the catalog declaration of the stage (``applies``, ``applies_by_option``,
+    ``skips_if_applied_upstream``); a stage outside the catalog applies none.
     """
-    stage_class = get_stage_class(stage)
-    method = getattr(stage_class, "applied_factors", None)
-    if method is not None:
-        return frozenset(method(options, upstream=upstream))
-    spec = getattr(stage_class, "spec", None)
+    spec = getattr(get_stage_class(stage), "spec", None)
     return spec.applied_factors(options, upstream) if spec is not None else frozenset()
 
 
@@ -318,6 +316,25 @@ def ends_camera_only(inputs):
     return bool(spec and spec.simulates_camera_only(inputs.options_of(last)))
 
 
+def check_array_models(stages, array_models):
+    """
+    Raise ValueError if a stage that runs for one array model gets several.
+
+    Parameters
+    ----------
+    stages : iterable of str
+        Stage names of the chain.
+    array_models : sequence
+        Array models of the run (one per model version).
+    """
+    single = stages_with(stages, "single_array_model")
+    if single and len(array_models) > 1:
+        raise ValueError(
+            f"Stages {single} simulate one model version per run; "
+            f"got {len(array_models)} model versions."
+        )
+
+
 def efficiency_envelope_enabled(inputs):
     """
     Return True if a thinning stage of the chain thins the photons by the efficiency envelope.
@@ -380,62 +397,3 @@ def get_stage_class(name) -> type[SimulationStage]:
         return stages[name]
     except KeyError as exc:
         raise ValueError(f"Unknown simulation stage {name!r}; known: {sorted(stages)}") from exc
-
-
-@dataclass(frozen=True)
-class SimulationChain:
-    """Ordered simulation stages, checked for matching data products."""
-
-    stages: tuple[str, ...]
-
-    def __post_init__(self):
-        """Check that each stage consumes what the previous stage produces."""
-        if not self.stages:
-            raise ValueError("A simulation chain needs at least one stage.")
-        for name in self.stages:  # ray-tracing stages select a backend; they are not run
-            if software_catalog.is_star_stage(name):
-                raise ValueError(f"Stage {name!r} selects a ray-tracing backend, not a chain step.")
-        classes = [get_stage_class(name) for name in self.stages]
-        for upstream, downstream in pairwise(classes):
-            if not connects(upstream, downstream):
-                raise ValueError(
-                    f"Stage {downstream.name!r} consumes {downstream.consumes!r}, "
-                    f"but {upstream.name!r} produces {upstream.produces!r}."
-                )
-
-    @property
-    def software(self):
-        """Return the software needed by the stages of this chain."""
-        return stages_software(self.stages)
-
-    @property
-    def stage_classes(self):
-        """Return the stage classes in chain order."""
-        return [get_stage_class(name) for name in self.stages]
-
-    @property
-    def source(self):
-        """Return the kind of photons the first stage generates (None if it reads an input)."""
-        return stage_role(self.stage_classes[0], "source")
-
-    @property
-    def generates_air_showers(self):
-        """Return whether the first stage generates air showers."""
-        return self.source == AIR_SHOWER_SOURCE
-
-    @property
-    def reads_input_file(self):
-        """Return whether the first stage reads an input file (it generates no photons)."""
-        return self.stage_classes[0].consumes is not None
-
-    def has(self, name):
-        """Return whether the chain contains a stage."""
-        return name in self.stages
-
-    def runs(self, implementation):
-        """Return whether a stage of the chain is run by an implementation (a stage class)."""
-        return any(issubclass(stage, implementation) for stage in self.stage_classes)
-
-    def with_role(self, role, value=True):
-        """Return the stages of the chain that have a role (see :func:`stages_with`)."""
-        return stages_with(self.stages, role, value)

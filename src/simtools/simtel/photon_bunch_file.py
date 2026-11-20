@@ -455,8 +455,8 @@ def write_photon_bunches(
                 reuse_counts = {}
                 showers += 1
             _write_telescope_blocks(output, blocks, reuse_counts)
-            # Flushed per event: a consumer in sequential mode (see shower_route) is signalled
-            # after each input object and must find its events in the pipe.
+            # Flushed per event: a consumer in sequential mode is signalled after each input
+            # object and must find its events in the pipe.
             output.flush()
         if open_number is not None:
             _write_event_end(output, open_number)

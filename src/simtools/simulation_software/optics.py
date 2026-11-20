@@ -16,15 +16,17 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from simtools.simtel.shower_photons import derive_seed
+import numpy as np
 
-#: Modes of the telescope transmission (option of the tracing program). The mode
-#: ``angular`` is not offered: its on-axis part would stay unapplied in the chain.
-TELESCOPE_TRANSMISSION_MODES = ("full",)
+from simtools.model import mirrors
+
 #: Prefix of the seed string of a seed file, see ``SimtelSeeds``.
 SEED_FILE_PREFIX = "file-by-run:"
-#: Mirror class value of dual-mirror telescopes.
-DUAL_MIRROR_CLASS = 2
+
+
+def derive_seed(seed, *keys):
+    """Return a reproducible 32-bit seed for the given non-negative integer keys."""
+    return int(np.random.SeedSequence([seed, *keys]).generate_state(1, np.uint32)[0])
 
 
 @dataclass(frozen=True)
@@ -73,12 +75,6 @@ class OpticsRequest:
 
     def __post_init__(self):
         """Check the request."""
-        if self.telescope_transmission not in TELESCOPE_TRANSMISSION_MODES:
-            raise ValueError(
-                f"Invalid telescope transmission {self.telescope_transmission!r}; only "
-                f"{', '.join(TELESCOPE_TRANSMISSION_MODES)} is supported (with 'angular' the "
-                "constant part of the transmission would stay unapplied in the chain)"
-            )
         if self.telescope_id < 0:
             raise ValueError("The telescope id of an optics request must not be negative.")
         if not 0.0 <= self.zenith_deg < 90.0:
@@ -166,7 +162,7 @@ def optics_requests(
             telescope_id=int(telescope_ids[name]) + stream_id_offset,
             model_version=array_model.model_version,
             site=array_model.site,
-            dual_mirror=telescope.get_parameter_value("mirror_class") == DUAL_MIRROR_CLASS,
+            dual_mirror=mirrors.is_dual_mirror(telescope),
             zenith_deg=float(simulation_parameters.zenith_angle),
             azimuth_deg=float(simulation_parameters.azimuth_angle),
             instrument_seed=derive_seed(instrument_seed, int(telescope_ids[name])),

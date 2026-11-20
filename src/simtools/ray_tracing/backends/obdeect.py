@@ -222,9 +222,6 @@ class ObdeectBackend:
         Trace single mirrors.
     """
 
-    traces_light_sources = True
-    traces_shower_photons = True
-
     def __init__(
         self, telescope_model, site_model, label, zenith_angle, single_mirror_mode, *, context=None
     ):
@@ -337,10 +334,6 @@ class ObdeectBackend:
                 data[f"{mirror}_hit_x"] = point[:, 0]
                 data[f"{mirror}_hit_y"] = point[:, 1]
         return data, []
-
-    def camera_photons(self, request):
-        """Photons of a calibration light source at the camera entrance, per pulse in blocks."""
-        return self._tracer.trace_light_source(request)
 
 
 def make_shower_tracer(telescope_model):

@@ -1,16 +1,23 @@
-"""Tests for simulation stages and chains."""
+"""Tests for simulation stage roles, stage inputs and the checks of stage arrays."""
 
 from types import SimpleNamespace
 
 import pytest
 
 from simtools.runners import stages
+from simtools.runners.chain_spec import parse_chain
 from simtools.runners.corsika_stage import CorsikaStage
 from simtools.runners.sim_telarray_stage import SimTelArrayStage
-from simtools.runners.stages import StageInputs, StreamTo
+from simtools.runners.stages import CatalogStage, StageInputs, StreamTo
 
 CAMERA_EVENTS = "camera_events"
 CHERENKOV_PHOTONS = "cherenkov_photons"
+OBDEECT_ITEMS = [
+    "corsika",
+    "obdeect_atmosphere",
+    "obdeect_optics",
+    "sim_telarray:bypass_optics=camera_only",
+]
 
 
 @pytest.fixture
@@ -33,28 +40,6 @@ def fake_stage():
         stages.STAGES.pop(name, None)
 
 
-@pytest.mark.parametrize(
-    ("names", "software"),
-    [
-        (("corsika",), {"corsika"}),
-        (("sim_telarray",), {"sim_telarray"}),
-        (("corsika", "sim_telarray"), {"corsika", "sim_telarray"}),
-        (
-            ("corsika", "corsika_to_stream", "obdeect_optics", "stream_to_simtel", "sim_telarray"),
-            {"corsika", "obdeect", "sim_telarray"},
-        ),
-    ],
-)
-def test_chain_software_and_first_stage(names, software):
-    chain = stages.SimulationChain(names)
-
-    assert chain.stages == names
-    assert chain.software == software
-    assert chain.generates_air_showers == (names[0] == "corsika")
-    assert chain.reads_input_file == (names[0] != "corsika")
-    assert all(chain.has(name) for name in names)
-
-
 def test_catalog_stage_classes_carry_the_catalog_entry():
     corsika = stages.get_stage_class("corsika")
 
@@ -65,6 +50,7 @@ def test_catalog_stage_classes_carry_the_catalog_entry():
     assert corsika.spec.software == {"corsika"}
     assert stages.get_stage_class("corsika") is corsika
     assert CHERENKOV_PHOTONS in stages.get_stage_class("sim_telarray").consumes
+    assert issubclass(stages.get_stage_class("sim_telarray"), SimTelArrayStage)
 
 
 def test_one_implementation_serves_several_stages():
@@ -76,41 +62,10 @@ def test_one_implementation_serves_several_stages():
     assert flasher.produces != illuminator.produces
 
 
-def test_chain_runs_implementation():
-    chain = stages.SimulationChain(("corsika", "sim_telarray"))
-
-    assert chain.runs(CorsikaStage)
-    assert chain.runs(SimTelArrayStage)
-    assert not stages.SimulationChain(("sim_telarray",)).runs(CorsikaStage)
-
-
-def test_register_stage_extends_chains(fake_stage):
+def test_register_stage_makes_stage_available(fake_stage):
     stage_class = fake_stage("fake_stage")
 
-    chain = stages.SimulationChain(("corsika", "fake_stage"))
-
-    assert chain.stage_classes[1] is stage_class
-    assert chain.software == {"corsika"}
-
-
-def test_chain_rejects_unknown_stage_and_empty_chain():
-    with pytest.raises(ValueError, match="Unknown simulation stage 'unknown'"):
-        stages.SimulationChain(("unknown",))
-    with pytest.raises(ValueError, match="at least one stage"):
-        stages.SimulationChain(())
-
-
-def test_chain_rejects_mismatched_data_products():
-    with pytest.raises(ValueError, match="'corsika' consumes None, but 'sim_telarray' produces"):
-        stages.SimulationChain(("sim_telarray", "corsika"))
-
-
-def test_stage_may_consume_several_products(fake_stage):
-    fake_stage("fake_stage", consumes=(CHERENKOV_PHOTONS, "other_photons"))
-
-    assert stages.SimulationChain(("corsika", "fake_stage")).stages == ("corsika", "fake_stage")
-    with pytest.raises(ValueError, match="consumes"):
-        stages.SimulationChain(("fake_stage", "fake_stage"))
+    assert stages.get_stage_class("fake_stage") is stage_class
 
 
 def test_registry_holds_the_catalog_stages():
@@ -127,16 +82,30 @@ def test_registry_holds_the_catalog_stages():
     } <= set(stages.registry())
 
 
-def test_stage_inputs_options_of_stage():
-    inputs = StageInputs(
-        array_models=(),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        chain_options={"obdeect_optics": {"threads": 2}},
-    )
+def test_catalog_stage_defaults():
+    stage = CatalogStage()
 
-    assert inputs.options_of("obdeect_optics") == {"threads": 2}
+    assert stage.environment() == {}
+    assert stage.get_resources(runtime=3.0) == {}
+    assert stage.get_resources() == {}
+
+
+def test_stage_inputs_stages_and_options_of_chain():
+    chain = parse_chain(OBDEECT_ITEMS)
+    inputs = StageInputs((), (), (), {}, chain=chain)
+
+    assert inputs.stages == chain.stages
+    assert inputs.chain is chain
+    assert inputs.options_of("sim_telarray") == {"bypass_optics": "camera_only"}
+    assert inputs.options_of("obdeect_optics") == {"telescope_transmission": "full"}
+    assert inputs.options_of("light_emission") == {}
+
+
+def test_stage_inputs_without_chain():
+    inputs = StageInputs((), (), (), {})
+
+    assert inputs.stages == ()
+    assert inputs.chain is None
     assert inputs.options_of("sim_telarray") == {}
 
 
@@ -152,9 +121,6 @@ def test_stage_roles_come_from_catalog_or_class(fake_stage):
         "fake_thinning",
     ]
     assert stages.stages_software(["corsika", "fake_thinning"]) == {"corsika", "fake_program"}
-    chain = stages.SimulationChain(("light_emission", "sim_telarray"))
-    assert chain.source == stages.LIGHT_SOURCE
-    assert chain.with_role("source", stages.LIGHT_SOURCE) == ["light_emission"]
 
 
 def test_converter_stages_are_declared_in_the_catalog():
@@ -166,20 +132,38 @@ def test_stages_software_rejects_unknown_stage():
         stages.stages_software(["corsika", "unknown"])
 
 
-def test_applied_factors_from_catalog_and_class_hook(fake_stage):
-    fake_stage("fake_hook", applied_factors=classmethod(lambda cls, options, upstream: {"x"}))
-
+def test_applied_factors_from_catalog(fake_stage):
     assert stages.applied_factors_of("obdeect_atmosphere", {}) == {"atmospheric_extinction"}
-    assert stages.applied_factors_of("sim_telarray", {"bypass_optics": 1}) == {
+    assert stages.applied_factors_of("sim_telarray", {"bypass_optics": "none"}) == {
+        "atmospheric_extinction",
+        "mirror_reflectivity",
+        "telescope_transmission",
+        "quantum_efficiency",
+    }
+    assert stages.applied_factors_of("sim_telarray", {"bypass_optics": "camera_entrance"}) == {
         "atmospheric_extinction",
         "quantum_efficiency",
     }
     assert stages.applied_factors_of(
-        "sim_telarray", {"bypass_optics": 1}, upstream=frozenset({"atmospheric_extinction"})
+        "sim_telarray",
+        {"bypass_optics": "camera_entrance"},
+        upstream=frozenset({"atmospheric_extinction"}),
     ) == {"quantum_efficiency"}
-    assert stages.applied_factors_of("fake_hook", {}) == {"x"}
+
+
+def test_applied_factors_of_stage_outside_the_catalog(fake_stage):
     fake_stage("fake_plain")
+
     assert stages.applied_factors_of("fake_plain", {}) == frozenset()
+
+
+def test_stage_file_requires_run_configuration():
+    stage = SimpleNamespace(
+        name="obdeect_optics", spec=stages.get_stage_class("obdeect_optics").spec, run_files=None
+    )
+
+    with pytest.raises(ValueError, match="has no run configuration to name its log file"):
+        stages.stage_file(stage, "log", 4)
 
 
 def test_stage_file_and_single_downstream():
@@ -196,112 +180,131 @@ def test_stage_file_and_single_downstream():
         stages.single_downstream(StreamTo(("a", "b")), "obdeect_optics")
 
 
-def test_run_files_of_light_emission_and_shower_runs(run_context):
+def test_files_of_run_of_light_emission(run_context):
     calibration = SimpleNamespace(runner_service="light-emission files")
     light = StageInputs((), (), (), {}, context=run_context, calibration=calibration)
+
     assert stages.files_of_run(light) == "light-emission files"
+
+
+def test_files_of_run_without_configuration():
+    inputs = StageInputs((), (), (), {})
+
     with pytest.raises(ValueError, match="need a light-emission or a shower configuration"):
-        stages.files_of_run(StageInputs((), (), (), {}, stages=("corsika",)))
+        stages.files_of_run(inputs)
+    assert stages.files_of_run(inputs, required=False) is None
 
 
 def test_ends_camera_only():
-    def _inputs(names, options):
-        return StageInputs((), (), (), {}, chain_options=options, stages=names)
+    def _inputs(items):
+        return StageInputs((), (), (), {}, chain=parse_chain(items))
 
-    assert stages.ends_camera_only(
-        _inputs(("sim_telarray",), {"sim_telarray": {"bypass_optics": 3}})
+    assert stages.ends_camera_only(_inputs(OBDEECT_ITEMS))
+    assert not stages.ends_camera_only(
+        _inputs(
+            [
+                "corsika",
+                "obdeect_atmosphere",
+                "obdeect_optics",
+                "sim_telarray:bypass_optics=camera_entrance",
+            ]
+        )
     )
-    assert not stages.ends_camera_only(_inputs(("sim_telarray",), {}))
-    assert not stages.ends_camera_only(_inputs(("corsika",), {}))
-    assert not stages.ends_camera_only(_inputs((), {}))
+    assert not stages.ends_camera_only(_inputs(["corsika", "sim_telarray"]))
+    assert not stages.ends_camera_only(_inputs(["corsika"]))
+    assert not stages.ends_camera_only(StageInputs((), (), (), {}))
 
 
-def test_chain_envelope_enabled_follows_atmosphere_stage(run_context):
-    def _inputs(names, options=None):
+def test_efficiency_envelope_enabled_follows_atmosphere_stage(run_context):
+    def _inputs(items):
         return StageInputs(
             array_models=(),
             simulation_parameters=(),
             shower_configurations=(),
             args={},
             context=run_context,
-            chain_options=options or {},
-            stages=names,
+            chain=parse_chain(items),
         )
 
-    assert stages.efficiency_envelope_enabled(_inputs(("corsika", "sim_telarray"))) is False
-    assert stages.efficiency_envelope_enabled(_inputs(("obdeect_atmosphere",))) is False
+    assert stages.efficiency_envelope_enabled(_inputs(["corsika", "sim_telarray"])) is False
+    assert stages.efficiency_envelope_enabled(_inputs(["obdeect_atmosphere"])) is False
     assert (
-        stages.efficiency_envelope_enabled(
-            _inputs(
-                ("obdeect_atmosphere",),
-                {"obdeect_atmosphere": {"efficiency_envelope": "qe"}},
-            )
-        )
+        stages.efficiency_envelope_enabled(_inputs(["obdeect_atmosphere:efficiency_envelope=qe"]))
         is True
     )
     assert (
-        stages.efficiency_envelope_enabled(
-            _inputs(
-                ("obdeect_atmosphere",),
-                {"obdeect_atmosphere": {"efficiency_envelope": "none"}},
-            )
-        )
+        stages.efficiency_envelope_enabled(_inputs(["obdeect_atmosphere:efficiency_envelope=none"]))
         is False
     )
 
 
-def _chain(names, chain_options=None, context=None):
+def _chain(items):
     return StageInputs(
         array_models=(),
         simulation_parameters=(),
         shower_configurations=(),
         args={},
-        context=context,
-        chain_options=chain_options or {},
-        stages=names,
+        chain=parse_chain(items),
     )
 
 
 @pytest.mark.parametrize(
-    ("names", "chain_options", "expected"),
+    ("items", "expected"),
     [
-        # default: on for a chain ending in sim_telarray with Bypass_Optics 3
-        (("obdeect_atmosphere", "sim_telarray"), {"sim_telarray": {"bypass_optics": 3}}, True),
-        # default: off for Bypass_Optics 1 or 2, and for a chain not ending in sim_telarray
-        (("obdeect_atmosphere", "sim_telarray"), {"sim_telarray": {"bypass_optics": 1}}, False),
-        (("obdeect_atmosphere", "sim_telarray"), {"sim_telarray": {"bypass_optics": 2}}, False),
-        (("obdeect_atmosphere", "sim_telarray"), {}, False),
-        (("obdeect_atmosphere", "stream_to_simtel"), {}, False),
+        # default: on for a chain whose last stage simulates the camera only
+        (OBDEECT_ITEMS, True),
+        # default: off for a chain not ending in camera-only sim_telarray
+        (
+            [
+                "corsika",
+                "obdeect_atmosphere",
+                "obdeect_optics",
+                "sim_telarray:bypass_optics=camera_entrance",
+            ],
+            False,
+        ),
+        (["corsika", "obdeect_atmosphere", "obdeect_optics"], False),
         # explicit option overrides the default in both directions
         (
-            ("obdeect_atmosphere", "sim_telarray"),
-            {
-                "obdeect_atmosphere": {"efficiency_envelope": "none"},
-                "sim_telarray": {"bypass_optics": 3},
-            },
+            [
+                "corsika",
+                "obdeect_atmosphere:efficiency_envelope=none",
+                "obdeect_optics",
+                "sim_telarray:bypass_optics=camera_only",
+            ],
             False,
         ),
         (
-            ("obdeect_atmosphere", "sim_telarray"),
-            {
-                "obdeect_atmosphere": {"efficiency_envelope": "qe"},
-                "sim_telarray": {"bypass_optics": 1},
-            },
+            [
+                "corsika",
+                "obdeect_atmosphere:efficiency_envelope=qe",
+                "obdeect_optics",
+                "sim_telarray:bypass_optics=camera_entrance",
+            ],
             True,
         ),
     ],
 )
-def test_envelope_default_depends_on_chain_end(names, chain_options, expected):
-    inputs = _chain(names, chain_options)
+def test_envelope_default_depends_on_chain_end(items, expected):
+    inputs = _chain(items)
 
     assert stages.get_stage_class("obdeect_atmosphere").efficiency_envelope(inputs) is expected
     assert stages.efficiency_envelope_enabled(inputs) is expected
 
 
-def test_envelope_default_requires_sim_telarray_last():
-    inputs = _chain(
-        ("obdeect_atmosphere", "sim_telarray", "corsika_to_stream"),
-        {"sim_telarray": {"bypass_optics": 3}},
-    )
+def test_check_array_models_accepts_one_model_per_run():
+    stages.check_array_models(parse_chain(OBDEECT_ITEMS).stages, ("model-6.0.2",))
+    stages.check_array_models(("corsika", "sim_telarray"), ("model-6.0.2",))
 
-    assert stages.get_stage_class("obdeect_atmosphere").efficiency_envelope(inputs) is False
+
+def test_check_array_models_rejects_several_models_for_single_model_stages():
+    with pytest.raises(
+        ValueError,
+        match=r"Stages \['obdeect_atmosphere', 'obdeect_optics', 'stream_to_simtel'\] "
+        r"simulate one model version per run; got 2 model versions",
+    ):
+        stages.check_array_models(parse_chain(OBDEECT_ITEMS).stages, ("model-6.0.2", "model-6.0.3"))
+
+
+def test_check_array_models_allows_several_models_without_single_model_stages():
+    stages.check_array_models(("corsika", "sim_telarray"), ("model-6.0.2", "model-6.0.3"))

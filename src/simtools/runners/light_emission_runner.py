@@ -1,10 +1,11 @@
 """Build calibration run scripts from explicitly ordered simulation stages."""
 
+import functools
 from dataclasses import dataclass
 from types import SimpleNamespace
 
-from simtools.runners import chain_spec
 from simtools.runners.chain_runner import ChainRunner
+from simtools.runners.chain_spec import parse_chain
 from simtools.runners.stages import (
     AIR_SHOWER_SOURCE,
     LIGHT_SOURCE,
@@ -13,6 +14,7 @@ from simtools.runners.stages import (
     registry,
     stage_role,
 )
+from simtools.runtime import software_catalog
 
 
 @dataclass(frozen=True)
@@ -72,7 +74,7 @@ def _seed_object(seeds):
     )
 
 
-def stage_inputs(calibration, spec, chain):
+def stage_inputs(calibration, chain):
     """
     Return the stage inputs of a light-emission simulation.
 
@@ -80,8 +82,6 @@ def stage_inputs(calibration, spec, chain):
     ----------
     calibration : SimulatorLightEmission
         Light-emission simulation of one telescope and one light source.
-    spec : ChainSpec
-        Chain specification (stage options).
     chain : SimulationChain
         Simulation chain.
 
@@ -107,8 +107,7 @@ def stage_inputs(calibration, spec, chain):
         shower_configurations=(),
         args=config,
         context=calibration.context,
-        chain_options=spec.options,
-        stages=chain.stages,
+        chain=chain,
         calibration=calibration,
     )
 
@@ -131,12 +130,9 @@ def build_chain_runner(calibration, items, label=None):
     ChainRunner
         Chain runner.
     """
-    spec = chain_spec.parse_chain(items)
-    chain = spec.chain()
+    chain = parse_chain(items)
     check_light_chain(chain)
-    return ChainRunner(
-        chain, stage_inputs(calibration, spec, chain), label=label or calibration.label
-    )
+    return ChainRunner(chain, stage_inputs(calibration, chain), label=label or calibration.label)
 
 
 def write_chain_script(calibration, items, script_file):
@@ -163,3 +159,31 @@ def write_chain_script(calibration, items, script_file):
         sub_script=script_file,
     )
     return runner
+
+
+def script_writer_for_chain(items):
+    """
+    Return the run-script writer of a configured simulation chain.
+
+    Parameters
+    ----------
+    items : list of str or None
+        Stages of the configured chain (``simulation_software``).
+
+    Returns
+    -------
+    callable or None
+        None for the default chain (LightEmission program, then sim_telarray), which the
+        light-emission simulation writes itself. Otherwise a picklable callable
+        ``writer(calibration, script_file)`` that writes the chain script with
+        ``write_chain_script``.
+    """
+    items = [items] if isinstance(items, str) else list(items or ())
+    if not items or tuple(items) == software_catalog.default_chain(LIGHT_SOURCE):
+        return None
+    return functools.partial(_write_chain_script_file, items=tuple(items))
+
+
+def _write_chain_script_file(calibration, script_file, items):
+    """Write the chain script of a light-emission simulation (see ``script_writer_for_chain``)."""
+    write_chain_script(calibration, list(items), script_file)

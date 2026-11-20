@@ -17,7 +17,7 @@ applications:
     - obdeect_illuminator
     - obdeect_atmosphere
     - obdeect_optics
-    - sim_telarray:bypass_optics=1
+    - sim_telarray:bypass_optics=camera_entrance
     instrument_seed: 1
     simulation_seed: 1
   integration_tests:

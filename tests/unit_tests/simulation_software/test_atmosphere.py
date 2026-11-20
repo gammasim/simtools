@@ -64,11 +64,6 @@ def test_request_rejects_unsupported_geometry():
         _request(geometry="curved")
 
 
-def test_request_rejects_unknown_mode():
-    with pytest.raises(ValueError, match=r"Invalid atmosphere output mode 'bogus'"):
-        _request(mode="bogus")
-
-
 def test_in_telescope_pathlength_single_mirror_is_focal_length():
     telescope = _TelescopeStandIn(mirror_class=1, focal_length_m=28.0)
 

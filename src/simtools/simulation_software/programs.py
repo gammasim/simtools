@@ -7,6 +7,9 @@ from pathlib import Path
 
 from simtools.runtime import software_catalog
 
+#: Stream marker of a command: standard input when read, standard output when written.
+STDIO = "-"
+
 
 def _package_directories(package):
     """Return directories containing an installed Python package."""

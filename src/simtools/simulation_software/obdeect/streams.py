@@ -3,12 +3,12 @@
 import astropy.units as u
 
 from simtools.corsika.corsika_config import corsika_telescope_ids
+from simtools.model import mirrors
 from simtools.simulation_software.programs import program_command
 
+SOFTWARE = "obdeect"
 #: Photon-stream id of a telescope = its CORSIKA IACT id + this offset (streams start at 1).
 STREAM_TELESCOPE_ID_OFFSET = 1
-
-SOFTWARE = "obdeect"
 FROM_CORSIKA_PROGRAM = "obdeect-stream-from-corsika"
 TO_SIMTEL_PROGRAM = "obdeect-stream-to-simtel"
 
@@ -88,8 +88,8 @@ def write_camera_map(telescope_models, path):
     ids = corsika_telescope_ids(telescope_models)
     lines = []
     for name, telescope in telescope_models.items():
-        # model mirror class 2 is dual mirror; stream-to-simtel takes 1 (single) or 2 (dual)
-        mirror_class = 2 if telescope.get_parameter_value("mirror_class") == 2 else 1
+        # stream-to-simtel takes 1 (single mirror) or 2 (dual mirror)
+        mirror_class = 2 if mirrors.is_dual_mirror(telescope) else 1
         rotation_deg = telescope.get_parameter_value_with_unit("camera_rotate").to_value(u.deg)
         lines.append(f"{ids[name] + STREAM_TELESCOPE_ID_OFFSET} {mirror_class} {rotation_deg}")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

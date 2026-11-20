@@ -46,7 +46,7 @@ def test_production_definition_records_stages_of_any_chain():
                 "obdeect_atmosphere",
                 "obdeect_optics",
                 "stream_to_simtel",
-                "sim_telarray:bypass_optics=3",
+                "sim_telarray:bypass_optics=camera_only",
             ]
         }
     )

@@ -1,8 +1,11 @@
-"""Stream input and output of simulation stages (the products are in ``products``)."""
+"""Stream input and output of simulation stages."""
 
 from dataclasses import dataclass
 
-STDIN = "-"
+from simtools.simulation_software.programs import STDIO
+
+#: Stream marker of a stage input read from the standard input of the chain.
+STDIN = STDIO
 
 
 @dataclass(frozen=True)

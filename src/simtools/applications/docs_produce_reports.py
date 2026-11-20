@@ -10,6 +10,7 @@ from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.configuration import defaults
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 
@@ -33,7 +34,9 @@ _ARGUMENTS = (
         action="store_true",
         help="Produce array_element reports for an observatory at a given site.",
     ),
-    cli.SIMULATION_SOFTWARE(nargs=None, default=None, choices=["corsika", "sim_telarray"]),
+    cli.SIMULATION_SOFTWARE(
+        nargs=None, default=None, choices=list(defaults.SIMULATION_SOFTWARE_CHOICES)
+    ),
     cli.MODEL_VERSION,
     cli.OVERWRITE_MODEL_PARAMETERS,
     cli.SITE,

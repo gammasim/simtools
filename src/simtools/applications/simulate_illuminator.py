@@ -8,6 +8,7 @@ import sys
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import positive_quantity, scientific_int
+from simtools.runners import light_emission_runner
 from simtools.runtime import software_catalog
 from simtools.simtel.multi_illuminator_simulator import MultiIlluminatorSimulator
 
@@ -105,7 +106,8 @@ APPLICATION = ApplicationDefinition.for_module(
             help=(
                 "Stages of the simulation in order, each as STAGE or STAGE:KEY=VALUE,... "
                 "(e.g. obdeect_illuminator obdeect_atmosphere obdeect_optics "
-                "sim_telarray:bypass_optics=3); converters between photon formats are inserted."
+                "sim_telarray:bypass_optics=camera_only); converters between photon formats are "
+                "inserted."
             ),
         ),
     ),
@@ -133,6 +135,9 @@ def main():
         backend_config=app_context.args.get("backend_config"),
         model_reader=app_context.model_reader,
         context=app_context,
+        script_writer=light_emission_runner.script_writer_for_chain(
+            app_context.args.get("simulation_software")
+        ),
     )
 
     results = simulator.simulate(

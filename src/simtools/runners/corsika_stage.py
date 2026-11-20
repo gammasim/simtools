@@ -8,9 +8,8 @@ from pathlib import Path
 from simtools.corsika import build_options
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.job_execution.runner_services import RunnerServices
-from simtools.ray_tracing.backends.interface import get_backend
 from simtools.runners.stage_types import StreamTo
-from simtools.runners.stages import CatalogStage, stages_with
+from simtools.runners.stages import CatalogStage
 
 
 class CorsikaStage(CatalogStage):
@@ -43,7 +42,6 @@ class CorsikaStage(CatalogStage):
         self.label = label
         self.sequential = sequential
         self.save_output = save_output
-        self.disk_route = False
         self.context = context or corsika_config.context
         self.runner_service = RunnerServices(
             corsika_config, run_type="corsika", label=label, context=self.context
@@ -63,13 +61,6 @@ class CorsikaStage(CatalogStage):
             save_output=inputs.args.get("save_corsika_output", False),
             context=inputs.context,
         )
-        if (
-            stages_with(inputs.stages, "routes_shower_photons")
-            and inputs.args.get("shower_route_mode", "stream") == "disk"
-        ):
-            stage.disk_route = bool(
-                getattr(get_backend(context=stage.context), "traces_shower_photons", False)
-            )
         return [stage]
 
     def prepare(self, run_number, input_file=None, output=None):
@@ -94,7 +85,7 @@ class CorsikaStage(CatalogStage):
         if input_file is not None:
             raise ValueError("CORSIKA does not read an input product.")
         self.file_list = self.runner_service.load_files(run_number=run_number)
-        streamed = isinstance(output, StreamTo) or self.disk_route
+        streamed = isinstance(output, StreamTo)
         if streamed:
             self.file_list.update(self.stream_service.load_files(run_number=run_number))
             corsika_output = self._write_stream(run_number, output or StreamTo(()))
@@ -132,7 +123,7 @@ class CorsikaStage(CatalogStage):
         with open(multipipe_file, "w", encoding="utf-8") as file:
             for command in output.commands:
                 file.write(f"{command}\n\n")
-            if self.save_output or self.disk_route:
+            if self.save_output:
                 corsika_output = self.runner_service.get_file_name(
                     "corsika_output", run_number=run_number
                 )
@@ -147,9 +138,7 @@ class CorsikaStage(CatalogStage):
             "-c",
             multipipe_file,
         ]
-        # A disk route has no downstream command to signal: sequential mode would wait for wakeups
-        # that never come, so the producer-only pipe runs in parallel.
-        if self.sequential and not self.disk_route:
+        if self.sequential:
             multipipe_command.append("--sequential")
         accounting_command = build_accounting_command(
             multipipe_command,

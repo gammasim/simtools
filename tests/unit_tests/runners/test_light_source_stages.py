@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import dataclasses
 import json
 import math
 import shlex
@@ -10,12 +11,12 @@ import pytest
 
 from simtools.runners import adapter_stages, light_emission_runner, stages
 from simtools.runners.chain_runner import ChainRunner
+from simtools.runners.chain_spec import SimulationChain, parse_chain
 from simtools.runners.light_source_stages import LightSourceStage
 from simtools.runners.stages import StageInputs, StreamTo, get_stage_class
 from simtools.simulation_software import light_sources
 
-CAMERA_EVENTS = "camera_events"
-CHERENKOV_PHOTONS = "cherenkov_photons"
+LIGHT_EMISSION_PHOTONS = "light_emission_photons"
 PHOTONS_CAMERA = "photons_camera"
 PHOTONS_SKY = "photons_sky"
 FlasherSourceStage = get_stage_class("obdeect_flasher")
@@ -141,12 +142,8 @@ def test_flasher_stage_instance(light_source_context):
 
 def test_stage_options_take_precedence(light_source_context):
     inputs = _inputs(light_source_context, light_source=_FLASHER, number_of_events=2)
-    inputs = StageInputs(
-        **{
-            **inputs.__dict__,
-            "chain_options": {"obdeect_flasher": {"number_of_events": 5, "wavelength": 355}},
-        }
-    )
+    chain = parse_chain(["obdeect_flasher:number_of_events=5,wavelength=355"])
+    inputs = dataclasses.replace(inputs, chain=chain)
     (stage,) = FlasherSourceStage.instances(inputs)
     assert stage.request.events == (5,)
     assert stage.request.wavelength_nm == pytest.approx(355.0)
@@ -243,7 +240,7 @@ class _FakeDownstream:
     """Downstream stage consuming a product and streaming."""
 
     consumes = PHOTONS_CAMERA
-    produces = CAMERA_EVENTS
+    produces = "fake_product"
     streams = True
     name = "fake_downstream"
     file_list = None
@@ -261,7 +258,7 @@ class _FakeDownstream:
 
 def test_chain_with_fake_downstream_stage(monkeypatch, light_source_context):
     monkeypatch.setitem(stages.registry(), "fake_downstream", _FakeDownstream)
-    chain = stages.SimulationChain(("obdeect_flasher", "fake_downstream"))
+    chain = SimulationChain(("obdeect_flasher", "fake_downstream"))
     assert chain.source == stages.LIGHT_SOURCE
     runner = ChainRunner(chain, _inputs(light_source_context, light_source=_FLASHER))
     script = runner.stages[0][0].work_directory / "run.sh"
@@ -273,17 +270,16 @@ def test_chain_with_fake_downstream_stage(monkeypatch, light_source_context):
 
 def test_chain_rejects_mismatching_products():
     with pytest.raises(ValueError, match="consumes None"):
-        stages.SimulationChain(("obdeect_illuminator", "obdeect_flasher"))
+        SimulationChain(("obdeect_illuminator", "obdeect_flasher"))
 
 
-def _calibration_inputs(light_simulation, *chain):
+def _calibration_inputs(light_simulation):
     return StageInputs(
         array_models=(),
         simulation_parameters=(),
         shower_configurations=(),
         args={},
         context=light_simulation.context,
-        stages=chain,
         calibration=light_simulation,
     )
 
@@ -291,7 +287,7 @@ def _calibration_inputs(light_simulation, *chain):
 def test_light_emission_stage_registered():
     assert stages.stages_software(["light_emission"]) == {"sim_telarray"}
     assert LightEmissionStage.consumes is None
-    assert LightEmissionStage.produces == CHERENKOV_PHOTONS
+    assert LightEmissionStage.produces == LIGHT_EMISSION_PHOTONS
     assert LightEmissionStage.streams is False
     assert stages.applied_factors_of("light_emission", {}) == frozenset()
 
@@ -343,7 +339,7 @@ def test_flasher_chain_through_light_emission_simulation(
         0.0 * u.deg if name == "camera_rotate" else 2156.0 * u.m
     )
     script = tmp_test_directory / "chain.sh"
-    items = ["obdeect_flasher", "stream_to_simtel", "sim_telarray:bypass_optics=1"]
+    items = ["obdeect_flasher", "stream_to_simtel", "sim_telarray:bypass_optics=camera_entrance"]
     light_emission_runner.write_chain_script(light_simulation, items, script)
     lines = script.read_text(encoding="utf-8").splitlines()
     camera_iact = tmp_test_directory / "run.stream_to_simtel.photon_bunches"

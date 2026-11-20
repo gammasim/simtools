@@ -16,7 +16,7 @@ applications:
     log_level: DEBUG
     simulation_software:
     - obdeect_flasher
-    - sim_telarray:bypass_optics=1
+    - sim_telarray:bypass_optics=camera_entrance
     instrument_seed: 1
     simulation_seed: 1
   integration_tests:

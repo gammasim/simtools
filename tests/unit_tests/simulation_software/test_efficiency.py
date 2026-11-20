@@ -63,11 +63,6 @@ def test_envelope_setting_defaults_to_off():
     assert efficiency.envelope_setting({"efficiency_envelope": "none"}) is False
 
 
-def test_envelope_setting_rejects_unknown_value():
-    with pytest.raises(ValueError, match=r"Invalid efficiency_envelope option: 'yes'"):
-        efficiency.envelope_setting({"efficiency_envelope": "yes"})
-
-
 def test_sim_telarray_qe_interpolates_linearly_on_grid():
     table = _qe_table([500.0, 300.0], [0.4, 0.2])
 

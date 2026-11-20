@@ -2,11 +2,10 @@
 
 from pathlib import Path
 
-from simtools.simulation_software.atmosphere import STDIO
 from simtools.simulation_software.efficiency import OBDEECT_QE_FACTOR
-from simtools.simulation_software.programs import program_command
+from simtools.simulation_software.obdeect.streams import SOFTWARE
+from simtools.simulation_software.programs import STDIO, program_command
 
-SOFTWARE = "obdeect"
 PROPAGATION_PROGRAM = "obdeect-propagation-run"
 
 

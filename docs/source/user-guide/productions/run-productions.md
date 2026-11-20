@@ -16,7 +16,7 @@ The `simulation_software` lists the stages that are executed (default: `corsika 
 - `sim_telarray`: run detector simulation using an existing CORSIKA input file
 - `corsika sim_telarray`: run the CORSIKA to sim_telarray chain using multipipe execution
 - stages of the obdeect chain, e.g. `corsika obdeect_atmosphere obdeect_optics
-  sim_telarray:bypass_optics=3` (converters between the stages are inserted)
+  sim_telarray:bypass_optics=camera_only` (converters between the stages are inserted)
 
 The stage names and options are described in
 [simtools-simulate-prod](../applications/simtools-simulate-prod).

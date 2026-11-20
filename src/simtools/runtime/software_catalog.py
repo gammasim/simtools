@@ -20,8 +20,8 @@ _SCHEMA = "schemas/simulation_software.schema.yml"
 #: Kinds of photons a first stage generates.
 AIR_SHOWER_SOURCE = "air_shower"
 LIGHT_SOURCE = "light_source"
-#: Data product of the ray-tracing stages; they select the ray-tracing backend, not run in a chain.
-STAR_IMAGES = "star_images"
+#: Format of the products that end a simulation chain (camera events).
+EVENTS_FORMAT = "events"
 #: Python types of the option types.
 _OPTION_TYPES = {
     "integer": (int,),
@@ -61,9 +61,16 @@ def _check_stage(name, stage, data):
             applies, skips = _value_factors(value)
             factors.extend([*applies, *skips])
     _check(factors, data["efficiency_factors"], "efficiency factors", where)
+    for values in stage.get("consumes_by_option", {}).values():
+        for products in values.values():
+            _check(products, stage.get("consumes", ()), "consumed products", where)
     options = stage.get("options", {})
     _check(
-        [*stage.get("applies_by_option", {}), *stage.get("camera_only", {})],
+        [
+            *stage.get("applies_by_option", {}),
+            *stage.get("consumes_by_option", {}),
+            *stage.get("camera_only", {}),
+        ],
         options,
         "options",
         where,
@@ -88,6 +95,8 @@ def _check_references(data):
         _check_stage(name, stage, data)
     for kind, chain in data["default_chains"].items():
         _check(chain, data["stages"], "stages", f"Default chain '{kind}'")
+    for kind, factors in data["required_efficiency_factors"].items():
+        _check(factors, data["efficiency_factors"], "efficiency factors", f"Source '{kind}'")
 
 
 @dataclass(frozen=True)
@@ -127,6 +136,14 @@ class StageSpec:
     def options(self):
         """Options of the stage by name."""
         return self.entry.get("options", {})
+
+    def consumes_with(self, options):
+        """Return the products the stage reads with its options (``consumes_by_option``)."""
+        options = self.checked_options(options)
+        for option, by_value in self.entry.get("consumes_by_option", {}).items():
+            if options.get(option) in by_value:
+                return tuple(by_value[options[option]])
+        return self.consumes
 
     def file_type(self, use):
         """Return the file product of a use of the stage (``output``, ``log``, ...)."""
@@ -280,39 +297,18 @@ def light_source_names():
     return tuple(catalog().get("light_sources", {}))
 
 
-def is_star_stage(name):
-    """Return True if a catalog stage produces star images, i.e. selects a ray-tracing backend."""
-    return name in stage_names() and stage_spec(name).produces == STAR_IMAGES
+def required_efficiency_factors(source):
+    """Return the efficiency factors a chain ending in camera events applies, by photon source."""
+    return frozenset(catalog()["required_efficiency_factors"][source])
 
 
-def star_backend(items=None):
-    """
-    Return the ray-tracing backend selected by the star stages of a list of stages.
-
-    Parameters
-    ----------
-    items : str, list of str or None
-        Stage items as in ``simulation_software`` (e.g. ``["sim_telarray_star"]``).
-
-    Returns
-    -------
-    str or None
-        Software of the star stage; None if the list has no star stage.
-
-    Raises
-    ------
-    ValueError
-        If the list has more than one star stage.
-    """
-    if not items:
-        return None
-    # stage names only: parse_chain would look up stage classes, and star stages have none
-    items = [items] if isinstance(items, str) else list(items)
-    names = [item.split(":")[0] for item in items]  # STAGE or STAGE:KEY=VALUE,...
-    star = [stage_spec(name) for name in names if is_star_stage(name)]
-    if len(star) > 1:
-        raise ValueError(f"Only one ray-tracing stage is allowed, got {[s.name for s in star]}.")
-    return next(iter(star[0].software)) if star else None
+def ray_tracing_backends():
+    """Return the ray-tracing backend classes (``module:Class``) by software name."""
+    return {
+        name: entry["ray_tracing_backend"]
+        for name, entry in catalog()["software"].items()
+        if "ray_tracing_backend" in entry
+    }
 
 
 def load_object(path):

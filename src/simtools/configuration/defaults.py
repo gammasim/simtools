@@ -12,6 +12,6 @@ CORSIKA_INTERACTION_TABLE_PATH = constants.CORSIKA_INTERACTION_TABLE_PATH
 # Minimum zenith angle (degrees) above which CORSIKA uses a curved-atmosphere binary.
 CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG = 65
 
-# Simulation software identifiers and the external executables each requires.
+# Simulation software identifiers (choices) and the default simulation chain.
 SIMULATION_SOFTWARE_CHOICES = constants.SIMULATION_SOFTWARE_CHOICES
 SIMULATION_SOFTWARE_DEFAULT = software_catalog.default_chain(software_catalog.AIR_SHOWER_SOURCE)

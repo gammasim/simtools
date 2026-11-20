@@ -6,7 +6,8 @@ description: >-
   stages and their options. Formats and files of the programs are validated with the file catalog
   (file_types.schema.yml) after they are merged into it.
 type: object
-required: [efficiency_factors, products, software, stages, default_chains]
+required:
+  [efficiency_factors, products, software, stages, required_efficiency_factors, default_chains]
 additionalProperties: false
 definitions:
   name:
@@ -48,7 +49,7 @@ properties:
       properties:
         description: {type: string}
         frame: {enum: [sky, ground, telescope, camera]}
-        format: {enum: [iact, stream, events, table]}
+        format: {enum: [iact, stream, events]}
   software:
     type: object
     minProperties: 1
@@ -62,6 +63,9 @@ properties:
         dependency:
           description: How the installation is checked (see simtools.runtime.dependencies).
           enum: [corsika, sim_telarray, python_package]
+        ray_tracing_backend:
+          description: Ray-tracing backend class of the software (see simtools.ray_tracing).
+          $ref: '#/definitions/object_path'
         package: {type: string}
         command: {type: string}
         command_module:
@@ -85,6 +89,11 @@ properties:
         model_types: {type: array, minItems: 1, items: {type: string}}
         request: {$ref: '#/definitions/object_path'}
         command: {$ref: '#/definitions/object_path'}
+        model_context:
+          description: >-
+            The source program reads the model source and the parameter changes of the run
+            (environment variable SIMTOOLS_FLASHER_CONTEXT).
+          type: boolean
   stages:
     type: object
     minProperties: 1
@@ -103,7 +112,9 @@ properties:
         light_source: {$ref: '#/definitions/name'}
         converter: {type: boolean}
         thins_photons: {type: boolean}
-        routes_shower_photons: {type: boolean}
+        single_array_model:
+          description: The stage runs for one array model (one model version) per run.
+          type: boolean
         required_arguments: {$ref: '#/definitions/names'}
         production_result: {$ref: '#/definitions/name'}
         options_from_arguments:
@@ -113,6 +124,13 @@ properties:
           type: object
           propertyNames: {$ref: '#/definitions/name'}
           additionalProperties: {$ref: '#/definitions/option'}
+        consumes_by_option:
+          description: Products consumed, by the value of one option (a subset of consumes).
+          type: object
+          maxProperties: 1
+          additionalProperties:
+            type: object
+            additionalProperties: {$ref: '#/definitions/names'}
         applies: {$ref: '#/definitions/names'}
         applies_by_option:
           description: >-
@@ -139,6 +157,14 @@ properties:
           description: Files of the stage by use (output, log, resources, ...), as file product ids.
           type: object
           additionalProperties: {$ref: '#/definitions/name'}
+  required_efficiency_factors:
+    description: Efficiency factors a chain ending in camera events applies, by photon source.
+    type: object
+    required: [air_shower, light_source]
+    additionalProperties: false
+    properties:
+      air_shower: {$ref: '#/definitions/names'}
+      light_source: {$ref: '#/definitions/names'}
   default_chains:
     type: object
     required: [air_shower, light_source]

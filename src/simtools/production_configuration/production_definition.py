@@ -11,7 +11,7 @@ _SCHEMA_VERSION = "1.1.0"
 
 def production_definition_from_arguments(args_dict):
     """Create validated production data from resolved grid application arguments."""
-    stages = list(parse_chain(args_dict["simulation_software"]).chain().stages)
+    stages = list(parse_chain(args_dict["simulation_software"]).stages)
     definition = {
         "schema_name": _SCHEMA_NAME,
         "schema_version": _SCHEMA_VERSION,

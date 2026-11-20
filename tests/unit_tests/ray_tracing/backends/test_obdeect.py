@@ -234,12 +234,11 @@ def _pulses(backend, request):
     """Photons of each pulse, blocks joined."""
     return [
         {name: np.concatenate([b[name] for b in blocks]) for name in blocks[0]}
-        for blocks in (list(pulse) for pulse in backend.camera_photons(request))
+        for blocks in (list(pulse) for pulse in backend._tracer.trace_light_source(request))
     ]
 
 
 def test_camera_photons_of_a_flasher(backend):
-    assert backend.traces_light_sources
     first, second = _pulses(backend, _light_source())
     plane = backend._tracer.optical_model(0.0, 3).focal_surface_z_m
     for photons in (first, second):
@@ -289,7 +288,7 @@ def test_at_plane():
 
 def test_flasher_pulses_keep_photon_ids_bounded(backend):
     request = _light_source(photons_per_pulse=(0,) * 256 + (2e5,))
-    pulses = list(backend.camera_photons(request))
+    pulses = list(backend._tracer.trace_light_source(request))
     photons = list(pulses[-1])
     assert sum(len(block["weight"]) for block in photons) > 0
 

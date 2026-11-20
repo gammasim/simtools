@@ -12,6 +12,7 @@ import simtools.configuration.argument_helpers as helpers
 import simtools.version
 from simtools import constants
 from simtools.configuration import defaults
+from simtools.runtime import software_catalog
 from simtools.utils.primary_particle import PrimaryParticle
 
 
@@ -86,6 +87,7 @@ _SIMULATION_CONFIGURATION_GROUP = "simulation configuration"
 _SHOWER_PARAMETERS_GROUP = "shower parameters"
 _SIM_TELARRAY_CONFIGURATION_GROUP = "sim_telarray configuration"
 _CORSIKA_CONFIGURATION_GROUP = "corsika configuration"
+_RAY_TRACING_CONFIGURATION_GROUP = "ray tracing configuration"
 
 
 CONFIG = _argument(
@@ -615,14 +617,17 @@ SIMULATION_SOFTWARE = _argument(
     default=list(defaults.SIMULATION_SOFTWARE_DEFAULT),
 )
 
-# Ray-tracing backend: a star stage of simulation_software (see software_catalog.star_backend).
+RAY_TRACING_BACKEND = _argument(
+    "ray_tracing_backend",
+    _RAY_TRACING_CONFIGURATION_GROUP,
+    help="Optical ray-tracing backend (environment: SIMTOOLS_RAY_TRACING_BACKEND).",
+    type=str,
+    choices=tuple(software_catalog.ray_tracing_backends()),
+    default=None,
+)
+
 RAY_TRACING_ARGUMENTS = (
-    SIMULATION_SOFTWARE(
-        default=["sim_telarray_star"],
-        choices=("sim_telarray_star", "obdeect_star"),
-        nargs=1,
-        help="Ray-tracing backend as a stage: sim_telarray_star or obdeect_star.",
-    ),
+    RAY_TRACING_BACKEND,
     INSTRUMENT_SEED,
     RANDOM_INSTRUMENT_INSTANCES(
         default=constants.RAY_TRACING_INSTRUMENT_INSTANCES,

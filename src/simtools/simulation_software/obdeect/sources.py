@@ -7,9 +7,9 @@ import numpy as np
 
 from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
 from simtools.simulation_software.light_sources import request_to_json
+from simtools.simulation_software.obdeect.streams import SOFTWARE
 from simtools.simulation_software.programs import program_command
 
-SOFTWARE = "obdeect"
 ILLUMINATOR_PROGRAM = "obdeect-sources-point-source"
 FLASHER_MODULE = "simtools.simulation_software.flasher_stream"
 

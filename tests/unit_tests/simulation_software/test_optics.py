@@ -7,9 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from simtools.simtel.shower_photons import derive_seed
 from simtools.simulation_software import optics
-from simtools.simulation_software.optics import OpticsRequest
+from simtools.simulation_software.optics import OpticsRequest, derive_seed
 
 _NOT_IN_RANGE = "must lie in"
 
@@ -69,11 +68,22 @@ def test_request_is_frozen(request_one):
         request_one.threads = 2
 
 
+def test_derive_seed_is_reproducible_and_32_bit():
+    seed = derive_seed(11, 0, 1)
+
+    assert seed == derive_seed(11, 0, 1)
+    assert 0 <= seed < 2**32
+
+
+def test_derive_seed_depends_on_seed_and_keys():
+    values = {derive_seed(11, 0), derive_seed(11, 1), derive_seed(12, 0), derive_seed(11, 0, 1)}
+
+    assert len(values) == 4
+
+
 @pytest.mark.parametrize(
     ("change", "match"),
     [
-        ({"telescope_transmission": "none"}, "Invalid telescope transmission"),
-        ({"telescope_transmission": "angular"}, "stay unapplied"),
         ({"telescope_id": -1}, "telescope id"),
         ({"zenith_deg": 90.0}, _NOT_IN_RANGE),
         ({"zenith_deg": -1.0}, _NOT_IN_RANGE),

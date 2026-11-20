@@ -4,7 +4,6 @@ import copy
 
 import pytest
 
-from simtools.runners.stages import SimulationChain
 from simtools.runtime import software_catalog
 
 
@@ -87,16 +86,37 @@ def test_options_from_arguments_are_not_checked():
     ("options", "upstream", "applied", "skipped"),
     [
         ({}, set(), {"atmospheric_extinction", "mirror_reflectivity"}, set()),
-        ({"bypass_optics": 1}, set(), {"atmospheric_extinction", "quantum_efficiency"}, set()),
         (
-            {"bypass_optics": 1},
+            {"bypass_optics": "none"},
+            set(),
+            {"atmospheric_extinction", "mirror_reflectivity", "quantum_efficiency"},
+            set(),
+        ),
+        (
+            {"bypass_optics": "camera_entrance"},
+            set(),
+            {"atmospheric_extinction", "quantum_efficiency"},
+            set(),
+        ),
+        (
+            {"bypass_optics": "camera_entrance"},
             {"atmospheric_extinction"},
             {"quantum_efficiency"},
             {"atmospheric_extinction"},
         ),
-        # mode 0 applies the extinction even if an upstream stage applies it (rejected later)
-        ({"bypass_optics": 0}, {"atmospheric_extinction"}, {"atmospheric_extinction"}, set()),
-        ({"bypass_optics": 3}, {"atmospheric_extinction"}, {"quantum_efficiency"}, set()),
+        # bypass_optics none applies the extinction even if an upstream stage applies it
+        (
+            {"bypass_optics": "none"},
+            {"atmospheric_extinction"},
+            {"atmospheric_extinction", "mirror_reflectivity"},
+            set(),
+        ),
+        (
+            {"bypass_optics": "camera_only"},
+            {"atmospheric_extinction"},
+            {"quantum_efficiency"},
+            set(),
+        ),
     ],
 )
 def test_applied_and_skipped_factors(options, upstream, applied, skipped):
@@ -109,9 +129,57 @@ def test_applied_and_skipped_factors(options, upstream, applied, skipped):
 def test_simulates_camera_only():
     spec = software_catalog.stage_spec("sim_telarray")
 
-    assert spec.simulates_camera_only({"bypass_optics": 3})
-    assert not spec.simulates_camera_only({"bypass_optics": 1})
+    assert spec.simulates_camera_only({"bypass_optics": "camera_only"})
+    assert not spec.simulates_camera_only({"bypass_optics": "camera_entrance"})
+    assert not spec.simulates_camera_only({})
     assert not software_catalog.stage_spec("corsika").simulates_camera_only({})
+
+
+@pytest.mark.parametrize(
+    ("options", "products"),
+    [
+        ({}, ("cherenkov_photons", "light_emission_photons")),
+        ({"bypass_optics": "none"}, ("cherenkov_photons", "light_emission_photons")),
+        ({"bypass_optics": "camera_entrance"}, ("camera_photons_iact",)),
+        ({"bypass_optics": "camera_only"}, ("camera_photons_iact",)),
+    ],
+)
+def test_consumes_with_options(options, products):
+    assert software_catalog.stage_spec("sim_telarray").consumes_with(options) == products
+
+
+def test_consumes_with_without_option_dependence():
+    spec = software_catalog.stage_spec("obdeect_atmosphere")
+
+    assert spec.consumes_with({}) == ("photons_sky", "photons_ground")
+    with pytest.raises(ValueError, match="Unknown option"):
+        spec.consumes_with({"bypass_optics": "none"})
+
+
+def test_consumes_with_rejects_integer_bypass_optics():
+    with pytest.raises(ValueError, match="must be of type string"):
+        software_catalog.stage_spec("sim_telarray").consumes_with({"bypass_optics": 1})
+
+
+def test_required_efficiency_factors():
+    assert software_catalog.required_efficiency_factors("air_shower") == frozenset(
+        {
+            "atmospheric_extinction",
+            "mirror_reflectivity",
+            "telescope_transmission",
+            "quantum_efficiency",
+        }
+    )
+    assert software_catalog.required_efficiency_factors("light_source") == frozenset(
+        {"quantum_efficiency"}
+    )
+
+
+def test_ray_tracing_backends():
+    assert software_catalog.ray_tracing_backends() == {
+        "sim_telarray": "simtools.ray_tracing.backends.sim_telarray:SimtelBackend",
+        "obdeect": "simtools.ray_tracing.backends.obdeect:ObdeectBackend",
+    }
 
 
 def test_load_object_and_light_sources():
@@ -143,6 +211,16 @@ def test_load_object_and_light_sources():
             lambda data: data["default_chains"].update(air_shower=["other"]),
             "Default chain 'air_shower': unknown stages",
         ),
+        (
+            lambda data: data["stages"]["sim_telarray"]["consumes_by_option"][
+                "bypass_optics"
+            ].update(camera_only=["photons_sky"]),
+            "unknown consumed products",
+        ),
+        (
+            lambda data: data["required_efficiency_factors"].update(air_shower=["other"]),
+            "Source 'air_shower': unknown efficiency factors",
+        ),
     ],
 )
 def test_references_are_checked(change, match):
@@ -159,33 +237,3 @@ def test_file_references_are_checked():
 
     with pytest.raises(ValueError, match="Unknown file product 'no_such_file'"):
         software_catalog._check_references(data)  # pylint: disable=protected-access
-
-
-def test_star_stages_are_declared_and_validated():
-    assert software_catalog.stage_spec("obdeect_star").produces == "star_images"
-    assert software_catalog.stage_spec("sim_telarray_star").software == {"sim_telarray"}
-    assert software_catalog.product("star_images")["format"] == "table"
-
-
-@pytest.mark.parametrize(
-    ("items", "backend"),
-    [
-        (None, None),
-        ([], None),
-        ("sim_telarray_star", "sim_telarray"),
-        (["obdeect_star"], "obdeect"),
-        (["corsika", "sim_telarray"], None),
-    ],
-)
-def test_star_backend(items, backend):
-    assert software_catalog.star_backend(items) == backend
-
-
-def test_star_backend_rejects_several_star_stages():
-    with pytest.raises(ValueError, match="Only one ray-tracing stage"):
-        software_catalog.star_backend(["sim_telarray_star", "obdeect_star"])
-
-
-def test_star_stages_are_not_run_in_a_chain():
-    with pytest.raises(ValueError, match="selects a ray-tracing backend"):
-        SimulationChain(("obdeect_star",))

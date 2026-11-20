@@ -13,12 +13,14 @@ from pathlib import Path
 
 import astropy.units as u
 
+from simtools.model import mirrors
 from simtools.model.model_utils import export_model_files
 from simtools.simulation.configuration import get_model_writer
 
 PLANE_PARALLEL = "plane_parallel"
-MODES = ("thinned", "weighted")
+#: Seed of the thinning if the telescope models give no simulation seed.
 DEFAULT_SEED = 1
+#: Output mode of the thinning: one photon per surviving photon.
 DEFAULT_MODE = "thinned"
 #: Name of the transmission table exported from an ECSV model parameter.
 TRANSMISSION_FILE_NAME = "atmosphere-transmission.dat"
@@ -28,8 +30,6 @@ ZERO_TRANSMISSION_FILE_NAME = "atmosphere-zero-transmission.dat"
 PROFILE_FILE_NAME = "atmosphere-profile.dat"
 #: obdeect reads transmission wavelengths that are integers below this value [nm].
 OBDEECT_MAX_WAVELENGTH_NM = 1000
-#: Stdin and stdout of a command in the shell.
-STDIO = "-"
 
 
 @dataclass(frozen=True)
@@ -70,13 +70,11 @@ class AtmosphereRequest:
     geometry: str = PLANE_PARALLEL
 
     def __post_init__(self):
-        """Check the geometry and the output mode."""
+        """Check the geometry."""
         if self.geometry != PLANE_PARALLEL:
             raise ValueError(
                 f"Unsupported atmosphere geometry {self.geometry!r}; use {PLANE_PARALLEL!r}."
             )
-        if self.mode not in MODES:
-            raise ValueError(f"Invalid atmosphere output mode {self.mode!r}; choose from {MODES}.")
 
 
 def in_telescope_pathlength_m(telescope_model):
@@ -96,7 +94,7 @@ def in_telescope_pathlength_m(telescope_model):
     float
         Path length [m].
     """
-    if telescope_model.get_parameter_value("mirror_class") == 2:
+    if mirrors.is_dual_mirror(telescope_model):
         return 0.0
     return telescope_model.get_parameter_value_with_unit("focal_length").to_value(u.m)
 

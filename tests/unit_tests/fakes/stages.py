@@ -4,8 +4,9 @@ from pathlib import Path
 
 from tests.unit_tests.builders.tables import reduced_event_tables
 
-CAMERA_EVENTS = "camera_events"
 CHERENKOV_PHOTONS = "cherenkov_photons"
+#: Photon stream of the fake camera; a stream needs no efficiency factors (unlike camera events).
+PHOTONS_CAMERA = "photons_camera"
 
 
 class FakeShowerStage:
@@ -48,7 +49,7 @@ class FakeTelescopeStage:
 
     name = "fake_telescope"
     consumes = CHERENKOV_PHOTONS
-    produces = CAMERA_EVENTS
+    produces = PHOTONS_CAMERA
     streams = False
 
     def __init__(self, directory):

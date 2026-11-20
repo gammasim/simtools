@@ -5,8 +5,6 @@ import json
 import shlex
 from pathlib import Path
 
-import astropy.units as u
-
 from simtools.model.model_utils import (
     initialize_simulation_models,
     read_overwrite_model_parameter_dict,
@@ -18,6 +16,7 @@ from simtools.runners.stages import (
     single_downstream,
     stage_file,
 )
+from simtools.runtime import software_catalog
 from simtools.simtel.simtel_seeds import instance_seed_pairs
 from simtools.simulation_software import light_sources
 from simtools.utils import value_conversion
@@ -38,15 +37,6 @@ def _telescope(config):
     if config.get("telescope"):
         return config["telescope"]
     return _single(config.get("telescopes"), "telescope")
-
-
-def _wavelength(config):
-    """Return the requested wavelength (quantity) or None; a number is in nm."""
-    wavelength = config.get("wavelength")
-    if wavelength is None:
-        return None
-    wavelength = _single(wavelength, "wavelength")
-    return wavelength if hasattr(wavelength, "to") else float(wavelength) * u.nm
 
 
 def _file_token(telescope, light_source, wavelength_nm):
@@ -76,6 +66,8 @@ class LightSourceStage(CatalogStage):
         Simulation models (for sources that read model files).
     run_files : RunnerServices, optional
         File naming of the run (output file when the output is not streamed).
+    context : RunContext, optional
+        Run context (model reader of the simulation models, used by sources that read them).
     """
 
     streams = True
@@ -88,6 +80,7 @@ class LightSourceStage(CatalogStage):
         executable=None,
         simulation_models_path=None,
         run_files=None,
+        context=None,
     ):
         """Initialize LightSourceStage."""
         self.run_files = run_files
@@ -97,7 +90,7 @@ class LightSourceStage(CatalogStage):
         self.executable = executable
         self.simulation_models_path = simulation_models_path
         self.file_list = None
-        self._context = None
+        self._context = context
 
     @classmethod
     def instances(cls, inputs, label=None):
@@ -136,7 +129,7 @@ class LightSourceStage(CatalogStage):
                 f"Light source {config.get('light_source')!r} is of type {model_type!r}; "
                 f"stage {cls.name!r} handles {cls.spec.light_source!r}."
             )
-        config["wavelength"] = _wavelength(config)
+        config["wavelength"] = light_sources.requested_wavelength(config.get("wavelength"))
         instrument_seed, simulation_seed = instance_seed_pairs(context=context)[0]
         config |= {"telescope": telescope, "instrument_seed": instrument_seed}
         request = light_sources.build_request(
@@ -156,8 +149,8 @@ class LightSourceStage(CatalogStage):
             executable=config.get("executable"),
             simulation_models_path=config.get("simulation_models_path"),
             run_files=files_of_run(inputs, label, required=False),
+            context=context,
         )
-        stage._context = context
         return [stage]
 
     def output_file(self, run_number):
@@ -201,7 +194,8 @@ class LightSourceStage(CatalogStage):
                 simulation_models_path=self.simulation_models_path,
             )
         )
-        if self.spec.light_source == "flasher" and self._context is not None:
+        model_context = software_catalog.light_source(self.spec.light_source).get("model_context")
+        if model_context and self._context is not None:
             source = getattr(self._context.model_reader, "source_config", None)
             overrides = read_overwrite_model_parameter_dict(context=self._context)
             if isinstance(source, dict) or overrides:
@@ -212,10 +206,6 @@ class LightSourceStage(CatalogStage):
                 )
                 command = f"env {shlex.quote(f'SIMTOOLS_FLASHER_CONTEXT={path}')} {command}"
         return [f"{command} | {downstream}"] if streamed else [command]
-
-    def environment(self):
-        """Return environment variables needed to run the stage (none)."""
-        return {}
 
     def get_resources(self, runtime=None):
         """Return the run time and the number of simulated events."""
@@ -289,10 +279,6 @@ class LightEmissionStage(CatalogStage):
         """Return the IACT file written by the LightEmission program."""
         del run_number
         return self.calibration.runner_service.get_file_name(file_type="iact_output")
-
-    def environment(self):
-        """Return environment variables needed to run the stage (none)."""
-        return {}
 
     def get_resources(self, runtime=None):
         """Return the run time."""

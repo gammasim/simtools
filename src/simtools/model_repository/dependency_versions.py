@@ -35,6 +35,7 @@ SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
 IMAGE_REGISTRY = "ghcr.io/gammasim"
 IMAGE_REGISTRY_PATTERN = re.compile(r"^[a-z0-9.-]+(/[a-z0-9._-]+)*$")
 IMAGE_TAG_SUFFIX_PATTERN = re.compile(r"^(-\w[A-Za-z0-9_.]*)?$", re.ASCII)
+SIM_TELARRAY_KEY_SCHEMA_VERSION = "0.10.0"
 
 
 @cache
@@ -287,12 +288,12 @@ def validate_dependency_catalog(catalog):
         catalog = dict(catalog)
         catalog[MODEL_KEY] = catalog.pop(LEGACY_MODEL_KEY)
     schema_version = catalog.get("schema_version")
-    catalog = _normalize_legacy_simtel_catalog(catalog, schema_version)
     missing = sorted(_required_catalog_keys(schema_version) - catalog.keys())
     if missing:
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
     if schema_version not in set(_dependency_schemas()):
         raise ValueError(f"Unsupported dependency catalog schema version: {schema_version}")
+    catalog = _normalize_sim_telarray_key(catalog, schema_version)
     _validate_optional_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
     _validate_optional_digest(catalog["base-image"].get("build-digest"), "build base image")
     if _uses_image_catalog(schema_version):
@@ -305,20 +306,30 @@ def validate_dependency_catalog(catalog):
     return catalog
 
 
-def _normalize_legacy_simtel_catalog(catalog, schema_version):
-    """Normalize the historical sim_telarray key for catalog consumers."""
-    if schema_version == "0.9.0" or "sim-telarray" not in catalog:
+def _version_tuple(schema_version):
+    """Return a schema version as a tuple of integers for numeric comparison."""
+    return tuple(map(int, schema_version.split(".")))
+
+
+def _with_sim_telarray_key(mapping):
+    """Return a copy of a mapping with the sim-telarray key renamed to sim_telarray."""
+    return {
+        ("sim_telarray" if key == "sim-telarray" else key): value for key, value in mapping.items()
+    }
+
+
+def _normalize_sim_telarray_key(catalog, schema_version):
+    """Rename the sim-telarray key of catalogs older than schema 0.10.0 to sim_telarray.
+
+    Must run after the catalog passed the required-key check of its own schema version.
+    Catalogs of schema 0.10.0 and later are returned unchanged.
+    """
+    if _version_tuple(schema_version) >= _version_tuple(SIM_TELARRAY_KEY_SCHEMA_VERSION):
         return catalog
-    if "sim_telarray" in catalog:
-        raise ValueError("Catalog declares both sim-telarray and sim_telarray keys.")
-    catalog = dict(catalog)
-    catalog["sim_telarray"] = catalog.pop("sim-telarray")
+    catalog = _with_sim_telarray_key(catalog)
     if "production-combinations" in catalog:
         catalog["production-combinations"] = [
-            {
-                ("sim_telarray" if key == "sim-telarray" else key): value
-                for key, value in combination.items()
-            }
+            _with_sim_telarray_key(combination)
             for combination in catalog["production-combinations"]
         ]
     return catalog
@@ -332,12 +343,8 @@ def _required_catalog_keys(schema_version):
     """
     schemas = _dependency_schemas()
     if schema_version not in schemas:
-        schema_version = max(schemas, key=lambda version: tuple(map(int, version.split("."))))
-    required = set(schemas[schema_version]["required"])
-    if "sim-telarray" in required:
-        required.remove("sim-telarray")
-        required.add("sim_telarray")
-    return required
+        schema_version = max(schemas, key=_version_tuple)
+    return set(schemas[schema_version]["required"])
 
 
 def _validate_images(images):

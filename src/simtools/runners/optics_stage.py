@@ -1,4 +1,4 @@
-"""Trace each telescope photon stream through obdeect optics to its camera."""
+"""Optics stage of the obdeect chain: mirrors, shadowing and telescope transmission."""
 
 import os
 import shlex
@@ -14,13 +14,9 @@ from simtools.runners.stages import (
     stage_file,
 )
 from simtools.simulation_software.obdeect.optics import trace_stream_command, write_optical_model
-from simtools.simulation_software.optics import (
-    optics_requests,
-)
-
-#: Photon streams number telescopes from 1 (sim_telarray numbering); the IACT ids of the CORSIKA
-#: telescope list start at 0.
-STREAM_ID_OFFSET = 1
+from simtools.simulation_software.obdeect.streams import STREAM_TELESCOPE_ID_OFFSET
+from simtools.simulation_software.optics import optics_requests
+from simtools.simulation_software.programs import STDIO
 
 
 class ObdeectOpticsStage(CatalogStage):
@@ -51,25 +47,21 @@ class ObdeectOpticsStage(CatalogStage):
 
     @classmethod
     def instances(cls, inputs, label=None):
-        """Return one stage per array model, tracing all telescopes of the array."""
+        """Return the optics stage of the array model, tracing all telescopes of the array."""
         if inputs.context is None:
             raise ValueError(f"Stage {cls.name!r} needs a run context.")
-        options = cls.stage_options(inputs)
-        threads = _threads(options, inputs.args, len(inputs.array_models))
-        files = files_of_run(inputs, label)
-        stage_list = []
-        for parameters, array_model in zip(inputs.simulation_parameters, inputs.array_models):
-            requests = optics_requests(
-                array_model,
-                parameters,
-                corsika_telescope_ids(array_model.telescope_models),
-                stream_id_offset=STREAM_ID_OFFSET,
-                telescope_transmission=options["telescope_transmission"],
-                threads=threads,
-            )
-            telescopes = [array_model.telescope_models[r.telescope_name] for r in requests]
-            stage_list.append(cls(requests, telescopes, files))
-        return stage_list
+        options = inputs.options_of(cls.name)
+        array_model = inputs.array_models[0]
+        requests = optics_requests(
+            array_model,
+            inputs.simulation_parameters[0],
+            corsika_telescope_ids(array_model.telescope_models),
+            stream_id_offset=STREAM_TELESCOPE_ID_OFFSET,
+            telescope_transmission=options["telescope_transmission"],
+            threads=_threads(options, inputs.args),
+        )
+        telescopes = [array_model.telescope_models[r.telescope_name] for r in requests]
+        return [cls(requests, telescopes, files_of_run(inputs, label))]
 
     def prepare(self, run_number, input_file=None, output=None):
         """
@@ -100,7 +92,7 @@ class ObdeectOpticsStage(CatalogStage):
             self.requests,
             model_files,
             input_file=input_file,
-            output_file="-" if streamed else self.output_file(run_number),
+            output_file=STDIO if streamed else self.output_file(run_number),
         )
         resources_file = stage_file(self, "resources", run_number)
         log_file = stage_file(self, "log", run_number)
@@ -128,22 +120,14 @@ class ObdeectOpticsStage(CatalogStage):
         """Return the camera photon stream file of the array."""
         return stage_file(self, "output", run_number)
 
-    def environment(self):
-        """Return environment variables needed by the stage (none)."""
-        return {}
 
-    def get_resources(self, runtime=None):
-        """Return computing resources used (reported by the first stage of the chain only)."""
-        del runtime
-
-
-def _threads(options, args, instances):
-    """Return the tracing threads of each instance (all cores shared by the instances)."""
+def _threads(options, args):
+    """Return the tracing threads: the option, one thread if sequential, else all cores."""
     if "threads" in options:
         return int(options["threads"])
     if args.get("sequential", False):
         return 1
-    return max(1, (os.process_cpu_count() or 1) // max(1, instances))
+    return os.process_cpu_count() or 1
 
 
 def _guarded(command_text, log_file):

@@ -71,23 +71,6 @@ _ARGUMENTS = (
         default=False,
     ),
     cli.ArgumentDefinition(
-        "shower_route_mode",
-        help=(
-            "How air-shower photon bunches reach sim_telarray when the ray-tracing backend traces "
-            "them (only relevant for the simulation chain 'corsika sim_telarray'): 'stream' pipes "
-            "them without an IACT file on disk; 'disk' keeps the CORSIKA IACT file and routes it "
-            "through a camera photon-bunch file."
-        ),
-        choices=("stream", "disk"),
-        default="stream",
-    ),
-    cli.ArgumentDefinition(
-        "shower_route_threads",
-        help="Threads per shower route process (default 1; 0 divides usable cores among routes).",
-        type=int,
-        default=1,
-    ),
-    cli.ArgumentDefinition(
         "reduced_event_lists",
         help=(
             "Save reduced event lists with event data on simulated and triggered events. "

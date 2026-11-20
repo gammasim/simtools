@@ -287,15 +287,16 @@ class RunnerServices:
         """
         Return a file of a simulation stage: ``<base name>.<stage name><suffix>``.
 
-        The suffix and the directory are those of the file type (``resources/file_types.yml``),
-        so the files of all stages of a run share one naming scheme.
+        The suffix and the directory are those of the file type (the file catalog, which
+        includes ``resources/simulation_software.yml``), so the files of all stages of a run
+        share one naming scheme.
 
         Parameters
         ----------
         stage_name : str
             Name of the stage.
         file_type : str
-            File type (e.g. ``stage_photon_stream``, ``stage_log``).
+            File type of the stage (e.g. ``photon_stream``, ``stage_log``).
         run_number : int
             Run number.
 

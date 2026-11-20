@@ -10,15 +10,16 @@ from astropy.table import Column, Table
 
 from simtools.runners import stages
 from simtools.runners.atmosphere_stage import run_seed
-from simtools.runners.chain_spec import ChainSpec, parse_chain
-from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo, get_stage_class
+from simtools.runners.chain_spec import parse_chain
+from simtools.runners.stages import STDIN, StageInputs, StreamTo, get_stage_class
 from simtools.simulation_software.atmosphere import AtmosphereRequest
 from simtools.simulation_software.programs import program_command
 
-CAMERA_EVENTS = "camera_events"
 PHOTONS_GROUND = "photons_ground"
 PHOTONS_SKY = "photons_sky"
 ATMOSPHERIC_EXTINCTION = "atmospheric_extinction"
+QUANTUM_EFFICIENCY = "quantum_efficiency"
+CAMERA_ONLY_CHAIN = ["corsika", "obdeect_atmosphere", "obdeect_optics"]
 ObdeectAtmosphereStage = get_stage_class("obdeect_atmosphere")
 
 
@@ -66,6 +67,27 @@ def atmosphere_stage(request_for_stage, run_context):
 
 def _tokens(line):
     return shlex.split(line)
+
+
+def _inputs(run_context, array_model, chain_items=("obdeect_atmosphere",), **kwargs):
+    """Stage inputs of one array model and a chain given by its items."""
+    return StageInputs(
+        array_models=(array_model,),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args=kwargs.pop("args", {}),
+        context=run_context,
+        chain=parse_chain(list(chain_items)),
+        **kwargs,
+    )
+
+
+def _instance(inputs, run_context):
+    """Return the atmosphere stage of the inputs, with the run files of a corsika run."""
+    (stage,) = ObdeectAtmosphereStage.instances(inputs)
+    if stage.run_files is None:
+        stage.run_files = _RunFiles(run_context.paths.get_output_directory("corsika"))
+    return stage
 
 
 def test_stage_protocol_attributes():
@@ -151,27 +173,17 @@ def test_output_file_needs_run_files(request_for_stage, run_context):
         stage.output_file(1)
 
 
-def test_environment_and_resources_are_empty(atmosphere_stage):
-    assert atmosphere_stage.environment() == {}
-    assert atmosphere_stage.get_resources() == {}
+def test_instances_create_one_stage_for_the_array_model(array_model_north, run_context):
+    inputs = _inputs(run_context, array_model_north)
 
+    stage_list = ObdeectAtmosphereStage.instances(inputs, label="test")
 
-def test_instances_one_per_array_model(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north, array_model_north),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-    )
-
-    stages_of_run = ObdeectAtmosphereStage.instances(inputs, label="test")
-
-    assert len(stages_of_run) == 2
-    assert all(stage.request.site == "North" for stage in stages_of_run)
-    assert all(stage.request.seed == 1 for stage in stages_of_run)
-    assert all(stage.seed_per_run for stage in stages_of_run)
-    assert all(stage.request.mode == "thinned" for stage in stages_of_run)
+    assert len(stage_list) == 1
+    (stage,) = stage_list
+    assert stage.request.site == "North"
+    assert stage.request.seed == 1
+    assert stage.seed_per_run
+    assert stage.request.mode == "thinned"
 
 
 def test_run_seed_depends_on_base_seed_and_run_number():
@@ -183,18 +195,7 @@ def test_instances_derive_the_seed_of_each_run(array_model_north, run_context, m
     monkeypatch.setattr(
         array_model_north, "sim_telarray_seed", SimpleNamespace(seed_string="11,22")
     )
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-    )
-
-    (stage,) = ObdeectAtmosphereStage.instances(inputs)
-    stage.run_files = stage.run_files or _RunFiles(
-        run_context.paths.get_output_directory("corsika")
-    )
+    stage = _instance(_inputs(run_context, array_model_north), run_context)
 
     assert stage.request.seed == 22
     for run_number in (1, 2):
@@ -203,25 +204,8 @@ def test_instances_derive_the_seed_of_each_run(array_model_north, run_context, m
 
 
 def test_instances_use_stage_options(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-        chain_options={
-            "obdeect_atmosphere": {
-                "seed": 7,
-                "mode": "weighted",
-                "wavelength_range_nm": [250.0, 700.0],
-            }
-        },
-    )
-
-    (stage,) = ObdeectAtmosphereStage.instances(inputs)
-    stage.run_files = stage.run_files or _RunFiles(
-        run_context.paths.get_output_directory("corsika")
-    )
+    chain_items = ["obdeect_atmosphere:seed=7,mode=weighted,wavelength_range_nm=[250.0,700.0]"]
+    stage = _instance(_inputs(run_context, array_model_north, chain_items), run_context)
 
     assert stage.request.seed == 7
     assert not stage.seed_per_run
@@ -232,6 +216,18 @@ def test_instances_use_stage_options(array_model_north, run_context):
     assert stage.request.wavelength_range_nm == (250.0, 700.0)
 
 
+def test_chain_options_reject_unknown_option():
+    with pytest.raises(
+        ValueError, match=r"Unknown option\(s\) \['threads'\] of stage 'obdeect_atmosphere'"
+    ):
+        parse_chain(["obdeect_atmosphere:threads=4"])
+
+
+def test_chain_options_reject_invalid_mode():
+    with pytest.raises(ValueError, match=r"Invalid mode option of stage 'obdeect_atmosphere'"):
+        parse_chain(["obdeect_atmosphere:mode=sparse"])
+
+
 class _CalibrationModel:
     """Calibration device model with one monochromatic wavelength (flasher_wavelength)."""
 
@@ -240,86 +236,73 @@ class _CalibrationModel:
         return [300.0 * u.nm]
 
 
-def test_instances_illuminator_range_is_source_wavelength(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
+def _calibration_inputs(run_context, array_model, chain_items, args=None):
+    return _inputs(
+        run_context,
+        array_model,
+        chain_items,
+        args={} if args is None else args,
         calibration=SimpleNamespace(
             calibration_model=_CalibrationModel(),
             runner_service=_RunFiles(run_context.paths.get_output_directory("light")),
         ),
     )
 
-    (stage,) = ObdeectAtmosphereStage.instances(inputs)
-    stage.run_files = stage.run_files or _RunFiles(
-        run_context.paths.get_output_directory("corsika")
-    )
+
+def test_instances_illuminator_range_is_source_wavelength(array_model_north, run_context):
+    inputs = _calibration_inputs(run_context, array_model_north, ["obdeect_atmosphere"])
+
+    stage = _instance(inputs, run_context)
 
     # obdeect needs lo < hi; no photon is drawn from this range (they carry 300 nm)
     assert stage.request.wavelength_range_nm == pytest.approx((300.0, 301.0))
 
 
-def test_instances_explicit_range_overrides_source_wavelength(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-        calibration=SimpleNamespace(
-            calibration_model=_CalibrationModel(),
-            runner_service=_RunFiles(run_context.paths.get_output_directory("light")),
-        ),
-        chain_options={"obdeect_atmosphere": {"wavelength_range_nm": [250.0, 700.0]}},
+def test_instances_illuminator_rejects_unsupported_wavelength(array_model_north, run_context):
+    inputs = _calibration_inputs(
+        run_context, array_model_north, ["obdeect_atmosphere"], args={"wavelength": [400.0]}
     )
 
-    (stage,) = ObdeectAtmosphereStage.instances(inputs)
-    stage.run_files = stage.run_files or _RunFiles(
-        run_context.paths.get_output_directory("corsika")
+    with pytest.raises(ValueError, match=r"is not supported by the light source"):
+        ObdeectAtmosphereStage.instances(inputs)
+
+
+def test_instances_explicit_range_overrides_source_wavelength(array_model_north, run_context):
+    inputs = _calibration_inputs(
+        run_context,
+        array_model_north,
+        ["obdeect_atmosphere:wavelength_range_nm=[250.0,700.0]"],
     )
+
+    stage = _instance(inputs, run_context)
 
     assert stage.request.wavelength_range_nm == (250.0, 700.0)
 
 
 def test_instances_without_light_source_keeps_run_keys(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-    )
-
-    (stage,) = ObdeectAtmosphereStage.instances(inputs)
-    stage.run_files = stage.run_files or _RunFiles(
-        run_context.paths.get_output_directory("corsika")
-    )
+    stage = _instance(_inputs(run_context, array_model_north), run_context)
 
     assert stage.request.wavelength_range_nm is None
 
 
-def test_instances_reject_unknown_options(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-        chain_options={"obdeect_atmosphere": {"threads": 4}},
-    )
+def test_chain_accepts_photons_from_upstream_stage(fake_stage_factories):
+    fake_stage_factories("fake_sky_source", None, PHOTONS_SKY)
 
-    with pytest.raises(
-        ValueError, match=r"Unknown option\(s\) \['threads'\] of stage 'obdeect_atmosphere'"
-    ):
-        ObdeectAtmosphereStage.instances(inputs)
+    chain = parse_chain(["fake_sky_source", "obdeect_atmosphere"])
+
+    assert chain.stage_classes[-1] is ObdeectAtmosphereStage
+
+
+def test_chain_rejects_upstream_product_it_does_not_consume(fake_stage_factories):
+    fake_stage_factories("fake_camera", None, "camera_events")
+
+    with pytest.raises(ValueError, match=r"'obdeect_atmosphere' consumes"):
+        parse_chain(["fake_camera", "obdeect_atmosphere"])
 
 
 @pytest.fixture
 def fake_stage_factories(monkeypatch):
-    """Register fake upstream stages (other stages are not part of this worktree)."""
+    """Register fake upstream stages (stages of other programs) by name."""
 
     def _register(name, consumes, produces):
         fake = type(
@@ -332,50 +315,19 @@ def fake_stage_factories(monkeypatch):
     return _register
 
 
-def test_chain_accepts_photons_from_upstream_stage(fake_stage_factories):
-    fake_stage_factories("fake_sky_source", None, PHOTONS_SKY)
+def test_bypass_camera_entrance_with_upstream_extinction_applies_extinction_once():
+    chain = parse_chain([*CAMERA_ONLY_CHAIN, "sim_telarray:bypass_optics=camera_entrance"])
 
-    chain = SimulationChain(("fake_sky_source", "obdeect_atmosphere"))
-
-    assert chain.stage_classes[-1] is ObdeectAtmosphereStage
-
-
-def test_chain_rejects_upstream_product_it_does_not_consume(fake_stage_factories):
-    fake_stage_factories("fake_camera", None, CAMERA_EVENTS)
-
-    with pytest.raises(ValueError, match=r"'obdeect_atmosphere' consumes"):
-        SimulationChain(("fake_camera", "obdeect_atmosphere"))
-
-
-def test_chain_spec_rejects_two_atmospheres():
-    spec = ChainSpec(("obdeect_atmosphere", "obdeect_atmosphere"))
-
-    with pytest.raises(ValueError, match=r"applies 'atmospheric_extinction' twice"):
-        spec.chain()
-
-
-def test_applied_factors_is_extinction_regardless_of_options():
-    assert ObdeectAtmosphereStage.spec.applied_factors({"seed": 2}, upstream=frozenset()) == (
-        frozenset({ATMOSPHERIC_EXTINCTION})
-    )
-
-
-def test_bypass_one_chain_with_upstream_extinction_applies_extinction_once():
-    spec = parse_chain(
-        ["corsika", "obdeect_atmosphere", "obdeect_optics", "sim_telarray:bypass_optics=1"]
-    )
-
-    spec.check_applied_factors()
-    applied = dict(spec.applied_factors())
+    applied = dict(chain.applied_factors())
     assert applied["obdeect_atmosphere"] == frozenset({ATMOSPHERIC_EXTINCTION})
-    assert applied["sim_telarray"] == frozenset({"quantum_efficiency"})
+    assert applied["sim_telarray"] == frozenset({QUANTUM_EFFICIENCY})
 
 
-def test_bypass_one_chain_without_upstream_atmosphere_applies_extinction_in_sim_telarray():
-    spec = parse_chain(["corsika", "obdeect_optics", "sim_telarray:bypass_optics=1"])
+def test_bypass_camera_entrance_without_upstream_atmosphere_applies_extinction_in_sim_telarray():
+    chain = parse_chain(["corsika", "obdeect_optics", "sim_telarray:bypass_optics=camera_entrance"])
 
-    applied = dict(spec.applied_factors())
-    assert applied["sim_telarray"] == frozenset({"quantum_efficiency", ATMOSPHERIC_EXTINCTION})
+    applied = dict(chain.applied_factors())
+    assert applied["sim_telarray"] == frozenset({QUANTUM_EFFICIENCY, ATMOSPHERIC_EXTINCTION})
 
 
 class _EnvelopeTelescope:
@@ -429,94 +381,56 @@ def test_prepare_without_envelope_has_no_envelope_option(atmosphere_stage):
     assert "--envelope" not in _tokens(lines[0])
 
 
-def test_instances_envelope_off_by_default(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-    )
-
-    (stage,) = ObdeectAtmosphereStage.instances(inputs)
-    stage.run_files = stage.run_files or _RunFiles(
-        run_context.paths.get_output_directory("corsika")
-    )
+def test_envelope_off_by_default_for_chain_not_ending_camera_only(array_model_north, run_context):
+    stage = _instance(_inputs(run_context, array_model_north, ["obdeect_atmosphere"]), run_context)
 
     assert stage.envelope_model is None
 
 
-def test_instances_envelope_on_by_default_for_camera_only_chain(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-        chain_options={"sim_telarray": {"bypass_optics": 3}},
-        stages=("obdeect_atmosphere", "sim_telarray"),
-    )
+def test_envelope_on_by_default_for_camera_only_chain(array_model_north, run_context):
+    chain_items = [*CAMERA_ONLY_CHAIN, "sim_telarray:bypass_optics=camera_only"]
 
-    (stage,) = ObdeectAtmosphereStage.instances(inputs)
-    stage.run_files = stage.run_files or _RunFiles(
-        run_context.paths.get_output_directory("corsika")
-    )
+    stage = _instance(_inputs(run_context, array_model_north, chain_items), run_context)
 
     assert stage.envelope_model is array_model_north
 
 
-def test_instances_envelope_on_by_option(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-        chain_options={"obdeect_atmosphere": {"efficiency_envelope": "qe"}},
-    )
+def test_envelope_on_by_option(array_model_north, run_context):
+    chain_items = ["obdeect_atmosphere:efficiency_envelope=qe"]
 
-    (stage,) = ObdeectAtmosphereStage.instances(inputs)
-    stage.run_files = stage.run_files or _RunFiles(
-        run_context.paths.get_output_directory("corsika")
-    )
+    stage = _instance(_inputs(run_context, array_model_north, chain_items), run_context)
 
     assert stage.envelope_model is array_model_north
 
 
-def test_instances_envelope_off_by_option(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-        chain_options={"obdeect_atmosphere": {"efficiency_envelope": "none"}},
-    )
+def test_envelope_off_by_option_for_camera_only_chain(array_model_north, run_context):
+    chain_items = [
+        "corsika",
+        "obdeect_atmosphere:efficiency_envelope=none",
+        "obdeect_optics",
+        "sim_telarray:bypass_optics=camera_only",
+    ]
 
-    (stage,) = ObdeectAtmosphereStage.instances(inputs)
-    stage.run_files = stage.run_files or _RunFiles(
-        run_context.paths.get_output_directory("corsika")
-    )
+    stage = _instance(_inputs(run_context, array_model_north, chain_items), run_context)
 
     assert stage.envelope_model is None
 
 
-def test_instances_reject_invalid_envelope_option(array_model_north, run_context):
-    inputs = StageInputs(
-        array_models=(array_model_north,),
-        simulation_parameters=(),
-        shower_configurations=(),
-        args={},
-        context=run_context,
-        chain_options={"obdeect_atmosphere": {"efficiency_envelope": "yes"}},
-    )
-
+def test_envelope_option_rejects_invalid_value():
     with pytest.raises(ValueError, match=r"Invalid efficiency_envelope option of stage"):
-        ObdeectAtmosphereStage.instances(inputs)
+        parse_chain(["obdeect_atmosphere:efficiency_envelope=maybe"])
 
 
-@pytest.mark.parametrize("option", [{}, {"efficiency_envelope": "none"}])
-def test_calibration_does_not_thin_by_qe_envelope(run_context, option):
+@pytest.mark.parametrize(
+    "atmosphere_item", ["obdeect_atmosphere", "obdeect_atmosphere:efficiency_envelope=none"]
+)
+def test_calibration_does_not_thin_by_qe_envelope(run_context, atmosphere_item):
+    chain_items = [
+        "obdeect_illuminator",
+        atmosphere_item,
+        "obdeect_optics",
+        "sim_telarray:bypass_optics=camera_only",
+    ]
     inputs = StageInputs(
         array_models=(),
         simulation_parameters=(),
@@ -524,9 +438,9 @@ def test_calibration_does_not_thin_by_qe_envelope(run_context, option):
         args={},
         context=run_context,
         calibration=object(),
-        stages=("obdeect_illuminator", "obdeect_atmosphere", "obdeect_optics", "sim_telarray"),
-        chain_options={"obdeect_atmosphere": option, "sim_telarray": {"bypass_optics": 3}},
+        chain=parse_chain(chain_items),
     )
+
     assert not ObdeectAtmosphereStage.efficiency_envelope(inputs)
 
 
@@ -538,7 +452,8 @@ def test_calibration_rejects_explicit_qe_envelope(run_context):
         args={},
         context=run_context,
         calibration=object(),
-        chain_options={"obdeect_atmosphere": {"efficiency_envelope": "qe"}},
+        chain=parse_chain(["obdeect_atmosphere:efficiency_envelope=qe"]),
     )
+
     with pytest.raises(ValueError, match=r"efficiency envelope.*calibration"):
         ObdeectAtmosphereStage.efficiency_envelope(inputs)

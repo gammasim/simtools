@@ -62,16 +62,60 @@ def test_simulation_software_prefers_arguments_over_environment(monkeypatch, tmp
 @pytest.mark.parametrize(
     ("args", "backend"),
     [
-        ({"simulation_software": ["obdeect_star"]}, "obdeect"),
-        ({"simulation_software": ["sim_telarray_star"]}, "sim_telarray"),
-        ({"simulation_software": ["corsika", "sim_telarray"]}, "sim_telarray"),
+        ({"ray_tracing_backend": "obdeect"}, "obdeect"),
+        ({"ray_tracing_backend": "sim_telarray"}, "sim_telarray"),
+        ({"ray_tracing_backend": None}, "sim_telarray"),
         ({}, "sim_telarray"),
         (None, "sim_telarray"),
     ],
 )
-def test_ray_tracing_backend_follows_simulation_software(args, backend):
+def test_ray_tracing_backend_from_arguments(args, backend):
     assert SimulationSoftware.from_arguments(args).ray_tracing_backend == backend
     assert RunContext.from_arguments(args).ray_tracing_backend == backend
+
+
+def test_ray_tracing_backend_prefers_arguments_over_environment(monkeypatch):
+    monkeypatch.setenv("SIMTOOLS_RAY_TRACING_BACKEND", "sim_telarray")
+
+    assert SimulationSoftware.from_arguments(
+        {"ray_tracing_backend": "obdeect"}
+    ).ray_tracing_backend == ("obdeect")
+
+
+def test_ray_tracing_backend_from_environment(monkeypatch):
+    monkeypatch.setenv("SIMTOOLS_RAY_TRACING_BACKEND", "obdeect")
+
+    assert SimulationSoftware.from_arguments({}).ray_tracing_backend == "obdeect"
+    assert SimulationSoftware.from_arguments(None).ray_tracing_backend == "obdeect"
+    assert RunContext.from_environment().ray_tracing_backend == "obdeect"
+
+
+def test_ray_tracing_backend_default_is_sim_telarray(monkeypatch):
+    monkeypatch.delenv("SIMTOOLS_RAY_TRACING_BACKEND", raising=False)
+
+    assert SimulationSoftware().ray_tracing_backend == "sim_telarray"
+    assert SimulationSoftware.from_arguments({}).ray_tracing_backend == "sim_telarray"
+
+
+@pytest.mark.parametrize(
+    ("args", "name"),
+    [
+        ({"ray_tracing_backend": "obdeect_star"}, "obdeect_star"),
+        ({"ray_tracing_backend": "unknown"}, "unknown"),
+    ],
+)
+def test_ray_tracing_backend_rejects_unknown_names(args, name):
+    with pytest.raises(
+        ValueError, match=rf"Unknown ray-tracing backend '{name}'.*sim_telarray, obdeect"
+    ):
+        SimulationSoftware.from_arguments(args)
+
+
+def test_ray_tracing_backend_rejects_unknown_environment_value(monkeypatch):
+    monkeypatch.setenv("SIMTOOLS_RAY_TRACING_BACKEND", "star")
+
+    with pytest.raises(ValueError, match="Unknown ray-tracing backend 'star'"):
+        SimulationSoftware.from_arguments({})
 
 
 def test_simulation_software_reports_missing_installations(tmp_test_directory):

@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-from simtools.ray_tracing.backends.obdeect import ObdeectBackend, ObdeectRayTracer
+from simtools.ray_tracing.backends.obdeect import ObdeectRayTracer
 from simtools.simulation_software import flasher_stream
 from simtools.simulation_software.light_sources import (
     AngularDistribution,
@@ -118,13 +118,14 @@ def test_light_source_request():
     assert light.pulse is not None
 
 
-def test_stream_matches_in_process_tracing(toy_telescope, run_context, tmp_path):
+def test_stream_matches_in_process_tracing(toy_telescope, tmp_path):
     request = _request()
     output = tmp_path / "flasher.pst"
     total = flasher_stream.write_flasher_stream(ObdeectRayTracer(toy_telescope), request, output)
 
-    backend = ObdeectBackend(toy_telescope, None, "test", 0.0, False, context=run_context)
-    (pulse,) = backend.camera_photons(flasher_stream.light_source_request(request))
+    (pulse,) = ObdeectRayTracer(toy_telescope).trace_light_source(
+        flasher_stream.light_source_request(request)
+    )
     blocks = list(pulse)
     expected = {
         name: np.concatenate([block[name] for block in blocks])

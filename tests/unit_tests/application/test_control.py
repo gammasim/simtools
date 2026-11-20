@@ -164,7 +164,7 @@ def test_initialize_runtime_validates_software_of_all_chain_stages():
             "corsika_to_stream",
             "obdeect_optics",
             "stream_to_simtel",
-            "sim_telarray:bypass_optics=3",
+            "sim_telarray:bypass_optics=camera_entrance",
         ],
     }
     with (

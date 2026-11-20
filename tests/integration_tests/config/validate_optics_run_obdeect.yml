@@ -17,7 +17,7 @@ applications:
     test: true
     zenith_angle: 20
     plot_images: true
-    simulation_software: obdeect_star
+    ray_tracing_backend: obdeect
     instrument_seed: 17
     simulation_seed: [17]
   integration_tests:

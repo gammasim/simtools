@@ -1,7 +1,7 @@
 """Unit tests for multi_illuminator_simulator module."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import astropy.units as u
 import pytest
@@ -684,3 +684,40 @@ def test_simulate_illuminator_telescope_pair_passes_simulation_software(
 
     config = mock_sim_class.call_args[1]["light_emission_config"]
     assert config["simulation_software"] == chain
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
+def test_simulate_passes_script_writer_to_jobs(
+    mock_pool, simple_visibility_data, base_config, run_context
+):
+    mock_pool.return_value = []
+    script_writer = Mock()
+    simulator = MultiIlluminatorSimulator(
+        context=run_context,
+        visibility_data=simple_visibility_data,
+        config=base_config,
+        script_writer=script_writer,
+    )
+
+    simulator.simulate(wavelengths=[355 * u.nm], illuminators=["ILLS-01"], telescopes=["MSTS-01"])
+
+    (job_spec,) = mock_pool.call_args[0][1]
+    assert job_spec["script_writer"] is script_writer
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.SimulatorLightEmission")
+def test_simulate_illuminator_telescope_pair_uses_script_writer(mock_sim_class, run_context):
+    script_writer = Mock()
+    job_spec = {
+        "illuminator": "ILLS-01",
+        "telescope": "MSTS-01",
+        "site": "South",
+        "label": "test",
+        "context": run_context.replace(model_reader=None).to_spec(),
+        "config": {"site": "South", "model_version": "6.0.0"},
+        "script_writer": script_writer,
+    }
+
+    assert _simulate_illuminator_telescope_pair(job_spec)["success"] is True
+
+    mock_sim_class.return_value.simulate.assert_called_once_with(script_writer=script_writer)

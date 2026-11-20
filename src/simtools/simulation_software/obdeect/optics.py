@@ -3,9 +3,9 @@
 from pathlib import Path
 
 from simtools.ray_tracing.backends.interface import create_shower_tracer
-from simtools.simulation_software.programs import program_command
+from simtools.simulation_software.obdeect.streams import SOFTWARE
+from simtools.simulation_software.programs import STDIO, program_command
 
-SOFTWARE = "obdeect"
 COMMAND_PROGRAM = "obdeect"
 
 
@@ -42,7 +42,7 @@ def write_optical_model(request, telescope_model, directory=None):
 _SHARED_FIELDS = ("tracing_seed", "threads", "zenith_deg", "azimuth_deg", "telescope_transmission")
 
 
-def trace_stream_command(requests, model_files, input_file="-", output_file="-"):
+def trace_stream_command(requests, model_files, input_file=STDIO, output_file=STDIO):
     """
     Return the tokens of the obdeect command tracing a photon stream through several telescopes.
 

@@ -17,7 +17,7 @@ from simtools.job_execution.execution import execute_jobs, options_from_args, su
 from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
 from simtools.model_repository.reader import with_resolved_model_reader
-from simtools.runners import chain_spec, sim_telarray_stage
+from simtools.runners import chain_spec
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.corsika_stage import CorsikaStage
 from simtools.runners.sim_telarray_stage import SimTelArrayStage
@@ -147,8 +147,7 @@ class Simulator:
         self.site = self.context.args.get("site", None)
         self.model_version = self.context.args.get("model_version", None)
         self.run_mode = self.context.args.get("run_mode", None)
-        self.chain_spec = chain_spec.parse_chain(self._chain_software())
-        self.chain = self.chain_spec.chain()
+        self.chain = chain_spec.parse_chain(self._chain_software())
         self.logger.info("Simulation software: %s", " -> ".join(self.chain.stages))
         self.io_handler = self.context.paths
 
@@ -246,8 +245,7 @@ class Simulator:
             shower_configurations=tuple(value_conversion.ensure_list(self.corsika_configurations)),
             args=dict(self.context.args),
             context=self.context,
-            chain_options=self.chain_spec.options,
-            stages=self.chain.stages,
+            chain=self.chain,
         )
         return ChainRunner(self.chain, inputs, label=self.label)
 
@@ -645,8 +643,6 @@ class Simulator:
             "corsika_resources",
             "sim_telarray_resources",
             "multi_pipe_resources",
-            "shower_route_resources",
-            "shower_route_log",
             "sim_telarray_err",
             "corsika_err",
         )
@@ -712,9 +708,7 @@ class Simulator:
     def _allowed_metadata_changes(self):
         """Model parameters that sim_telarray may read differently from the model (-C options)."""
         allowed = ["nsb_scaling_factor", "stars"]
-        if sim_telarray_stage.uses_zero_transmission(
-            self.chain_spec.stages, self.chain_spec.stage_options
-        ):
+        if any(self.chain.skipped_factors(name) for name in self.chain.stages):
             # the zero-depth table replaces the atmospheric transmission of the model
             allowed.append("atmospheric_transmission")
         return allowed

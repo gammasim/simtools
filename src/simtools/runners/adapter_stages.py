@@ -7,6 +7,7 @@ from simtools.runners.stages import (
     StreamTo,
     efficiency_envelope_enabled,
     files_of_run,
+    single_downstream,
     stage_file,
 )
 from simtools.simulation_software import efficiency
@@ -14,16 +15,15 @@ from simtools.simulation_software.atmosphere import export_atmosphere_files
 from simtools.simulation_software.obdeect import streams
 
 
-def _connect_output(command, output, output_file):
+def _connect_output(stage_name, command, output, output_file):
     """
     Return the shell lines of a stream command.
 
-    A streamed output (downstream commands) is piped into each downstream command; the
-    downstream commands read the stream from their standard input. Without a streamed output,
-    the command writes the stream to ``output_file``.
+    A streamed output is piped into its one downstream command, which reads the stream from its
+    standard input. Without a streamed output, the command writes the stream to ``output_file``.
     """
     if isinstance(output, StreamTo):
-        return [f"{command} | {downstream}" for downstream in output.commands]
+        return [f"{command} | {single_downstream(output, stage_name)}"]
     return [f"{command} > {shlex.quote(str(output_file))}"]
 
 
@@ -60,7 +60,7 @@ class CorsikaToStreamStage(CatalogStage):
         input_file : str or Path
             CORSIKA output file, or ``STDIN`` when reading a stream.
         output : StreamTo or None
-            Downstream commands receiving the photon stream; None writes the stream to the
+            Downstream command receiving the photon stream; None writes the stream to the
             stage output file.
 
         Returns
@@ -71,19 +71,11 @@ class CorsikaToStreamStage(CatalogStage):
         if input_file is None:
             raise ValueError(f"{self.name} reads the CORSIKA output: give a file or STDIN.")
         command = shlex.join(streams.from_corsika_command(input_file))
-        return _connect_output(command, output, self.output_file(run_number))
+        return _connect_output(self.name, command, output, self.output_file(run_number))
 
     def output_file(self, run_number):
         """Return the photon stream file of the run."""
         return stage_file(self, "output", run_number)
-
-    def environment(self):
-        """Return the environment variables of the stage (none)."""
-        return {}
-
-    def get_resources(self, runtime=None):
-        """Return computing resources used (of the CORSIKA run)."""
-        return self.run_files.get_resources(runtime=runtime)
 
 
 class StreamToSimtelStage(CatalogStage):
@@ -128,13 +120,8 @@ class StreamToSimtelStage(CatalogStage):
 
     @classmethod
     def instances(cls, inputs, label=None):
-        """Return the stage of the array (the obdeect chain converts one array model per run)."""
-        if len(inputs.array_models) != 1:
-            raise ValueError(
-                "The obdeect chain converts one array model per run; "
-                f"got {len(inputs.array_models)} array models."
-            )
-        options = cls.stage_options(inputs)
+        """Return the stage of the array model (the first array model of the run)."""
+        options = inputs.options_of(cls.name)
         scaled_factors = tuple(options.get("scaled_factors", ()))
         if efficiency_envelope_enabled(inputs):
             # sim_telarray's QE table holds QE / envelope (see simulation_software.efficiency)
@@ -161,7 +148,7 @@ class StreamToSimtelStage(CatalogStage):
         input_file : str or Path
             Photon stream file, or ``STDIN`` when reading a stream.
         output : StreamTo or None
-            Downstream commands (sim_telarray) receiving the converted stream; None writes the
+            Downstream command (sim_telarray) receiving the converted stream; None writes the
             stream to the stage output file.
 
         Returns
@@ -179,7 +166,7 @@ class StreamToSimtelStage(CatalogStage):
             self.scaled_factors,
             atmprof=atmprof,
         )
-        return _connect_output(shlex.join(command), output, self.output_file(run_number))
+        return _connect_output(self.name, shlex.join(command), output, self.output_file(run_number))
 
     def camera_map_file(self, run_number):
         """Return the camera map file of the run."""
@@ -206,11 +193,3 @@ class StreamToSimtelStage(CatalogStage):
     def output_file(self, run_number):
         """Return the sim_telarray input file of the run."""
         return stage_file(self, "output", run_number)
-
-    def environment(self):
-        """Return the environment variables of the stage (none)."""
-        return {}
-
-    def get_resources(self, runtime=None):
-        """Return computing resources used (of the CORSIKA run)."""
-        return self.run_files.get_resources(runtime=runtime)

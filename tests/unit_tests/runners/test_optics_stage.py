@@ -1,5 +1,6 @@
 """Tests for the optics stage of the obdeect chain."""
 
+import os
 import shlex
 from pathlib import Path
 from types import SimpleNamespace
@@ -8,16 +9,15 @@ import pytest
 
 from simtools.runners import stages
 from simtools.runners.chain_runner import ChainRunner
-from simtools.runners.chain_spec import (
-    ChainSpec,
-)
-from simtools.runners.stages import STDIN, SimulationChain, StageInputs, StreamTo, get_stage_class
-from simtools.simtel.shower_photons import derive_seed
+from simtools.runners.chain_spec import parse_chain
+from simtools.runners.stages import STDIN, StageInputs, StreamTo, get_stage_class
+from simtools.simulation_software.optics import derive_seed
 
 CHERENKOV_PHOTONS = "cherenkov_photons"
+CAMERA_PHOTONS_IACT = "camera_photons_iact"
 PHOTONS_CAMERA = "photons_camera"
 PHOTONS_GROUND = "photons_ground"
-PHOTONS_TELESCOPE = "photons_telescope"
+ObdeectOpticsStage = get_stage_class("obdeect_optics")
 
 _MIRROR_LIST = """0 0 100.0 0.0 0
 125 0 100.0 0.0 0
@@ -71,7 +71,7 @@ def _telescope(type_name, directory):
 
 MIRROR_REFLECTIVITY = "mirror_reflectivity"
 TELESCOPE_TRANSMISSION = "telescope_transmission"
-ObdeectOpticsStage = get_stage_class("obdeect_optics")
+OPTICS_CHAIN = ["obdeect_optics"]
 
 
 class _RunFiles:
@@ -114,17 +114,32 @@ def array_model(tmp_test_directory):
     )
 
 
-@pytest.fixture
-def inputs(array_model, context, run_files):
+def _inputs(array_model, context, run_files, chain_items=OPTICS_CHAIN, args=None):
     parameters = SimpleNamespace(zenith_angle=20.0, azimuth_angle=180.0)
     return StageInputs(
         array_models=(array_model,),
         simulation_parameters=(parameters,),
         shower_configurations=(),
-        args={},
+        args={} if args is None else args,
         context=context,
+        chain=parse_chain(list(chain_items)),
         calibration=SimpleNamespace(runner_service=run_files),
     )
+
+
+@pytest.fixture
+def inputs(array_model, context, run_files):
+    return _inputs(array_model, context, run_files)
+
+
+@pytest.fixture
+def stage(inputs):
+    (stage,) = ObdeectOpticsStage.instances(inputs)
+    return stage
+
+
+def _all_cores():
+    return os.process_cpu_count() or 1
 
 
 def _command_tokens(line):
@@ -136,12 +151,12 @@ def _command_tokens(line):
 
 def test_stage_attributes():
     assert ObdeectOpticsStage.name == "obdeect_optics"
-    assert ObdeectOpticsStage.consumes == (PHOTONS_GROUND, PHOTONS_TELESCOPE)
+    assert ObdeectOpticsStage.consumes == (PHOTONS_GROUND, "photons_telescope")
     assert ObdeectOpticsStage.produces == PHOTONS_CAMERA
     assert ObdeectOpticsStage.streams
 
 
-def test_instances_one_per_array_model(inputs):
+def test_instances_create_one_stage_for_the_array_model(inputs):
     (stage,) = ObdeectOpticsStage.instances(inputs, label="test")
 
     assert [r.telescope_name for r in stage.requests] == ["LSTN-01", "MSTN-01", "LSTN-02"]
@@ -155,32 +170,12 @@ def test_instances_one_per_array_model(inputs):
     assert stage.telescope_models[2] is inputs.array_models[0].telescope_models["LSTN-02"]
 
 
-def test_instances_of_several_array_models(inputs):
-    two = StageInputs(
-        array_models=inputs.array_models * 2,
-        simulation_parameters=inputs.simulation_parameters * 2,
-        shower_configurations=(),
-        args={"sequential": True},
-        context=inputs.context,
-        calibration=inputs.calibration,
-    )
-
-    stages = ObdeectOpticsStage.instances(two)
-
-    assert len(stages) == 2
-    assert {r.threads for stage in stages for r in stage.requests} == {1}
-
-
-def test_instances_take_options(inputs):
-    options = {"obdeect_optics": {"telescope_transmission": "full", "threads": 3}}
-    chained = StageInputs(
-        array_models=inputs.array_models,
-        simulation_parameters=inputs.simulation_parameters,
-        shower_configurations=(),
-        args={},
-        context=inputs.context,
-        chain_options=options,
-        calibration=inputs.calibration,
+def test_instances_take_options(inputs, array_model, context, run_files):
+    chained = _inputs(
+        array_model,
+        context,
+        run_files,
+        chain_items=["obdeect_optics:telescope_transmission=full,threads=3"],
     )
 
     (stage,) = ObdeectOpticsStage.instances(chained)
@@ -189,27 +184,52 @@ def test_instances_take_options(inputs):
     assert {r.threads for r in stage.requests} == {3}
 
 
-def test_instances_need_context(inputs):
-    without_context = StageInputs(
+def test_threads_default_to_all_cores(inputs):
+    (stage,) = ObdeectOpticsStage.instances(inputs)
+
+    assert {r.threads for r in stage.requests} == {_all_cores()}
+
+
+def test_threads_of_sequential_run_is_one(inputs):
+    sequential = StageInputs(
         array_models=inputs.array_models,
         simulation_parameters=inputs.simulation_parameters,
         shower_configurations=(),
+        args={"sequential": True},
+        context=inputs.context,
+        chain=inputs.chain,
+        calibration=inputs.calibration,
+    )
+    (stage,) = ObdeectOpticsStage.instances(sequential)
+
+    assert {r.threads for r in stage.requests} == {1}
+
+
+def test_instances_need_context(array_model, run_files):
+    without_context = StageInputs(
+        array_models=(array_model,),
+        simulation_parameters=(SimpleNamespace(zenith_angle=20.0, azimuth_angle=180.0),),
+        shower_configurations=(),
         args={},
+        chain=parse_chain(OPTICS_CHAIN),
     )
     with pytest.raises(ValueError, match="needs a run context"):
         ObdeectOpticsStage.instances(without_context)
 
 
 def test_applied_factors():
-    spec = ObdeectOpticsStage.spec
-    assert spec.applied_factors({}) == {MIRROR_REFLECTIVITY, TELESCOPE_TRANSMISSION}
-    with pytest.raises(ValueError, match="Invalid telescope_transmission option"):
-        spec.applied_factors({"telescope_transmission": "angular"})
+    assert ObdeectOpticsStage.spec.applied_factors({}) == {
+        MIRROR_REFLECTIVITY,
+        TELESCOPE_TRANSMISSION,
+    }
 
 
-def test_prepare_traces_all_telescopes_in_one_command(inputs, context):
-    (stage,) = ObdeectOpticsStage.instances(inputs)
+def test_chain_option_rejects_unsupported_transmission():
+    with pytest.raises(ValueError, match="Invalid telescope_transmission option of stage"):
+        parse_chain(["obdeect_optics:telescope_transmission=angular"])
 
+
+def test_prepare_traces_all_telescopes_in_one_command(stage, context):
     (line,) = stage.prepare(5, input_file=STDIN)
 
     tokens = _command_tokens(line)
@@ -232,53 +252,38 @@ def test_prepare_traces_all_telescopes_in_one_command(inputs, context):
     assert len(stage.file_list["obdeect_optics_resources"]) == 1
 
 
-def test_prepare_reading_file(inputs):
-    stage = ObdeectOpticsStage.instances(inputs)[0]
-
+def test_prepare_reading_file(stage):
     (line,) = stage.prepare(5, input_file="photons.pst")
 
     tokens = _command_tokens(line)
     assert tokens[tokens.index("--input") + 1] == "photons.pst"
 
 
-def test_prepare_requires_input(inputs):
-    stage = ObdeectOpticsStage.instances(inputs)[0]
+def test_prepare_requires_input(stage):
     with pytest.raises(ValueError, match="needs an input photon stream"):
         stage.prepare(5)
 
 
-def test_prepare_streams_to_one_downstream_command(inputs):
-    (stage,) = ObdeectOpticsStage.instances(inputs)
-
+def test_prepare_streams_to_one_downstream_command(stage):
     (line,) = stage.prepare(5, input_file=STDIN, output=StreamTo(("consume",)))
 
     assert line.endswith(" | consume")
     assert _command_tokens(line)[-1] == "-"
 
 
-def test_prepare_rejects_several_downstream_commands(inputs):
-    (stage,) = ObdeectOpticsStage.instances(inputs)
+def test_prepare_rejects_several_downstream_commands(stage):
     with pytest.raises(ValueError, match="pipes into one downstream command, got 2"):
         stage.prepare(5, input_file=STDIN, output=StreamTo(("a", "b")))
 
 
-def test_failing_command_stops_multipipe(inputs):
-    stage = ObdeectOpticsStage.instances(inputs)[0]
-
+def test_failing_command_stops_multipipe(stage):
     (line,) = stage.prepare(5, input_file=STDIN)
 
     assert "MULTIPIPE_PID" in line
     assert "obdeect_optics.log" in line
 
 
-def test_environment_and_resources(inputs):
-    stage = ObdeectOpticsStage.instances(inputs)[0]
-
-    assert stage.environment() == {}
-    assert stage.get_resources() is None
-
-
-def _fake_class(name, consumes, produces, factors=(), lines=()):
+def _fake_class(name, consumes, produces, lines=()):
     """Return a stage class standing in for a stage of another module."""
 
     class Fake:
@@ -292,10 +297,6 @@ def _fake_class(name, consumes, produces, factors=(), lines=()):
         def instances(cls, _inputs, label=None):
             del label
             return [cls(tag) for tag in lines] or [cls()]
-
-        @classmethod
-        def applied_factors(cls, _options, upstream=frozenset()):
-            return set(factors)
 
         def prepare(self, run_number, input_file=None, output=None):
             del run_number
@@ -314,9 +315,8 @@ def _fake_class(name, consumes, produces, factors=(), lines=()):
 def fake_chain_stages(monkeypatch):
     fakes = {
         "fake_to_stream": _fake_class("fake_to_stream", CHERENKOV_PHOTONS, PHOTONS_GROUND),
-        "fake_camera": _fake_class("consume", PHOTONS_CAMERA, "camera_events", lines=("shared",)),
-        "fake_double": _fake_class(
-            "fake_double", PHOTONS_CAMERA, "camera_events", {MIRROR_REFLECTIVITY}
+        "fake_camera": _fake_class(
+            "consume", PHOTONS_CAMERA, CAMERA_PHOTONS_IACT, lines=("shared",)
         ),
     }
     for name, fake in fakes.items():
@@ -324,28 +324,21 @@ def fake_chain_stages(monkeypatch):
 
 
 def test_chain_is_valid(fake_chain_stages):
-    chain = SimulationChain(("fake_to_stream", "obdeect_optics", "fake_camera"))
+    chain = parse_chain(["fake_to_stream", "obdeect_optics", "fake_camera"])
 
-    ChainSpec(chain.stages).check_applied_factors()
-    assert chain.has("obdeect_optics")
+    assert chain.stages == ("fake_to_stream", "obdeect_optics", "fake_camera")
 
 
 def test_chain_without_converter_is_invalid(fake_chain_stages):
     with pytest.raises(ValueError, match="consumes"):
-        SimulationChain(("fake_camera", "obdeect_optics"))
-
-
-def test_factor_applied_twice_is_rejected(fake_chain_stages):
-    spec = ChainSpec(("fake_to_stream", "obdeect_optics", "fake_double"))
-
-    with pytest.raises(ValueError, match="applies 'mirror_reflectivity' twice"):
-        spec.check_applied_factors()
+        parse_chain(["fake_camera", "obdeect_optics"])
 
 
 def test_runner_streams_the_array_through_one_optics_process(
-    inputs, fake_chain_stages, tmp_test_directory
+    array_model, context, run_files, fake_chain_stages, tmp_test_directory
 ):
-    chain = SimulationChain(("fake_to_stream", "obdeect_optics", "fake_camera"))
+    chain = parse_chain(["fake_to_stream", "obdeect_optics", "fake_camera"])
+    inputs = _inputs(array_model, context, run_files, chain_items=chain.stages)
     script = Path(tmp_test_directory) / "run.sh"
 
     ChainRunner(chain, inputs).prepare_run(1, script)

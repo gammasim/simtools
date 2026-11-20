@@ -51,5 +51,4 @@ def light_simulation(run_context, tmp_test_directory, monkeypatch):
     writer = LightEmissionConfigWriter(simulation)
     simulation.configuration_writers = {"light_emission": writer}
     monkeypatch.setattr(writer, "make_command", lambda iact_output: f"ff-1m -o {iact_output}")
-    monkeypatch.setattr(simulation, "_backend", lambda: None)
     return simulation

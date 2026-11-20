@@ -23,6 +23,7 @@ from simtools.ray_tracing.backends.interface import LightSourceRequest
 from simtools.runtime.context import RunContext
 from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
 from simtools.simulation_software.light_sources import flasher_request_from_json
+from simtools.simulation_software.programs import STDIO
 
 PRODUCER = "simtools-flasher"
 TELESCOPE_ID = 1
@@ -133,7 +134,7 @@ def write_flasher_stream(tracer, request, output):
         else request.emission_altitude_m
     )
     # obdeect Writer takes a path, as its own stages do for output "-": stdout is /dev/stdout
-    sink = "/dev/stdout" if str(output) == "-" else str(output)
+    sink = "/dev/stdout" if str(output) == STDIO else str(output)
     total = 0
     with obdeect.stream.Writer(sink, PRODUCER) as writer:
         writer.write(
@@ -183,7 +184,7 @@ def parse_args(argv=None):
         description="Write the camera-frame photon stream of a flasher (stdout or --output)."
     )
     parser.add_argument("--request", type=Path, required=True, help="JSON flasher request.")
-    parser.add_argument("--output", default="-", help="Photon-stream file, or '-' for stdout.")
+    parser.add_argument("--output", default=STDIO, help="Photon-stream file, or '-' for stdout.")
     parser.add_argument(
         "--output-path", type=Path, default=None, help="Work directory for exported model files."
     )

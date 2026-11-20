@@ -37,9 +37,11 @@ products:
     description: Camera-frame photons as IACT photon bunches, for sim_telarray with bypassed optics.
     frame: camera
     format: iact
-  star_images:
-    description: Star images of one telescope model (ray tracing).
-    format: table
+  light_emission_photons:
+    description: >-
+      Photons of a sim_telarray LightEmission program (IACT photon bunches); sim_telarray sets
+      Bypass_Optics from the light-source type.
+    format: iact
   camera_events:
     description: Camera events written by sim_telarray.
     format: events
@@ -103,6 +105,7 @@ software:
   sim_telarray:
     description: Telescope optics, camera and electronics (sim_telarray and its LightEmission programs).
     dependency: sim_telarray
+    ray_tracing_backend: simtools.ray_tracing.backends.sim_telarray:SimtelBackend
     formats:
       sim_telarray: [.simtel, .simtel.gz, .simtel.zst]
     files:
@@ -167,33 +170,11 @@ software:
         role: metadata
         retention: persistent
         directory: run
-      shower_route_resources:
-        suffixes: [.shower_route.resources.json]
-        default_suffix: .shower_route.resources.json
-        role: metadata
-        retention: persistent
-        directory: run
-      shower_route_log:
-        suffixes: [.shower_route.log]
-        default_suffix: .shower_route.log
-        role: diagnostic
-        retention: persistent
-      telescope_route_map:
-        suffixes: [.telescope_map.json]
-        default_suffix: .telescope_map.json
-        role: intermediate
-        retention: persistent
-        directory: run
-      camera_bunch_file:
-        suffixes: [.camera.iact.gz, .camera.iact.zst]
-        default_suffix: .camera.iact.gz
-        role: intermediate
-        retention: temporary
-        directory: run
 
   obdeect:
     description: obdeect is a simulation chain for imaging atmospheric Cherenkov telescopes.
     dependency: python_package
+    ray_tracing_backend: simtools.ray_tracing.backends.obdeect:ObdeectBackend
     package: obdeect
     command: obdeect
     command_module: obdeect.stream.cli
@@ -245,6 +226,7 @@ light_sources:
     description: Flat-fielding flasher in front of the camera.
     model_types: [flat_fielding]
     request: simtools.simulation_software.light_sources:flasher_request
+    model_context: true
     command: simtools.simulation_software.obdeect.sources:flasher_command
   illuminator:
     description: External illuminator (point source at a distance).
@@ -267,7 +249,7 @@ stages:
     software: sim_telarray
     implementation: simtools.runners.light_source_stages:LightEmissionStage
     source: light_source
-    produces: cherenkov_photons
+    produces: light_emission_photons
 
   obdeect_flasher:
     description: Flasher photons traced past the telescope structure to the camera.
@@ -291,18 +273,6 @@ stages:
     files:
       output: photon_stream
 
-  obdeect_star:
-    description: Star images and incidence angles traced in process by obdeect (ray-tracing backend; selects the backend, not run by the chain runner).
-    software: obdeect
-    implementation: simtools.ray_tracing.backends.obdeect:ObdeectBackend
-    produces: star_images
-
-  sim_telarray_star:
-    description: Star images and incidence angles traced in process by sim_telarray (ray-tracing backend; selects the backend, not run by the chain runner).
-    software: sim_telarray
-    implementation: simtools.ray_tracing.backends.sim_telarray:SimtelBackend
-    produces: star_images
-
   corsika_to_stream:
     description: CORSIKA photon bunches to a photon stream.
     software: obdeect
@@ -317,6 +287,7 @@ stages:
     description: Photons from emission to the ground, with atmospheric extinction (thinned).
     software: obdeect
     implementation: simtools.runners.atmosphere_stage:ObdeectAtmosphereStage
+    single_array_model: true
     consumes: [photons_sky, photons_ground]
     produces: photons_ground
     applies: [atmospheric_extinction]
@@ -346,6 +317,7 @@ stages:
     description: Mirrors, shadowing and telescope transmission; one process for all telescopes.
     software: obdeect
     implementation: simtools.runners.optics_stage:ObdeectOpticsStage
+    single_array_model: true
     consumes: [photons_ground, photons_telescope]
     produces: photons_camera
     applies: [mirror_reflectivity, telescope_transmission]
@@ -367,6 +339,7 @@ stages:
     description: Camera-frame photon stream to sim_telarray photon bunches.
     software: obdeect
     implementation: simtools.runners.adapter_stages:StreamToSimtelStage
+    single_array_model: true
     converter: true
     consumes: [photons_camera]
     produces: camera_photons_iact
@@ -387,31 +360,39 @@ stages:
     description: Telescopes (optics unless bypassed), camera and electronics.
     software: sim_telarray
     implementation: simtools.runners.sim_telarray_stage:SimTelArrayStage
-    consumes: [cherenkov_photons, camera_photons_iact]
+    consumes: [cherenkov_photons, camera_photons_iact, light_emission_photons]
     produces: camera_events
-    routes_shower_photons: true
     production_result: production_sim_telarray
     options:
       bypass_optics:
-        type: integer
-        enum: [0, 1, 2, 3]
-        default: 0
+        type: string
+        enum: [none, camera_entrance, camera_only]
+        default: none
         description: >-
-          0 traces CORSIKA photons through the optics; 1 or 2 takes photons at the camera
-          entrance (level from the mirror class); 3 simulates the camera only.
+          none traces the photons through the optics (Bypass_Optics of a LightEmission run
+          follows the light-source type); camera_entrance takes photons at the camera entrance
+          (Bypass_Optics 1 or 2 from the mirror class); camera_only simulates the camera only
+          (Bypass_Optics 3).
+    consumes_by_option:
+      bypass_optics:
+        none: [cherenkov_photons, light_emission_photons]
+        camera_entrance: [camera_photons_iact]
+        camera_only: [camera_photons_iact]
     applies_by_option:
       bypass_optics:
-        0: [atmospheric_extinction, mirror_reflectivity, telescope_transmission, quantum_efficiency]
-        # photons at the camera entrance; a zero-depth table if the extinction is applied upstream
-        1:
+        none: [atmospheric_extinction, mirror_reflectivity, telescope_transmission, quantum_efficiency]
+        # a zero-depth transmission table if the extinction is applied upstream
+        camera_entrance:
           applies: [atmospheric_extinction, quantum_efficiency]
           skips_if_applied_upstream: [atmospheric_extinction]
-        2:
-          applies: [atmospheric_extinction, quantum_efficiency]
-          skips_if_applied_upstream: [atmospheric_extinction]
-        3: [quantum_efficiency]
+        camera_only: [quantum_efficiency]
     camera_only:
-      bypass_optics: 3
+      bypass_optics: camera_only
+
+# Efficiency factors a chain ending in camera events applies, by the source of its photons.
+required_efficiency_factors:
+  air_shower: [atmospheric_extinction, mirror_reflectivity, telescope_transmission, quantum_efficiency]
+  light_source: [quantum_efficiency]
 
 default_chains:
   air_shower: [corsika, sim_telarray]

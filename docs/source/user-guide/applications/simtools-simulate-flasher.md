@@ -28,7 +28,7 @@ source stage and has no ``corsika`` stage. The direct-injection run mode accepts
 
     simtools-simulate-flasher --run_mode full_simulation --light_source_type flat_fielding \
     --model_version 7.0.0 --site North --telescopes MSTN-04 \
-    --simulation_software obdeect_flasher sim_telarray:bypass_optics=1
+    --simulation_software obdeect_flasher sim_telarray:bypass_optics=camera_entrance
 
 See :doc:`/components/obdeect` for the stages.
 

@@ -350,7 +350,7 @@ def test_validate_required_production_outputs_accepts_required_output(tmp_test_d
 def test_validate_required_production_outputs_uses_last_stage_of_chain(tmp_test_directory):
     validate_required_production_outputs(
         {"sim_telarray": ["run000001.simtel.zst"]},
-        ["corsika", "sim_telarray:bypass_optics=3"],
+        ["corsika", "sim_telarray"],
         tmp_test_directory,
     )
     with pytest.raises(ValueError, match="no 'corsika' output"):

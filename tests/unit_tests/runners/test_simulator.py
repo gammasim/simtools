@@ -12,8 +12,9 @@ import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.runners import simulator as simulator_module
+from simtools.runners.chain_spec import parse_chain
 from simtools.runners.simulator import Simulator
-from simtools.runners.stages import SimulationChain, StageInputs
+from simtools.runners.stages import StageInputs
 from simtools.sim_events import file_info
 from simtools.sim_events.simulation_parameters import SimulationParameters
 from simtools.utils.primary_particle import PrimaryParticle
@@ -165,35 +166,33 @@ def test_init_simulator(make_simulator, software, label):
 
 
 def test_simulation_software_of_fixtures(array_simulator, shower_simulator, shower_array_simulator):
-    assert array_simulator.chain == SimulationChain(("sim_telarray",))
-    assert shower_simulator.chain == SimulationChain(("corsika",))
-    assert shower_array_simulator.chain == SimulationChain(("corsika", "sim_telarray"))
+    assert array_simulator.chain == parse_chain(["sim_telarray"])
+    assert shower_simulator.chain == parse_chain(["corsika"])
+    assert shower_array_simulator.chain == parse_chain(["corsika", "sim_telarray"])
     assert shower_array_simulator.chain.software == frozenset({"corsika", "sim_telarray"})
 
 
 def test_simulation_software_default(make_simulator):
     """Without 'simulation_software' the chain is corsika followed by sim_telarray."""
     simulator = make_simulator(None, "test-default-chain")
-    assert simulator.chain == SimulationChain(("corsika", "sim_telarray"))
-    assert simulator.chain_spec.stages == ("corsika", "sim_telarray")
-    assert simulator.chain_spec.options == {}
+    assert simulator.chain.stages == ("corsika", "sim_telarray")
+    assert simulator.chain.stage_options("sim_telarray") == {"bypass_optics": "none"}
 
 
 @pytest.mark.parametrize("single_stage", ["corsika", "sim_telarray"])
 def test_simulation_software_single_stage(make_simulator, single_stage):
     simulator = make_simulator([single_stage], f"test-{single_stage}-chain")
     assert simulator.chain.stages == (single_stage,)
-    assert simulator.chain_spec.software == frozenset({single_stage})
+    assert simulator.chain.software == frozenset({single_stage})
 
 
 def test_simulation_software_options_reach_stage_inputs(make_simulator, mocker):
     stage_inputs = mocker.patch("simtools.runners.simulator.StageInputs", wraps=StageInputs)
 
-    simulator = make_simulator(["corsika", "sim_telarray:bypass_optics=0"], "test-chain-options")
+    simulator = make_simulator(["corsika", "sim_telarray:bypass_optics=none"], "test-chain-options")
 
-    assert simulator.chain_spec.options == {"sim_telarray": {"bypass_optics": 0}}
-    assert stage_inputs.call_args.kwargs["chain_options"] == {"sim_telarray": {"bypass_optics": 0}}
-    assert stage_inputs.call_args.kwargs["stages"] == ("corsika", "sim_telarray")
+    assert simulator.chain.stage_options("sim_telarray") == {"bypass_optics": "none"}
+    assert stage_inputs.call_args.kwargs["chain"] is simulator.chain
 
 
 def test_simulation_software_with_explicit_converters(make_simulator):
@@ -203,11 +202,11 @@ def test_simulation_software_with_explicit_converters(make_simulator):
         "obdeect_atmosphere",
         "obdeect_optics",
         "stream_to_simtel",
-        "sim_telarray:bypass_optics=3",
+        "sim_telarray:bypass_optics=camera_only",
     ]
     simulator = make_simulator(items, "explicit-converters")
     assert simulator.chain.stages == tuple(item.split(":")[0] for item in items)
-    assert simulator.chain_spec.stage_options("sim_telarray") == {"bypass_optics": 3}
+    assert simulator.chain.stage_options("sim_telarray") == {"bypass_optics": "camera_only"}
 
 
 def test_simulation_software_unknown_stage(make_simulator):
@@ -962,7 +961,7 @@ def test_report(array_simulator, mocker, caplog):
 
     array_simulator.site = "North"
     array_simulator.model_version = "6.0.2"
-    array_simulator.chain = SimulationChain(("sim_telarray",))
+    array_simulator.chain = parse_chain(["sim_telarray"])
 
     with caplog.at_level(logging.INFO):
         array_simulator.report()
@@ -1010,7 +1009,7 @@ def test_make_resources_report_without_runtime(array_simulator, mocker):
 
 def test_get_corsika_file(array_simulator):
     # Test case 1: sim_telarray with corsika_file in args
-    array_simulator.chain = SimulationChain(("sim_telarray",))
+    array_simulator.chain = parse_chain(["sim_telarray"])
     array_simulator.context = array_simulator.context.replace(
         args={"corsika_file": "/path/to/corsika_file.corsika"}
     )
@@ -1025,13 +1024,13 @@ def test_get_corsika_file(array_simulator):
     assert result is None
 
     # Test case 3: Non-sim_telarray simulation software
-    array_simulator.chain = SimulationChain(("corsika",))
+    array_simulator.chain = parse_chain(["corsika"])
 
     result = array_simulator._get_corsika_file()
     assert result is None
 
     # Test case 4: corsika_sim_telarray simulation software
-    array_simulator.chain = SimulationChain(("corsika", "sim_telarray"))
+    array_simulator.chain = parse_chain(["corsika", "sim_telarray"])
 
     result = array_simulator._get_corsika_file()
     assert result is None
@@ -1262,6 +1261,28 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
         allow_for_changes=["nsb_scaling_factor", "stars"],
     )
     mock_corsika_validator.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("chain_items", "expected"),
+    [
+        (["sim_telarray"], ["nsb_scaling_factor", "stars"]),
+        (["corsika", "sim_telarray:bypass_optics=none"], ["nsb_scaling_factor", "stars"]),
+        (
+            [
+                "corsika",
+                "obdeect_atmosphere",
+                "obdeect_optics",
+                "sim_telarray:bypass_optics=camera_entrance",
+            ],
+            ["nsb_scaling_factor", "stars", "atmospheric_transmission"],
+        ),
+    ],
+)
+def test_allowed_metadata_changes_follow_skipped_factors(array_simulator, chain_items, expected):
+    array_simulator.chain = parse_chain(chain_items)
+
+    assert array_simulator._allowed_metadata_changes() == expected
 
 
 def test_validate_simulations_corsika(shower_simulator, mocker):

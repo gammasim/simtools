@@ -173,6 +173,15 @@ def test_select_wavelength(illuminator_model):
         light_sources.select_wavelength(illuminator_model)
 
 
+def test_requested_wavelength():
+    assert light_sources.requested_wavelength(None) is None
+    assert light_sources.requested_wavelength(355.0).to_value(u.nm) == pytest.approx(355.0)
+    assert light_sources.requested_wavelength([355.0]).to_value(u.nm) == pytest.approx(355.0)
+    assert light_sources.requested_wavelength(0.355 * u.um).to_value(u.nm) == pytest.approx(355.0)
+    with pytest.raises(ValueError, match=r"Expected exactly one wavelength; got \[300.0, 400.0\]"):
+        light_sources.requested_wavelength([300.0, 400.0])
+
+
 def test_illuminator_request_from_model(illuminator_model, telescope_model, site_model):
     config = {"wavelength": 355.0 * u.nm, "number_of_events": 2}
     request = light_sources.illuminator_request(

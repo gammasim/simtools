@@ -31,53 +31,19 @@ available. Use `--list_available_corsika_models` to inspect them. For simulation
 CORSIKA, `--corsika_hadronic_transition_energy` controls the `HILOW` transition between the
 low- and high-energy models. If omitted, the selected CORSIKA build default is retained.
 
-## Shower ray tracing
-
-For CORSIKA and sim_telarray simulations, include the obdeect stages (such as
-`obdeect_optics`) in `--simulation_software` to trace shower photons before sim_telarray. `--shower_route_mode stream` pipes the photons through
-the tracer; `disk` retains the CORSIKA IACT file and writes camera photon-bunch files for
-each telescope type. Each model version has a telescope map, and each route produces a log
-and a resources JSON file. A failing route stops the job and prints its log to the job output.
-
-`--shower_route_threads` sets the threads per route. The default, 1, runs each route as one
-single-threaded process per telescope type, like sim_telarray. The value 0 divides the usable
-cores among the telescope-type routes across all model versions, with a minimum of one; with
-`--sequential`, this automatic setting uses one thread per route.
-
-## Air-shower photons through obdeect: physics approach
-
-CORSIKA supplies photon bunches at the telescope sphere centre, including their ground-frame
-directions, emission altitudes, arrival times and wavelengths. The route projects them along
-their directions to an input plane above the incoming obscurers. It transforms them to the
-telescope frame, where obdeect applies the telescope axes offset and traces the optics,
-including mirror reflectivity and shadowing. For a telescope without a structure, its
-telescope transmission is applied. Wavelengths sampled from the CORSIKA wavelength range
-follow the Cherenkov `1/lambda^2` law at integer nanometres. Photon thinning uses roulette;
-seeds are derived per event, core reuse and telescope.
-
-The route writes camera-frame bunches for sim_telarray with `Bypass_Optics` enabled.
-sim_telarray applies quantum efficiency, camera and electronics. The route sets the 1201
-height of each traced telescope to zero, so that sim_telarray does not shift the camera-frame
-bunches along their directions (sim_telarray.c:2740-2790). Under bypass, sim_telarray takes the
-airmass from the bunch direction it reads, which is near the telescope axis. The route therefore
-multiplies each bunch by the ratio of the atmospheric transmission at the ground-frame airmass to
-the transmission at the airmass sim_telarray reads under bypass, so that the absorption is
-applied with the native airmass.
-
-Telescope height convention: the height of each telescope in the 1201 object is taken as its
-height above the observation level, as in sim_telarray. The reference-point altitude of the site
-(16 m South, 21 m North) is not added to it.
-
 ## Simulation chain
 
 `--simulation_software` lists the stages of the simulation in order, each as
 `STAGE` or `STAGE:KEY=VALUE,...`. The default is `corsika sim_telarray`: showers with CORSIKA,
-telescopes and cameras with sim_telarray. A stage must consume what the previous stage produces. Examples:
+telescopes and cameras with sim_telarray. A stage must consume what the previous stage produces.
+The obdeect stages (for example `obdeect_atmosphere` and `obdeect_optics`), their options and the
+efficiency factors of a chain are described in [obdeect](../../components/obdeect.md#simulation-chain).
+Examples:
 
 ```bash
 --simulation_software sim_telarray        # sim_telarray only, e.g. from a CORSIKA input file
 --simulation_software corsika             # CORSIKA only
---simulation_software corsika obdeect_atmosphere obdeect_optics sim_telarray:bypass_optics=3
+--simulation_software corsika obdeect_atmosphere obdeect_optics sim_telarray:bypass_optics=camera_only
 ```
 
 simtools inserts the converters between programs with different photon formats

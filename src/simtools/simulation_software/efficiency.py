@@ -27,7 +27,6 @@ OBDEECT_QE_FACTOR = "qe"
 ENVELOPE_OPTION = "efficiency_envelope"
 ENVELOPE_ON = "qe"
 ENVELOPE_OFF = "none"
-ENVELOPE_OPTIONS = (ENVELOPE_ON, ENVELOPE_OFF)
 QE_PARAMETER = "quantum_efficiency"
 QE_VARIATION_PARAMETER = "qe_variation"
 #: Standard deviations of the pixel QE variation left as margin by the headroom, so that the
@@ -91,6 +90,8 @@ def envelope_setting(options, default=ENVELOPE_OFF):
     """
     Return whether the efficiency envelope is on, from the options of the atmosphere stage.
 
+    The values of the option are checked by the software catalog.
+
     Parameters
     ----------
     options : dict
@@ -102,17 +103,8 @@ def envelope_setting(options, default=ENVELOPE_OFF):
     -------
     bool
         True if the envelope is on.
-
-    Raises
-    ------
-    ValueError
-        If the option value is not one of ``qe`` or ``none``.
     """
-    value = options.get(ENVELOPE_OPTION, default)
-    if value not in ENVELOPE_OPTIONS:
-        choices = ", ".join(ENVELOPE_OPTIONS)
-        raise ValueError(f"Invalid {ENVELOPE_OPTION} option: {value!r}; choose from {choices}.")
-    return value == ENVELOPE_ON
+    return options.get(ENVELOPE_OPTION, default) == ENVELOPE_ON
 
 
 def sim_telarray_qe(table, grid=WAVELENGTH_GRID_NM):

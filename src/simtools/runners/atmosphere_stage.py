@@ -1,9 +1,8 @@
-"""Apply obdeect atmospheric extinction to a photon stream."""
+"""Atmosphere stage of the obdeect chain: extinction and in-telescope path of the photons."""
 
 import dataclasses
 import shlex
 
-import astropy.units as u
 import numpy as np
 
 from simtools.runners.stages import (
@@ -23,22 +22,10 @@ from simtools.simulation_software.atmosphere import (
     write_obdeect_transmission,
 )
 from simtools.simulation_software.obdeect.atmosphere import propagation_command
-from simtools.utils import value_conversion
 
 #: Width [nm] added above a monochromatic light-source wavelength (see ``_wavelength_range``).
 MONOCHROMATIC_BAND_NM = 1.0
 OUTPUT_DIRECTORY = "atmosphere"
-
-
-def _requested_wavelength(value):
-    """Convert a configured wavelength to a quantity; numeric values are in nm."""
-    if value is None:
-        return None
-    values = value_conversion.ensure_list(value)
-    if len(values) != 1:
-        raise ValueError(f"Expected exactly one wavelength; got {values}.")
-    wavelength = values[0]
-    return wavelength if hasattr(wavelength, "to") else float(wavelength) * u.nm
 
 
 def _wavelength_range(inputs, options):
@@ -53,7 +40,7 @@ def _wavelength_range(inputs, options):
     explicit = options.get("wavelength_range_nm")
     if explicit is not None or inputs.calibration is None:
         return explicit
-    requested = _requested_wavelength(inputs.args.get("wavelength"))
+    requested = light_sources.requested_wavelength(inputs.args.get("wavelength"))
     wavelength = light_sources.select_wavelength(inputs.calibration.calibration_model, requested)
     return (wavelength, wavelength + MONOCHROMATIC_BAND_NM)
 
@@ -115,18 +102,18 @@ class ObdeectAtmosphereStage(CatalogStage):
         """
         Return True if the stage thins the photons by the efficiency envelope.
 
-        The option ``efficiency_envelope`` decides; without it, the envelope is on for a chain
-        whose last stage simulates the camera only; it is disabled for calibration chains.
+        The option ``efficiency_envelope`` decides. Without it, the envelope is on for a chain
+        whose last stage simulates the camera only, and off otherwise. Calibration chains have
+        no envelope by default and reject an explicit ``qe``.
         """
-        default = efficiency.ENVELOPE_ON if ends_camera_only(inputs) else efficiency.ENVELOPE_OFF
-        options = cls.stage_options(inputs)
-        if inputs.calibration is not None:
-            default = efficiency.ENVELOPE_OFF
-            if efficiency.envelope_setting(options, default=default):
-                raise ValueError(
-                    "The QE efficiency envelope is not supported for calibration chains."
-                )
-        return efficiency.envelope_setting(options, default=default)
+        options = inputs.options_of(cls.name)
+        calibration = inputs.calibration is not None
+        camera_only = not calibration and ends_camera_only(inputs)
+        default = efficiency.ENVELOPE_ON if camera_only else efficiency.ENVELOPE_OFF
+        enabled = efficiency.envelope_setting(options, default=default)
+        if calibration and enabled:
+            raise ValueError("The QE efficiency envelope is not supported for calibration chains.")
+        return enabled
 
     def __init__(
         self, request, run_files=None, context=None, envelope_model=None, seed_per_run=False
@@ -142,42 +129,37 @@ class ObdeectAtmosphereStage(CatalogStage):
     @classmethod
     def instances(cls, inputs, label=None):
         """
-        Return one atmosphere stage per array model.
+        Return the atmosphere stage of the array model.
 
         The options are declared in the software catalog. Without ``seed``, the seed of each run
         is derived from the simulation seed and the run number.
         """
-        options = cls.stage_options(inputs)
-        files = files_of_run(inputs, label, required=False)
-        envelope = cls.efficiency_envelope(inputs)
-        wavelength_range = _wavelength_range(inputs, options)
+        options = inputs.options_of(cls.name)
+        array_model = inputs.array_models[0]
         explicit_seed = options.get("seed")
-        stage_list = []
-        for array_model in inputs.array_models:
-            request = build_atmosphere_request(
-                array_model.site_model,
-                array_model.telescope_models,
-                seed=(_simulation_seed(array_model) if explicit_seed is None else explicit_seed),
-                mode=options["mode"],
-                wavelength_range_nm=wavelength_range,
-            )
-            request = dataclasses.replace(
+        request = build_atmosphere_request(
+            array_model.site_model,
+            array_model.telescope_models,
+            seed=(_simulation_seed(array_model) if explicit_seed is None else explicit_seed),
+            mode=options["mode"],
+            wavelength_range_nm=_wavelength_range(inputs, options),
+        )
+        request = dataclasses.replace(
+            request,
+            transmission_file=write_obdeect_transmission(
+                request.transmission_file,
+                inputs.context.paths.get_output_directory(OUTPUT_DIRECTORY),
+            ),
+        )
+        return [
+            cls(
                 request,
-                transmission_file=write_obdeect_transmission(
-                    request.transmission_file,
-                    inputs.context.paths.get_output_directory(OUTPUT_DIRECTORY),
-                ),
+                run_files=files_of_run(inputs, label, required=False),
+                context=inputs.context,
+                envelope_model=array_model if cls.efficiency_envelope(inputs) else None,
+                seed_per_run=explicit_seed is None,
             )
-            stage_list.append(
-                cls(
-                    request,
-                    run_files=files,
-                    context=inputs.context,
-                    envelope_model=array_model if envelope else None,
-                    seed_per_run=explicit_seed is None,
-                )
-            )
-        return stage_list
+        ]
 
     def prepare(self, run_number, input_file=None, output=None):
         """
@@ -228,11 +210,3 @@ class ObdeectAtmosphereStage(CatalogStage):
     def output_file(self, run_number):
         """Return the photon stream file written when the output is not streamed."""
         return stage_file(self, "output", run_number)
-
-    def environment(self):
-        """Return the environment variables needed (none)."""
-        return {}
-
-    def get_resources(self, runtime=None):  # pylint: disable=unused-argument
-        """Return computing resources used (none: the chain's first stage reports them)."""
-        return {}

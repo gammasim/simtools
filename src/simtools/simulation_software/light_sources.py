@@ -204,6 +204,29 @@ def event_photon_sequences(number_of_events, photons):
     return events, photons
 
 
+def requested_wavelength(value):
+    """
+    Return a configured wavelength as a quantity (None if not given); a number is in nm.
+
+    Parameters
+    ----------
+    value : float, astropy.units.Quantity, list or None
+        One wavelength, or a list with one wavelength.
+
+    Raises
+    ------
+    ValueError
+        If more than one wavelength is given.
+    """
+    if value is None:
+        return None
+    values = value_conversion.ensure_list(value)
+    if len(values) != 1:
+        raise ValueError(f"Expected exactly one wavelength; got {values}.")
+    wavelength = values[0]
+    return wavelength if hasattr(wavelength, "to") else float(wavelength) * u.nm
+
+
 def select_wavelength(calibration_model, requested=None):
     """
     Return the wavelength [nm] of the light source.
