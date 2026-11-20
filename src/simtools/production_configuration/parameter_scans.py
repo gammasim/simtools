@@ -7,9 +7,9 @@ ECSV metadata (``model_parameter_sets``); every expanded row references its set
 via ``model_parameter_set`` and carries the combination name in ``scan_label``.
 
 Bias curves use two scans (NSB and proton), each with a production grid, a scan
-configuration, and the expanded scan grid. The NSB overwrite sets
-``min_photons`` and ``min_photoelectrons`` to zero; both curves set
-``nsb_scaling_factor``.
+configuration, and the expanded scan grid. NSB and proton scans set
+``min_photons`` to 0 and 50 and ``min_photoelectrons`` to 0 and 10,
+respectively. Both set ``nsb_scaling_factor``.
 """
 
 import itertools
@@ -59,16 +59,12 @@ _REQUIRED_ARGS = (
     "core_scatter",
     "view_cone",
     "number_of_runs",
+    "trigger_thresholds",
 )
 # curve name -> (primary, application argument holding the energy range)
 _CURVES = {
     "nsb": ("gamma", "nsb_energy_range"),
     "proton": ("proton", "proton_energy_range"),
-}
-_DEFAULT_THRESHOLDS = {
-    "asum_threshold": [*range(220, 310, 10), *range(320, 361, 20)],
-    "dsum_threshold": list(range(22, 31)),
-    "discriminator_threshold": list(range(0, 10)),
 }
 _logger = logging.getLogger(__name__)
 
@@ -190,10 +186,10 @@ def _clean_scan_grid_metadata(output_file):
     table.write(output_file, format=_ECSV_FORMAT, overwrite=True)
 
 
-def _threshold_values(threshold_param, trigger_thresholds=None):
-    """Return trigger thresholds from ``(minimum, count, step)`` or the defaults."""
+def _threshold_values(trigger_thresholds=None):
+    """Return trigger thresholds from ``(minimum, count, step)``."""
     if trigger_thresholds is None:
-        return _DEFAULT_THRESHOLDS.get(threshold_param, _DEFAULT_THRESHOLDS["dsum_threshold"])
+        raise ValueError("trigger_thresholds must specify minimum, count, and step size.")
     if len(trigger_thresholds) != 3:
         raise ValueError(
             "trigger_thresholds must contain minimum threshold, number of thresholds, "
@@ -229,9 +225,10 @@ def _scan_config(curve_name, telescope, args):
         "model_version_history": [args["model_version"]],
         "description": f"Tune for {'NSB' if nsb else 'proton'} telescope trigger scan",
         "changes": {
-            telescope: {"min_photons": {"value": 0}, "min_photoelectrons": {"value": 0}}
-            if nsb
-            else {},
+            telescope: {
+                "min_photons": {"value": 0 if nsb else 50},
+                "min_photoelectrons": {"value": 0 if nsb else 10},
+            },
             f"OBS-{args['site']}": {"nsb_scaling_factor": {"value": args["nsb_scaling_factor"]}},
         },
     }
@@ -243,7 +240,7 @@ def _scan_config(curve_name, telescope, args):
                 {
                     "name": threshold_param,
                     "path": f"changes.{telescope}.{threshold_param}",
-                    "values": _threshold_values(threshold_param, args.get("trigger_thresholds")),
+                    "values": _threshold_values(args.get("trigger_thresholds")),
                     "label": threshold_param.removesuffix("_threshold"),
                     "label_separator": "",
                 }
@@ -263,8 +260,15 @@ def _generate_scan_grid(curve_name, curve_definition, args, telescope, io_handle
         _scan_config(curve_name, telescope, args), scan_config_file, sort_keys=False
     )
     primary, energy_range_arg = curve_definition
+    curve_args = dict(args)
+    for key in ("showers_per_run", "number_of_runs"):
+        override = args.get(f"{curve_name}_{key}")
+        if override is not None:
+            curve_args[key] = override
     production_configuration = {
-        key: args[key] for key in _PRODUCTION_GRID_ARGS if args.get(key) not in (None, "")
+        key: curve_args[key]
+        for key in _PRODUCTION_GRID_ARGS
+        if curve_args.get(key) not in (None, "")
     }
     production_configuration.update(
         {

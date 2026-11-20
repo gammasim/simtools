@@ -26,6 +26,23 @@ values and relative changes. Unequal wavelength grids are diagnosed without resa
 problems are reported as `table_diagnostics`; with `--require_wavelength_tables` they make the
 comparison `incomplete`.
 
+Use `--comparison_type bias_curves` for derived bias-curve ECSV tables. Each input can be a
+`bias_curve.ecsv` file (with exactly one `--telescopes` selection) or a directory containing
+`<telescope>/bias_curve.ecsv` files. The comparison linearly interpolates both rates on the shared
+threshold range and reports the maximum relative deviation for `NSB rate (Hz)` and
+`Proton rate (Hz)`. Tolerances use those exact metric names; they are advisory. Missing curves,
+invalid tables, or curves without a shared threshold range make the comparison `incomplete`.
+
+```console
+simtools-compare-science-results \
+    --comparison_type bias_curves \
+    --baseline_path /data/baseline/bias_curves \
+    --candidate_path /data/candidate/bias_curves \
+    --tolerance 'NSB rate (Hz)=0.05' \
+    --tolerance 'Proton rate (Hz)=0.10' \
+    --output_path comparison
+```
+
 ```console
 simtools-compare-science-results \
     --baseline_path /data/baseline/telescope_throughput \

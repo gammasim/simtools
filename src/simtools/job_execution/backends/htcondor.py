@@ -348,9 +348,9 @@ class HTCondorBackend:
     def submit(self, job_specs, options):
         """Create and submit a shared-filesystem HTCondor cluster."""
         config = self._build_config(options)
+        working_directory = Path(config.pop("working_directory", Path.cwd())).resolve()
         self._validate_config(config)
         jobs = self._prepare_jobs(job_specs, options, config)
-        working_directory = Path.cwd().resolve()
         if not jobs:
             return SubmissionHandle(
                 backend="htcondor",
@@ -359,6 +359,10 @@ class HTCondorBackend:
             )
         htcondor = self._load_htcondor()
         self._validate_job_resources(jobs, config)
+        for job in jobs:
+            if config.get("container_image") or job.resources.get("container_image"):
+                for output in job.output_paths:
+                    Path(output).expanduser().resolve().parent.mkdir(parents=True, exist_ok=True)
         work_dir = self._create_work_dir(options)
         self._serialize_jobs(jobs, work_dir)
         event_log = self._resolve_event_log(config, work_dir)
@@ -451,11 +455,11 @@ class HTCondorBackend:
 
     @staticmethod
     def _create_work_dir(options):
-        """Create the shared, private run directory."""
+        """Create shared work directories traversable by the submit and execute users."""
         root = Path(options.work_dir or Path.cwd() / "simtools-jobs").expanduser().resolve()
         root.mkdir(parents=True, exist_ok=True)
         work_dir = root / f"htcondor-{uuid.uuid4().hex}"
-        work_dir.mkdir(mode=0o700)
+        HTCondorBackend._create_shared_directory(work_dir)
         for directory in (
             work_dir / "inputs",
             work_dir / "results",
@@ -463,8 +467,14 @@ class HTCondorBackend:
             work_dir / "stderr",
             work_dir / "logs",
         ):
-            directory.mkdir(parents=True, exist_ok=True)
+            HTCondorBackend._create_shared_directory(directory)
         return work_dir
+
+    @staticmethod
+    def _create_shared_directory(path):
+        """Create a setgid directory accessible to members of its inherited group."""
+        path.mkdir(mode=0o2770, parents=True, exist_ok=True)
+        path.chmod(0o2770)
 
     @staticmethod
     def _serialize_jobs(jobs, work_dir):
@@ -507,6 +517,11 @@ class HTCondorBackend:
             python_path=source_path,
             implicit_bind_path=working_directory if uses_container else None,
         )
+        if uses_container:
+            scratch = config.get("container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR)
+            environment = ";".join(
+                filter(None, (environment, f"SIMTOOLS_WORKER_SCRATCH_DIRECTORY={scratch}"))
+            )
         if environment:
             submit_values["environment"] = environment
         self._add_extra_submit_attributes(submit_values, self._validate_extra_attributes(config))
@@ -637,6 +652,9 @@ class HTCondorBackend:
                 "request_disk": config.get("request_disk"),
                 "priority": config.get("priority"),
                 "container_image": config.get("container_image"),
+                "container_target_dir": config.get("container_target_dir"),
+                "python_executable": config.get("python_executable"),
+                "extra_submit_attributes": config.get("extra_submit_attributes", {}),
                 "environment_file": str(config["environment_file"])
                 if config.get("environment_file")
                 else None,
@@ -677,10 +695,10 @@ class HTCondorBackend:
 
     @staticmethod
     def _cleanup_successful_artifacts(submission):
-        """Remove transient payload and stream files after successful execution."""
+        """Remove transient payload files after successful execution."""
         if submission.metadata.get("keep_successful_artifacts"):
             return
-        for directory in ("inputs", "results", "stdout", "stderr"):
+        for directory in ("inputs", "results"):
             shutil.rmtree(submission.work_dir / directory, ignore_errors=True)
 
     def _wait_for_processes(self, submission):
@@ -769,9 +787,12 @@ class HTCondorBackend:
         for job_id, process_id in submission.process_ids.items():
             result_path = submission.work_dir / "results" / f"{job_id}.pkl"
             if not result_path.exists():
+                worker_log = submission.work_dir / "logs" / f"{job_id}.log"
+                stdout_path = submission.work_dir / "stdout" / f"{job_id}.out"
                 stderr_path = submission.work_dir / "stderr" / f"{job_id}.err"
                 failures.append(
-                    f"process {process_id}: missing result {result_path}; stderr {stderr_path}"
+                    f"process {process_id}: missing result {result_path}; "
+                    f"stdout {stdout_path}; stderr {stderr_path}; worker log {worker_log}"
                 )
                 continue
             try:
@@ -817,6 +838,19 @@ class HTCondorBackend:
             raise BackendExecutionError("HTCondor job failure(s): " + "; ".join(failures))
         self._cleanup_successful_artifacts(submission)
         return sorted(results, key=lambda result: result.index)
+
+    @staticmethod
+    def failed_job_ids(submission):
+        """Return job IDs without a successful result and all declared outputs."""
+        results, _ = HTCondorBackend._load_results(submission)
+        successful = {result.job_id for result in results}
+        outputs = submission.metadata.get("expected_outputs", {})
+        return {
+            job_id
+            for job_id in submission.job_ids
+            if job_id not in successful
+            or any(not Path(path).exists() for path in outputs.get(job_id, ()))
+        }
 
     def is_finished(self, submission):
         """Confirm every submitted process has left the queue and reached a terminal state.
