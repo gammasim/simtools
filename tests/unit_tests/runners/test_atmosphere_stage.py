@@ -254,8 +254,7 @@ def test_instances_illuminator_range_is_source_wavelength(array_model_north, run
 
     stage = _instance(inputs, run_context)
 
-    # obdeect needs lo < hi; no photon is drawn from this range (they carry 300 nm)
-    assert stage.request.wavelength_range_nm == pytest.approx((300.0, 301.0))
+    assert stage.request.wavelength_range_nm == pytest.approx((300.0, 300.0))
 
 
 def test_instances_illuminator_rejects_unsupported_wavelength(array_model_north, run_context):

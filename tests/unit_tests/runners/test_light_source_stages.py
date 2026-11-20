@@ -227,13 +227,12 @@ def test_prepare_errors(flasher_stage):
         flasher_stage.prepare(1, output=StreamTo(("a", "b")))
 
 
-def test_illuminator_prepare_writes_position_file(light_source_context):
+def test_illuminator_prepare_writes_run_description(light_source_context):
     inputs = _inputs(light_source_context, light_source=_ILLUMINATOR, wavelength=355.0 * u.nm)
     (stage,) = IlluminatorSourceStage.instances(inputs)
     tokens = shlex.split(stage.prepare(2)[0])
-    assert tokens[0].endswith("obdeect-sources-point-source")
-    position_file = tokens[tokens.index("--telpos-file") + 1]
-    assert len(Path(position_file).read_text(encoding="utf-8").split()) == 4
+    assert tokens[1:3] == ["sources", "run"]
+    assert Path(tokens[3]).is_file()
 
 
 class _FakeDownstream:

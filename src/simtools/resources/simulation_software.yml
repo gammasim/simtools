@@ -182,8 +182,6 @@ software:
       obdeect-propagation-run: propagation/bin/obdeect-propagation-run
       obdeect-stream-from-corsika: stream/bin/obdeect-stream-from-corsika
       obdeect-stream-to-simtel: stream/bin/obdeect-stream-to-simtel
-      obdeect-sources-point-source: sources/bin/obdeect-sources-point-source
-      obdeect-sources-flasher: sources/bin/obdeect-sources-flasher
     files:
       photon_stream:
         suffixes: [.pst]

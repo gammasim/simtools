@@ -97,6 +97,8 @@ event order. The obdeect stages take one array model per run (stages with the ca
 `single_array_model`); a run with several model versions is rejected, so each model version
 needs its own run.
 
+The obdeect illuminator stage requires an obdeect release after 0.10.0.
+
 The calibration applications use obdeect through `--simulation_software` (default
 `light_emission sim_telarray`; see the next section), which runs the stages for one
 telescope: a calibration chain starts with `light_emission`, `obdeect_flasher` or

@@ -23,8 +23,6 @@ from simtools.simulation_software.atmosphere import (
 )
 from simtools.simulation_software.obdeect.atmosphere import propagation_command
 
-#: Width [nm] added above a monochromatic light-source wavelength (see ``_wavelength_range``).
-MONOCHROMATIC_BAND_NM = 1.0
 OUTPUT_DIRECTORY = "atmosphere"
 
 
@@ -32,17 +30,14 @@ def _wavelength_range(inputs, options):
     """
     Return the wavelength range [nm] of photons without a wavelength (None: the run keys).
 
-    obdeect needs lo < hi in every run. A monochromatic light source has lo == hi in its run
-    keys, so an illuminator chain gets its source wavelength with a 1 nm upper edge. Photons of
-    the source carry their wavelength already, so none is drawn from this range: it only sets the
-    envelope grid and the efficiency-status records of the run.
+    A monochromatic source uses equal bounds for the envelope and efficiency status.
     """
     explicit = options.get("wavelength_range_nm")
     if explicit is not None or inputs.calibration is None:
         return explicit
     requested = light_sources.requested_wavelength(inputs.args.get("wavelength"))
     wavelength = light_sources.select_wavelength(inputs.calibration.calibration_model, requested)
-    return (wavelength, wavelength + MONOCHROMATIC_BAND_NM)
+    return (wavelength, wavelength)
 
 
 def _simulation_seed(array_model):

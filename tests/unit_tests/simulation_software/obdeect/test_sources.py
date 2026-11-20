@@ -1,5 +1,7 @@
 """Tests for the commands of the obdeect light sources."""
 
+import json
+
 import numpy as np
 import pytest
 
@@ -78,18 +80,22 @@ def test_illuminator_command_and_tables(tmp_path):
     tokens = sources.illuminator_command(
         _illuminator_request(), tmp_path, output=tmp_path / "i.pst", file_token="_x"
     )
-    positions = tmp_path / "light_source_telescope_position_x.dat"
     angular = tmp_path / "light_source_angular_distribution_x.dat"
     pulse = tmp_path / "light_source_pulse_shape_x.dat"
     assert tokens == [
-        *program_command("obdeect", "obdeect-sources-point-source"),
-        *("-R", "3", "-N", "2"),
-        *("-x", "11000", "-y", "0", "-z", "500", "-d", "-1,0,0"),
-        *("-n", "1000000", "-b", "1", "-s", "355"),
-        *("-p", str(pulse), "-a", str(angular), "-h", "2158"),
-        *("--telpos-file", str(positions), "--seed", "8", "-o", str(tmp_path / "i.pst")),
+        *program_command("obdeect", "obdeect"),
+        "sources",
+        "run",
+        str(tmp_path / "light_source_run_x.json"),
+        "-o",
+        str(tmp_path / "i.pst"),
     ]
-    assert positions.read_text(encoding="utf-8").split() == ["1000", "0", "500", "1200"]
+    description = json.loads((tmp_path / "light_source_run_x.json").read_text())
+    emission = description["events"][0]["emissions"][0]
+    assert emission["position_m"] == [110, 0, 5]
+    assert emission["target"]["normal"] == [-1, 0, 0]
+    assert emission["target"]["radius_m"] > 12
+    assert description["telescopes"][0]["position_m"] == [10, 0, 5]
     angles, intensity = np.loadtxt(angular, unpack=True)
     assert angles[0] == pytest.approx(0.0)
     assert angles[-1] == pytest.approx(20.0)
@@ -106,8 +112,11 @@ def test_illuminator_command_with_program_tokens(tmp_path):
         angular=AngularDistribution("FilledCone", 2.0), pulse=PulseShape("Exponential", 0.0, 3.0)
     )
     tokens = sources.illuminator_command(request, tmp_path)
-    assert tokens[tokens.index("-a") + 1] == "FilledCone:2"
-    assert tokens[tokens.index("-p") + 1] == "Exp:3"
+    emission = json.loads((tmp_path / "light_source_run.json").read_text())["events"][0][
+        "emissions"
+    ][0]
+    assert emission["angular"] == {"kind": "filled_cone", "angle_deg": 2}
+    assert emission["pulse"] == {"kind": "exponential", "decay_ns": 3, "mean_ns": 3}
     assert "-o" not in tokens
     assert not (tmp_path / "light_source_angular_distribution.dat").exists()
 
@@ -118,20 +127,46 @@ def test_illuminator_tokens_without_tables(tmp_path):
         == "isotropic"
     )
     assert (
-        sources.illuminator_angular_token(AngularDistribution("Gauss", 3.0), tmp_path) == "Gauss:3"
+        sources.illuminator_angular_token(AngularDistribution("Gauss", 3.0), tmp_path)
+        == "gauss:sigma_deg=3"
     )
-    assert sources.illuminator_pulse_token(PulseShape("TopHat", 2.0, 0.0), tmp_path) == ("Simple:2")
-    assert sources.illuminator_pulse_token(PulseShape("Gauss", 0.0, 0.0), tmp_path) == ("Gauss:0")
+    assert sources.illuminator_pulse_token(PulseShape("TopHat", 2.0, 0.0), tmp_path) == (
+        "tophat:width_ns=2"
+    )
+    assert sources.illuminator_pulse_token(PulseShape("Gauss", 0.0, 0.0), tmp_path) == (
+        "fixed:time_ns=0"
+    )
     # An instantaneous pulse needs no table; an unknown shape with a width has none.
-    assert sources.illuminator_pulse_token(PulseShape("Triangle", 0.0, 0.0), tmp_path) == "Simple:0"
+    assert (
+        sources.illuminator_pulse_token(PulseShape("Triangle", 0.0, 0.0), tmp_path)
+        == "fixed:time_ns=0"
+    )
     with pytest.raises(ValueError, match="has no tabulated profile"):
         sources.illuminator_pulse_token(PulseShape("Triangle", 1.0, 0.0), tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("position", "angular", "target"),
+    [
+        ((10.0, 0.0, 5.0), AngularDistribution("isotropic", 0), "none"),
+        ((110.0, 0.0, 5.0), AngularDistribution("isotropic", 0), "sphere"),
+        ((110.0, 0.0, 5.0), AngularDistribution("Gauss", 3), "disc"),
+    ],
+)
+def test_illuminator_target_geometry(tmp_path, position, angular, target):
+    request = _illuminator_request(position_m=position, angular=angular, photons=(100, 200))
+    sources.illuminator_command(request, tmp_path, executable="obdeect")
+    description = json.loads((tmp_path / "light_source_run.json").read_text())
+    emissions = [event["emissions"][0] for event in description["events"]]
+    assert [emission["photons"] for emission in emissions] == [100, 200]
+    actual = emissions[0]["target"]
+    assert (actual if isinstance(actual, str) else actual["kind"]) == target
 
 
 def test_illuminator_command_executable_override(tmp_path):
     tokens = sources.illuminator_command(_illuminator_request(), tmp_path, executable="my-source")
     assert tokens[0] == "my-source"
-    assert tokens[1] == "-R"
+    assert tokens[1:3] == ["sources", "run"]
 
 
 def test_flasher_command_passes_simulation_models_path(tmp_path):
