@@ -281,6 +281,3 @@ To the changelog
 :::
 
 ::::
-
-:::{warning} simtools is currently under heavy development with continuous changes and additions applied. Please contact the developers before using it: simtools-developer@desy.de.
-:::

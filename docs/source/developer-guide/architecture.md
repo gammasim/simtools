@@ -54,11 +54,11 @@ Each axis where simtools grows has one extension point:
 | --- | --- |
 | Model parameter | schema YAML in `schemas/model_parameters/` |
 | Simulation configuration writer and result reader | see [Simulation formats](simulation_formats.md) |
-| Ray-tracing backend | `RayTracingBackend` Protocol in `ray_tracing/backends/interface.py`, declared by the `ray_tracing_backend` field of a software entry in `resources/simulation_software.yml`; see [Add a ray-tracing backend](extending/ray-tracing-backend.md) |
+| Ray-tracing backend | `RayTracingBackend` Protocol in `ray_tracing/backends/interface.py`, declared by the `ray_tracing_backend` field of a software entry in `resources/simulation_software.yml`; see [Extend the simulation chain](extending/simulation-chain.md#ray-tracing-applications) |
 | Event-file format | `EventReader` Protocol in `sim_events/formats/readers.py` |
 | Model-repository storage | `ModelStorage` Protocol in `model_repository/storage.py` |
 | Execution backend | `job_execution/backends/registry.py` |
-| Simulation stage | entry in `resources/simulation_software.yml` with its `implementation` class; see [simulation chains](../components/obdeect.md#simulation-chain) |
+| Simulation stage | entry in `resources/simulation_software.yml` with its `implementation` class; see [Extend the simulation chain](extending/simulation-chain.md#add-or-change-a-stage) |
 | Plot | `plot_tables` and `plot_configuration.metaschema.yml` |
 | Application | `ApplicationDefinition` plus the `[project.scripts]` entry |
 
