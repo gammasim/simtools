@@ -34,16 +34,19 @@ products:
     frame: camera
     format: stream
   camera_photons_iact:
-    description: Camera-frame photons as IACT photon bunches, for sim_telarray with bypassed optics.
+    description: >-
+      Photons at the camera entrance encoded as IACT photon bunches, for sim_telarray
+      with bypassed optics.
     frame: camera
     format: iact
   light_emission_photons:
     description: >-
-      Photons of a sim_telarray LightEmission program (IACT photon bunches); sim_telarray sets
-      Bypass_Optics from the light-source type.
+      IACT photon bunches from a sim_telarray LightEmission program. The injection point
+      depends on the light-source type: flat-fielding uses bypassed optics, while other
+      sources use sim_telarray optics.
     format: iact
   camera_events:
-    description: Camera events written by sim_telarray.
+    description: Camera events.
     format: events
 
 software:
