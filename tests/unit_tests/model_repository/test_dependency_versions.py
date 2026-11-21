@@ -26,8 +26,23 @@ def _model_revision(catalog):
     )
 
 
+def _as_schema_before_0_10(catalog):
+    """Return a catalog using the sim-telarray key that schemas before 0.10.0 declare."""
+    renamed = {
+        ("sim-telarray" if key == "sim_telarray" else key): value for key, value in catalog.items()
+    }
+    renamed["production-combinations"] = [
+        {
+            ("sim-telarray" if key == "sim_telarray" else key): value
+            for key, value in combination.items()
+        }
+        for combination in catalog["production-combinations"]
+    ]
+    return renamed
+
+
 def _legacy_catalog(schema_version="0.2.0"):
-    """Return a minimal catalog using the pre-tag dependency fields."""
+    """Return a minimal catalog using the pre-tag dependency fields (schema before 0.10.0)."""
     catalog = {
         "schema_version": schema_version,
         "python": "3.14",
@@ -37,7 +52,7 @@ def _legacy_catalog(schema_version="0.2.0"):
         "corsika-interaction-tables": {"version": "v1.0.0"},
         "archives": {"autoconf": {"version": "2.71"}, "gsl": {"version": "2.8"}},
         "model-repository": {"name": "CTAO-Simulation-Model", "default-version": "v0.1.0"},
-        "production-combinations": [{"corsika": "78010", "sim-telarray": "v1.0.0"}],
+        "production-combinations": [{"corsika": "78010", "sim_telarray": "v1.0.0"}],
         "corsika": [
             {
                 "version": "78010",
@@ -49,7 +64,7 @@ def _legacy_catalog(schema_version="0.2.0"):
                 "opt-patch-source-url": "https://example.test/op.git",
             }
         ],
-        "sim-telarray": [
+        "sim_telarray": [
             {
                 "version": "v1.0.0",
                 "source-url": "https://example.test/s.git",
@@ -68,7 +83,7 @@ def _legacy_catalog(schema_version="0.2.0"):
             "source-url": "https://example.test/tests.git",
             "version": "v0.1.0",
         }
-    return catalog
+    return _as_schema_before_0_10(catalog)
 
 
 def _readable_catalog(schema_version="0.6.0"):
@@ -184,12 +199,14 @@ def test_simtel_branch_ref_requires_a_safe_build_id():
 def test_catalog_reads_legacy_corsika_fields():
     """Keep schema 0.2 CORSIKA records readable during migration."""
     catalog = _legacy_catalog()
-    assert dependency_versions.validate_dependency_catalog(catalog) == catalog
+    validated = dependency_versions.validate_dependency_catalog(catalog)
+    assert validated["sim_telarray"] == catalog["sim-telarray"]
+    assert validated["production-combinations"][0]["sim_telarray"] == "v1.0.0"
 
 
 def test_legacy_catalog_fields_are_preserved_in_workflow_and_summary():
     """Use legacy names when producing matrices and summary exports."""
-    catalog = _legacy_catalog()
+    catalog = dependency_versions.validate_dependency_catalog(_legacy_catalog())
 
     matrices = dependency_versions.build_workflow_matrices(catalog)
     summary = dependency_versions.dependency_catalog_summary(catalog)
@@ -232,7 +249,7 @@ def test_schema_0_6_accepts_branch_refs_without_revisions():
     catalog["model-repository"]["default-ref"] = "main"
     catalog["simtools-tests"]["ref"] = "release/3"
 
-    assert dependency_versions.validate_dependency_catalog(catalog) is catalog
+    catalog = dependency_versions.validate_dependency_catalog(catalog)
     matrix = dependency_versions.build_workflow_matrices(catalog)
     assert matrix["simtel_matrix"][0]["simtel_tag"] == "release/2025"
     assert matrix["simtel_matrix"][0]["simtel_build_id"] == "release-2025"
@@ -262,7 +279,7 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
 
 def test_source_build_matrices_use_platform_entries():
     """Catalogs that pin component sources export platform-specific build matrices."""
-    catalog = _readable_catalog()
+    catalog = dependency_versions.validate_dependency_catalog(_readable_catalog())
     catalog["cpu-variants"] = ["generic", "avx2"]
     matrices = dependency_versions.build_workflow_matrices(catalog)
 
@@ -322,7 +339,11 @@ def test_env_template_matches_catalog(simtools_root_path):
         (
             lambda data: (
                 data.update(
-                    {"schema_version": "0.2.0", "archives": {"autoconf": {"version": "2.71"}}}
+                    {
+                        "schema_version": "0.2.0",
+                        "archives": {"autoconf": {"version": "2.71"}},
+                        "sim-telarray": data.pop("sim_telarray"),
+                    }
                 ),
                 data.pop("simtools-tests"),
             ),
@@ -337,7 +358,7 @@ def test_env_template_matches_catalog(simtools_root_path):
             "Invalid source ref",
         ),
         (
-            lambda data: data["sim-telarray"][0].update({"source-ref": "bad ref"}),
+            lambda data: data["sim_telarray"][0].update({"source-ref": "bad ref"}),
             "Invalid source ref",
         ),
         (
@@ -353,7 +374,7 @@ def test_env_template_matches_catalog(simtools_root_path):
             "Invalid SHA-256 digest",
         ),
         (
-            lambda data: data["sim-telarray"][0].update({"image-digest": "latest"}),
+            lambda data: data["sim_telarray"][0].update({"image-digest": "latest"}),
             "Invalid SHA-256 digest",
         ),
         (
@@ -475,7 +496,7 @@ def test_validate_dependency_catalog_preserves_schema_0_1_contract(simtools_root
     """Test catalogs using the original schema remain accepted."""
     catalog = _legacy_catalog("0.1.0")
 
-    assert dependency_versions.validate_dependency_catalog(catalog) is catalog
+    assert dependency_versions.validate_dependency_catalog(catalog)["sim_telarray"]
 
 
 def test_validate_dependency_catalog_accepts_valid_revisions():
@@ -490,7 +511,9 @@ def test_validate_dependency_catalog_accepts_valid_revisions():
     catalog["sim-telarray"][0].update(
         {"revision": revision, "hessio-revision": revision, "stdtools-revision": revision}
     )
-    assert dependency_versions.validate_dependency_catalog(catalog) is catalog
+    validated = dependency_versions.validate_dependency_catalog(catalog)
+    assert validated["corsika"][0]["source-revision"] == revision
+    assert validated["sim_telarray"][0]["revision"] == revision
 
 
 def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path):
@@ -498,7 +521,7 @@ def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path)
     catalog = _load_catalog(simtools_root_path)
     digest = "sha256:" + "a" * 64
     catalog["corsika"][0]["image-digests"] = {"generic": digest}
-    catalog["sim-telarray"][0]["image-digest"] = digest
+    catalog["sim_telarray"][0]["image-digest"] = digest
 
     dependency_versions.validate_dependency_catalog(catalog)
     matrix = dependency_versions.build_workflow_matrices(catalog)["production_matrix"]
@@ -510,6 +533,7 @@ def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path)
 def test_build_workflow_matrices_selects_private_source_snapshots():
     """Use a deterministic private snapshot only when every source is pinned."""
     catalog = _readable_catalog("0.8.0")
+    catalog["model-repository"]["compatible-versions"] = ">=0.1.0"
     revision = "a" * 40
     catalog["corsika"][0].update(
         {
@@ -525,6 +549,7 @@ def test_build_workflow_matrices_selects_private_source_snapshots():
     catalog["corsika"][0]["source-snapshot-digest"] = digest
     catalog["sim-telarray"][0]["source-snapshot-digest"] = digest
 
+    catalog = dependency_versions.validate_dependency_catalog(catalog)
     matrices = dependency_versions.build_workflow_matrices(catalog)
 
     assert matrices["corsika_source_matrix"][0]["corsika_source_snapshot"] == (
@@ -571,7 +596,7 @@ def test_production_matrix_uses_global_cpu_variants_by_default(simtools_root_pat
     ("field", "value", "error"),
     [
         ("corsika", "unknown", "Unknown CORSIKA"),
-        ("sim-telarray", "unknown", "Unknown sim_telarray"),
+        ("sim_telarray", "unknown", "Unknown sim_telarray"),
     ],
 )
 def test_validate_dependency_catalog_rejects_unknown_production_components(
@@ -615,7 +640,7 @@ def test_export_dependency_configuration_returns_environment_values(simtools_roo
 
 def test_dependency_catalog_environment_supports_schema_0_1(simtools_root_path):
     """Test the legacy catalog environment excludes simtools-tests settings."""
-    catalog = _legacy_catalog("0.1.0")
+    catalog = dependency_versions.validate_dependency_catalog(_legacy_catalog("0.1.0"))
 
     environment = dependency_versions.dependency_catalog_environment(catalog)
 
@@ -677,7 +702,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     schema = schemas_by_version[catalog["schema_version"]]
 
     jsonschema.validate(catalog, schema)
-    assert sorted(item["schema_version"] for item in schemas) == [
+    assert {item["schema_version"] for item in schemas} == {
         "0.1.0",
         "0.2.0",
         "0.3.0",
@@ -687,7 +712,8 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
         "0.7.0",
         "0.8.0",
         "0.9.0",
-    ]
+        "0.10.0",
+    }
     assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
     assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]
     assert catalog["schema_version"] in schemas_by_version
@@ -704,8 +730,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
 
 def test_catalog_refs_drive_unpinned_builds():
     """Build matrices and runtime settings use readable refs without Git pins."""
-    catalog = _readable_catalog()
-    assert dependency_versions.validate_dependency_catalog(catalog) is catalog
+    catalog = dependency_versions.validate_dependency_catalog(_readable_catalog())
     matrix = dependency_versions.build_workflow_matrices(catalog)
     assert matrix["corsika_source_matrix"][0]["corsika_tag"] == "v7.8010"
     assert matrix["corsika_source_matrix"][0]["corsika_source_revision"] == ""
@@ -726,9 +751,9 @@ def test_catalog_optional_test_revision(revision):
         with pytest.raises(ValueError, match="Invalid Git revision"):
             dependency_versions.validate_dependency_catalog(catalog)
     else:
-        assert dependency_versions.validate_dependency_catalog(catalog) is catalog
+        validated = dependency_versions.validate_dependency_catalog(catalog)
         assert (
-            dependency_versions.dependency_catalog_environment(catalog)["SIMTOOLS_TESTS_REVISION"]
+            dependency_versions.dependency_catalog_environment(validated)["SIMTOOLS_TESTS_REVISION"]
             == revision
         )
 
@@ -837,7 +862,7 @@ def test_legacy_catalog_rejects_invalid_pins(mutator, error):
     [
         ("0.8.0", False),
         ("0.9.0", True),
-        ("0.10.0", False),
+        ("0.10.0", True),
         ("latest", False),
         (None, False),
     ],
@@ -954,18 +979,18 @@ def test_validate_dependency_catalog_rejects_invalid_images(simtools_root_path, 
         lambda data: data["corsika-interaction-tables"].update(
             {"source-url": "https://example.test/t.git"}
         ),
-        lambda data: data["sim-telarray"][0].update({"hessio-ref": "v2025-12-01-rc"}),
+        lambda data: data["sim_telarray"][0].update({"hessio-ref": "v2025-12-01-rc"}),
         lambda data: data["images"].pop("registry"),
         lambda data: data["images"].update({"tag-suffix": "gl1"}),
     ],
 )
 def test_image_catalog_schema_rejects_retired_fields(simtools_root_path, mutator):
-    """The 0.9.0 schema rejects source fields and invalid image settings."""
+    """The current schema rejects source fields and invalid image settings."""
     catalog = _load_catalog(simtools_root_path)
     mutator(catalog)
 
     with pytest.raises(jsonschema.ValidationError):
-        jsonschema.validate(catalog, _schema_documents()["0.9.0"])
+        jsonschema.validate(catalog, _schema_documents()["0.10.0"])
 
 
 def test_image_catalog_schema_accepts_default_suffix(simtools_root_path):
@@ -973,7 +998,7 @@ def test_image_catalog_schema_accepts_default_suffix(simtools_root_path):
     catalog = _load_catalog(simtools_root_path)
     catalog["images"] = {"registry": "ghcr.io/gammasim"}
 
-    jsonschema.validate(catalog, _schema_documents()["0.9.0"])
+    jsonschema.validate(catalog, _schema_documents()["0.10.0"])
     entry = dependency_versions.build_workflow_matrices(catalog)["production_matrix"][0]
     assert entry["corsika_image"] == "ghcr.io/gammasim/corsika7:v78010-generic"
 
@@ -981,13 +1006,15 @@ def test_image_catalog_schema_accepts_default_suffix(simtools_root_path):
 def test_required_catalog_keys_come_from_the_schema():
     """Required top-level keys are read from the schema of the catalog version."""
     required = dependency_versions._required_catalog_keys  # pylint: disable=protected-access
-    assert "images" in required("0.9.0")
+    assert "images" in required("0.10.0")
+    assert "sim_telarray" in required("0.10.0")
+    assert "sim-telarray" in required("0.9.0")
     assert "archives" not in required("0.9.0")
     assert "archives" in required("0.8.0")
     assert "simtools-tests" not in required("0.1.0")
     # An unknown version falls back to the newest schema.
-    assert required("9.9.9") == required("0.9.0")
-    assert required(None) == required("0.9.0")
+    assert required("9.9.9") == required("0.10.0")
+    assert required(None) == required("0.10.0")
 
 
 @pytest.mark.parametrize("suffix", ["-\u00e9", "-gl\u0661", "gl1", "-", "-gl 1"])
@@ -1000,3 +1027,77 @@ def test_image_tag_suffix_rejects_non_ascii_and_malformed(suffix):
 def test_image_tag_suffix_accepts_ascii(suffix):
     """Valid ASCII suffixes pass."""
     assert dependency_versions.IMAGE_TAG_SUFFIX_PATTERN.fullmatch(suffix) is not None
+
+
+def test_legacy_catalog_uses_original_sim_telarray_key():
+    """Schema 0.2 catalogs declare sim-telarray on disk and are normalized for consumers."""
+    catalog = _legacy_catalog("0.2.0")
+    assert "sim-telarray" in catalog
+    validated = dependency_versions.validate_dependency_catalog(catalog)
+    assert "sim-telarray" not in validated
+    assert validated["sim_telarray"][0]["version"] == "v1.0.0"
+    assert validated["production-combinations"][0]["sim_telarray"] == "v1.0.0"
+
+
+def test_current_catalog_uses_sim_telarray_key(simtools_root_path):
+    catalog = _load_catalog(simtools_root_path)
+    assert catalog["schema_version"] == "0.10.0"
+    assert "sim-telarray" not in catalog
+    assert "sim_telarray" in catalog
+    assert all(
+        "sim-telarray" not in combination for combination in catalog["production-combinations"]
+    )
+
+
+def test_schema_0_10_0_validates_sim_telarray_catalog(simtools_root_path):
+    catalog = _load_catalog(simtools_root_path)
+    validated = dependency_versions.validate_dependency_catalog(copy.deepcopy(catalog))
+    assert validated["sim_telarray"] == catalog["sim_telarray"]
+    assert "sim-telarray" not in validated
+
+
+def test_schema_0_9_0_catalog_with_sim_telarray_key_is_normalized(simtools_root_path):
+    """Catalogs of schema 0.9.0 declare sim-telarray; consumers receive sim_telarray."""
+    legacy = copy.deepcopy(_load_catalog(simtools_root_path))
+    legacy["schema_version"] = "0.9.0"
+    legacy["sim-telarray"] = legacy.pop("sim_telarray")
+    for combination in legacy["production-combinations"]:
+        combination["sim-telarray"] = combination.pop("sim_telarray")
+    original = copy.deepcopy(legacy)
+
+    validated = dependency_versions.validate_dependency_catalog(legacy)
+
+    assert validated["schema_version"] == "0.9.0"
+    assert "sim-telarray" not in validated
+    assert validated["sim_telarray"][0]["source-ref"]
+    assert all(
+        "sim_telarray" in combination and "sim-telarray" not in combination
+        for combination in validated["production-combinations"]
+    )
+    assert legacy == original
+
+
+def test_schema_0_9_0_catalog_requires_sim_telarray_spelling(simtools_root_path):
+    """A 0.9.0 catalog with the current key does not satisfy its own schema."""
+    catalog = copy.deepcopy(_load_catalog(simtools_root_path))
+    catalog["schema_version"] = "0.9.0"
+    with pytest.raises(ValueError, match="Missing dependency catalog keys: sim-telarray"):
+        dependency_versions.validate_dependency_catalog(catalog)
+
+
+def test_schema_documents_use_sim_telarray_from_0_10_0():
+    for version, schema in _schema_documents().items():
+        if tuple(map(int, version.split("."))) >= (0, 10, 0):
+            assert "sim_telarray" in schema["required"]
+            assert "sim-telarray" not in schema["required"]
+        else:
+            assert "sim-telarray" in schema["required"]
+
+
+def test_legacy_catalog_still_requires_production_combinations():
+    catalog = _legacy_catalog("0.2.0")
+    catalog.pop("production-combinations")
+    with pytest.raises(
+        ValueError, match="Missing dependency catalog keys: production-combinations"
+    ):
+        dependency_versions.validate_dependency_catalog(catalog)

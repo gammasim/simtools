@@ -12,7 +12,9 @@ import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.runners import simulator as simulator_module
+from simtools.runners.chain_spec import parse_chain
 from simtools.runners.simulator import Simulator
+from simtools.runners.stages import StageInputs
 from simtools.sim_events import file_info
 from simtools.sim_events.simulation_parameters import SimulationParameters
 from simtools.utils.primary_particle import PrimaryParticle
@@ -35,7 +37,7 @@ STDOUT_LOG_SUFFIX = ".log.gz"
 def simulations_args_dict(corsika_config_data, model_version):
     """Return a dictionary with the simulation command line arguments."""
     args_dict = copy.deepcopy(corsika_config_data)
-    args_dict["simulation_software"] = "sim_telarray"
+    args_dict["simulation_software"] = ["sim_telarray"]
     args_dict["model_version"] = model_version
     args_dict["label"] = "test-array-simulator"
     args_dict["array_layout_name"] = "test_layout"
@@ -73,7 +75,11 @@ def make_simulator(io_handler, run_context, simulations_args_dict, mock_array_mo
 
     def _make(simulation_software, label, add_resources=False, **extra_args):
         args_dict = copy.deepcopy(simulations_args_dict)
-        args_dict.update(simulation_software=simulation_software, label=label, **extra_args)
+        args_dict.update(label=label, **extra_args)
+        if simulation_software is None:
+            args_dict.pop("simulation_software", None)
+        else:
+            args_dict["simulation_software"] = simulation_software
 
         mocker.patch("simtools.runners.simulator.ArrayModel", return_value=mock_array_model)
         mocker.patch("simtools.runners.simulator.get_shower_configuration")
@@ -112,32 +118,41 @@ def _resources_for_run(file_path):
 
 @pytest.fixture
 def array_simulator(make_simulator):
-    return make_simulator("sim_telarray", "test-array-simulator")
+    return make_simulator(["sim_telarray"], "test-array-simulator")
 
 
 @pytest.fixture
 def shower_simulator(make_simulator):
-    return make_simulator("corsika", "test-shower-simulator", add_resources=True)
+    return make_simulator(["corsika"], "test-shower-simulator", add_resources=True)
 
 
 @pytest.fixture
 def shower_array_simulator(make_simulator):
-    return make_simulator("corsika_sim_telarray", "test-shower-array-simulator", sequential=True)
+    return make_simulator(
+        ["corsika", "sim_telarray"], "test-shower-array-simulator", sequential=True
+    )
 
 
 @pytest.fixture
 def calibration_simulator(make_simulator):
     return make_simulator(
-        "corsika_sim_telarray",
+        ["corsika", "sim_telarray"],
         "test-calibration-shower-array-simulator",
         sequential=True,
         run_mode="pedestals_nsb_only",
     )
 
 
-@pytest.mark.parametrize("software", ["corsika", "sim_telarray", "corsika_sim_telarray"])
-def test_init_simulator(make_simulator, software):
-    simulator = make_simulator(software, f"test-{software}")
+@pytest.mark.parametrize(
+    ("software", "label"),
+    [
+        (["corsika"], "corsika"),
+        (["sim_telarray"], "simtel"),
+        (["corsika", "sim_telarray"], "combined"),
+    ],
+)
+def test_init_simulator(make_simulator, software, label):
+    simulator = make_simulator(software, f"test-{label}")
     runner_factory = simulator_module.ChainRunner
     chain, inputs = runner_factory.call_args.args
 
@@ -146,23 +161,62 @@ def test_init_simulator(make_simulator, software):
     assert inputs.simulation_parameters == tuple(simulator.simulation_parameters)
     assert inputs.args["simulation_software"] == software
     assert inputs.context is simulator.context
-    assert runner_factory.call_args.kwargs["label"] == f"test-{software}"
+    assert runner_factory.call_args.kwargs["label"] == f"test-{label}"
     assert simulator._simulation_runner is runner_factory.return_value
 
 
-def test_simulation_software(array_simulator, shower_simulator, shower_array_simulator):
-    assert array_simulator.simulation_software == "sim_telarray"
-    assert shower_simulator.simulation_software == "corsika"
-    assert shower_array_simulator.simulation_software == "corsika_sim_telarray"
+def test_simulation_software_of_fixtures(array_simulator, shower_simulator, shower_array_simulator):
+    assert array_simulator.chain == parse_chain(["sim_telarray"])
+    assert shower_simulator.chain == parse_chain(["corsika"])
+    assert shower_array_simulator.chain == parse_chain(["corsika", "sim_telarray"])
+    assert shower_array_simulator.chain.software == frozenset({"corsika", "sim_telarray"})
 
-    test_array_simulator = copy.deepcopy(array_simulator)
-    test_array_simulator.simulation_software = "corsika"
-    assert test_array_simulator.simulation_software == "corsika"
 
-    with pytest.raises(
-        ValueError, match="Invalid simulation software: this_simulator_is_not_there"
-    ):
-        test_array_simulator.simulation_software = "this_simulator_is_not_there"
+def test_simulation_software_default(make_simulator):
+    """Without 'simulation_software' the chain is corsika followed by sim_telarray."""
+    simulator = make_simulator(None, "test-default-chain")
+    assert simulator.chain.stages == ("corsika", "sim_telarray")
+    assert simulator.chain.stage_options("sim_telarray") == {"bypass_optics": "none"}
+
+
+@pytest.mark.parametrize("single_stage", ["corsika", "sim_telarray"])
+def test_simulation_software_single_stage(make_simulator, single_stage):
+    simulator = make_simulator([single_stage], f"test-{single_stage}-chain")
+    assert simulator.chain.stages == (single_stage,)
+    assert simulator.chain.software == frozenset({single_stage})
+
+
+def test_simulation_software_options_reach_stage_inputs(make_simulator, mocker):
+    stage_inputs = mocker.patch("simtools.runners.simulator.StageInputs", wraps=StageInputs)
+
+    simulator = make_simulator(["corsika", "sim_telarray:bypass_optics=none"], "test-chain-options")
+
+    assert simulator.chain.stage_options("sim_telarray") == {"bypass_optics": "none"}
+    assert stage_inputs.call_args.kwargs["chain"] is simulator.chain
+
+
+def test_simulation_software_with_explicit_converters(make_simulator):
+    items = [
+        "corsika",
+        "corsika_to_stream",
+        "obdeect_atmosphere",
+        "obdeect_optics",
+        "stream_to_simtel",
+        "sim_telarray:bypass_optics=camera_only",
+    ]
+    simulator = make_simulator(items, "explicit-converters")
+    assert simulator.chain.stages == tuple(item.split(":")[0] for item in items)
+    assert simulator.chain.stage_options("sim_telarray") == {"bypass_optics": "camera_only"}
+
+
+def test_simulation_software_unknown_stage(make_simulator):
+    with pytest.raises(ValueError, match="Unknown simulation stage 'no_such_stage'"):
+        make_simulator(["corsika", "no_such_stage"], "test-unknown-stage")
+
+
+def test_simulation_software_duplicate_stage(make_simulator):
+    with pytest.raises(ValueError, match="Stage 'corsika' is listed twice"):
+        make_simulator(["corsika", "corsika"], "test-duplicate-stage")
 
 
 def test_get_files_returns_empty_list_for_unknown_type(array_simulator):
@@ -282,7 +336,7 @@ def test_pack_for_register_with_multiple_versions(
     run_context,
 ):
     args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "corsika_sim_telarray"
+    args_dict["simulation_software"] = ["corsika", "sim_telarray"]
     args_dict["label"] = "local-test-shower-array-simulator"
     args_dict["save_corsika_output"] = True
     model_versions = ["5.0.0", "6.0.1"]
@@ -379,20 +433,20 @@ def test_pack_for_register_with_multiple_versions(
 
 
 @pytest.mark.parametrize(
-    ("fixture_name", "expected_software"),
+    ("fixture_name", "expected_stages"),
     [
-        ("shower_simulator", "corsika"),
-        ("array_simulator", "sim_telarray"),
-        ("shower_array_simulator", "corsika_sim_telarray"),
-        ("calibration_simulator", "corsika_sim_telarray"),
+        ("shower_simulator", ("corsika",)),
+        ("array_simulator", ("sim_telarray",)),
+        ("shower_array_simulator", ("corsika", "sim_telarray")),
+        ("calibration_simulator", ("corsika", "sim_telarray")),
     ],
 )
-def test_initialize_simulation_runner(fixture_name, expected_software, request):
-    """Test simulation runner initialization for different simulation software types."""
+def test_initialize_simulation_runner(fixture_name, expected_stages, request):
+    """Test simulation runner initialization for different simulation chains."""
     simulator = request.getfixturevalue(fixture_name)
     simulation_runner = simulator._initialize_simulation_runner()
     assert simulation_runner is not None
-    assert simulator.simulation_software == expected_software
+    assert simulator.chain.stages == expected_stages
 
 
 def test_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
@@ -907,7 +961,7 @@ def test_report(array_simulator, mocker, caplog):
 
     array_simulator.site = "North"
     array_simulator.model_version = "6.0.2"
-    array_simulator.simulation_software = "sim_telarray"
+    array_simulator.chain = parse_chain(["sim_telarray"])
 
     with caplog.at_level(logging.INFO):
         array_simulator.report()
@@ -919,7 +973,7 @@ def test_report(array_simulator, mocker, caplog):
     )
     assert expected_production_msg in caplog.text
 
-    expected_computing_msg = f"Computing for sim_telarray Simulations: {mock_resources_report}"
+    expected_computing_msg = f"Computing for sim_telarray simulations: {mock_resources_report}"
     assert expected_computing_msg in caplog.text
 
 
@@ -955,7 +1009,7 @@ def test_make_resources_report_without_runtime(array_simulator, mocker):
 
 def test_get_corsika_file(array_simulator):
     # Test case 1: sim_telarray with corsika_file in args
-    array_simulator.simulation_software = "sim_telarray"
+    array_simulator.chain = parse_chain(["sim_telarray"])
     array_simulator.context = array_simulator.context.replace(
         args={"corsika_file": "/path/to/corsika_file.corsika"}
     )
@@ -970,13 +1024,13 @@ def test_get_corsika_file(array_simulator):
     assert result is None
 
     # Test case 3: Non-sim_telarray simulation software
-    array_simulator.simulation_software = "corsika"
+    array_simulator.chain = parse_chain(["corsika"])
 
     result = array_simulator._get_corsika_file()
     assert result is None
 
     # Test case 4: corsika_sim_telarray simulation software
-    array_simulator.simulation_software = "corsika_sim_telarray"
+    array_simulator.chain = parse_chain(["corsika", "sim_telarray"])
 
     result = array_simulator._get_corsika_file()
     assert result is None
@@ -1209,6 +1263,28 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
     mock_corsika_validator.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("chain_items", "expected"),
+    [
+        (["sim_telarray"], ["nsb_scaling_factor", "stars"]),
+        (["corsika", "sim_telarray:bypass_optics=none"], ["nsb_scaling_factor", "stars"]),
+        (
+            [
+                "corsika",
+                "obdeect_atmosphere",
+                "obdeect_optics",
+                "sim_telarray:bypass_optics=camera_entrance",
+            ],
+            ["nsb_scaling_factor", "stars", "atmospheric_transmission"],
+        ),
+    ],
+)
+def test_allowed_metadata_changes_follow_skipped_factors(array_simulator, chain_items, expected):
+    array_simulator.chain = parse_chain(chain_items)
+
+    assert array_simulator._allowed_metadata_changes() == expected
+
+
 def test_validate_simulations_corsika(shower_simulator, mocker):
     mock_corsika_config = mocker.Mock()
     mock_corsika_config.shower_events = 2000
@@ -1356,3 +1432,22 @@ def test_reduced_filename_is_independent_of_input_format(file_name):
     assert Simulator._build_output_file_for_input_batch("output", [file_name]) == Path(
         "output/run.reduced_event_data.hdf5"
     )
+
+
+@pytest.mark.parametrize(
+    ("run_mode", "software", "expected"),
+    [
+        ("direct_injection", ["light_emission", "sim_telarray"], ["corsika", "sim_telarray"]),
+        ("direct_injection", None, ["corsika", "sim_telarray"]),
+        ("full_simulation", ["light_emission", "sim_telarray"], ["light_emission", "sim_telarray"]),
+        ("full_simulation", None, ["corsika", "sim_telarray"]),
+    ],
+)
+def test_chain_software(mocker, run_context, run_mode, software, expected):
+    simulator = Simulator.__new__(Simulator)
+    args = {"run_mode": run_mode}
+    if software is not None:
+        args["simulation_software"] = software
+    simulator.context = run_context.replace(args=args)
+    simulator.run_mode = run_mode
+    assert list(simulator._chain_software()) == expected

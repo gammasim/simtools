@@ -28,7 +28,7 @@ on:
         description: 'simtools-tests branch'
         required: false
         type: string
-        default: 'main'
+        default: 'updated-simulation-chain'
   workflow_call:
     inputs:
       simulation_model_repository:
@@ -434,7 +434,7 @@ jobs:
         env:
           BRANCH: >-
             ${{ inputs.simtools_tests_branch ||
-            'main' }}
+            'updated-simulation-chain' }}
         run: |
           git check-ref-format --branch "$BRANCH"
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"

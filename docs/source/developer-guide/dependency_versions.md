@@ -14,7 +14,7 @@ each image. The catalog only names the published images.
 | Section | Declares | Used by |
 | --- | --- | --- |
 | `images` | Registry and tag suffix of the CORSIKA and sim_telarray images | Production and development image builds |
-| `corsika`, `sim-telarray` | Component version (`source-ref`), optional `build-id`, optional image digests | Production matrix, development images |
+| `corsika`, `sim_telarray` | Component version (`source-ref`), optional `build-id`, optional image digests | Production matrix, development images |
 | `production-combinations` | CORSIKA and sim_telarray versions per production image, optional CPU variants | Production matrix |
 | `base-image`, `python`, `apptainer` | Container base image and tool versions | Image builds, summary export |
 | `corsika-interaction-tables` | Interaction tables reference | Integration test setup |
@@ -28,7 +28,7 @@ Change Python requirements in `pyproject.toml`. Change images in `dependency_ver
 
 - `images.registry` and `images.tag-suffix` set where the images are published and the suffix
   added to their tags.
-- `corsika` and `sim-telarray` list one entry per component version. The `source-ref` is the
+- `corsika` and `sim_telarray` list one entry per component version. The `source-ref` is the
   version identity used by `production-combinations`.
 - `production-combinations` pairs one CORSIKA and one sim_telarray version per production image.
 
@@ -40,7 +40,7 @@ images:
   tag-suffix: -gl1
 corsika:
 - source-ref: v7.8010
-sim-telarray:
+sim_telarray:
 - source-ref: v2025-11-30-rc
 ```
 

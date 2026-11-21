@@ -38,7 +38,12 @@ Prefer data over code for anything that is expected to grow:
   (`simulation_software`, `internal_parameter_name`). Add code only for a new
   output format.
 - A shared file product (suffix, default name) is an entry in
-  `resources/file_types.yml`.
+  `resources/file_types.yml`; the files of a simulation program are entries of that program
+  in `resources/simulation_software.yml`.
+- A simulation program, a stage of a simulation chain, its options, the data products that
+  connect stages, the efficiency factors a stage applies and the light-source types are entries
+  in `resources/simulation_software.yml`. Code refers to a stage by its role (for example
+  `thins_photons` or `source`), not by its name.
 - A simple line or histogram plot is a `plot_tables` configuration.
 
 ## Extension points
@@ -49,10 +54,11 @@ Each axis where simtools grows has one extension point:
 | --- | --- |
 | Model parameter | schema YAML in `schemas/model_parameters/` |
 | Simulation configuration writer and result reader | see [Simulation formats](simulation_formats.md) |
-| Ray-tracing backend | `RayTracingBackend` Protocol in `ray_tracing/backends/interface.py`; see [Add a ray-tracing backend](extending/ray-tracing-backend.md) |
+| Ray-tracing backend | `RayTracingBackend` Protocol in `ray_tracing/backends/interface.py`, declared by the `ray_tracing_backend` field of a software entry in `resources/simulation_software.yml`; see [Add a ray-tracing backend](extending/ray-tracing-backend.md) |
 | Event-file format | `EventReader` Protocol in `sim_events/formats/readers.py` |
 | Model-repository storage | `ModelStorage` Protocol in `model_repository/storage.py` |
 | Execution backend | `job_execution/backends/registry.py` |
+| Simulation stage | entry in `resources/simulation_software.yml` with its `implementation` class; see [simulation chains](../components/obdeect.md#simulation-chain) |
 | Plot | `plot_tables` and `plot_configuration.metaschema.yml` |
 | Application | `ApplicationDefinition` plus the `[project.scripts]` entry |
 
