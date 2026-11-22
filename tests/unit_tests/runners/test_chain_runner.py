@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from simtools.runners.chain_runner import ChainRunner
+from simtools.runners.chain_spec import parse_chain
 from simtools.runners.stages import STDIN, StageInputs, StreamTo
 
 
@@ -47,7 +48,9 @@ def _runner(*stage_classes):
     inputs = StageInputs(
         array_models=(), simulation_parameters=(), shower_configurations=(), args={}
     )
-    return ChainRunner(SimpleNamespace(stage_classes=list(stage_classes)), inputs, label="test")
+    # fake stage classes are not catalog stages: the chain has no stage names to check
+    chain = SimpleNamespace(stages=(), stage_classes=list(stage_classes))
+    return ChainRunner(chain, inputs, label="test")
 
 
 def test_single_stage_reads_input_file_and_writes_extras(tmp_test_directory):
@@ -138,6 +141,28 @@ def test_file_hand_over_rejects_mismatched_instance_counts(tmp_test_directory):
         match=r"Stage 'second' has 3 instances, but upstream stage 'first' has 2\. Files are",
     ):
         runner.prepare_run(1, script)
+
+
+def test_single_model_stage_rejects_several_array_models():
+    chain = parse_chain(
+        [
+            "corsika",
+            "obdeect_atmosphere",
+            "obdeect_optics",
+            "sim_telarray:bypass_optics=camera_only",
+        ]
+    )
+    inputs = StageInputs(
+        array_models=("model-6.0.2", "model-6.0.3"),
+        simulation_parameters=(),
+        shower_configurations=(),
+        args={},
+    )
+
+    with pytest.raises(
+        ValueError, match=r"Stages \['obdeect_atmosphere'.*simulate one model version"
+    ):
+        ChainRunner(chain, inputs)
 
 
 def test_environment_and_resources():
