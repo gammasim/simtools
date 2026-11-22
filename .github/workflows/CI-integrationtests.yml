@@ -434,7 +434,7 @@ jobs:
         env:
           BRANCH: >-
             ${{ inputs.simtools_tests_branch ||
-            'updated-simulation-chain' }}
+            'main' }}
         run: |
           git check-ref-format --branch "$BRANCH"
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"

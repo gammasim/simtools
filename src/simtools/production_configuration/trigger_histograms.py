@@ -593,7 +593,7 @@ def _group_job(index, args_dict, context, item, mount_paths, output_paths):
         index=index,
         function=_write_directory_group_job,
         item={"args_dict": args_dict, **item},
-        context_spec=context.to_spec() if args_dict.get("backend", "local") != "local" else None,
+        context_spec=context.to_spec(),
         mount_paths=mount_paths,
         output_paths=output_paths,
     )

@@ -10,6 +10,8 @@ References:
 
 ## Building CORSIKA for simtools
 
+The simtools framework relies on containers build for CORSIKA 7, see the [CTAO container-software repository](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/simulation-containers).
+
 CORSIKA 7 is built using the CORSIKA `coconut` build system:
 
 ```bash
