@@ -228,12 +228,12 @@ def _checked(stage, options):
 def _with_converters(stages):
     """Return the stages with the converter inserted between stages whose products differ."""
     completed = list(stages[:1])
-    for downstream in stages[1:]:
-        converter = _converter_between(completed[-1], downstream)
+    for upstream, downstream in pairwise(stages):
+        converter = _converter_between(upstream, downstream)
         if converter is not None:
             if converter in stages or converter in completed:
                 raise ValueError(
-                    f"Stage {converter!r} is needed between stages {completed[-1]!r} and "
+                    f"Stage {converter!r} is needed between stages {upstream!r} and "
                     f"{downstream!r} but is listed elsewhere in the simulation chain."
                 )
             completed.append(converter)
