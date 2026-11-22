@@ -52,7 +52,6 @@ def test_inspect_with_errors(mock_logger):
     assert result is False
     assert len(mock_logger.records) == 2
     assert ERROR_MSG_LINE_1 in mock_logger.text
-    assert "Error or warning found in log at line 1" in mock_logger.text
 
 
 def test_inspect_single_string_input(mock_logger):

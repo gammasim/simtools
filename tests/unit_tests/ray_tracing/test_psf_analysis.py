@@ -351,17 +351,19 @@ def test_process_simtel_file_using_rx_file_not_found(mocker, psf_image, mocker_g
 
 def test_is_photon_positions_ok(psf_image):
     image = psf_image
+    original_x = image.photon_pos_x.copy()
+    original_y = image.photon_pos_y.copy()
 
     assert image._is_photon_positions_ok() is True
 
     image.photon_pos_x = []
     assert image._is_photon_positions_ok() is False
 
-    image.photon_pos_x = psf_image.photon_pos_x  # Reset to original
+    image.photon_pos_x = original_x.copy()
     image.photon_pos_y = []
     assert image._is_photon_positions_ok() is False
 
-    image.photon_pos_y = psf_image.photon_pos_y  # Reset to original
+    image.photon_pos_y = original_y.copy()
     image.photon_pos_x.append(0.0)  # Add an extra element to make lengths different
     assert image._is_photon_positions_ok() is False
 

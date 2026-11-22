@@ -107,6 +107,29 @@ def test_prepare_test_expands_telescopes_and_applies_overrides(bundle):
     assert all(app[CONFIGURATION][FIGURE_FORMAT] == ["pdf"] for app in applications)
 
 
+def test_prepare_test_applies_telescope_settings_only_to_selected_test(bundle):
+    bundle.suites[NORTH]["camera_telescopes"] = [LSTN_01, MSTN_01]
+    bundle.suites[NORTH]["telescope_configuration_overrides"] = {
+        DERIVE: {
+            LSTN_01: {"core_scatter": "10 1000 m"},
+            MSTN_01: {"core_scatter": "10 2000 m"},
+        }
+    }
+    write_workflow(
+        bundle,
+        WORKFLOW_YML,
+        {
+            APPLICATION: VALIDATOR,
+            CONFIGURATION: {TELESCOPE: defs.TELESCOPE, "core_scatter": "10 1900 m"},
+        },
+    )
+    apps = prepare(bundle).workflow[APPLICATIONS]
+    assert [app[CONFIGURATION]["core_scatter"] for app in apps] == ["10 1000 m", "10 2000 m"]
+    del bundle.suites[NORTH]["telescope_configuration_overrides"][DERIVE][MSTN_01]
+    with pytest.raises(ValueError, match="Missing telescope configuration override for MSTN-01"):
+        prepare(bundle)
+
+
 def test_prepare_test_requires_telescopes_and_declared_changes(bundle):
     write_workflow(
         bundle, WORKFLOW_YML, {APPLICATION: VALIDATOR, CONFIGURATION: {"t": defs.TELESCOPE}}
@@ -233,6 +256,21 @@ def test_derived_products_are_reused_only_when_current(bundle, successful_workfl
         execution._execute(test, overwrite=False)
     execution._execute(test, overwrite=True)
     assert len(successful_workflow) == 2
+
+
+def test_reused_derived_products_reject_changed_collection(bundle, successful_workflow, mocker):
+    mocker.patch.object(execution, "validate_derived_workflow")
+    bundle.catalogue[DERIVE]["derived_output"] = defs.REPORT_PATH
+    test = prepare(bundle)
+    execution._execute(test, overwrite=False)
+    test.workflow["collection"] = {
+        "output_path": str(test.work / "collected"),
+        "files": ["*/bias_curve.png"],
+        "preserve_relative_paths": True,
+    }
+    with pytest.raises(ValueError, match="collection settings changed"):
+        execution._execute(test, overwrite=False)
+    assert len(successful_workflow) == 1
 
 
 def test_selected_model_source_environment_hides_inactive_source(monkeypatch):

@@ -23,9 +23,9 @@ def release_catalog():
         "schema_version": "0.9.0",
         "images": {"registry": "registry.example.org/example", "tag-suffix": "-gl1"},
         "cpu-variants": ["generic"],
-        "production-combinations": [{"corsika": "v7.8010", "sim-telarray": "v1"}],
+        "production-combinations": [{"corsika": "v7.8010", "sim_telarray": "v1"}],
         "corsika": [{"source-ref": "v7.8010"}],
-        "sim-telarray": [{"source-ref": "v1"}],
+        "sim_telarray": [{"source-ref": "v1"}],
     }
 
 

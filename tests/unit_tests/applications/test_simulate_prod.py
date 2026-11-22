@@ -52,7 +52,7 @@ def job_grid_file(tmp_test_directory):
             },
         ],
         grid_file,
-        metadata={"site": "North", "simulation_software": "corsika_sim_telarray"},
+        metadata={"site": "North", "simulation_software": ["corsika", "sim_telarray"]},
     )
     return grid_file
 
@@ -185,7 +185,7 @@ def test_parse_job_grid_file_selects_row(
 
     for key, value in expected.items():
         assert args[key] == value
-    assert args["simulation_software"] == "corsika_sim_telarray"
+    assert args["simulation_software"] == ["corsika", "sim_telarray"]
 
 
 @pytest.mark.parametrize("backend", ["local", "htcondor"])
@@ -357,6 +357,9 @@ def test_execute_job_grid_submits_or_waits(mocker, tmp_test_directory, wait):
         "simtools.applications.simulate_prod.build_simulate_prod_job_specs", return_value=job_specs
     )
     mocker.patch("simtools.applications.simulate_prod.options_from_args")
+    mocker.patch(
+        "simtools.applications.simulate_prod.get_backend"
+    ).return_value.supports_submit_only = False
     execute = mocker.patch("simtools.applications.simulate_prod.execute_jobs")
     submit = mocker.patch("simtools.applications.simulate_prod.submit_jobs")
 
@@ -372,6 +375,58 @@ def test_execute_job_grid_submits_or_waits(mocker, tmp_test_directory, wait):
     expected = execute if wait else submit
     expected.assert_called_once()
     (submit if wait else execute).assert_not_called()
+
+
+def test_execute_job_grid_submits_in_paced_bursts(mocker, tmp_test_directory):
+    jobs = [MagicMock() for _ in range(5)]
+    mocker.patch.object(app, "prepare_jobs", side_effect=lambda specs, *_: specs)
+    mocker.patch(
+        "simtools.applications.simulate_prod.build_simulate_prod_job_specs", return_value=jobs
+    )
+    mocker.patch("simtools.applications.simulate_prod.options_from_args")
+    mocker.patch.object(app, "get_backend").return_value.supports_submit_only = True
+    submit = mocker.patch("simtools.applications.simulate_prod.submit_jobs")
+    sleep = mocker.patch("simtools.applications.simulate_prod.time.sleep")
+
+    app._execute_job_grid(
+        {
+            "_job_grid_rows": [{}],
+            "_job_grid_metadata": {},
+            "output_path": tmp_test_directory,
+            "submission_burst_size": 2,
+            "submission_burst_delay_seconds": 3,
+        }
+    )
+
+    assert [call.args[0] for call in submit.call_args_list] == [jobs[:2], jobs[2:4], jobs[4:]]
+    assert sleep.call_args_list == [((3.0,),), ((3.0,),)]
+
+
+def test_execute_job_grid_waits_after_all_scheduler_bursts(mocker, tmp_test_directory):
+    jobs = [MagicMock() for _ in range(3)]
+    mocker.patch.object(app, "prepare_jobs", side_effect=lambda specs, *_: specs)
+    mocker.patch.object(app, "build_simulate_prod_job_specs", return_value=jobs)
+    mocker.patch.object(app, "options_from_args")
+    mocker.patch.object(app, "get_backend").return_value.supports_submit_only = True
+    events = []
+    mocker.patch.object(
+        app, "submit_jobs", side_effect=lambda burst, _: events.append(burst) or burst
+    )
+    mocker.patch.object(
+        app, "wait_for_submission", side_effect=lambda handle, **_: events.append(handle)
+    )
+
+    app._execute_job_grid(
+        {
+            "_job_grid_rows": [{}],
+            "output_path": tmp_test_directory,
+            "wait": True,
+            "submission_burst_size": 2,
+            "submission_burst_delay_seconds": 0,
+        }
+    )
+
+    assert events == [jobs[:2], jobs[2:], jobs[:2], jobs[2:]]
 
 
 @patch("simtools.applications.simulate_prod.Simulator")
@@ -429,7 +484,7 @@ def test_main_writes_job_metadata_to_output_path(
     manifest = {
         "configuration": {
             "run_number": 7,
-            "simulation_software": "corsika_sim_telarray",
+            "simulation_software": ["corsika", "sim_telarray"],
         },
         "files": {"sim_telarray": ["gamma.simtel.zst"]},
     }
@@ -445,7 +500,7 @@ def test_main_writes_job_metadata_to_output_path(
     mock_simulator.pack_for_register.assert_not_called()
     mock_validate_outputs.assert_called_once_with(
         manifest["files"],
-        "corsika_sim_telarray",
+        ["corsika", "sim_telarray"],
         Path("output"),
     )
     assert mock_check_manifest.call_args.args[0].data == manifest
@@ -473,7 +528,7 @@ def test_main_writes_job_metadata_to_grid_output_path(
     manifest = {
         "configuration": {
             "run_number": 7,
-            "simulation_software": "corsika_sim_telarray",
+            "simulation_software": ["corsika", "sim_telarray"],
         },
         "files": {"sim_telarray": ["gamma.simtel.zst"]},
     }
@@ -489,7 +544,7 @@ def test_main_writes_job_metadata_to_grid_output_path(
     mock_simulator.pack_for_register.assert_called_once_with(Path("grid-output"))
     mock_validate_outputs.assert_called_once_with(
         manifest["files"],
-        "corsika_sim_telarray",
+        ["corsika", "sim_telarray"],
         Path("grid-output"),
     )
     assert mock_check_manifest.call_args.args[0].data == manifest

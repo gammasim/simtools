@@ -90,7 +90,6 @@ def test_get_backend_obdeect():
                     "with_mirrors",
                     "keep_files",
                 ),
-                "camera_photons": ("self", "request"),
             },
         ),
     ],

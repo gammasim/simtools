@@ -59,12 +59,14 @@ def test_calculate_pedestals_dynamic_window(
     if peak_pos:
         waveform[peak_pos] = 10
     if waveform_shape == (1, 2, 10):
+        waveform[0, 0, :] = 1
+        waveform[0, 1, :] = 2
         waveform[0, 0, 5] = 5
         waveform[0, 1, 7] = 7
 
     if half_width is None:
         ped = trace.calculate_pedestals(waveform)
-        assert ped.shape == (2,)
+        np.testing.assert_allclose(ped, [1.0, 2.0])
     else:
         ped = trace.calculate_pedestals(waveform, half_width=half_width, offset=offset)
         expected = expected_match(waveform)

@@ -276,7 +276,7 @@ def test_sst_m2_flasher_command(simulator_instance):
         "flasher_pulse_shape": ["Gauss", 1.06, 0.0],
     }
     calibration_units = {
-        "flasher_position": [0 * u.cm, 0 * u.cm, 310.84 * u.cm, "primary_mirror_frame"],
+        "flasher_position": [0 * u.cm, 0 * u.cm, 206.92 * u.cm, "primary_mirror_frame"],
         "flasher_wavelength": 405 * u.nm,
         "flasher_angular_distribution_width": 30 * u.deg,
     }
@@ -297,6 +297,10 @@ def test_sst_m2_flasher_command(simulator_instance):
     ) == (pytest.approx(51.96))
     assert "--spectrum 405" in options
     assert "--lightpulse gauss:1.06" in options
+
+    calibration_units["flasher_position"][2] = 310.84 * u.cm
+    with pytest.raises(ValueError, match="Flasher above the focal surface"):
+        get_light_source_writer(simulator_instance).add_flasher_command_options()
 
 
 def test__add_flasher_command_options(simulator_instance):

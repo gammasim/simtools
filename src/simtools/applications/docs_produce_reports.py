@@ -10,6 +10,7 @@ from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.configuration import defaults
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 
@@ -33,7 +34,9 @@ _ARGUMENTS = (
         action="store_true",
         help="Produce array_element reports for an observatory at a given site.",
     ),
-    cli.SIMULATION_SOFTWARE,
+    cli.SIMULATION_SOFTWARE(
+        nargs=None, default=None, choices=list(defaults.SIMULATION_SOFTWARE_CHOICES)
+    ),
     cli.MODEL_VERSION,
     cli.OVERWRITE_MODEL_PARAMETERS,
     cli.SITE,
@@ -41,11 +44,20 @@ _ARGUMENTS = (
 )
 
 
+def _validate_simulation_software(args_dict, _config_sources, parser):
+    """Require the simulation software for the simulation_configuration report."""
+    if args_dict.get("report") == "simulation_configuration" and not args_dict.get(
+        "simulation_software"
+    ):
+        parser.error("--simulation_software is required for report simulation_configuration.")
+
+
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
     arguments=(*_ARGUMENTS, *cli.OUTPUT_PATH_ARGUMENTS),
     usage="simtools-docs-produce-reports --report <report_type> [options]",
+    post_parse=_validate_simulation_software,
     needs=("model", "corsika"),
 )
 

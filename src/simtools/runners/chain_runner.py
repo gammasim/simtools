@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from simtools.runners.stages import STDIN, StreamTo
+from simtools.runners.stages import STDIN, StreamTo, check_array_models
 
 
 class ChainRunner:
@@ -28,6 +28,7 @@ class ChainRunner:
         """Initialize ChainRunner."""
         self._logger = logging.getLogger(__name__)
         self.chain = chain
+        check_array_models(chain.stages, inputs.array_models)
         self.stages = [
             stage_class.instances(inputs, label=label) for stage_class in chain.stage_classes
         ]

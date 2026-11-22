@@ -6,6 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import astropy.units as u
+import h5py
 import numpy as np
 from astropy.table import Table
 
@@ -120,21 +121,15 @@ def parse_nsb_hdf5_file(file_path):
     file_path = Path(file_path)
 
     try:
-        events_table = Table.read(file_path, path="SHOWERS")
+        with h5py.File(file_path, "r") as file:
+            events = len(file["SHOWERS"])
+            triggers = len(file["TRIGGERS"]) if "TRIGGERS" in file else 0
     except OSError, ValueError, KeyError:
-        _logger.exception(f"Failed to read SHOWERS table from {file_path}")
+        _logger.exception(f"Failed to read event counts from {file_path}")
         return None
-
-    try:
-        triggers_table = Table.read(file_path, path="TRIGGERS")
-        triggers = len(triggers_table)
-    except OSError, ValueError, KeyError:
-        _logger.info(f"No TRIGGERS table found in {file_path}; using 0 triggers")
-        triggers = 0
 
     run_number = extract_run_number(file_path)
     threshold = extract_threshold(file_path)
-    events = len(events_table)
 
     if run_number is None or threshold is None:
         _logger.warning(

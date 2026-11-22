@@ -2,10 +2,8 @@
 
 import io
 import os
-import signal
 import subprocess
-import time
-from contextlib import suppress
+import sys
 from pathlib import Path
 from tempfile import TemporaryFile
 from types import SimpleNamespace
@@ -292,23 +290,46 @@ def test_lock_is_reset_in_forked_child(repository, store):
 
 
 @pytest.mark.skipif(not hasattr(os, "fork"), reason="requires os.fork")
-def test_forked_child_does_not_deadlock_on_inherited_lock(repository, store):
-    _, commit = repository
-    store._lock.acquire()  # simulate another thread holding the lock during fork
+def test_forked_child_does_not_deadlock_on_inherited_lock(repository):
+    root, commit = repository
+    script = """
+import os
+import signal
+import sys
+import time
+import traceback
+from simtools.model_repository.git_backend import GitCommandObjectStore
+
+store = GitCommandObjectStore(sys.argv[1])
+store._lock.acquire()
+try:
     pid = os.fork()
-    if pid == 0:  # pragma: no cover - runs in the child
-        code = 1
-        with suppress(Exception):
-            code = 0 if store.read_blob(commit, "a.json") == BLOB else 2
-        os._exit(code)
+except BaseException:
     store._lock.release()
-    deadline = time.monotonic() + 20
-    while time.monotonic() < deadline:
-        done, status = os.waitpid(pid, os.WNOHANG)
-        if done:
-            assert os.waitstatus_to_exitcode(status) == 0
-            return
-        time.sleep(0.05)
-    os.kill(pid, signal.SIGKILL)
-    os.waitpid(pid, 0)
-    pytest.fail("forked child deadlocked on the inherited lock")
+    raise
+if pid == 0:
+    try:
+        assert store.read_blob(sys.argv[2], "a.json") == b"x" * 100000
+    except BaseException:
+        traceback.print_exc()
+        os._exit(1)
+    os._exit(0)
+store._lock.release()
+deadline = time.monotonic() + 20
+while time.monotonic() < deadline:
+    done, status = os.waitpid(pid, os.WNOHANG)
+    if done:
+        sys.exit(os.waitstatus_to_exitcode(status))
+    time.sleep(0.05)
+os.kill(pid, signal.SIGKILL)
+os.waitpid(pid, 0)
+sys.exit("forked child deadlocked on the inherited lock")
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(root), commit],
+        capture_output=True,
+        text=True,
+        timeout=25,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr

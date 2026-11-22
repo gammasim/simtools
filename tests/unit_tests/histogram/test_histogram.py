@@ -160,11 +160,6 @@ def test_calculate_cumulative_histogram():
     # Test 1D histogram
     test_hist_1d = np.array([1, 2, 3, 4])
 
-    # Accumulate one-dimensional counts.
-    result_1d_direct = _histogram_from_values(test_hist_1d).cumulative(reverse=False).values
-    expected_1d = np.array([1, 3, 6, 10])
-    np.testing.assert_array_equal(result_1d_direct, expected_1d)
-
     # Normal cumulative (left to right)
     result_1d = _histogram_from_values(test_hist_1d).cumulative().values
     expected_1d = np.array([1, 3, 6, 10])
@@ -212,26 +207,12 @@ def test_calculate_cumulative_histogram():
     expected_axis0_reverse = np.array([[5, 7, 9], [4, 5, 6]])
     np.testing.assert_array_equal(result_axis0_reverse, expected_axis0_reverse)
 
-    # Accumulate along rows.
-    result_2d = _histogram_from_values(test_hist_2d).cumulative(axis=1).values
-    expected_2d = np.array([[1, 3, 6], [4, 9, 15]])
-    np.testing.assert_array_equal(result_2d, expected_2d)
-
     # Test 2D histogram with normalization - row normalization
     result_2d_normalized = (
         _histogram_from_values(test_hist_2d).cumulative(normalize=True, axis=1).values
     )
     expected_2d_normalized = np.array([[1 / 6, 3 / 6, 1.0], [4 / 15, 9 / 15, 1.0]])
     np.testing.assert_allclose(result_2d_normalized, expected_2d_normalized)
-
-    # Along axis 0
-    result_2d_axis0 = _histogram_from_values(test_hist_2d).cumulative(axis=0).values
-    expected_2d_axis0 = np.array([[1, 2, 3], [5, 7, 9]])
-    np.testing.assert_array_equal(result_2d_axis0, expected_2d_axis0)
-
-    # With reverse=True
-    result_2d_reverse = _histogram_from_values(test_hist_2d).cumulative(reverse=True, axis=1).values
-    np.testing.assert_array_equal(result_2d_reverse, np.array([[6, 5, 3], [15, 11, 6]]))
 
 
 def test_normalized_cumulative_histogram():

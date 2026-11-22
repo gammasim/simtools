@@ -4,8 +4,10 @@ from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 from astropy.table import Table
+from matplotlib.figure import Figure
 
 from simtools.visualization.plot_production_grid import (
     DEFAULT_OUTPUT_FILE_STEM,
@@ -235,7 +237,7 @@ def test_plot_shower_statistics_requires_positive_azimuth_width(tmp_test_directo
         plotter.plot_shower_statistics_vs_zenith(azimuth_width=0)
 
 
-def test_plot_shower_statistics_azimuth_interval_wraps_at_zero(tmp_test_directory):
+def test_plot_shower_statistics_azimuth_interval_wraps_at_zero(tmp_test_directory, monkeypatch):
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_showers_wrap.ecsv",
@@ -247,13 +249,26 @@ def test_plot_shower_statistics_azimuth_interval_wraps_at_zero(tmp_test_director
     )
     output_path = Path(tmp_test_directory) / "output"
     plotter = _create_plotter(grid_file=grid_file, output_path=output_path)
+    saved = {}
+    savefig = Figure.savefig
+
+    def capture(figure, path, *args, **kwargs):
+        if "az0_width2deg" in str(path):
+            scatter = figure.axes[0].collections[0]
+            saved["positions"] = scatter.get_offsets().copy()
+            saved["azimuths"] = scatter.get_array().copy()
+        return savefig(figure, path, *args, **kwargs)
+
+    monkeypatch.setattr(Figure, "savefig", capture)
 
     plotter.plot_shower_statistics_vs_zenith(azimuth_center=0.0, azimuth_width=2.0)
 
     assert (output_path / "showers_vs_zenith_az0_width2deg.png").exists()
+    np.testing.assert_array_equal(saved["positions"], [[20, 100], [20, 100]])
+    np.testing.assert_array_equal(saved["azimuths"], [359, 1])
 
 
-def test_plot_sky_projection_creates_output_with_hadec_panel(tmp_test_directory):
+def test_plot_sky_projection_creates_output_with_hadec_panel(tmp_test_directory, monkeypatch):
     """Write the sky projection plot with both Alt/Az and HA/Dec data."""
     grid_file = _write_grid_file(
         tmp_test_directory,
@@ -266,10 +281,26 @@ def test_plot_sky_projection_creates_output_with_hadec_panel(tmp_test_directory)
         grid_file=grid_file,
         output_path=output_path,
     )
+    saved = {}
+    savefig = Figure.savefig
+
+    def capture(figure, path, *args, **kwargs):
+        saved["titles"] = [axis.get_title() for axis in figure.axes]
+        saved["positions"] = [
+            collection.get_offsets().copy()
+            for axis in figure.axes
+            if axis.get_title() == "Hour angle / Declination"
+            for collection in axis.collections
+        ]
+        return savefig(figure, path, *args, **kwargs)
+
+    monkeypatch.setattr(Figure, "savefig", capture)
 
     plotter.plot_sky_projection()
 
     assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.png").exists()
+    assert "Hour angle / Declination" in saved["titles"]
+    assert any(np.allclose(points, [[180, -10]]) for points in saved["positions"])
 
 
 def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):

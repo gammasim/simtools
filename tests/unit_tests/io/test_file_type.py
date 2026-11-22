@@ -96,3 +96,30 @@ def test_looks_like_text_file_false_on_os_error(mocker):
     mocker.patch.object(Path, "read_bytes", side_effect=OSError("missing"))
 
     assert looks_like_text_file("missing.txt") is False
+
+
+def test_file_catalog_merges_the_files_of_the_simulation_software():
+    # declared in resources/simulation_software.yml
+    assert product_suffixes("corsika_output") == (".corsika", ".corsika.gz", ".corsika.zst")
+    assert product_value("photon_stream", "default_suffix") == ".pst"
+    assert product_value("stage_log", "directory") == "run"
+    assert FILE_TYPE_SUFFIXES["sim_telarray"] == (".simtel", ".simtel.gz", ".simtel.zst")
+
+
+def test_products_in_directory():
+    assert {"corsika_output", "photon_stream", "stage_log"} <= set(
+        file_type.products_in_directory("run")
+    )
+    assert set(file_type.products_in_directory("submission")) == {
+        "sub_out",
+        "sub_err",
+        "sub_log",
+        "sub_script",
+    }
+
+
+def test_merge_rejects_an_id_declared_twice():
+    catalog = {"products": {"corsika_output": {}}}
+
+    with pytest.raises(ValueError, match="File product 'corsika_output' is declared twice"):
+        file_type._merge(catalog, "products", {"corsika_output": {}}, "corsika")  # pylint: disable=protected-access
