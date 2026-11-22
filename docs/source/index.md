@@ -147,7 +147,7 @@ Changelog <changelog>
     <text x="700" y="241" font-size="11.5" opacity="0.8">Trigger, Digitization</text>
 
     <!-- Legend / Footer -->
-    <text x="380" y="280" font-size="11.5" opacity="0.8">solid horizontal arrows: photon streams · dashed vertical arrows: configuration &amp; model parameters</text>
+    <text x="380" y="280" font-size="11.5" opacity="0.8">solid horizontal arrows: photon streams; dashed vertical arrows: configuration &amp; model parameters</text>
   </g>
 </svg>
 ```
