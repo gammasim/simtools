@@ -161,8 +161,9 @@ class LightEmissionConfigWriter:
             raise ValueError(
                 "Flasher above the focal surface of a dual-mirror telescope cannot be simulated "
                 "with the sim_telarray light-emission package (ff-1m has no direction option). "
-                "Use a ray-tracing backend that traces light sources, e.g. "
-                "--ray_tracing_backend obdeect, or place the flasher below the focal surface."
+                "Use a simulation chain with obdeect_flasher, e.g. "
+                "--simulation_software obdeect_flasher obdeect_optics sim_telarray, "
+                "or place the flasher below the focal surface."
             )
         events, photons = self.simulation.build_flasher_event_and_photon_sequences()
         flasher_xyz = self.simulation.calibration_model.get_parameter_value_with_unit(

@@ -36,7 +36,9 @@ applications:
     primary:
     - gamma
     - proton
-    simulation_software: corsika_sim_telarray
+    simulation_software:
+    - corsika
+    - sim_telarray
     site: North
     view_cone: 0 deg 10 deg
     zenith_angle:

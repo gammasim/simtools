@@ -6,14 +6,19 @@ import pytest
 
 from simtools.runners import stages
 from simtools.runners.chain_runner import ChainRunner
-from simtools.runners.corsika_stage import CorsikaStage
-from simtools.runners.sim_telarray_stage import SimTelArrayStage
-from simtools.runners.stages import SimulationChain, StageInputs
+from simtools.runners.chain_spec import parse_chain
+from simtools.runners.stages import StageInputs, get_stage_class
 from tests.unit_tests.fakes.stages import FakeShowerStage, FakeTelescopeStage
 
 
 @pytest.mark.parametrize(
-    "stage_class", [CorsikaStage, SimTelArrayStage, FakeShowerStage, FakeTelescopeStage]
+    "stage_class",
+    [
+        get_stage_class("corsika"),
+        get_stage_class("sim_telarray"),
+        FakeShowerStage,
+        FakeTelescopeStage,
+    ],
 )
 def test_stage_contract_methods_exist(stage_class):
     assert stage_class.name
@@ -24,10 +29,10 @@ def test_stage_contract_methods_exist(stage_class):
 
 
 def test_fake_stage_chain_writes_products_and_run_script(tmp_test_directory):
-    stages.register_stage("fake_shower", lambda: FakeShowerStage)
-    stages.register_stage("fake_telescope", lambda: FakeTelescopeStage)
+    stages.register_stage(FakeShowerStage)
+    stages.register_stage(FakeTelescopeStage)
     try:
-        chain = SimulationChain(("fake_shower", "fake_telescope"))
+        chain = parse_chain(["fake_shower", "fake_telescope"])
         inputs = StageInputs((), (), (), {"output_directory": tmp_test_directory})
         script = Path(tmp_test_directory) / "run.sh"
         runner = ChainRunner(chain, inputs)
