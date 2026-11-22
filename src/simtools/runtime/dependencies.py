@@ -79,7 +79,7 @@ def validate_simulation_dependencies(software, context=None):
         invalid, or a required dependency is unavailable.
     """
     context = context or run_context.RunContext.from_environment()
-    required = frozenset(software)
+    required = frozenset({software} if isinstance(software, str) else software)
     unknown = required - set(software_catalog.software_names())
     if unknown:
         raise ValueError(f"Unknown simulation software: {', '.join(sorted(unknown))}")

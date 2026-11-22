@@ -1,5 +1,6 @@
 """Tests for the optical model file and the command line of the obdeect ray tracing."""
 
+import subprocess
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -160,7 +161,7 @@ def test_optical_model_depends_on_instrument_seed(request_one, toy_telescope):
 def test_trace_stream_of_ground_photons(request_one, toy_telescope, tmp_test_directory):
     """Run obdeect on a small ground-frame stream: two telescopes in one process, one dropped."""
     stream = pytest.importorskip("obdeect.stream")
-    cli = pytest.importorskip("obdeect.stream.cli")
+    pytest.importorskip("obdeect.stream.cli")
     model_file = optics.write_optical_model(request_one, toy_telescope)
     count = 200
     rng = np.random.default_rng(1)
@@ -205,7 +206,7 @@ def test_trace_stream_of_ground_photons(request_one, toy_telescope, tmp_test_dir
         [request_one, other_request], [model_file, model_file], input_file, output_file
     )
 
-    assert cli.main(command[command.index("ray-tracing") :]) == 0
+    subprocess.run(command, check=True)
     records = list(stream.Reader(str(output_file)))
     telescopes = [
         record["metadata"]["telescope_id"] for record in records if record["type"] == "telescope"
