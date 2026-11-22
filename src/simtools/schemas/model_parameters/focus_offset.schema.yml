@@ -12,14 +12,18 @@ description: |-
   through mirror alignment and camera positioning) this is best set
   such that starlight gets focused onto the camera lid while showers
   are focused onto the pixel entry.
+  The offset sets the camera geometry for both starlight and shower light.
   Zenith angle dependence of the focus offset can be applied and includes
   the constant value $\Delta_0$ and terms depending on cosine and sine
   of the zenith angle. The total focus offset is
-  $\Delta = \Delta_0 + \Delta_c + \Delta_s$.
-  Set to zero for all 2M telescope types, as it is already included in
-  the first of the par:focal-surface-parameters values, assuming the
-  design value of that is for a light source at a typical shower maximum
-  distance.
+  $\Delta = \Delta_0 + \Delta_c + \Delta_s$. Both scaling terms must be
+  nonzero for sim_telarray to apply either zenith angle correction; otherwise
+  the offset is $\Delta_0$.
+  For two-mirror telescopes, a positive offset shifts the camera and focal
+  surface towards the primary mirror. The first of the
+  par:focal-surface-parameters values also affects the focal surface position.
+  If that value already accounts for the desired focus at a typical shower
+  maximum distance, use zero offset to avoid applying an additional shift.
 short_description: |-
   Distance of the starlight focus from the camera pixels (light guides)
   entry.
@@ -30,19 +34,19 @@ data:
     unit: cm
     default: 2.8
   - type: float64
-    description: Zenith angle $\Delta_0$ at which minimum is reached.
+    description: Reference zenith angle $\theta_0$ at which both corrections are zero.
     unit: deg
     default: 28.0
   - type: float64
     description: |-
       Scaling term $k_c$ in
-      $\Delta_c = (\cos(\theta)-\cos(\theta_0)) / k_c$.
+      $\Delta_c = k_c (\cos(\theta)-\cos(\theta_0))$.
     unit: dimensionless
     default: 0.0
   - type: float64
     description: |-
       Scaling term $k_s$ in
-      $\Delta_s = (\sin(\theta)-\sin(\theta_0)) / k_s$.
+      $\Delta_s = k_s (\sin(\theta)-\sin(\theta_0))$.
     unit: dimensionless
     default: 0.0
 instrument:
