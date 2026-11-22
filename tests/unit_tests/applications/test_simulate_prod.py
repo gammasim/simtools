@@ -52,7 +52,7 @@ def job_grid_file(tmp_test_directory):
             },
         ],
         grid_file,
-        metadata={"site": "North", "simulation_software": "corsika_sim_telarray"},
+        metadata={"site": "North", "simulation_software": ["corsika", "sim_telarray"]},
     )
     return grid_file
 
@@ -185,7 +185,7 @@ def test_parse_job_grid_file_selects_row(
 
     for key, value in expected.items():
         assert args[key] == value
-    assert args["simulation_software"] == "corsika_sim_telarray"
+    assert args["simulation_software"] == ["corsika", "sim_telarray"]
 
 
 @pytest.mark.parametrize("backend", ["local", "htcondor"])
@@ -484,7 +484,7 @@ def test_main_writes_job_metadata_to_output_path(
     manifest = {
         "configuration": {
             "run_number": 7,
-            "simulation_software": "corsika_sim_telarray",
+            "simulation_software": ["corsika", "sim_telarray"],
         },
         "files": {"sim_telarray": ["gamma.simtel.zst"]},
     }
@@ -500,7 +500,7 @@ def test_main_writes_job_metadata_to_output_path(
     mock_simulator.pack_for_register.assert_not_called()
     mock_validate_outputs.assert_called_once_with(
         manifest["files"],
-        "corsika_sim_telarray",
+        ["corsika", "sim_telarray"],
         Path("output"),
     )
     assert mock_check_manifest.call_args.args[0].data == manifest
@@ -528,7 +528,7 @@ def test_main_writes_job_metadata_to_grid_output_path(
     manifest = {
         "configuration": {
             "run_number": 7,
-            "simulation_software": "corsika_sim_telarray",
+            "simulation_software": ["corsika", "sim_telarray"],
         },
         "files": {"sim_telarray": ["gamma.simtel.zst"]},
     }
@@ -544,7 +544,7 @@ def test_main_writes_job_metadata_to_grid_output_path(
     mock_simulator.pack_for_register.assert_called_once_with(Path("grid-output"))
     mock_validate_outputs.assert_called_once_with(
         manifest["files"],
-        "corsika_sim_telarray",
+        ["corsika", "sim_telarray"],
         Path("grid-output"),
     )
     assert mock_check_manifest.call_args.args[0].data == manifest

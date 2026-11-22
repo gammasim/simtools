@@ -7,11 +7,19 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
+#: Value of the model parameter mirror_class for dual-mirror telescopes.
+DUAL_MIRROR_CLASS = 2
+
+
+def is_dual_mirror(telescope_model):
+    """Return whether a telescope model describes a dual-mirror telescope."""
+    return telescope_model.get_parameter_value("mirror_class") == DUAL_MIRROR_CLASS
+
 
 def uses_segmented_dual_mirror_geometry(parameters):
     """Return whether sim_telarray derives primary-mirror geometry from segmentation."""
     return bool(
-        parameters.get("mirror_class", {}).get("value") == 2
+        parameters.get("mirror_class", {}).get("value") == DUAL_MIRROR_CLASS
         and parameters.get("primary_mirror_segmentation", {}).get("value")
     )
 

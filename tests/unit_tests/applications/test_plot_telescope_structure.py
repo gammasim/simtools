@@ -79,11 +79,12 @@ def test_application_plot_custom_structure(
 
         monkeypatch.delitem(sys.modules, "simtools.ray_tracing.backends.obdeect", raising=False)
         obdeect = ModuleType("obdeect")
-        model = ModuleType("obdeect.model")
-        model.OpticalModel = OpticalModel
-        model.DETECTED = 1
+        obdeect.__path__ = []
+        ray_tracing = ModuleType("obdeect.ray_tracing")
+        ray_tracing.OpticalModel = OpticalModel
+        ray_tracing.DETECTED = 1
         monkeypatch.setitem(sys.modules, "obdeect", obdeect)
-        monkeypatch.setitem(sys.modules, "obdeect.model", model)
+        monkeypatch.setitem(sys.modules, "obdeect.ray_tracing", ray_tracing)
     monkeypatch.setattr(
         "sys.argv",
         [

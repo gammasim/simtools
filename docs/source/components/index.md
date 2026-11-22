@@ -14,13 +14,12 @@ The following simulation software packages are used by simtools:
 
 - [CORSIKA](corsika.md): Air shower simulation software.
 - [sim_telarray](sim_telarray.md): Telescope simulation software for ray tracing, triggering, and camera-level simulation.
-- [obdeect](obdeect.md): Packaged C++ optical ray-tracing backend.
+- [obdeect](obdeect.md): Simulation chain for imaging atmospheric Cherenkov telescopes.
 - ROBAST (used externally for dedicated optics workflows)
 
 ```{note}
 Simulation software is external to simtools and developed by the respective teams. The integration of these components into simtools is done through interfaces, allowing for flexibility and future updates.
 ```
-
 
 ## Simulation Models
 

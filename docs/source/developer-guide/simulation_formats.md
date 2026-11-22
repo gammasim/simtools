@@ -12,7 +12,11 @@ the corresponding built-in implementation.
 
 Shared file suffixes, generated defaults, fixed filenames, and lifecycle labels
 belong in [`resources/file_types.yml`](https://github.com/gammasim/simtools/blob/main/src/simtools/resources/file_types.yml)
-and are schema-validated when loaded. Add an entry when a product is shared by
+and are schema-validated when loaded. The formats and files of each simulation program are
+declared with the program in
+[`resources/simulation_software.yml`](https://github.com/gammasim/simtools/blob/main/src/simtools/resources/simulation_software.yml)
+and merged into the same catalog; the `directory` of a file places it in the run or the
+submission directory. Add an entry when a product is shared by
 multiple producers or consumers; keep parameterized native names, directory
 placement, and cleanup rules with their owning workflow.
 

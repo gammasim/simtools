@@ -26,6 +26,7 @@ from simtools.production_configuration.production_file_selection import (
     resolve_relative_manifest_path,
     validate_required_production_outputs,
 )
+from simtools.runtime import software_catalog
 from simtools.sim_events.simtel_io_metadata import read_sim_telarray_metadata
 from simtools.simtel.sim_telarray_metadata import get_ctao_metadata_registry
 from simtools.utils import names
@@ -90,7 +91,10 @@ def _write_manifests(production_path, job_grid_file, args_dict, context):
                 f"Metadata manifest already exists: {manifest_path}. Use --overwrite to replace it."
             )
         args = job_grid_row_to_simulate_prod_args(row, metadata)
-        args.setdefault("simulation_software", "corsika_sim_telarray")
+        args.setdefault(
+            "simulation_software",
+            list(software_catalog.default_chain(software_catalog.AIR_SHOWER_SOURCE)),
+        )
         args.setdefault("eslope", -2.0)
         missing = [
             key
@@ -427,7 +431,7 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
         "site": args_dict["site"],
         "array_layout_name": args_dict["array_layout_name"],
         "model_version": _scalar_or_list(args_dict["model_version"]),
-        "simulation_software": args_dict["simulation_software"],
+        "simulation_software": list(args_dict["simulation_software"]),
         _AZIMUTH_ANGLE: args_dict[_AZIMUTH_ANGLE],
         _ZENITH_ANGLE: args_dict[_ZENITH_ANGLE],
         "energy_min": energy_min,
