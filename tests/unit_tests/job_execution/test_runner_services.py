@@ -283,3 +283,14 @@ def test_stderr_file_matches_stdout_name(runner_service, prefix):
     assert stderr_file == stdout_file.with_name(
         stdout_file.name.removesuffix(".log.gz") + ".err.gz"
     )
+
+
+def test_get_stage_file_name(runner_service):
+    log = runner_service.get_file_name("stage_log", run_number=1)
+
+    stage_log = runner_service.get_stage_file_name("obdeect_optics", "stage_log", run_number=1)
+
+    assert stage_log.parent == log.parent
+    assert stage_log.name == log.name.removesuffix(".log") + ".obdeect_optics.log"
+    stream = runner_service.get_stage_file_name("obdeect_atmosphere", "photon_stream", run_number=2)
+    assert stream.name.endswith(".obdeect_atmosphere.pst")

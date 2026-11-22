@@ -18,7 +18,7 @@ import astropy.units as u
 import numpy as np
 from astropy.constants import c as speed_of_light  # pylint: disable=no-name-in-module
 from astropy.table import QTable
-from obdeect.model import DETECTED, OpticalModel
+from obdeect.ray_tracing import DETECTED, OpticalModel  # pylint: disable=no-name-in-module
 
 from simtools.model.model_utils import export_model_files
 from simtools.ray_tracing.backends.interface import image_file_name
@@ -173,14 +173,20 @@ class ObdeectRayTracer:
             if request.inside_telescope
             else None  # The telescope entrance.
         )
+        axis = request.axis
+        if request.inside_telescope:
+            axis = (0.0, 0.0, 1.0 if request.position_m[2] < plane_z else -1.0)
         for pulse_number, photons in enumerate(request.photons_per_pulse):
+            pulse_seed = int(
+                np.random.SeedSequence((simulation_seed, pulse_number)).generate_state(1)[0]
+            )
             blocks = model.trace_emitter_blocks(
                 photons,
-                seed=simulation_seed,
-                first_id=pulse_number << 40,
+                seed=pulse_seed,
+                first_id=0,
                 position_m=request.position_m,
                 intensity=request.angular_profile,
-                axis=request.axis,
+                axis=axis,
                 pulse=request.pulse,
                 wavelength_nm=request.wavelength_nm,
                 disk=disk,
@@ -215,9 +221,6 @@ class ObdeectBackend:
     single_mirror_mode: bool
         Trace single mirrors.
     """
-
-    traces_light_sources = True
-    traces_shower_photons = True
 
     def __init__(
         self, telescope_model, site_model, label, zenith_angle, single_mirror_mode, *, context=None
@@ -331,10 +334,6 @@ class ObdeectBackend:
                 data[f"{mirror}_hit_x"] = point[:, 0]
                 data[f"{mirror}_hit_y"] = point[:, 1]
         return data, []
-
-    def camera_photons(self, request):
-        """Photons of a calibration light source at the camera entrance, per pulse in blocks."""
-        return self._tracer.trace_light_source(request)
 
 
 def make_shower_tracer(telescope_model):

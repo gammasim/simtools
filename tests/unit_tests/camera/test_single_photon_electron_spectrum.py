@@ -34,20 +34,6 @@ def afterpulse_column():
     return "frequency (afterpulsing)"
 
 
-def test_derive_single_pe_spectrum(spe_spectrum, tmp_test_directory):
-    input_file = tmp_test_directory / "prompt.ecsv"
-    Table(
-        {
-            "amplitude": [0.0, 1.0, 2.0],
-            "frequency (prompt)": [0.0, 1.0, 0.0],
-        }
-    ).write(input_file, format="ascii.ecsv")
-    spe_spectrum.args_dict["input_spectrum"] = input_file
-
-    assert spe_spectrum.derive_single_pe_spectrum() == 0
-    assert spe_spectrum.data
-
-
 @patch("simtools.camera.single_photon_electron_spectrum.writer.ModelDataWriter.write_product_data")
 def test_write_single_pe_spectrum(mock_dump, spe_spectrum, tmp_test_directory):
     spe_spectrum.context.paths.output_path["default"] = tmp_test_directory / "output" / "directory"
@@ -86,7 +72,8 @@ def test_write_single_pe_spectrum_rejects_unexpected_spectrum_columns(spe_spectr
         spe_spectrum.write_single_pe_spectrum()
 
 
-def test_derive_spectrum(spe_spectrum, tmp_test_directory):
+@pytest.mark.parametrize("max_amplitude", [1.0, 2.0])
+def test_derive_spectrum(spe_spectrum, tmp_test_directory, max_amplitude):
     input_file = tmp_test_directory / "prompt.ecsv"
     Table(
         {
@@ -94,12 +81,12 @@ def test_derive_spectrum(spe_spectrum, tmp_test_directory):
             "frequency (prompt)": [0.0, 1.0, 0.0],
         }
     ).write(input_file, format="ascii.ecsv")
-    spe_spectrum.args_dict.update(input_spectrum=input_file, max_amplitude=2.0)
+    spe_spectrum.args_dict.update(input_spectrum=input_file, max_amplitude=max_amplitude)
 
     assert spe_spectrum.derive_single_pe_spectrum() == 0
 
     output = np.loadtxt(BytesIO(spe_spectrum.data.encode("utf-8")))
-    np.testing.assert_allclose(output[:, 0], np.arange(0.0, 2.1, 0.1))
+    np.testing.assert_allclose(output[:, 0], np.arange(0.0, max_amplitude + 0.05, 0.1))
     np.testing.assert_allclose(output[:, 1], np.maximum(0.0, 1.0 - np.abs(output[:, 0] - 1.0)))
     np.testing.assert_allclose(output[:, 2], output[:, 1])
 

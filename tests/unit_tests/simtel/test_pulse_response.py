@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from astropy.table import Table
@@ -17,6 +18,12 @@ INTENSITY = "intensity"
 SCAN_FILE = "scan.simtel"
 PEAK = "peak_adc"
 ADC_SUM = "adc_sum"
+_CAPTURED_FIGURES = []
+
+
+def _capture_figure(figure):
+    """Keep figures for checking their labels after PDF export."""
+    _CAPTURED_FIGURES.append(figure)
 
 
 @pytest.fixture
@@ -242,12 +249,21 @@ def test_scan_rejects_ambiguous_steps():
 
 
 def test_summary_and_outputs(pulse_model, tmp_test_directory):
-    table, waves = pulse_response.template_responses(pulse_model, [5, 15])
-    path = pulse_response.write_response(table, waves, tmp_test_directory, RESPONSE)
+    table, waves = pulse_response.template_responses(pulse_model, [5, 15], threshold_adc=0.5)
+    try:
+        with plt.rc_context({"figure.hooks": [f"{__name__}:_capture_figure"]}):
+            path = pulse_response.write_response(table, waves, tmp_test_directory, RESPONSE)
+        assert len(_CAPTURED_FIGURES) == 2
+        assert all(
+            figure.axes[2].get_ylabel() == "Width above 0.5 ADC [ns]"
+            for figure in _CAPTURED_FIGURES
+        )
+    finally:
+        _CAPTURED_FIGURES.clear()
     loaded = Table.read(path)
     summary = Table.read(tmp_test_directory / "response_summary.ecsv")
     assert len(loaded) == len(summary) == 8
-    assert path.with_suffix(".pdf").is_file()
+    assert path.with_suffix(".pdf").read_bytes().startswith(b"%PDF-")
     assert summary["event_count"].tolist() == [1] * 8
     assert np.allclose(summary["peak_adc_std"], 0)
 

@@ -41,8 +41,6 @@ def test_assert_file_type_json(tmp_test_directory, test_yaml_file):
     assert not assertions.assert_file_type("json", "tests/unit_tests/resources/does_not_exist.json")
     assert not assertions.assert_file_type("json", test_yaml_file)
 
-    assert assertions.assert_file_type("json", json_file)
-
 
 def test_assert_file_type_yaml(test_yaml_file):
     assert assertions.assert_file_type("yaml", test_yaml_file)

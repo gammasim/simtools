@@ -25,7 +25,7 @@ def _base_args(tmp_test_directory):
         "model_version": "7.0.0",
         "array_layout_name": "LSTN-01",
         "threshold_parameter": "asum_threshold",
-        "simulation_software": "corsika_sim_telarray",
+        "simulation_software": ["corsika", "sim_telarray"],
         "azimuth_angle": 0.0,
         "zenith_angle": 20.0,
         "showers_per_run": 10000,
@@ -37,7 +37,7 @@ def _base_args(tmp_test_directory):
         "nsb_energy_range": "20 MeV 25 MeV",
         "proton_energy_range": "2 GeV 2000 GeV",
         "nsb_scaling_factor": 2,
-        "trigger_thresholds": None,
+        "trigger_thresholds": [220, 10, 10],
         "output_path": str(Path(tmp_test_directory) / "bias_curves"),
     }
 
@@ -180,7 +180,7 @@ def test_expand_job_grid_with_scan_validates_configuration(tmp_test_directory):
             {
                 "model_parameter_sets": {"set1": {"param": 1}},
                 "site": "South",
-                "simulation_software": "sim_telarray",
+                "simulation_software": ["sim_telarray"],
                 "job_grid_summary": {"total": 10},
                 "job_grid_format_version": "1.0",
                 "unwanted_key": "should_be_removed",
@@ -234,6 +234,31 @@ def test_generate_scan_grids_generates_both_curves_without_mutating_args(
     primaries = [call.args[0]["primary"] for call in mock_generate_job_grid.call_args_list]
     assert primaries == ["gamma", "proton"]
     assert mock_expand.call_count == 2
+
+
+def test_bias_curve_grid_uses_curve_specific_job_sizes(tmp_test_directory, run_context):
+    args = _base_args(tmp_test_directory) | {
+        "nsb_showers_per_run": 2000,
+        "nsb_number_of_runs": 38,
+        "proton_showers_per_run": 7500,
+        "proton_number_of_runs": 10,
+        "threshold_parameter": "asum_threshold",
+    }
+    paths = OutputPaths(output_path=Path(args["output_path"]).resolve())
+    with (
+        patch(f"{_MODULE}.generate_job_grid") as generate,
+        patch(f"{_MODULE}.expand_job_grid_with_scan"),
+    ):
+        for curve, definition in (
+            ("nsb", ("gamma", "nsb_energy_range")),
+            ("proton", ("proton", "proton_energy_range")),
+        ):
+            parameter_scans._generate_scan_grid(
+                curve, definition, args, "LSTN-01", paths, run_context
+            )
+    nsb, proton = (call.args[0] for call in generate.call_args_list)
+    assert (nsb["showers_per_run"], nsb["number_of_runs"]) == (2000, 38)
+    assert (proton["showers_per_run"], proton["number_of_runs"]) == (7500, 10)
 
 
 def test_generate_scan_grid_writes_scan_config_and_expands_grid(tmp_test_directory, run_context):
@@ -294,23 +319,13 @@ def test_threshold_parameter_is_chosen_from_telescope_model(
     )
 
 
-@pytest.mark.parametrize(
-    ("threshold_param", "expected_values"),
-    [
-        (
-            "asum_threshold",
-            [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
-        ),
-        ("dsum_threshold", [22, 23, 24, 25, 26, 27, 28, 29, 30]),
-        ("discriminator_threshold", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-    ],
-)
-def test_threshold_values_use_parameter_defaults(threshold_param, expected_values):
-    assert parameter_scans._threshold_values(threshold_param) == expected_values
+def test_threshold_values_require_explicit_scan():
+    with pytest.raises(ValueError, match="trigger_thresholds"):
+        parameter_scans._threshold_values()
 
 
 def test_threshold_values_expand_configured_thresholds():
-    assert parameter_scans._threshold_values("asum_threshold", [225, 3, 10]) == [225, 235, 245]
+    assert parameter_scans._threshold_values([225, 3, 10]) == [225, 235, 245]
 
 
 @pytest.mark.parametrize(
@@ -324,11 +339,15 @@ def test_threshold_values_expand_configured_thresholds():
 )
 def test_invalid_configured_thresholds_are_rejected(trigger_thresholds, error):
     with pytest.raises(ValueError, match=error):
-        parameter_scans._threshold_values("asum_threshold", trigger_thresholds)
+        parameter_scans._threshold_values(trigger_thresholds)
 
 
-@pytest.mark.parametrize("curve_name", ["nsb", "proton"])
-def test_scan_config_contains_curve_overwrite_and_trigger_scan(tmp_test_directory, curve_name):
+@pytest.mark.parametrize(
+    ("curve_name", "min_photons", "min_photoelectrons"), [("nsb", 0, 0), ("proton", 50, 10)]
+)
+def test_scan_config_contains_curve_overwrite_and_trigger_scan(
+    tmp_test_directory, curve_name, min_photons, min_photoelectrons
+):
     args = {**_base_args(tmp_test_directory), "threshold_parameter": "asum_threshold"}
     scan_config = parameter_scans._scan_config(curve_name, "LSTN-01", args)
 
@@ -339,18 +358,15 @@ def test_scan_config_contains_curve_overwrite_and_trigger_scan(tmp_test_director
         == f"Tune for {'NSB' if curve_name == 'nsb' else 'proton'} telescope trigger scan"
     )
     assert overwrite["changes"]["OBS-North"] == {"nsb_scaling_factor": {"value": 2}}
-    if curve_name == "nsb":
-        assert overwrite["changes"]["LSTN-01"] == {
-            "min_photons": {"value": 0},
-            "min_photoelectrons": {"value": 0},
-        }
-    else:
-        assert overwrite["changes"]["LSTN-01"] == {}
+    assert overwrite["changes"]["LSTN-01"] == {
+        "min_photons": {"value": min_photons},
+        "min_photoelectrons": {"value": min_photoelectrons},
+    }
     assert scan_config["parameter_scan"]["parameters"] == [
         {
             "name": "asum_threshold",
             "path": "changes.LSTN-01.asum_threshold",
-            "values": [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
+            "values": [220, 230, 240, 250, 260, 270, 280, 290, 300, 310],
             "label": "asum",
             "label_separator": "",
         }
@@ -362,4 +378,11 @@ def test_validate_required_args_rejects_missing_required_argument(tmp_test_direc
     args = _base_args(tmp_test_directory)
     args["site"] = ""
     with pytest.raises(ValueError, match="Missing required argument: --site"):
+        parameter_scans.generate_scan_grids(args, Mock())
+
+
+def test_generate_scan_grids_rejects_missing_thresholds(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+    args["trigger_thresholds"] = None
+    with pytest.raises(ValueError, match="--trigger_thresholds"):
         parameter_scans.generate_scan_grids(args, Mock())

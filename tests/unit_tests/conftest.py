@@ -112,6 +112,24 @@ def restore_environment():
 
 
 @pytest.fixture(autouse=True)
+def block_container_engines(monkeypatch):
+    """Block direct container-engine subprocesses in the test process."""
+    original_popen = subprocess.Popen
+
+    def checked_popen(args, *popen_args, **popen_kwargs):
+        executable = popen_kwargs.get("executable") or (
+            args[0] if isinstance(args, list | tuple) and args else args
+        )
+        if isinstance(executable, str | bytes | os.PathLike):
+            name = Path(os.fsdecode(executable)).name
+            if name in {"podman", "docker", "apptainer", "singularity"}:
+                raise RuntimeError(f"Unit tests must mock container engine: {name}")
+        return original_popen(args, *popen_args, **popen_kwargs)
+
+    monkeypatch.setattr(subprocess, "Popen", checked_popen)
+
+
+@pytest.fixture(autouse=True)
 def mock_simulator_paths(request, tmp_test_directory):
     """Mock sim_telarray and corsika paths for unit tests.
 

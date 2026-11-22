@@ -469,14 +469,18 @@ def _make_discoverable(manifest):
     """Add the job-metadata fields required by manifest discovery and write the manifest."""
     manifest.data.update(
         schema_name="simulate_prod_job_metadata",
-        schema_version=INITIAL_SCHEMA_VERSION,
+        schema_version="2.0.0",
         product_type="simulate_prod_job",
         status="complete",
         catalog_metadata={},
-        statistics={SIMULATED_EVENTS: 10, TRIGGERED_EVENTS: 5},
+        statistics={
+            "outputs": {
+                manifest.data[FILES][SIM_TELARRAY][0]: {SIMULATED_EVENTS: 10, TRIGGERED_EVENTS: 5}
+            }
+        },
     )
     manifest.data[CONFIGURATION].update(
-        simulation_software="corsika_sim_telarray",
+        simulation_software=["corsika", "sim_telarray"],
         view_cone_min={VALUE: 0.0, "unit": "deg"},
         view_cone_max={VALUE: 0.0, "unit": "deg"},
         core_scatter_max={VALUE: 100.0, "unit": "m"},

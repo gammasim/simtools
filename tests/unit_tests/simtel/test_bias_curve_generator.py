@@ -68,18 +68,27 @@ def test_calculate_time_window_requires_telescope(tmp_path, run_context):
         bias_curve_generator._calculate_time_window(args, run_context)
 
 
-def test_calculate_time_window_reads_telescope_model(tmp_path, run_context):
-    args = _base_args(tmp_path)
+@pytest.mark.parametrize(
+    ("disc_bins", "fadc_bins", "effective_bins"), [(68, 75, 75), (100, 75, 100)]
+)
+def test_calculate_time_window_reads_telescope_model(
+    tmp_test_directory, run_context, disc_bins, fadc_bins, effective_bins
+):
+    args = _base_args(tmp_test_directory)
 
     telescope_model = MagicMock()
-    telescope_model.get_parameter_value.side_effect = [68, 1024]
+    telescope_model.get_parameter_value.side_effect = {
+        "disc_bins": disc_bins,
+        "fadc_bins": fadc_bins,
+        "fadc_mhz": 1024,
+    }.__getitem__
 
     with (
         patch("simtools.simtel.bias_curve_generator.TelescopeModel", return_value=telescope_model),
     ):
         time_window = bias_curve_generator._calculate_time_window(args, run_context)
 
-    assert time_window == pytest.approx(68 / (1024 * 1e6))
+    assert time_window == pytest.approx(effective_bins / (1024 * 1e6))
 
 
 def test_extract_nsb_rates_uses_gamma_hdf5(tmp_path):
@@ -107,22 +116,25 @@ def test_extract_nsb_rates_raises_when_no_logs(tmp_path):
         bias_curve_generator._extract_nsb_rates(args, time_window=0.001)
 
 
-def test_group_hdf5_files_by_threshold_and_run(tmp_path):
-    valid = tmp_path / "proton_run000001_asum220.reduced_event_data.hdf5"
-    _write_file_info_hdf5(valid, "proton_run000001_asum220.simtel.zst")
+@pytest.mark.parametrize("include_proton", [False, True])
+def test_group_hdf5_files_by_threshold_and_run(tmp_test_directory, include_proton):
+    directory = Path(tmp_test_directory)
+    valid = directory / "proton_run000001_asum220.reduced_event_data.hdf5"
+    if include_proton:
+        _write_file_info_hdf5(valid, "proton_run000001_asum220.simtel.zst")
     _write_file_info_hdf5(
-        tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5",
+        directory / "gamma_run000001_asum220.reduced_event_data.hdf5",
         "gamma_run000001_asum220.simtel.zst",
     )
     _write_file_info_hdf5(
-        tmp_path / "proton_missing_threshold.reduced_event_data.hdf5",
+        directory / "proton_missing_threshold.reduced_event_data.hdf5",
         "proton_run000001.simtel.zst",
         threshold=None,
     )
 
-    grouped = bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
+    grouped = bias_curve_generator._group_hdf5_files_by_threshold_and_run(directory)
 
-    assert grouped == {220: {1: valid}}
+    assert grouped == ({220: {1: valid}} if include_proton else {})
 
 
 def test_group_hdf5_files_by_threshold_and_run_rejects_duplicates(tmp_path):
@@ -572,6 +584,7 @@ def test_generate_bias_curves_runs_full_pipeline(tmp_path):
             return_value=tmp_path / "bias.png",
         ),
         patch("simtools.simtel.bias_curve_generator._plot_bias_curves") as mock_plot,
+        patch("simtools.simtel.bias_curve_generator._threshold_unit", return_value="mV"),
         patch("simtools.simtel.bias_curve_generator._write_bias_curve_ecsv") as mock_write_bias,
         patch(
             "simtools.simtel.bias_curve_generator._calculate_trigger_threshold", return_value=250.0
@@ -587,6 +600,7 @@ def test_generate_bias_curves_runs_full_pipeline(tmp_path):
         tmp_path / "proton.ecsv",
     )
     mock_plot.assert_called_once()
+    assert mock_plot.call_args.kwargs["threshold_unit"] == "mV"
     mock_write_bias.assert_called_once()
     mock_calc_threshold.assert_called_once()
     mock_export.assert_called_once()
@@ -649,20 +663,6 @@ def test_calculate_proton_rate_for_file_returns_none_for_errors(tmp_path, run_co
             tmp_path / "events.hdf5", args, run_context
         )
         assert result is None
-
-
-def test_group_hdf5_files_skips_non_proton_files(tmp_test_directory):
-    """Test that _group_hdf5_files_by_threshold_and_run skips non-proton files."""
-    from pathlib import Path
-
-    tmp_path = Path(str(tmp_test_directory))
-    _write_file_info_hdf5(
-        tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5",
-        "gamma_run000001_asum220.simtel.zst",
-    )
-
-    result = bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
-    assert result == {}  # No proton files, should return empty dict
 
 
 def test_group_hdf5_files_skips_missing_metadata(tmp_test_directory):
@@ -757,10 +757,60 @@ def test_prepare_bias_curve_plot(scale, fraction):
     marker = data[f"Trigger Threshold: {threshold:.1f}"]
     assert marker["threshold"] == pytest.approx([threshold, threshold])
     assert marker["rate"] == pytest.approx(config["ylim"])
-    assert config["ylim"] == pytest.approx([9 * fraction * scale, 110])
+    assert config["ylim"] == pytest.approx([max(1, 4.5 * fraction * scale), 204])
     assert config["yscale"] == "log"
     assert config["series_options"]["NSB"]["linestyle"] == "None"
     assert config["series_options"]["_NSB fit"]["linestyle"] == "--"
+
+
+def test_bias_curve_plot_limits_cover_simulations_and_uncertainties():
+    nsb = {10: {"rate_hz": 100, "error_hz": 90}, 20: {"rate_hz": 10, "error_hz": 2}}
+    proton = {12: {"rate_hz": 2, "error_hz": 1}, 18: {"rate_hz": 200, "error_hz": 100}}
+    data, config = bias_curve_generator._prepare_bias_curve_plot(
+        nsb, proton, {"title": "Bias", "proton_intersection_fraction": 0.5}, 30
+    )
+    assert config["xlim"] == (8, 22)
+    for label, table in data.items():
+        if label.startswith("Trigger Threshold"):
+            continue
+        errors = table["error"] if "error" in table.dtype.names else 0
+        lower = table["rate"] - errors
+        if config["ylim"][0] > 1:
+            assert np.all(lower[lower > 0] >= config["ylim"][0])
+        else:
+            assert config["ylim"][0] == 1
+        assert np.all(table["rate"] + errors <= config["ylim"][1])
+
+
+@pytest.mark.parametrize(
+    ("thresholds", "expected"),
+    [([220, 230, 240], (210, 250)), ([6, 6.5, 7], (5.5, 7.5)), ([5], (None, None))],
+)
+def test_bias_curve_threshold_limits_extend_endpoint_steps(thresholds, expected):
+    stats = dict.fromkeys(thresholds)
+    assert bias_curve_generator._bias_curve_threshold_limits(stats, {}) == expected
+
+
+@pytest.mark.parametrize(
+    ("unit", "expected"),
+    [("mV", "Threshold [mV]"), ("count", "Threshold [count]"), (None, "Threshold")],
+)
+def test_bias_curve_plot_threshold_unit(unit, expected):
+    _, config = bias_curve_generator._prepare_bias_curve_plot(
+        {}, {}, {"title": "Bias", "proton_intersection_fraction": 0.1}, threshold_unit=unit
+    )
+    assert config["xtitle"] == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger", "expected"),
+    [("Majority", "mV"), ("AnalogSum", "mV"), ("DigitalSum", "count"), ("unknown", None)],
+)
+def test_threshold_unit_from_telescope_model(trigger, expected, run_context):
+    args = {"site": "North", "telescope": "MSTN-01", "model_version": "8.0.0"}
+    with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as model:
+        model.return_value.get_parameter_value.return_value = trigger
+        assert bias_curve_generator._threshold_unit(args, run_context) == expected
 
 
 @pytest.mark.parametrize("threshold", [None, 0.0])

@@ -165,6 +165,19 @@ def test_collect_production_reports_pending_and_completed(site, mocker):
         production.collect_production({}, site)
 
 
+def test_collect_production_recovery_submits_and_reports_pending(site, mocker):
+    _, payload = write_submission(site[defs.CANDIDATE_SITE_PATH], state="failed")
+    submission = SimpleNamespace(backend=HTCONDOR, metadata=payload[METADATA])
+    mocker.patch.object(production, LOAD_SUBMISSION, return_value=submission)
+    recover = mocker.patch.object(production, "recover_submission", return_value=False)
+
+    result = production.collect_production({}, site, recover=True)
+
+    assert result["status"] == "pending"
+    recover.assert_called_once()
+    assert ".science-test-recovery" in str(recover.call_args.args[1])
+
+
 def test_archive_failed_production(site, mocker, tmp_test_directory):
     site_path = Path(site[defs.CANDIDATE_SITE_PATH])
     production.archive_failed_production({}, site, "run", [])

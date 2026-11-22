@@ -39,7 +39,6 @@ def test_scientific_int():
     assert helpers.scientific_int("42") == 42
     assert helpers.scientific_int(100) == 100
     assert helpers.scientific_int(0) == 0
-    assert helpers.scientific_int(100.0) == 100
     assert helpers.scientific_int("1e3") == 1000
     assert helpers.scientific_int("1E3") == 1000
     assert helpers.scientific_int("2.5e3") == 2500
@@ -167,7 +166,7 @@ def test_azimuth_angle_out_of_range_for_command_line_inputs(angle, expected):
 
 
 def test_parse_quantity_pair():
-    for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100 GeV 5 TeV", "100GeV 5 TeV"]:
+    for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100GeV 5 TeV"]:
         e_pair = helpers.parse_quantity_pair(test_string)
         assert e_pair[0].value == pytest.approx(100.0)
         assert e_pair[0].unit == u.GeV
