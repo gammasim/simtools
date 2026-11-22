@@ -66,13 +66,6 @@ simulation chains.
    :members:
 ```
 
-## shower_routing
-
-```{eval-rst}
-.. automodule:: runners.shower_routing
-   :members:
-```
-
 ## simtel_runner
 
 (simtel-runner-1)=
@@ -102,5 +95,58 @@ simulation chains.
 
 ```{eval-rst}
 .. automodule:: runners.runtime_releases
+   :members:
+```
+
+## Simulation software
+
+```{eval-rst}
+.. automodule:: simulation_software.atmosphere
+   :members:
+
+.. automodule:: simulation_software.flasher_stream
+   :members:
+
+.. automodule:: simulation_software.light_sources
+   :members:
+
+.. automodule:: simulation_software.optics
+   :members:
+
+.. automodule:: simulation_software.programs
+   :members:
+
+.. automodule:: simulation_software.obdeect.atmosphere
+   :members:
+
+.. automodule:: simulation_software.obdeect.optics
+   :members:
+
+.. automodule:: simulation_software.obdeect.sources
+   :members:
+
+.. automodule:: simulation_software.obdeect.streams
+   :members:
+```
+
+## Simulation chain stages
+
+```{eval-rst}
+.. automodule:: runners.adapter_stages
+   :members:
+
+.. automodule:: runners.atmosphere_stage
+   :members:
+
+.. automodule:: runners.chain_spec
+   :members:
+
+.. automodule:: runners.light_emission_runner
+   :members:
+
+.. automodule:: runners.light_source_stages
+   :members:
+
+.. automodule:: runners.optics_stage
    :members:
 ```

@@ -8,6 +8,7 @@ from astropy.table import Table
 from simtools.model.mirrors import (
     InvalidMirrorListFileError,
     Mirrors,
+    is_dual_mirror,
     uses_segmented_dual_mirror_geometry,
 )
 
@@ -153,3 +154,17 @@ def test_get_single_mirror_parameters_missing_column(mirror_template_ecsv):
     ) = mirrors.get_single_mirror_parameters(MIRROR_PANEL_ID)
     assert 0 == mirror_x
     assert focal_length.value == pytest.approx(2920.0)
+
+
+class _Telescope:
+    def __init__(self, mirror_class):
+        self.mirror_class = mirror_class
+
+    def get_parameter_value(self, name):
+        assert name == "mirror_class"
+        return self.mirror_class
+
+
+@pytest.mark.parametrize(("mirror_class", "expected"), [(1, False), (2, True)])
+def test_is_dual_mirror(mirror_class, expected):
+    assert is_dual_mirror(_Telescope(mirror_class)) is expected

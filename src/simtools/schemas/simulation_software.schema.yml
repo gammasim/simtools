@@ -1,0 +1,171 @@
+---
+$schema: http://json-schema.org/draft-07/schema#
+title: simtools simulation software and simulation chain stages
+description: >-
+  Simulation programs, the data products that connect the stages of a simulation chain, the
+  stages and their options. Formats and files of the programs are validated with the file catalog
+  (file_types.schema.yml) after they are merged into it.
+type: object
+required:
+  [efficiency_factors, products, software, stages, required_efficiency_factors, default_chains]
+additionalProperties: false
+definitions:
+  name:
+    type: string
+    pattern: '^[a-z][a-z0-9_]*$'
+  names:
+    type: array
+    uniqueItems: true
+    items: {$ref: '#/definitions/name'}
+  object_path:
+    description: Python object as module:attribute.
+    type: string
+    pattern: '^[A-Za-z_][A-Za-z0-9_.]*:[A-Za-z_][A-Za-z0-9_]*$'
+  option:
+    type: object
+    required: [type, description]
+    additionalProperties: false
+    properties:
+      type: {enum: [integer, number, string, boolean, list]}
+      items: {enum: [integer, number, string]}
+      length: {type: integer, minimum: 1}
+      enum: {type: array, minItems: 1}
+      default: {}
+      description: {type: string}
+properties:
+  efficiency_factors:
+    type: object
+    minProperties: 1
+    propertyNames: {$ref: '#/definitions/name'}
+    additionalProperties: {type: string}
+  products:
+    type: object
+    minProperties: 1
+    propertyNames: {$ref: '#/definitions/name'}
+    additionalProperties:
+      type: object
+      required: [description, format]
+      additionalProperties: false
+      properties:
+        description: {type: string}
+        frame: {enum: [sky, ground, telescope, camera]}
+        format: {enum: [iact, stream, events]}
+  software:
+    type: object
+    minProperties: 1
+    propertyNames: {$ref: '#/definitions/name'}
+    additionalProperties:
+      type: object
+      required: [description, dependency]
+      additionalProperties: false
+      properties:
+        description: {type: string}
+        dependency:
+          description: How the installation is checked (see simtools.runtime.dependencies).
+          enum: [corsika, sim_telarray, python_package]
+        ray_tracing_backend:
+          description: Ray-tracing backend class of the software (see simtools.ray_tracing).
+          $ref: '#/definitions/object_path'
+        package: {type: string}
+        command: {type: string}
+        command_module:
+          description: Module whose main() runs the command when no console script is found.
+          type: string
+        programs:
+          type: object
+          additionalProperties: {type: string}
+        formats: {type: object}
+        files: {type: object}
+  files: {type: object}
+  light_sources:
+    type: object
+    propertyNames: {$ref: '#/definitions/name'}
+    additionalProperties:
+      type: object
+      required: [description, model_types, request, command]
+      additionalProperties: false
+      properties:
+        description: {type: string}
+        model_types: {type: array, minItems: 1, items: {type: string}}
+        request: {$ref: '#/definitions/object_path'}
+        command: {$ref: '#/definitions/object_path'}
+        model_context:
+          description: >-
+            The source program reads the model source and the parameter changes of the run
+            (environment variable SIMTOOLS_FLASHER_CONTEXT).
+          type: boolean
+  stages:
+    type: object
+    minProperties: 1
+    propertyNames: {$ref: '#/definitions/name'}
+    additionalProperties:
+      type: object
+      required: [description, software, implementation, produces]
+      additionalProperties: false
+      properties:
+        description: {type: string}
+        software: {$ref: '#/definitions/name'}
+        implementation: {$ref: '#/definitions/object_path'}
+        consumes: {$ref: '#/definitions/names'}
+        produces: {$ref: '#/definitions/name'}
+        source: {enum: [air_shower, light_source]}
+        light_source: {$ref: '#/definitions/name'}
+        converter: {type: boolean}
+        thins_photons: {type: boolean}
+        single_array_model:
+          description: The stage runs for one array model (one model version) per run.
+          type: boolean
+        required_arguments: {$ref: '#/definitions/names'}
+        production_result: {$ref: '#/definitions/name'}
+        options_from_arguments:
+          description: Stage options override the application arguments of the same name.
+          type: boolean
+        options:
+          type: object
+          propertyNames: {$ref: '#/definitions/name'}
+          additionalProperties: {$ref: '#/definitions/option'}
+        consumes_by_option:
+          description: Products consumed, by the value of one option (a subset of consumes).
+          type: object
+          maxProperties: 1
+          additionalProperties:
+            type: object
+            additionalProperties: {$ref: '#/definitions/names'}
+        applies: {$ref: '#/definitions/names'}
+        applies_by_option:
+          description: >-
+            Efficiency factors applied, by the value of one option: a list, or the factors and
+            those left to an upstream stage that applies them.
+          type: object
+          maxProperties: 1
+          additionalProperties:
+            type: object
+            additionalProperties:
+              oneOf:
+                - {$ref: '#/definitions/names'}
+                - type: object
+                  required: [applies]
+                  additionalProperties: false
+                  properties:
+                    applies: {$ref: '#/definitions/names'}
+                    skips_if_applied_upstream: {$ref: '#/definitions/names'}
+        skips_if_applied_upstream: {$ref: '#/definitions/names'}
+        camera_only:
+          description: Option values with which the stage simulates the camera only.
+          type: object
+        files:
+          description: Files of the stage by use (output, log, resources, ...), as file product ids.
+          type: object
+          additionalProperties: {$ref: '#/definitions/name'}
+  required_efficiency_factors:
+    description: Efficiency factors a chain ending in camera events applies, by photon source.
+    type: object
+    required: [air_shower, light_source]
+    additionalProperties: false
+    properties:
+      air_shower: {$ref: '#/definitions/names'}
+      light_source: {$ref: '#/definitions/names'}
+  default_chains:
+    type: object
+    required: [air_shower, light_source]
+    additionalProperties: {$ref: '#/definitions/names'}
