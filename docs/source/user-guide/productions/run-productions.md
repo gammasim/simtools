@@ -10,11 +10,16 @@ from many such runs, usually generated from the ECSV production grid described i
 `simtools-simulate-prod` prepares the simulation configuration, writes run scripts, executes the
 selected simulation software, validates the produced files, and reports the result.
 
-The selected `simulation_software` controls which part of the chain is executed:
+The `simulation_software` lists the stages that are executed (default: `corsika sim_telarray`):
 
 - `corsika`: run shower simulations only
 - `sim_telarray`: run detector simulation using an existing CORSIKA input file
-- `corsika_sim_telarray`: run the CORSIKA to sim_telarray chain using multipipe execution
+- `corsika sim_telarray`: run the CORSIKA to sim_telarray chain using multipipe execution
+- stages of the obdeect chain, e.g. `corsika obdeect_atmosphere obdeect_optics
+  sim_telarray:bypass_optics=camera_only` (converters between the stages are inserted)
+
+The stage names and options are described in
+[simtools-simulate-prod](../applications/simtools-simulate-prod).
 
 Typical outputs are:
 

@@ -6,7 +6,9 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import scientific_int
 from simtools.model.model_utils import get_array_elements_for_layout
+from simtools.runners import light_emission_runner
 from simtools.runners.simulator import Simulator
+from simtools.runtime import software_catalog
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import value_conversion
 
@@ -46,6 +48,26 @@ def _validate_max_photoelectrons(args_dict, _config_sources, parser):
                 )
     elif args_dict.get("flasher_dc_pixel_rate") is not None:
         parser.error("--flasher_dc_pixel_rate requires --run_mode dc.")
+
+
+def _validate_simulation_software(args_dict, _config_sources, parser):
+    """Allow a simulation chain other than the default only in full-simulation mode."""
+    chain = args_dict.get("simulation_software")
+    if (
+        args_dict.get("run_mode") == "direct_injection"
+        and chain
+        and tuple(chain) != software_catalog.default_chain(software_catalog.LIGHT_SOURCE)
+    ):
+        parser.error(
+            "--simulation_software is available in run mode full_simulation only; "
+            "direct_injection runs its own chain."
+        )
+
+
+def _validate(args_dict, config_sources, parser):
+    """Validate the arguments of the application."""
+    _validate_max_photoelectrons(args_dict, config_sources, parser)
+    _validate_simulation_software(args_dict, config_sources, parser)
 
 
 _ARGUMENTS = (
@@ -131,9 +153,16 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
-        cli.RAY_TRACING_BACKEND,
+        cli.SIMULATION_SOFTWARE(
+            default=list(software_catalog.default_chain(software_catalog.LIGHT_SOURCE)),
+            help=(
+                "Stages of the full simulation in order, each as STAGE or STAGE:KEY=VALUE,... "
+                "(e.g. obdeect_flasher sim_telarray:bypass_optics=camera_entrance); converters "
+                "between photon formats are inserted."
+            ),
+        ),
     ),
-    post_parse=_validate_max_photoelectrons,
+    post_parse=_validate,
     needs=("model", "sim_telarray", "corsika"),
 )
 
@@ -178,6 +207,9 @@ def main():
             if app_context.args.get("array_layout_name") is not None
             else value_conversion.ensure_list(app_context.args["telescopes"])
         )
+        script_writer = light_emission_runner.script_writer_for_chain(
+            app_context.args.get("simulation_software")
+        )
         for tel in telescopes:
             light_source = SimulatorLightEmission(
                 light_emission_config=app_context.args,
@@ -186,7 +218,7 @@ def main():
                 model_reader=app_context.model_reader,
                 context=app_context,
             )
-            light_source.simulate()
+            light_source.simulate(script_writer=script_writer)
             light_source.validate_simulations()
     elif app_context.args["run_mode"] == "direct_injection":
         Simulator.simulate_direct_injection_sequence(

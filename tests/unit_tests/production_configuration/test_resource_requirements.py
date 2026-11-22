@@ -92,7 +92,7 @@ def _manifest(tmp_test_directory):
         )
     outputs = {
         SIM_TELARRAY: "event.simtel.zst",
-        "reduced_event_data": "events.hdf5",
+        "reduced_event_data": "event.reduced_event_data.hdf5",
         "sim_telarray_histogram": "events.hdata.zst",
     }
     for output_type, file_name in outputs.items():
@@ -191,6 +191,62 @@ def test_collect_resource_requirements_recovers_trigger_count_from_reduced_data(
     assert diagnostics == []
     simtel_row = next(row for row in rows if row["role"] == SIM_TELARRAY)
     assert simtel_row[TRIGGERED_EVENTS] == 4
+
+
+def test_collect_resource_requirements_does_not_combine_output_counts(mocker, tmp_test_directory):
+    manifest = _manifest(tmp_test_directory)
+    second_name = "other_event.simtel.zst"
+    second_reduced_name = "other_event.reduced_event_data.hdf5"
+    simtel_directory = manifest.directory / SIM_TELARRAY / RUN_DIRECTORY
+    (simtel_directory / second_name).write_bytes(b"x" * 10)
+    with h5py.File(simtel_directory / second_reduced_name, "w") as data_file:
+        data_file.create_dataset("SHOWERS", shape=(10,), dtype="i8")
+        data_file.create_dataset("TRIGGERS", shape=(7,), dtype="i8")
+    manifest.data[FILES][SIM_TELARRAY].append(f"sim_telarray/{RUN_DIRECTORY}/{second_name}")
+    manifest.data[FILES]["reduced_event_data"].append(
+        f"sim_telarray/{RUN_DIRECTORY}/{second_reduced_name}"
+    )
+    mocker.patch.object(resource_requirements, DISCOVER_MANIFESTS, return_value=[manifest])
+
+    rows, diagnostics = resource_requirements.collect_resource_requirements(PRODUCTION)
+
+    assert diagnostics == []
+    simtel_row = next(row for row in rows if row["role"] == SIM_TELARRAY)
+    assert simtel_row[TRIGGERED_EVENTS] is None
+
+
+def test_collect_resource_requirements_rejects_mismatched_output_statistics(
+    mocker, tmp_test_directory
+):
+    manifest = _manifest(tmp_test_directory)
+    manifest.data["statistics"] = {
+        "outputs": {"other_event.simtel.zst": {SIMULATED_EVENTS: 10, TRIGGERED_EVENTS: 4}}
+    }
+    mocker.patch.object(resource_requirements, DISCOVER_MANIFESTS, return_value=[manifest])
+
+    rows, diagnostics = resource_requirements.collect_resource_requirements(PRODUCTION)
+
+    assert diagnostics == []
+    simtel_row = next(row for row in rows if row["role"] == SIM_TELARRAY)
+    assert simtel_row[TRIGGERED_EVENTS] is None
+
+
+def test_collect_resource_requirements_rejects_legacy_aggregate_for_multiple_outputs(
+    mocker, tmp_test_directory
+):
+    manifest = _manifest(tmp_test_directory)
+    second_name = "other_event.simtel.zst"
+    simtel_directory = manifest.directory / SIM_TELARRAY / RUN_DIRECTORY
+    (simtel_directory / second_name).write_bytes(b"x" * 10)
+    manifest.data[FILES][SIM_TELARRAY].append(f"sim_telarray/{RUN_DIRECTORY}/{second_name}")
+    manifest.data["statistics"] = {SIMULATED_EVENTS: 20, TRIGGERED_EVENTS: 8}
+    mocker.patch.object(resource_requirements, DISCOVER_MANIFESTS, return_value=[manifest])
+
+    rows, diagnostics = resource_requirements.collect_resource_requirements(PRODUCTION)
+
+    assert diagnostics == []
+    simtel_row = next(row for row in rows if row["role"] == SIM_TELARRAY)
+    assert simtel_row[TRIGGERED_EVENTS] is None
 
 
 def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_test_directory):
@@ -413,14 +469,18 @@ def _make_discoverable(manifest):
     """Add the job-metadata fields required by manifest discovery and write the manifest."""
     manifest.data.update(
         schema_name="simulate_prod_job_metadata",
-        schema_version=INITIAL_SCHEMA_VERSION,
+        schema_version="2.0.0",
         product_type="simulate_prod_job",
         status="complete",
         catalog_metadata={},
-        statistics={SIMULATED_EVENTS: 10, TRIGGERED_EVENTS: 5},
+        statistics={
+            "outputs": {
+                manifest.data[FILES][SIM_TELARRAY][0]: {SIMULATED_EVENTS: 10, TRIGGERED_EVENTS: 5}
+            }
+        },
     )
     manifest.data[CONFIGURATION].update(
-        simulation_software="corsika_sim_telarray",
+        simulation_software=["corsika", "sim_telarray"],
         view_cone_min={VALUE: 0.0, "unit": "deg"},
         view_cone_max={VALUE: 0.0, "unit": "deg"},
         core_scatter_max={VALUE: 100.0, "unit": "m"},

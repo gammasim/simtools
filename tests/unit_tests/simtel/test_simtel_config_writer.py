@@ -18,6 +18,64 @@ from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 logger = logging.getLogger()
 
 
+def test_incompatible_fadc_tag(simtel_config_writer, mocker, tmp_test_directory):
+    mocker.patch(
+        "simtools.simtel.simtel_config_writer.dependencies.get_build_options",
+        return_value={"simtel_tag": "v2025-11-30-rc"},
+    )
+    with pytest.raises(ValueError, match=r"fadc_pulse_shape.*0\.4\.0.*v2025-11-30-rc"):
+        simtel_config_writer._get_parameters_for_sim_telarray(
+            {
+                "fadc_pulse_shape": {
+                    "value": "pulse.ecsv",
+                    "model_parameter_schema_version": "0.4.0",
+                }
+            },
+            Path(tmp_test_directory) / "LSTN-01.cfg",
+        )
+
+
+@pytest.mark.parametrize(
+    ("version", "tag"),
+    [("0.3.0", "v2025-11-30-rc"), ("0.4.0", "development")],
+)
+def test_compatible_fadc_tag(simtel_config_writer, mocker, version, tag):
+    mocker.patch(
+        "simtools.simtel.simtel_config_writer.dependencies.get_build_options",
+        return_value={"simtel_tag": tag},
+    )
+    simtel_config_writer._check_simtel_tag({"model_parameter_schema_version": version})
+
+
+def test_unknown_fadc_build_tag_warns(simtel_config_writer, mocker, caplog):
+    mocker.patch(
+        "simtools.simtel.simtel_config_writer.dependencies.get_build_options",
+        side_effect=FileNotFoundError,
+    )
+    simtel_config_writer._check_simtel_tag({"model_parameter_schema_version": "0.4.0"})
+    assert "build options unavailable" in caplog.text
+
+
+def test_missing_fadc_build_tag_warns(simtel_config_writer, mocker, caplog):
+    mocker.patch(
+        "simtools.simtel.simtel_config_writer.dependencies.get_build_options", return_value={}
+    )
+    simtel_config_writer._check_simtel_tag({"model_parameter_schema_version": "0.4.0"})
+    assert "build tag unavailable" in caplog.text
+
+
+def test_fadc_build_tag_uses_runtime(simtel_config_writer, mocker):
+    simtel_config_writer._context = simtel_config_writer._context.replace(run_time=["container"])
+    get_options = mocker.patch(
+        "simtools.simtel.simtel_config_writer.dependencies.get_build_options",
+        return_value={"simtel_tag": "development"},
+    )
+    simtel_config_writer._check_simtel_tag({"model_parameter_schema_version": "0.4.0"})
+    get_options.assert_called_once_with(
+        run_time=["container"], context=simtel_config_writer._context
+    )
+
+
 @pytest.fixture
 def simtel_config_writer(model_version, run_context):
     return SimtelConfigWriter(

@@ -2,21 +2,16 @@
 
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
-from simtools.io.ascii_handler import collect_data_from_file
+from simtools.runners.chain_spec import parse_chain
 
 _DEFINITION_SCHEMA = SCHEMA_PATH / "production_definition.schema.yml"
 _SCHEMA_NAME = "production_definition"
-_SCHEMA_VERSION = "1.0.0"
-_SIMULATION_STAGES = {
-    "corsika": ["corsika"],
-    "sim_telarray": ["sim_telarray"],
-    "corsika_sim_telarray": ["corsika", "sim_telarray"],
-}
+_SCHEMA_VERSION = "1.1.0"
 
 
 def production_definition_from_arguments(args_dict):
     """Create validated production data from resolved grid application arguments."""
-    simulation_software = args_dict["simulation_software"]
+    stages = list(parse_chain(args_dict["simulation_software"]).stages)
     definition = {
         "schema_name": _SCHEMA_NAME,
         "schema_version": _SCHEMA_VERSION,
@@ -38,9 +33,9 @@ def production_definition_from_arguments(args_dict):
             "total_showers": args_dict.get("total_showers"),
             "max_showers_per_run": args_dict.get("max_showers_per_run"),
         },
-        "simulation_stages": _SIMULATION_STAGES[simulation_software],
+        "simulation_stages": stages,
     }
-    schema_definition = collect_data_from_file(_DEFINITION_SCHEMA)
+    schema_definition = schema.load_schema(_DEFINITION_SCHEMA, _SCHEMA_VERSION)
     return schema.validate_dict_using_schema(
         definition,
         json_schema=schema_definition,

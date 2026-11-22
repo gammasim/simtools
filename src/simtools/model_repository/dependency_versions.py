@@ -35,6 +35,7 @@ SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
 IMAGE_REGISTRY = "ghcr.io/gammasim"
 IMAGE_REGISTRY_PATTERN = re.compile(r"^[a-z0-9.-]+(/[a-z0-9._-]+)*$")
 IMAGE_TAG_SUFFIX_PATTERN = re.compile(r"^(-\w[A-Za-z0-9_.]*)?$", re.ASCII)
+SIM_TELARRAY_KEY_SCHEMA_VERSION = "0.10.0"
 
 
 @cache
@@ -292,6 +293,7 @@ def validate_dependency_catalog(catalog):
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
     if schema_version not in set(_dependency_schemas()):
         raise ValueError(f"Unsupported dependency catalog schema version: {schema_version}")
+    catalog = _normalize_sim_telarray_key(catalog, schema_version)
     _validate_optional_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
     _validate_optional_digest(catalog["base-image"].get("build-digest"), "build base image")
     if _uses_image_catalog(schema_version):
@@ -304,6 +306,35 @@ def validate_dependency_catalog(catalog):
     return catalog
 
 
+def _version_tuple(schema_version):
+    """Return a schema version as a tuple of integers for numeric comparison."""
+    return tuple(map(int, schema_version.split(".")))
+
+
+def _with_sim_telarray_key(mapping):
+    """Return a copy of a mapping with the sim-telarray key renamed to sim_telarray."""
+    return {
+        ("sim_telarray" if key == "sim-telarray" else key): value for key, value in mapping.items()
+    }
+
+
+def _normalize_sim_telarray_key(catalog, schema_version):
+    """Rename the sim-telarray key of catalogs older than schema 0.10.0 to sim_telarray.
+
+    Must run after the catalog passed the required-key check of its own schema version.
+    Catalogs of schema 0.10.0 and later are returned unchanged.
+    """
+    if _version_tuple(schema_version) >= _version_tuple(SIM_TELARRAY_KEY_SCHEMA_VERSION):
+        return catalog
+    catalog = _with_sim_telarray_key(catalog)
+    if "production-combinations" in catalog:
+        catalog["production-combinations"] = [
+            _with_sim_telarray_key(combination)
+            for combination in catalog["production-combinations"]
+        ]
+    return catalog
+
+
 def _required_catalog_keys(schema_version):
     """Return the top-level keys required by the schema of a catalog version.
 
@@ -312,7 +343,7 @@ def _required_catalog_keys(schema_version):
     """
     schemas = _dependency_schemas()
     if schema_version not in schemas:
-        schema_version = max(schemas, key=lambda version: tuple(map(int, version.split("."))))
+        schema_version = max(schemas, key=_version_tuple)
     return set(schemas[schema_version]["required"])
 
 
@@ -341,7 +372,7 @@ def _validate_image_components(catalog):
         _corsika_build_id(component)
         for variant, digest in component.get("image-digests", {}).items():
             _validate_digest(digest, f"CORSIKA {component['source-ref']} {variant}")
-    for component in catalog["sim-telarray"]:
+    for component in catalog["sim_telarray"]:
         _validate_source_ref(component["source-ref"], "sim_telarray")
         _simtel_build_id(component)
         _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
@@ -370,7 +401,7 @@ def _validate_components(catalog, schema_version):
         catalog["corsika"], require_revisions, ref_validator, readable_refs
     )
     _validate_simtel_components(
-        catalog["sim-telarray"], require_revisions, ref_validator, readable_refs
+        catalog["sim_telarray"], require_revisions, ref_validator, readable_refs
     )
     _validate_model_and_test_components(catalog, schema_version)
     _validate_archive_versions(catalog["archives"])
@@ -524,12 +555,12 @@ def _validate_simtools_tests(test_resources, require_revision=False, readable_re
 def _validate_production_combinations(catalog):
     """Validate every production combination against catalogued components."""
     corsika_versions = {_corsika_reference(component) for component in catalog["corsika"]}
-    simtel_versions = {_simtel_tag(component) for component in catalog["sim-telarray"]}
+    simtel_versions = {_simtel_tag(component) for component in catalog["sim_telarray"]}
     cpu_variants = set(catalog["cpu-variants"])
     for combination in catalog["production-combinations"]:
         if combination["corsika"] not in corsika_versions:
             raise ValueError("Unknown CORSIKA production combination.")
-        if combination["sim-telarray"] not in simtel_versions:
+        if combination["sim_telarray"] not in simtel_versions:
             raise ValueError("Unknown sim_telarray production combination.")
         invalid_variants = set(combination.get("cpu-variants", cpu_variants)) - cpu_variants
         if invalid_variants:
@@ -647,7 +678,7 @@ def _production_matrix(catalog):
     """Build one production image matrix entry per combination and CPU variant."""
     variants = catalog["cpu-variants"]
     corsika_components = {_corsika_reference(item): item for item in catalog["corsika"]}
-    simtel_components = {_simtel_tag(item): item for item in catalog["sim-telarray"]}
+    simtel_components = {_simtel_tag(item): item for item in catalog["sim_telarray"]}
     images = _image_settings(catalog)
     return [
         _production_matrix_entry(
@@ -725,7 +756,7 @@ def _source_build_matrices(catalog):
                 ),
             ),
         }
-        for component in catalog["sim-telarray"]
+        for component in catalog["sim_telarray"]
     ]
     corsika_source_matrix = [
         {
@@ -781,7 +812,7 @@ def _production_matrix_entry(corsika_components, simtel_components, combination,
     """
     registry, suffix = images
     corsika = corsika_components[combination["corsika"]]
-    simtel = simtel_components[combination["sim-telarray"]]
+    simtel = simtel_components[combination["sim_telarray"]]
     production_corsika = _corsika_tag(corsika) or f"v{_corsika_build_id(corsika)}"
     return {
         "corsika_tag": production_corsika,
@@ -814,7 +845,7 @@ def dependency_catalog_summary(catalog):
     """
     base = catalog["base-image"]
     default_corsika = catalog["corsika"][0]
-    default_simtel = catalog["sim-telarray"][0]
+    default_simtel = catalog["sim_telarray"][0]
     test_resources = catalog.get("simtools-tests", {})
     registry, suffix = _image_settings(catalog)
     summary = {
@@ -855,7 +886,7 @@ def _source_build_summary(catalog):
     """Return summary values that only source builds use."""
     base = catalog["base-image"]
     default_corsika = catalog["corsika"][0]
-    default_simtel = catalog["sim-telarray"][0]
+    default_simtel = catalog["sim_telarray"][0]
     return {
         "build_base_image": _image_reference(
             base["name"], base["build-version"], base.get("build-digest")

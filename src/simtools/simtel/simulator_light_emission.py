@@ -7,10 +7,10 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools.atmosphere.transmission import AtmosphericTransmission
 from simtools.job_execution import execution, runner_services
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.calibration_model import CalibrationModel
+from simtools.model.mirrors import is_dual_mirror
 from simtools.model.model_utils import (
     export_model_files,
     initialize_simulation_models,
@@ -18,27 +18,15 @@ from simtools.model.model_utils import (
 )
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.model_repository.reader import resolve_model_reader
-from simtools.ray_tracing.backends.interface import LightSourceRequest, get_backend
 from simtools.runtime.context import RunContext
 from simtools.simtel import output_validation as simtel_output_validation
-from simtools.simtel.photon_bunch_file import (
-    bypass_optics_level,
-    camera_bunches,
-    write_photon_bunches,
-)
 from simtools.simtel.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_seeds import instance_seed_pairs
 from simtools.simulation.configuration import (
     get_light_source_writer,
     get_model_writer,
 )
-from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
 from simtools.utils import value_conversion
-from simtools.utils.geometry import (
-    fiducial_radius_from_shape,
-    ground_direction_to_telescope_frame,
-    ground_to_telescope_frame,
-)
 
 AXES_OFFSETS = "axes_offsets"
 CORSIKA_OBSERVATION_LEVEL = "corsika_observation_level"
@@ -128,6 +116,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.model_reader = resolve_model_reader(model_reader, self.context)
         self.io_handler = self.context.paths
         telescope = telescope or light_emission_config.get("telescope")
+        self.telescope = telescope
         label = f"{label}_{telescope}" if label else telescope
 
         wavelength = light_emission_config.get("wavelength")
@@ -233,33 +222,64 @@ class SimulatorLightEmission(SimtelRunner):
 
         return events_int, photons_int
 
-    def simulate(self):
-        """Simulate light emission."""
-        run_script = self.prepare_run()
+    def simulate(self, script_writer=None):
+        """
+        Simulate light emission.
+
+        Parameters
+        ----------
+        script_writer : callable, optional
+            Writes the run script of a simulation chain other than the default one, called as
+            ``script_writer(calibration, script_file)``. None writes the default chain.
+        """
+        run_script = self.prepare_run(script_writer=script_writer)
+        self.execute_script(run_script)
+
+    def execute_script(self, run_script):
+        """Run a script of this simulation, logging to the submission output files."""
         execution.run_command(
             run_script,
             stdout=self.submission_files.get_file_name("sub_out"),
             stderr=self.submission_files.get_file_name("sub_err"),
         )
 
-    def prepare_run(self):
-        """Write the bash run script with the light-emission command and return its path."""
-        script_file = self.submission_files.get_file_name(file_type="sub_script")
+    def run_script_file(self):
+        """
+        Return the path of the run script, after checking that the output does not exist.
+
+        Raises
+        ------
+        FileExistsError
+            If the sim_telarray output file of this simulation exists.
+        """
         output_file = self.runner_service.get_file_name(file_type="sim_telarray_output")
         if output_file.exists():
             raise FileExistsError(
                 f"sim_telarray output file exists, cancelling simulation: {output_file}"
             )
-        if self._backend() is not None:
-            self._write_camera_photons(self.runner_service.get_file_name(file_type="iact_output"))
-        lines = self.make_run_command()
-        script_file.write_text("".join(lines), encoding="utf-8")
-        return script_file
+        return self.submission_files.get_file_name(file_type="sub_script")
 
-    def _backend(self):
-        """Return the ray-tracing backend class if it traces light, else None."""
-        backend = get_backend(context=self.context)
-        return backend if backend.traces_light_sources else None
+    def prepare_run(self, script_writer=None):
+        """
+        Write the bash run script and return its path.
+
+        Parameters
+        ----------
+        script_writer : callable, optional
+            Writes the run script of a simulation chain other than the default one, called as
+            ``script_writer(calibration, script_file)``. None writes the default chain.
+
+        Returns
+        -------
+        Path
+            Path of the run script.
+        """
+        script_file = self.run_script_file()
+        if script_writer is None:
+            script_file.write_text("".join(self.make_run_command()), encoding="utf-8")
+        else:
+            script_writer(self, script_file)
+        return script_file
 
     def _seeds(self):
         """Return the (instrument seed, simulation seed) of this run."""
@@ -267,155 +287,42 @@ class SimulatorLightEmission(SimtelRunner):
             self._seed_pair = instance_seed_pairs(context=self.context)[0]
         return self._seed_pair
 
-    def _dual_mirror(self):
-        """Return True for dual-mirror telescopes."""
-        return self.telescope_model.get_parameter_value("mirror_class") == 2
+    def simulation_seeds(self):
+        """Return the (instrument seed, simulation seed) of this run."""
+        return self._seeds()
 
     def _bypass_optics(self):
-        """Return sim_telarray's Bypass_Optics value: photons arrive at the camera entrance."""
-        if self._backend() is not None:
-            return bypass_optics_level(self._dual_mirror())
+        """Return sim_telarray's Bypass_Optics value: 1 for flat fielding, else 0."""
         return 1 if self.light_emission_config[LIGHT_SOURCE_TYPE] == FLAT_FIELDING else 0
 
-    def _write_camera_photons(self, iact_output):
-        """Write the photons the ray-tracing backend brings to the camera entrance."""
-        level_m = (
-            self.site_model.get_parameter_value_with_unit(CORSIKA_OBSERVATION_LEVEL).to(u.m).value
-        )
-        cal = self.calibration_model
-        shape, width_ns, decay_ns = cal.get_parameter_value("flasher_pulse_shape")
-        source = {
-            "angular_profile": angular_profile(
-                cal.get_parameter_value("flasher_angular_distribution"),
-                cal.get_parameter_value_with_unit("flasher_angular_distribution_width")
-                .to(u.deg)
-                .value,
-            ),
-            "pulse": pulse_profile(shape, width_ns, decay_ns),
-            "wavelength_nm": cal.get_parameter_value_with_unit(FLASHER_WAVELENGTH).to(u.nm).value,
-            "seeds": self._seeds(),
-        }
-        if self.light_emission_config[LIGHT_SOURCE_TYPE] == FLAT_FIELDING:
-            request, radius, transmission, emission_altitude_m = self._flasher_request(
-                source, level_m
-            )
-        else:
-            request, radius, transmission, emission_altitude_m = self._illuminator_request(
-                source, level_m
-            )
-        backend = self._backend()(
-            self.telescope_model, self.site_model, self.label, request.telescope_zenith, False
-        )
-        dual_mirror = self._dual_mirror()
-        camera_rotation = (
-            self.telescope_model.get_parameter_value_with_unit("camera_rotate").to(u.deg).value
-            if dual_mirror
-            else 0.0
-        )
-        events = (
-            np.concatenate(
-                [
-                    camera_bunches(
-                        block | {"weight": block["weight"] * transmission},
-                        dual_mirror=dual_mirror,
-                        emission_altitude_m=emission_altitude_m,
-                        camera_rotation_deg=camera_rotation,
-                    )
-                    for block in pulse
-                ]
-            )
-            for pulse in backend.camera_photons(request)
-        )
-        write_photon_bunches(
-            iact_output,
-            events,
-            observation_level_m=level_m,
-            telescope_radius_m=radius,
-            atmospheric_profile=self.site_model.get_parameter_table("atmospheric_profile"),
-            run_number=self.light_emission_config.get(RUN_NUMBER) or 1,
-        )
-
-    def _photons_per_pulse(self):
-        """Return the photons emitted in each light pulse (one entry per event)."""
-        events, photons = self.build_flasher_event_and_photon_sequences()
-        return tuple(n for count, n in zip(events, photons) for _ in range(count))
-
-    def _flasher_request(self, source, level_m):
-        """Flasher light to the camera (as ff-1m); return (request, radius, 1, altitude)."""
-        x, y, z = (
-            c.to(u.m).value
-            for c in self.calibration_model.get_parameter_value_with_unit(FLASHER_POSITION)[:3]
-        )
-        # Primary-mirror frame to telescope frame.
-        z -= self.telescope_model.get_parameter_value_with_unit("mirror_offset").to(u.m).value
-        radius = fiducial_radius_from_shape(
-            self.telescope_model.get_parameter_value_with_unit("camera_body_diameter")
-            .to(u.m)
-            .value,
-            self.telescope_model.get_parameter_value("camera_body_shape"),
-        )
-        request = LightSourceRequest(
-            position_m=(x, y, z),
-            axis=(0.0, 0.0, 1.0),
-            photons_per_pulse=self._photons_per_pulse(),
-            telescope_zenith=0.0,
-            inside_telescope=True,
-            camera_radius_m=radius,
-            **source,
-        )
-        distance = self.calculate_distance_focal_plane_calibration_device().to(u.m).value
-        return request, radius, 1.0, level_m + distance
-
-    def _illuminator_request(self, source, level_m):
-        """Illuminator light via the atmosphere; return (request, radius, transmission, level)."""
-        theta, phi = self._get_telescope_pointing()
-        position = self.get_illuminator_position()
-        telescope = self._get_telescope_position_ground_with_axis_offset(*position)
-        radius = self.telescope_model.get_parameter_value_with_unit(TELESCOPE_SPHERE_RADIUS)
-        telescope, radius = [c.to(u.m).value for c in telescope], radius.to(u.m).value
-        position = np.array([c.to(u.m).value for c in position])
-        relative = position - np.array(telescope)
-        if relative[2] == 0:
-            raise ValueError("Horizontal illuminator paths require a nonzero altitude difference")
-        pointing = np.asarray(self.get_illuminator_pointing_vector(position * u.m), dtype=float)
-        transmission = AtmosphericTransmission(
-            self.site_model.get_parameter_table("atmospheric_transmission")
-        ).transmission(
-            source["wavelength_nm"],
-            level_m + position[2],
-            level_m + telescope[2],
-            np.linalg.norm(relative) / abs(relative[2]),
-        )
-        request = LightSourceRequest(
-            position_m=tuple(ground_to_telescope_frame(relative, theta, phi)),
-            axis=tuple(
-                ground_direction_to_telescope_frame(pointing / np.linalg.norm(pointing), theta, phi)
-            ),
-            photons_per_pulse=self._photons_per_pulse(),
-            telescope_zenith=theta,
-            **source,
-        )
-        return request, radius, float(transmission), level_m
-
     def make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
-        """Light emission and sim_telarray run command (a backend writes the photons beforehand)."""
+        """Return the lines of the default run script: LightEmission program, then sim_telarray."""
         iact_output = self.runner_service.get_file_name(file_type="iact_output")
-        light_emission = (
-            ""
-            if self._backend() is not None
-            else f"{get_light_source_writer(self).make_command(iact_output)}\n\n"
-        )
         return [
             "#!/usr/bin/env bash\n",
             "set -e -o pipefail\n",
-            light_emission,
-            (
-                f"[ -s '{iact_output}' ] || "
-                f"{{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }}\n\n"
-            ),
+            f"{self.light_emission_command(iact_output)}\n\n",
+            f"{self.iact_file_check(iact_output)}\n\n",
             f"{self._make_simtel_script()}\n\n",
             f"rm -f '{iact_output}'\n\n",
         ]
+
+    def light_emission_command(self, iact_output=None):
+        """Return the LightEmission program command writing the IACT file of this run."""
+        iact_output = iact_output or self.runner_service.get_file_name(file_type="iact_output")
+        return get_light_source_writer(self).make_command(iact_output)
+
+    @staticmethod
+    def iact_file_check(iact_output):
+        """Return the shell command that stops the script if the IACT file is missing or empty."""
+        return (
+            f"[ -s '{iact_output}' ] || "
+            "{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }"
+        )
+
+    def telescope_pointing(self):
+        """Return (theta, phi) of the telescope pointing in degrees."""
+        return self._get_telescope_pointing()
 
     def _get_telescope_pointing(self):
         """Return (theta, phi) telescope pointing for the light source type and position."""
@@ -604,7 +511,30 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _make_simtel_script(self):
         """Return the command to run sim_telarray on the output of the previous step."""
-        bypass = self._bypass_optics()
+        return self.make_sim_telarray_command()
+
+    def make_sim_telarray_command(
+        self, input_file=None, bypass_optics=None, atmospheric_transmission=None
+    ):
+        """
+        Return the command to run sim_telarray on a file of photons.
+
+        Parameters
+        ----------
+        input_file : str or Path, optional
+            Photon file (default: the IACT file of the LightEmission program of this run).
+        bypass_optics : int, optional
+            Bypass_Optics level, 0 for none (default: 1 for flat fielding, else 0).
+        atmospheric_transmission : str or Path, optional
+            Transmission table read by sim_telarray (default: the table of the site model), e.g.
+            a zero-depth table when an upstream stage applies the extinction.
+
+        Returns
+        -------
+        str
+            Environment and command line, ending with a new line.
+        """
+        bypass = self._bypass_optics() if bypass_optics is None else bypass_optics
         theta, phi = (0.0, 0.0) if bypass else self._get_telescope_pointing()
         simtel_bin = str(self.context.software.sim_telarray_exe)
 
@@ -625,6 +555,8 @@ class SimulatorLightEmission(SimtelRunner):
             atmosphere = get_simtel_table_file_name(parameter_data) or (
                 f"atmospheric_transmission-{Path(self.telescope_model.config_file_path).stem}.dat"
             )
+        if atmospheric_transmission is not None:
+            atmosphere = str(atmospheric_transmission)
         options = [
             ("altitude", altitude),
             ("atmospheric_transmission", atmosphere),
@@ -640,7 +572,7 @@ class SimulatorLightEmission(SimtelRunner):
             options.append(("Bypass_Optics", f"{bypass}"))
         options.append(("random_seed", ",".join(str(seed) for seed in self._seeds())))
 
-        input_file = self.runner_service.get_file_name(file_type="iact_output")
+        input_file = input_file or self.runner_service.get_file_name(file_type="iact_output")
         output_file = self.runner_service.get_file_name(file_type="sim_telarray_output")
         histo_file = self.runner_service.get_file_name(file_type="sim_telarray_histogram")
 
@@ -671,18 +603,48 @@ class SimulatorLightEmission(SimtelRunner):
 
     def calculate_distance_focal_plane_calibration_device(self):
         """
-        Return the distance between the focal plane and a flasher (focal length + focus offset - z).
+        Return the distance between the focal plane and a flasher.
+
+        Single-mirror telescopes: focal length + focus offset - flasher z.
+        Dual-mirror telescopes: focal-surface vertex height + focus offset, and the
+        absolute separation from the flasher (the flasher sits on either side of the
+        focal surface).
 
         Returns
         -------
         astropy.units.Quantity
             Distance between calibration device and focal plane.
         """
-        focal_length = self.telescope_model.get_parameter_value_with_unit("focal_length").to(u.m)
         flasher_z = self.calibration_model.get_parameter_value_with_unit(FLASHER_POSITION)[2].to(
             u.m
         )
-        return focal_length + self._vertical_focus_offset() - flasher_z
+        distance = self._focal_plane_height() - flasher_z
+        return abs(distance) if is_dual_mirror(self.telescope_model) else distance
+
+    def flasher_above_focal_surface(self):
+        """Return True if a dual-mirror telescope's flasher sits above the focal surface."""
+        if not is_dual_mirror(self.telescope_model):
+            return False
+        flasher_z = self.calibration_model.get_parameter_value_with_unit(FLASHER_POSITION)[2].to(
+            u.m
+        )
+        return bool(self._focal_plane_height() < flasher_z)
+
+    def _focal_plane_height(self):
+        """
+        Return the height of the focal plane in the primary-mirror frame, including focus offset.
+
+        Single-mirror telescopes use the focal length; dual-mirror telescopes use the
+        focal-surface vertex (first element of focal_surface_parameters).
+        """
+        if is_dual_mirror(self.telescope_model):
+            coefficients = self.telescope_model.get_parameter_value_with_unit(
+                "focal_surface_parameters"
+            )
+            base = u.Quantity(coefficients).ravel()[0].to(u.m)
+        else:
+            base = self.telescope_model.get_parameter_value_with_unit("focal_length").to(u.m)
+        return base + self._vertical_focus_offset()
 
     def _vertical_focus_offset(self):
         """Return the vertical-telescope focus offset (zenith terms only if both are non-zero)."""

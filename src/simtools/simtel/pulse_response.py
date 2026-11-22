@@ -60,14 +60,18 @@ def template_responses(model, illuminations, width_fraction=0.95, threshold_adc=
     Returns
     -------
     astropy.table.Table, list
-        Metrics and waveform dictionaries for both gains and response models.
+        Metrics and waveform dictionaries for both gains. Nonlinear responses are
+        included when intensity-dependent templates are available.
         This is direct linear interpolation of the input tables, not a reproduction
         of the simulator's internal rpolator resampling or stochastic digitization.
     """
     levels = _positive_levels(illuminations)
-    unified = model.get_parameter_table("fadc_pulse_shape")
-    if TEMPLATE_KIND not in unified.colnames:
-        raise ValueError("Pulse response scan requires unified fadc_pulse_shape templates")
+    value = model.get_parameter_value("fadc_pulse_shape")
+    if isinstance(value, dict):
+        unified = Table(rows=value["rows"], names=value["columns"])
+        unified[TIME].unit = u.Unit(value["column_units"][0])
+    else:
+        unified = model.get_parameter_table("fadc_pulse_shape")
     rows, waves = [], []
     for gain_index, gain in enumerate(GAINS):
         time, single, nonlinear, scale, pedestal, ceiling = _gain_response(
@@ -75,14 +79,17 @@ def template_responses(model, illuminations, width_fraction=0.95, threshold_adc=
         )
         dt = float(time[1] - time[0])
         for level in levels:
-            pulse = _interpolate_response(nonlinear, time, single, level)
-            for response, shape in ((NONLINEAR, pulse), (LINEAR, level * single)):
+            shapes = [(LINEAR, level * single)]
+            if nonlinear is not None:
+                shapes.insert(0, (NONLINEAR, _interpolate_response(nonlinear, time, single, level)))
+            for response, shape in shapes:
                 wave = np.clip(shape * scale, -pedestal, ceiling)
                 row = {
                     INTENSITY: level,
                     "gain": gain,
                     RESPONSE: response,
-                    "above_table": level > np.max(nonlinear[TABLE_INTENSITY]),
+                    "above_table": nonlinear is not None
+                    and level > np.max(nonlinear[TABLE_INTENSITY]),
                     **measure_waveform(wave, dt, width_fraction, threshold_adc),
                 }
                 row[PEAK_TIME] += time[0]
@@ -107,20 +114,40 @@ def _time_ns(table):
     return np.asarray(u.Quantity(column, unit=column.unit or u.ns).to_value(u.ns))
 
 
+def _gain_templates(unified, gain_index):
+    """Select reference and optional intensity-dependent templates for one gain."""
+    nonlinear = None
+    if TEMPLATE_KIND in unified.colnames:
+        nonlinear = unified[
+            (np.asarray(unified[TEMPLATE_KIND]) == INTENSITY_DEPENDENT)
+            & (np.asarray(unified[GAIN]) == GAINS[gain_index])
+        ]
+        reference = unified[
+            (np.asarray(unified[TEMPLATE_KIND]) == REFERENCE)
+            & (np.asarray(unified[GAIN]) == GAINS[gain_index])
+        ]
+        if len(reference) == 0 or len(nonlinear) == 0:
+            raise ValueError(f"Unified FADC table is missing {GAINS[gain_index]} templates")
+        if not np.all(np.asarray(reference[TABLE_INTENSITY], dtype=float) == 1):
+            raise ValueError("Unified FADC reference rows must have intensity 1")
+    else:
+        reference = unified.copy()
+        low_gain = next(
+            (
+                name
+                for name in ("amplitude_low_gain", "amplitude (low gain)")
+                if name in reference.colnames
+            ),
+            None,
+        )
+        if gain_index and low_gain:
+            reference[AMPLITUDE] = reference[low_gain]
+    return reference, nonlinear
+
+
 def _gain_response(model, unified, gain_index):
     """Build one gain's uniformly sampled linear reference and ADC conversion."""
-    nonlinear = unified[
-        (np.asarray(unified[TEMPLATE_KIND]) == INTENSITY_DEPENDENT)
-        & (np.asarray(unified[GAIN]) == GAINS[gain_index])
-    ]
-    reference = unified[
-        (np.asarray(unified[TEMPLATE_KIND]) == REFERENCE)
-        & (np.asarray(unified[GAIN]) == GAINS[gain_index])
-    ]
-    if len(reference) == 0 or len(nonlinear) == 0:
-        raise ValueError(f"Unified FADC table is missing {GAINS[gain_index]} templates")
-    if not np.all(np.asarray(reference[TABLE_INTENSITY], dtype=float) == 1):
-        raise ValueError("Unified FADC reference rows must have intensity 1")
+    reference, nonlinear = _gain_templates(unified, gain_index)
     frequency = _scalar(model, "fadc_mhz")
     jitter = _scalar(model, "transit_time_jitter")
     if frequency <= 0 or jitter < 0:
@@ -128,7 +155,7 @@ def _gain_response(model, unified, gain_index):
     dt = 1000 / frequency
     reference.sort(TIME)
     raw_time = _time_ns(reference)
-    time_nl = _time_ns(nonlinear)
+    time_nl = _time_ns(nonlinear) if nonlinear is not None else raw_time
     start = min(raw_time.min(), time_nl.min()) - 5 * jitter
     stop = max(raw_time.max(), time_nl.max()) + 5 * jitter
     time = np.arange(start, stop + 0.5 * dt, dt)

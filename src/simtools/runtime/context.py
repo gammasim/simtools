@@ -11,9 +11,11 @@ from pathlib import Path
 from types import MappingProxyType
 
 from simtools import constants
-from simtools.constants import RAY_TRACING_BACKENDS
 from simtools.io.output_paths import OutputPaths
+from simtools.runtime import software_catalog
 from simtools.utils.general import find_executable_in_dir, get_uuid
+
+DEFAULT_RAY_TRACING_BACKEND = "sim_telarray"
 
 
 def _config_value(args, arg_key, env_key, default=None):
@@ -22,6 +24,17 @@ def _config_value(args, arg_key, env_key, default=None):
     if value is not None:
         return value
     return os.getenv(env_key, default)
+
+
+def _ray_tracing_backend(name):
+    """Return the ray-tracing backend name if the simulation software catalog declares it."""
+    backends = software_catalog.ray_tracing_backends()
+    if name not in backends:
+        raise ValueError(
+            f"Unknown ray-tracing backend {name!r}; choose from: {', '.join(backends)} "
+            "(set --ray_tracing_backend or SIMTOOLS_RAY_TRACING_BACKEND)."
+        )
+    return name
 
 
 @dataclass(frozen=True)
@@ -59,7 +72,7 @@ class SimulationSoftware:
     corsika_flat_executable: str | Path | None = None
     he_interaction: str = constants.CORSIKA_HE_INTERACTION
     le_interaction: str = constants.CORSIKA_LE_INTERACTION
-    ray_tracing_backend: str = RAY_TRACING_BACKENDS[0]
+    ray_tracing_backend: str = DEFAULT_RAY_TRACING_BACKEND
 
     @classmethod
     def from_arguments(cls, args=None):
@@ -72,17 +85,14 @@ class SimulationSoftware:
         args : Mapping, optional
             Parsed arguments.
         """
-        ray_tracing_backend = _config_value(
-            args,
-            "ray_tracing_backend",
-            "SIMTOOLS_RAY_TRACING_BACKEND",
-            default=RAY_TRACING_BACKENDS[0],
-        )
-        if ray_tracing_backend not in RAY_TRACING_BACKENDS:
-            raise ValueError(
-                f"ray_tracing_backend must be one of {RAY_TRACING_BACKENDS}, "
-                f"got '{ray_tracing_backend}'"
+        ray_tracing_backend = _ray_tracing_backend(
+            _config_value(
+                args,
+                "ray_tracing_backend",
+                "SIMTOOLS_RAY_TRACING_BACKEND",
+                default=DEFAULT_RAY_TRACING_BACKEND,
             )
+        )
         return cls(
             sim_telarray_root=_config_value(
                 args, "sim_telarray_path", "SIMTOOLS_SIM_TELARRAY_PATH"

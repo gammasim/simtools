@@ -1,46 +1,8 @@
 """Select software-specific configuration writers for resolved simulation models."""
 
+from simtools.simtel import model_writer
 
-def _simtel_writer(model, context=None):
-    """Construct the sim_telarray model writer."""
-    # pylint: disable-next=import-outside-toplevel
-    from simtools.simtel.model_writer import SimtelModelWriter
-
-    return SimtelModelWriter(model, context=context)
-
-
-_WRITERS = {"sim_telarray": _simtel_writer}
-
-
-def get_model_writer(model, simulation_software="sim_telarray", context=None):
-    """Return the selected model configuration writer, retaining its table cache.
-
-    Parameters
-    ----------
-    model : ModelParameter or ArrayModel
-        Resolved simulation model.
-    simulation_software : str
-        Registered configuration writer.
-    context : RunContext, optional
-        Run context; the model's own context is used if not given.
-
-    Returns
-    -------
-    object
-        Software-specific model writer.
-
-    Raises
-    ------
-    ValueError
-        If the selected software is not registered.
-    """
-    try:
-        factory = _WRITERS[simulation_software]
-    except KeyError as exc:
-        raise ValueError(f"Unknown model configuration writer '{simulation_software}'.") from exc
-    if simulation_software not in model.configuration_writers:
-        model.configuration_writers[simulation_software] = factory(model, context=context)
-    return model.configuration_writers[simulation_software]
+get_model_writer = model_writer.get_model_writer
 
 
 def _corsika_configuration(array_model, run_number, label=None, context=None):

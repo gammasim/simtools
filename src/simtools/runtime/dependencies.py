@@ -9,12 +9,15 @@ This modules provides two main functionalities:
 """
 
 import hashlib
+import importlib.util
 import json
 import logging
 import os
 import platform
 import re
+import shutil
 import subprocess
+import time
 import tomllib
 from functools import lru_cache
 from importlib import metadata
@@ -23,9 +26,9 @@ from pathlib import Path
 import yaml
 from packaging.requirements import InvalidRequirement, Requirement
 
-from simtools import constants
 from simtools.io import ascii_handler
 from simtools.runtime import context as run_context
+from simtools.runtime import software_catalog
 from simtools.utils import general as gen
 from simtools.version import __version__
 
@@ -56,45 +59,76 @@ LEGACY_BUILD_OPTION_KEYS = {
 }
 _CORSIKA_TABLE_MANIFEST_SCHEMA_MAJOR = 1
 _GIT_LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1\n"
+_TABLE_COPY_ATTEMPTS = 3
+_TABLE_COPY_CHUNK_SIZE = 1024 * 1024
 
 
-def validate_simulation_dependencies(simulation_software, context=None):
+def validate_simulation_dependencies(software, context=None):
     """Validate external software and data required by a simulation.
 
     Parameters
     ----------
-    simulation_software : str
-        Simulation software selection: ``sim_telarray``, ``corsika``, or
-        ``corsika_sim_telarray``.
+    software : iterable of str
+        Software needed by the stages of the simulation chain (names of the software catalog,
+        ``resources/simulation_software.yml``; its ``dependency`` selects the check).
 
     Raises
     ------
     ValueError
-        If the selection or CORSIKA interaction-table manifest is invalid, or
-        if a required dependency is unavailable.
+        If the software is unknown, the CORSIKA interaction-table manifest is
+        invalid, or a required dependency is unavailable.
     """
     context = context or run_context.RunContext.from_environment()
-    try:
-        required = constants.SIMULATION_SOFTWARE_DEPENDENCIES[simulation_software]
-    except KeyError as exc:
-        raise ValueError(f"Unknown simulation software: {simulation_software}") from exc
+    required = frozenset({software} if isinstance(software, str) else software)
+    unknown = required - set(software_catalog.software_names())
+    if unknown:
+        raise ValueError(f"Unknown simulation software: {', '.join(sorted(unknown))}")
 
     errors = []
-    if "sim_telarray" in required:
-        _collect_dependency_error(errors, "sim_telarray", lambda: context.software.sim_telarray_exe)
-    if "corsika" in required:
-        geometry = "curved" if _uses_curved_atmosphere(context) else "flat"
-        _collect_dependency_error(
-            errors, f"CORSIKA ({geometry})", lambda: _corsika_executable(geometry, context)
-        )
-        try:
-            table_path = context.software.corsika_interaction_table_path
-            errors.extend(_validate_corsika_interaction_tables(table_path, context))
-        except (FileNotFoundError, PermissionError, TypeError, ValueError) as exc:
-            errors.append(f"CORSIKA interaction tables: {exc}")
-
+    for name in sorted(required):
+        entry = software_catalog.software(name)
+        _DEPENDENCY_CHECKS[entry["dependency"]](errors, name, entry, context)
     if errors:
         raise ValueError("Simulation dependencies are unavailable:\n- " + "\n- ".join(errors))
+
+
+def _python_package(package):
+    """Return the location of a Python package; raise ValueError if it is not installed."""
+    specification = importlib.util.find_spec(package)
+    if specification is None:
+        raise ValueError(f"the {package} package is not installed")
+    return specification.origin or next(iter(specification.submodule_search_locations))
+
+
+def _check_python_package(errors, name, entry, _context):
+    """Check a software installed as a Python package (catalog ``package``)."""
+    _collect_dependency_error(errors, name, lambda: _python_package(entry["package"]))
+
+
+def _check_sim_telarray(errors, name, _entry, context):
+    """Check the sim_telarray executable."""
+    _collect_dependency_error(errors, name, lambda: context.software.sim_telarray_exe)
+
+
+def _check_corsika(errors, _name, _entry, context):
+    """Check the CORSIKA executable of the atmosphere geometry and the interaction tables."""
+    geometry = "curved" if _uses_curved_atmosphere(context) else "flat"
+    _collect_dependency_error(
+        errors, f"CORSIKA ({geometry})", lambda: _corsika_executable(geometry, context)
+    )
+    try:
+        table_path = context.software.corsika_interaction_table_path
+        errors.extend(_validate_corsika_interaction_tables(table_path, context))
+    except (FileNotFoundError, PermissionError, TypeError, ValueError) as exc:
+        errors.append(f"CORSIKA interaction tables: {exc}")
+
+
+#: Installation checks by the ``dependency`` of a software catalog entry.
+_DEPENDENCY_CHECKS = {
+    "python_package": _check_python_package,
+    "sim_telarray": _check_sim_telarray,
+    "corsika": _check_corsika,
+}
 
 
 def _collect_dependency_error(errors, name, getter):
@@ -173,6 +207,164 @@ def _validate_corsika_interaction_tables(table_path, context=None):
     return _validate_table_entries(entries, Path(table_path))
 
 
+def stage_corsika_interaction_tables(table_path, destination, he_model, le_model):
+    """Copy selected CORSIKA tables and verify each copy against its SHA-256 manifest.
+
+    The destination is installed atomically only after every selected file matches the manifest's
+    size and digest. Failed copies are retried up to three times. The staged manifest lists only
+    the selected interaction models.
+
+    Parameters
+    ----------
+    table_path : pathlib.Path or str
+        Source interaction-table directory.
+    destination : pathlib.Path or str
+        New destination directory.
+    he_model : str
+        Selected high-energy interaction model.
+    le_model : str
+        Selected low-energy interaction model.
+
+    Returns
+    -------
+    pathlib.Path
+        Destination directory with verified tables and a reduced manifest.
+
+    Raises
+    ------
+    ValueError
+        If the manifest is invalid or copied data does not match its size or SHA-256 digest.
+    OSError
+        If files cannot be read or the destination cannot be written.
+    """
+    table_path = Path(table_path)
+    destination = Path(destination)
+    manifest_path = table_path / "manifest.yaml"
+    try:
+        with manifest_path.open(encoding="utf-8") as stream:
+            manifest = yaml.safe_load(stream)
+    except (OSError, yaml.YAMLError) as exc:
+        raise ValueError(f"cannot read manifest {manifest_path}: {exc}") from exc
+
+    _validate_table_manifest_structure(manifest, manifest_path)
+    selected_groups = {
+        "common": _manifest_entries(manifest, "common"),
+        "electromagnetic": {"egs4": _manifest_entries(manifest, "electromagnetic", "egs4")},
+        "low_energy": {le_model: _manifest_entries(manifest, "low_energy", le_model)},
+        "high_energy": {he_model: _manifest_entries(manifest, "high_energy", he_model)},
+    }
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists():
+        raise FileExistsError(f"CORSIKA table destination already exists: {destination}")
+    partial_destination = destination.with_name(f".{destination.name}.partial")
+    partial_destination.mkdir()
+    committed = False
+    try:
+        for entries in _selected_table_entries(selected_groups):
+            for entry in entries:
+                file_name, size, digest = _copy_verified_table_file(
+                    table_path, partial_destination, entry
+                )
+                _logger.info(
+                    "Staged CORSIKA table %s (%d bytes, SHA-256 %s)", file_name, size, digest
+                )
+
+        staged_manifest = dict(manifest)
+        staged_manifest["files"] = selected_groups
+        (partial_destination / "manifest.yaml").write_text(
+            yaml.safe_dump(staged_manifest, sort_keys=False), encoding="utf-8"
+        )
+        partial_destination.replace(destination)
+        committed = True
+    finally:
+        if not committed:
+            shutil.rmtree(partial_destination, ignore_errors=True)
+    return destination
+
+
+def _selected_table_entries(groups):
+    """Flatten selected table manifest groups."""
+    return (
+        groups["common"],
+        groups["electromagnetic"]["egs4"],
+        *groups["low_energy"].values(),
+        *groups["high_energy"].values(),
+    )
+
+
+def _copy_verified_table_file(source_dir, destination_dir, entry):
+    """Copy one manifest file, retrying reads that fail its recorded integrity check."""
+    file_name, expected_size, expected_sha256 = _table_copy_metadata(entry)
+    source_file = source_dir / file_name
+    destination_file = destination_dir / file_name
+    last_error = None
+    for attempt in range(1, _TABLE_COPY_ATTEMPTS + 1):
+        try:
+            size, digest = _copy_table_attempt(
+                source_file, destination_file, attempt, expected_size, expected_sha256
+            )
+            return file_name, size, digest
+        except (OSError, ValueError) as exc:
+            last_error = exc
+            if attempt < _TABLE_COPY_ATTEMPTS:
+                time.sleep(attempt)
+    raise ValueError(
+        f"failed to stage {source_file} after {_TABLE_COPY_ATTEMPTS} attempts: {last_error}"
+    ) from last_error
+
+
+def _table_copy_metadata(entry, require_digest=True):
+    """Validate and return the path, size, and digest for one manifest entry."""
+    if not isinstance(entry, dict):
+        raise ValueError("invalid manifest table entry")
+    file_name = entry.get("path")
+    expected_size = entry.get("size")
+    expected_sha256 = entry.get("sha256")
+    if not isinstance(file_name, str) or Path(file_name).name != file_name:
+        raise ValueError(f"invalid manifest table path: {file_name!r}")
+    if not isinstance(expected_size, int) or expected_size < 0:
+        raise ValueError(f"invalid manifest table size for {file_name}")
+    if (expected_sha256 is not None or require_digest) and (
+        not isinstance(expected_sha256, str)
+        or not re.fullmatch(r"[0-9a-fA-F]{64}", expected_sha256)
+    ):
+        raise ValueError(f"missing or invalid SHA-256 digest for {file_name}")
+    return file_name, expected_size, expected_sha256
+
+
+def _copy_table_attempt(source_file, destination_file, attempt, expected_size, expected_sha256):
+    """Copy and verify a single table file once."""
+    partial_file = destination_file.with_name(f".{destination_file.name}.{attempt}.partial")
+    digest = hashlib.sha256()
+    copied_size = 0
+    try:
+        with source_file.open("rb") as source, partial_file.open("wb") as target:
+            while chunk := source.read(_TABLE_COPY_CHUNK_SIZE):
+                target.write(chunk)
+                digest.update(chunk)
+                copied_size += len(chunk)
+        actual_sha256 = digest.hexdigest()
+        _verify_table_copy(source_file, copied_size, actual_sha256, expected_size, expected_sha256)
+        partial_file.replace(destination_file)
+        return copied_size, actual_sha256
+    except OSError, ValueError:
+        partial_file.unlink(missing_ok=True)
+        raise
+
+
+def _verify_table_copy(source_file, copied_size, actual_sha256, expected_size, expected_sha256):
+    """Raise if a copied table file differs from its manifest entry."""
+    differences = []
+    if copied_size != expected_size:
+        differences.append(f"size {copied_size} != {expected_size}")
+    if actual_sha256.lower() != expected_sha256.lower():
+        differences.append(f"SHA-256 {actual_sha256} != {expected_sha256.lower()}")
+    if differences:
+        raise ValueError(
+            f"size or SHA-256 mismatch while staging {source_file}: " + "; ".join(differences)
+        )
+
+
 def _validate_table_manifest_structure(manifest, manifest_path):
     """Validate the manifest structure needed by simtools."""
     if not isinstance(manifest, dict):
@@ -218,26 +410,13 @@ def _validate_table_entries(entries, table_path):
 
 
 def _validate_table_entry(entry, table_path):
-    """Check one manifest entry's file presence, size, and optional SHA-256 digest.
-
-    Entries without a digest receive an installation sanity check only; their content
-    is not verified.
-    """
-    if not isinstance(entry, dict):
-        return "invalid manifest table entry"
-    path_value = entry.get("path")
-    expected_size = entry.get("size")
-    if not isinstance(path_value, str) or Path(path_value).name != path_value:
-        return f"invalid manifest table path: {path_value!r}"
-    if not isinstance(expected_size, int) or expected_size < 0:
-        return f"invalid manifest table size for {path_value}"
-    expected_digest = entry.get("sha256")
-    if expected_digest is not None and (
-        not isinstance(expected_digest, str)
-        or len(expected_digest) != 64
-        or any(character not in "0123456789abcdefABCDEF" for character in expected_digest)
-    ):
-        return f"invalid SHA-256 digest for {path_value}"
+    """Check one manifest entry's file presence, size, and SHA-256 digest."""
+    try:
+        path_value, expected_size, expected_digest = _table_copy_metadata(
+            entry, require_digest=False
+        )
+    except ValueError as exc:
+        return str(exc)
     return _validate_table_file(table_path / path_value, expected_size, expected_digest)
 
 

@@ -33,6 +33,7 @@ def run_release(
     allow_production=False,
     preflight=False,
     overwrite=False,
+    recover_production=False,
     application_args=None,
 ):
     """Validate and run the selected site/test pairs of one release.
@@ -57,6 +58,8 @@ def run_release(
         Check host paths and run one worker-side canary per site before production.
     overwrite : bool
         Rebuild derived products and archive failed, finished productions for a retry.
+    recover_production : bool
+        Resubmit only failed jobs from finished HTCondor science-test productions.
     application_args : dict or None
         Common runner arguments such as model-source and environment overrides.
 
@@ -109,7 +112,9 @@ def run_release(
     else:
         if production:
             _preflight(preflight_bundle, prepared, preflight)
-        results = execute_tests(prepared, bundle.catalogue, bundle.release_dir, run_id, overwrite)
+        results = execute_tests(
+            prepared, bundle.catalogue, bundle.release_dir, run_id, overwrite, recover_production
+        )
     model_source = {
         key: str(application_args[key])
         for key in defs.MODEL_SOURCE_KEYS

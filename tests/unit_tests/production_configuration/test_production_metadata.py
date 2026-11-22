@@ -1,5 +1,6 @@
 """Tests for production metadata backfill and validation workflows."""
 
+import struct
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -101,7 +102,7 @@ def test_write_manifests_does_not_mark_incomplete_job_complete(
         "simtools.production_configuration.production_metadata.read_job_grid",
         return_value=(
             [_job_grid_row()],
-            {"site": "North", "simulation_software": "corsika_sim_telarray"},
+            {"site": "North", "simulation_software": ["corsika", "sim_telarray"]},
         ),
     )
     write_file = mocker.patch(
@@ -140,7 +141,10 @@ def test_write_manifests_supports_zero_based_job_directories(
     (job_directory / "gamma_run000001.simtel.zst").touch()
     mocker.patch(
         "simtools.production_configuration.production_metadata.read_job_grid",
-        return_value=([_job_grid_row()], {"site": "North", "simulation_software": "sim_telarray"}),
+        return_value=(
+            [_job_grid_row()],
+            {"site": "North", "simulation_software": ["sim_telarray"]},
+        ),
     )
     write_file = mocker.patch(
         "simtools.production_configuration.production_metadata.write_data_to_file"
@@ -180,7 +184,7 @@ def test_write_manifests_omits_unknown_catalog_and_atmosphere_values(
         "simtools.production_configuration.production_metadata.read_job_grid",
         return_value=(
             [_job_grid_row()],
-            {"site": "North", "simulation_software": "corsika_sim_telarray"},
+            {"site": "North", "simulation_software": ["corsika", "sim_telarray"]},
         ),
     )
     write_file = mocker.patch(
@@ -327,7 +331,7 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_software=["corsika", "sim_telarray"],
             corsika_he_interaction="qgs3",
             corsika_le_interaction="urqmd",
         ),
@@ -335,7 +339,7 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
         output_directory,
     )
 
-    assert manifest["schema_version"] == "1.0.0"
+    assert manifest["schema_version"] == "2.0.0"
     assert manifest["product_type"] == "simulate_prod_job"
     assert manifest["production_id"] == "production-42"
     assert manifest["catalog_metadata"]["runNumber"] == 12
@@ -346,6 +350,41 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
         "reduced_event_data": ["gamma_run000012.reduced_event_data.hdf5"],
         "sim_telarray": ["gamma_run000012.simtel.zst"],
     }
+
+
+def test_filter_ctao_metadata_keeps_registry_scalar_values():
+    metadata = {"dataid": "id-1", "simzen": 20.0, "unknown": "value", "nested": {"x": 1}}
+
+    assert production_metadata._filter_ctao_metadata(metadata, {"dataid", "simzen", "nested"}) == {
+        "dataid": "id-1",
+        "simzen": 20.0,
+    }
+
+
+def test_manifest_records_ctao_metadata_and_skips_missing_global_metadata(
+    tmp_test_directory, caplog
+):
+    output_directory = Path(tmp_test_directory)
+    valid = output_directory / "valid.simtel"
+    incomplete = output_directory / "incomplete.simtel"
+    payload = b"\x02\x06dataid\x04id-1\x06simzen\x0220"
+    valid.write_bytes(struct.pack("<IIiI", 0xD41F8A37, 75, -1, len(payload)) + payload)
+    incomplete.write_bytes(struct.pack("<IIiI", 0xD41F8A37, 75, 1, len(payload)) + payload)
+
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            simulation_software=["corsika", "sim_telarray"],
+        ),
+        _simulator("MSTS-01", run_number=12),
+        output_directory,
+    )
+
+    assert manifest["ctao_metadata"] == {valid.name: {"dataid": "id-1", "simzen": "20"}}
+    assert "Unable to read CTAO metadata" in caplog.text
+    assert incomplete.name in caplog.text
 
 
 def test_build_production_job_manifest_uses_resolved_angles_from_input_file(tmp_test_directory):
@@ -369,7 +408,7 @@ def test_build_production_job_manifest_uses_resolved_angles_from_input_file(tmp_
             energy_range=(100 * u.GeV, 100 * u.GeV),
             core_scatter=(1, 840 * u.m),
             showers_per_run=None,
-            simulation_software="sim_telarray",
+            simulation_software=["sim_telarray"],
             corsika_file="showers.dat",
         ),
         simulator,
@@ -392,7 +431,7 @@ def test_build_production_job_manifest_preserves_generated_shower_angle_precisio
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_software=["corsika", "sim_telarray"],
         ),
         simulator,
         Path(tmp_test_directory),
@@ -416,45 +455,172 @@ def test_build_production_job_manifest_records_reduced_event_counts(tmp_test_dir
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_software=["corsika", "sim_telarray"],
         ),
         _simulator("MSTS-01", run_number=12),
         output_directory,
     )
 
-    assert manifest["statistics"] == {"simulated_events": 12, "triggered_events": 5}
+    assert manifest["statistics"] == {
+        "outputs": {
+            "gamma_run000012.simtel.zst": {
+                "simulated_events": 12,
+                "triggered_events": 5,
+            }
+        }
+    }
     manifest_path = output_directory / "simulate_prod_job_metadata.yml"
     write_data_to_file(manifest, manifest_path)
     assert check_manifest(ProductionManifest(path=manifest_path, data=manifest))["valid"]
+    legacy_manifest = manifest | {
+        "schema_version": "1.0.0",
+        "configuration": manifest["configuration"]
+        | {"simulation_software": "corsika_sim_telarray"},
+        "statistics": {"simulated_events": 12, "triggered_events": 5},
+    }
+    assert check_manifest(ProductionManifest(path=manifest_path, data=legacy_manifest))["valid"]
 
 
 def test_get_sim_telarray_event_counts_falls_back_to_log(tmp_test_directory):
     output_directory = Path(tmp_test_directory)
-    log_file = output_directory / "run.simtel.log"
+    log_file = output_directory / "run000001.simtel.log"
+    simtel_file = output_directory / "run000001.simtel.zst"
     log_file.write_text(
         "Sim_telarray finished at time after 1/2/3/4 tel., 100/17 events\n",
+        encoding="utf-8",
+    )
+    simtel_file.touch()
+
+    assert get_sim_telarray_event_counts(
+        output_directory,
+        {"sim_telarray": [simtel_file.name], "sim_telarray_log": [log_file.name]},
+    ) == {"outputs": {simtel_file.name: {"simulated_events": 100, "triggered_events": 17}}}
+
+
+def test_matching_output_files_uses_registered_product_suffixes():
+    inventory = {
+        "reduced_event_data": ["run.reduced_event_data.hdf5.zst"],
+        "sim_telarray_log": ["run.simtel.log.zst", "run.simtel.err.zst"],
+    }
+
+    assert production_metadata._matching_output_files("run.simtel.gz", inventory) == {
+        "reduced_event_data": ["run.reduced_event_data.hdf5.zst"],
+        "sim_telarray_log": ["run.simtel.log.zst"],
+    }
+
+
+def test_get_sim_telarray_event_counts_keeps_outputs_separate(tmp_test_directory):
+    output_directory = Path(tmp_test_directory)
+    first_output = output_directory / "gamma_run000001.simtel.zst"
+    second_output = output_directory / "proton_run000002.simtel.zst"
+    first_output.touch()
+    second_output.touch()
+    first_event_data = output_directory / "gamma_run000001.reduced_event_data.hdf5"
+    with h5py.File(first_event_data, "w") as data_file:
+        data_file.create_dataset("SHOWERS", shape=(12,), dtype="i8")
+        data_file.create_dataset("TRIGGERS", shape=(5,), dtype="i8")
+    second_log = output_directory / "proton_run000002.simtel.log"
+    second_log.write_text(
+        "Sim_telarray finished at time after 1/2/3/4 tel., 80/9 events\n",
         encoding="utf-8",
     )
 
     assert get_sim_telarray_event_counts(
         output_directory,
-        {"sim_telarray_log": [log_file.name]},
-    ) == {"simulated_events": 100, "triggered_events": 17}
+        {
+            "sim_telarray": [first_output.name, second_output.name],
+            "reduced_event_data": [first_event_data.name],
+            "sim_telarray_log": [second_log.name],
+        },
+    ) == {
+        "outputs": {
+            first_output.name: {"simulated_events": 12, "triggered_events": 5},
+            second_output.name: {"simulated_events": 80, "triggered_events": 9},
+        }
+    }
 
 
-def test_get_sim_telarray_event_counts_rejects_paths_outside_job_directory(
+def test_get_sim_telarray_event_counts_matches_exact_output_in_model_directories(
     tmp_test_directory,
 ):
-    assert (
-        get_sim_telarray_event_counts(
-            Path(tmp_test_directory),
-            {
-                "reduced_event_data": ["../outside.hdf5"],
-                "sim_telarray_log": ["../outside.simtel.log"],
-            },
+    output_directory = Path(tmp_test_directory)
+    inventory = {"sim_telarray": [], "reduced_event_data": [], "sim_telarray_log": []}
+    for model_version, simulated, triggered in (("6.0.2", 12, 5), ("6.1.1", 30, 11)):
+        model_directory = output_directory / model_version / "sim_telarray" / "run000001"
+        model_directory.mkdir(parents=True)
+        simtel_name = "gamma_run000001.simtel.zst"
+        reduced_name = "gamma_run000001.reduced_event_data.hdf5"
+        (model_directory / simtel_name).touch()
+        with h5py.File(model_directory / reduced_name, "w") as data_file:
+            data_file.create_dataset("SHOWERS", shape=(simulated,), dtype="i8")
+            data_file.create_dataset("TRIGGERS", shape=(triggered,), dtype="i8")
+        inventory["sim_telarray"].append(
+            (Path(model_version) / "sim_telarray" / "run000001" / simtel_name).as_posix()
         )
-        is None
+        inventory["reduced_event_data"].append(
+            (Path(model_version) / "sim_telarray" / "run000001" / reduced_name).as_posix()
+        )
+
+    assert get_sim_telarray_event_counts(output_directory, inventory) == {
+        "outputs": {
+            "6.0.2/sim_telarray/run000001/gamma_run000001.simtel.zst": {
+                "simulated_events": 12,
+                "triggered_events": 5,
+            },
+            "6.1.1/sim_telarray/run000001/gamma_run000001.simtel.zst": {
+                "simulated_events": 30,
+                "triggered_events": 11,
+            },
+        }
+    }
+
+
+def test_get_sim_telarray_event_counts_matches_same_run_outputs_by_full_basename(
+    tmp_test_directory,
+):
+    output_directory = Path(tmp_test_directory)
+    inventory = {"sim_telarray": [], "reduced_event_data": [], "sim_telarray_log": []}
+    expected = {}
+    for model_version, triggered in (("6.0.2", 16), ("6.1.1", 9)):
+        basename = f"gamma_run000001_test_{model_version}_multiple_model_versions"
+        simtel_name = f"{basename}.simtel.zst"
+        reduced_name = f"{basename}.reduced_event_data.hdf5"
+        (output_directory / simtel_name).touch()
+        with h5py.File(output_directory / reduced_name, "w") as data_file:
+            data_file.create_dataset("SHOWERS", shape=(25,), dtype="i8")
+            data_file.create_dataset("TRIGGERS", shape=(triggered,), dtype="i8")
+        inventory["sim_telarray"].append(simtel_name)
+        inventory["reduced_event_data"].append(reduced_name)
+        expected[simtel_name] = {"simulated_events": 25, "triggered_events": triggered}
+
+    assert get_sim_telarray_event_counts(output_directory, inventory) == {"outputs": expected}
+
+
+def test_get_sim_telarray_event_counts_rejects_paths_outside_job_directory(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    job = root / "job"
+    job.mkdir()
+    with h5py.File(root / "run000001.reduced_event_data.hdf5", "w") as data_file:
+        data_file.create_dataset("SHOWERS", shape=(25,), dtype="i8")
+        data_file.create_dataset("TRIGGERS", shape=(9,), dtype="i8")
+    (root / "run000001.simtel.log").write_text(
+        "Sim_telarray finished after 1/2/3/4 tel., 100/17 events\n", encoding="utf-8"
     )
+    inventory = {
+        "sim_telarray": ["../run000001.simtel.zst"],
+        "reduced_event_data": ["../run000001.reduced_event_data.hdf5"],
+        "sim_telarray_log": ["../run000001.simtel.log"],
+    }
+
+    assert get_sim_telarray_event_counts(
+        root, {key: [Path(value[0]).name] for key, value in inventory.items()}
+    ) == {"outputs": {"run000001.simtel.zst": {"simulated_events": 25, "triggered_events": 9}}}
+    assert get_sim_telarray_event_counts(job, inventory) is None
+    log_only = {key: value for key, value in inventory.items() if key != "reduced_event_data"}
+    assert get_sim_telarray_event_counts(
+        root, {key: [Path(value[0]).name] for key, value in log_only.items()}
+    ) == {"outputs": {"run000001.simtel.zst": {"simulated_events": 100, "triggered_events": 17}}}
+    assert get_sim_telarray_event_counts(job, log_only) is None
 
 
 def test_build_production_job_manifest_discovers_all_packaged_outputs(tmp_test_directory):
@@ -472,7 +638,7 @@ def test_build_production_job_manifest_discovers_all_packaged_outputs(tmp_test_d
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_software=["corsika", "sim_telarray"],
         ),
         _simulator("MSTS-01", run_number=12),
         output_directory,
@@ -504,7 +670,7 @@ def test_build_production_job_manifest_reads_primary_from_corsika_input(
             core_scatter=(10, 500 * u.m),
             showers_per_run=None,
             primary=None,
-            simulation_software="sim_telarray",
+            simulation_software=["sim_telarray"],
         ),
         simulator,
         output_directory,
@@ -525,7 +691,7 @@ def test_build_production_job_manifest_preserves_multiple_model_versions(tmp_tes
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
             model_version=["6.0.2", "7.0.0"],
-            simulation_software="sim_telarray",
+            simulation_software=["sim_telarray"],
         ),
         _simulator("MSTS-01", run_number=12),
         output_directory,
@@ -547,7 +713,7 @@ def test_build_production_job_manifest_preserves_truthful_backfill_metadata(tmp_
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_software=["corsika", "sim_telarray"],
         ),
         simulator,
         output_directory,
@@ -591,7 +757,7 @@ def test_build_production_job_manifest_records_resolved_overrides_and_atmosphere
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="corsika_sim_telarray",
+            simulation_software=["corsika", "sim_telarray"],
             curved_atmosphere_min_zenith_angle=70 * u.deg,
             overwrite_model_parameters="/submission/path/overrides.yml",
         ),
@@ -621,7 +787,7 @@ def test_telescope_only_manifest_uses_resolved_atmosphere_parameter(tmp_test_dir
 
     manifest = build_production_job_manifest(
         _args(
-            simulation_software="sim_telarray",
+            simulation_software=["sim_telarray"],
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
@@ -667,7 +833,7 @@ def test_build_production_job_manifest_keeps_nested_output_paths(tmp_test_direct
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
-            simulation_software="sim_telarray",
+            simulation_software=["sim_telarray"],
         ),
         simulator,
         output_directory,

@@ -1,3 +1,4 @@
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -44,7 +45,8 @@ def _write_interaction_table_manifest(table_path):
             "qgs3": [
                 {"path": "qgsdat-III", "size": 6},
                 {"path": "sectnu-III", "size": 7},
-            ]
+            ],
+            "epos": [{"path": "epos.iniev", "size": 8}],
         },
     }
     manifest = {"schema_version": "1.0.0", "files": groups}
@@ -53,9 +55,12 @@ def _write_interaction_table_manifest(table_path):
         groups["electromagnetic"]["egs4"],
         groups["low_energy"]["urqmd"],
         groups["high_energy"]["qgs3"],
+        groups["high_energy"]["epos"],
     ):
         for entry in entries:
-            (table_path / entry["path"]).write_bytes(b"x" * entry["size"])
+            content = b"x" * entry["size"]
+            (table_path / entry["path"]).write_bytes(content)
+            entry["sha256"] = hashlib.sha256(content).hexdigest()
     (table_path / "manifest.yaml").write_text(yaml.safe_dump(manifest), encoding="utf-8")
 
 
@@ -96,7 +101,25 @@ def test_validate_simulation_dependencies_accepts_manifest(tmp_test_directory, r
     _write_interaction_table_manifest(tmp_test_directory)
     context = _mock_corsika_config(run_context, tmp_test_directory)
 
+    validate_simulation_dependencies({"corsika"}, context=context)
+
+
+def test_validate_simulation_dependencies_accepts_manifest_without_digests(
+    tmp_test_directory, run_context
+):
+    _write_interaction_table_manifest(tmp_test_directory)
+    manifest_path = tmp_test_directory / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    for group in manifest["files"].values():
+        for entries in group.values() if isinstance(group, dict) else [group]:
+            for entry in entries:
+                entry.pop("sha256")
+    manifest_path.write_text(yaml.safe_dump(manifest), encoding="utf-8")
+    context = _mock_corsika_config(run_context, tmp_test_directory)
     validate_simulation_dependencies("corsika", context=context)
+    (Path(tmp_test_directory) / "common.dat").write_bytes(b"x")
+    with pytest.raises(ValueError, match="size mismatch"):
+        validate_simulation_dependencies("corsika", context=context)
 
 
 def test_validate_simulation_dependencies_uses_curved_corsika_executable(
@@ -114,7 +137,7 @@ def test_validate_simulation_dependencies_uses_curved_corsika_executable(
     context.software.corsika_exe_curved = None
 
     with pytest.raises(ValueError, match=r"CORSIKA \(curved\): not configured"):
-        validate_simulation_dependencies("corsika", context=context)
+        validate_simulation_dependencies({"corsika"}, context=context)
 
 
 def test_validate_simulation_dependencies_uses_flat_corsika_executable(
@@ -131,7 +154,7 @@ def test_validate_simulation_dependencies_uses_flat_corsika_executable(
     )
     context.software.corsika_exe_curved = None
 
-    validate_simulation_dependencies("corsika", context=context)
+    validate_simulation_dependencies({"corsika"}, context=context)
 
 
 def test_validate_simulation_dependencies_rejects_missing_and_unhydrated_tables(
@@ -146,7 +169,7 @@ def test_validate_simulation_dependencies_rejects_missing_and_unhydrated_tables(
     (table_path / "qgsdat-III").write_bytes(b"version https://git-lfs.github.com/spec/v1\n")
 
     with pytest.raises(ValueError, match=r"missing file.*common.dat") as error:
-        validate_simulation_dependencies("corsika", context=context)
+        validate_simulation_dependencies({"corsika"}, context=context)
 
     message = str(error.value)
     assert "size mismatch" in message
@@ -162,28 +185,62 @@ def test_validate_simulation_dependencies_rejects_unknown_model_group(
     context.software.corsika_interaction_models = ("qgs2", "urqmd")
 
     with pytest.raises(ValueError, match=r"files\.high_energy\.qgs2"):
-        validate_simulation_dependencies("corsika", context=context)
+        validate_simulation_dependencies({"corsika"}, context=context)
 
 
 def test_validate_simulation_dependencies_only_checks_selected_software(run_context):
     """sim_telarray-only validation does not access CORSIKA settings."""
     context = _dependency_context(run_context, sim_telarray_exe="sim_telarray")
 
-    validate_simulation_dependencies("sim_telarray", context=context)
+    validate_simulation_dependencies({"sim_telarray"}, context=context)
 
 
-def test_validate_simulation_dependencies_requires_both_for_combined_mode(run_context):
-    """Combined simulations report an unavailable sim_telarray executable."""
+def test_validate_simulation_dependencies_requires_both_for_combined_chain(run_context):
+    """Chains with CORSIKA and sim_telarray report an unavailable sim_telarray executable."""
     context = _dependency_context(run_context)
 
     with pytest.raises(ValueError, match="sim_telarray: not configured"):
-        validate_simulation_dependencies("corsika_sim_telarray", context=context)
+        validate_simulation_dependencies({"corsika", "sim_telarray"}, context=context)
 
 
 def test_validate_simulation_dependencies_rejects_unknown_software():
-    """Unknown simulation software selections are rejected explicitly."""
-    with pytest.raises(ValueError, match="Unknown simulation software: unknown"):
-        validate_simulation_dependencies("unknown")
+    """Unknown simulation software is rejected explicitly."""
+    with pytest.raises(ValueError, match=r"Unknown simulation software: unknown$"):
+        validate_simulation_dependencies({"corsika", "unknown"})
+
+
+def test_validate_simulation_dependencies_accepts_installed_obdeect(run_context, mocker):
+    """obdeect-only validation needs only the importable obdeect package."""
+    find_spec = mocker.patch(
+        "simtools.runtime.dependencies.importlib.util.find_spec",
+        return_value=SimpleNamespace(origin="/site-packages/obdeect/__init__.py"),
+    )
+    context = _dependency_context(run_context)
+
+    validate_simulation_dependencies(["obdeect"], context=context)
+
+    find_spec.assert_called_once_with("obdeect")
+
+
+def test_validate_simulation_dependencies_reports_missing_obdeect(run_context, mocker):
+    """A missing obdeect package is reported together with other missing software."""
+    mocker.patch("simtools.runtime.dependencies.importlib.util.find_spec", return_value=None)
+    context = _dependency_context(run_context)
+
+    with pytest.raises(ValueError, match="obdeect: the obdeect package is not installed") as error:
+        validate_simulation_dependencies({"obdeect", "sim_telarray"}, context=context)
+
+    assert "sim_telarray: not configured" in str(error.value)
+
+
+def test_validate_simulation_dependencies_skips_obdeect_when_not_in_chain(run_context, mocker):
+    """The obdeect package is not looked up for chains that do not use it."""
+    find_spec = mocker.patch("simtools.runtime.dependencies.importlib.util.find_spec")
+    context = _dependency_context(run_context, sim_telarray_exe="sim_telarray")
+
+    validate_simulation_dependencies({"sim_telarray"}, context=context)
+
+    find_spec.assert_not_called()
 
 
 @pytest.mark.parametrize("error_type", [FileNotFoundError, PermissionError, TypeError, ValueError])
@@ -248,6 +305,7 @@ def test_manifest_entries_rejects_invalid_groups(manifest, category, model, mess
         ({"path": "nested/file", "size": 1}, "invalid manifest table path"),
         ({"path": "file", "size": -1}, "invalid manifest table size"),
         ({"path": "file", "size": "1"}, "invalid manifest table size"),
+        ({"path": "file", "size": 1, "sha256": "invalid"}, "missing or invalid SHA-256 digest"),
     ],
 )
 def test_validate_table_entry_rejects_invalid_entries(entry, message, tmp_test_directory):
@@ -301,6 +359,47 @@ def test_validate_corsika_interaction_tables_reports_manifest_read_error(tmp_tes
     """A missing manifest is reported as a table validation error."""
     with pytest.raises(ValueError, match="cannot read manifest"):
         _validate_corsika_interaction_tables(Path(tmp_test_directory) / "missing")
+
+
+def test_stage_corsika_interaction_tables_copies_selected_files_with_verified_checksums(
+    tmp_test_directory,
+):
+    from simtools.runtime.dependencies import stage_corsika_interaction_tables
+
+    source = Path(tmp_test_directory) / "source"
+    destination = Path(tmp_test_directory) / "staged"
+    source.mkdir()
+    _write_interaction_table_manifest(source)
+
+    result = stage_corsika_interaction_tables(source, destination, "qgs3", "urqmd")
+
+    assert result == destination
+    assert {path.name for path in destination.iterdir()} == {
+        "common.dat",
+        "egs.dat",
+        "urqmd.dat",
+        "qgsdat-III",
+        "sectnu-III",
+        "manifest.yaml",
+    }
+    assert (destination / "qgsdat-III").read_bytes() == (source / "qgsdat-III").read_bytes()
+
+
+def test_stage_corsika_interaction_tables_rejects_source_that_does_not_match_manifest(
+    tmp_test_directory,
+):
+    from simtools.runtime.dependencies import stage_corsika_interaction_tables
+
+    source = Path(tmp_test_directory) / "source"
+    destination = Path(tmp_test_directory) / "staged"
+    source.mkdir()
+    _write_interaction_table_manifest(source)
+    (source / "common.dat").write_bytes(b"other")
+
+    with pytest.raises(ValueError, match=r"SHA-256 mismatch.*common.dat"):
+        stage_corsika_interaction_tables(source, destination, "qgs3", "urqmd")
+
+    assert not (destination / "common.dat").exists()
 
 
 def test_get_version_string(mocker, run_context):
@@ -689,3 +788,12 @@ def test_write_development_dependency_manifest(mocker, monkeypatch, tmp_test_dir
     }
     assert manifest["container"] == {"base_image": "alma:9"}
     assert Path(str(output)).with_suffix(".json.sha256").is_file()
+
+
+def test_validate_simulation_dependencies_checks_python_package(run_context, monkeypatch):
+    """Software installed as a Python package is checked by its catalog ``package``."""
+    context = _dependency_context(run_context)
+    monkeypatch.setattr("importlib.util.find_spec", lambda name: None)
+
+    with pytest.raises(ValueError, match="obdeect: the obdeect package is not installed"):
+        validate_simulation_dependencies({"obdeect"}, context=context)

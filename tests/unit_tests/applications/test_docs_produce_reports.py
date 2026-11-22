@@ -91,3 +91,23 @@ def test_report_producers_call_matching_report_method(recorder, producer, args, 
     producer(_context(**args), Path("reports"))
 
     assert recorder.calls == [expected]
+
+
+@pytest.mark.parametrize(
+    ("args", "error"),
+    [
+        ({"report": "simulation_configuration"}, True),
+        ({"report": "simulation_configuration", "simulation_software": ["corsika"]}, False),
+        ({"report": "array_element"}, False),
+    ],
+)
+def test_validate_simulation_software(args, error, capsys):
+    parser = Mock()
+    parser.error.side_effect = SystemExit(2)
+    if error:
+        with pytest.raises(SystemExit):
+            app._validate_simulation_software(args, {}, parser)
+        parser.error.assert_called_once()
+    else:
+        app._validate_simulation_software(args, {}, parser)
+        parser.error.assert_not_called()

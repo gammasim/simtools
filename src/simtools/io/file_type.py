@@ -13,11 +13,37 @@ _FILENAME = "filename"
 _UNKNOWN_PRODUCT = "Unknown file product '{product_id}'."
 
 
+#: Catalog of the simulation programs; their formats and files are merged into the file catalog.
+SIMULATION_SOFTWARE_CATALOG = "resources/simulation_software.yml"
+
+
+def _read_resource(path):
+    return yaml.safe_load(files("simtools").joinpath(path).read_text(encoding="utf-8"))
+
+
+def _merge(catalog, section, entries, source):
+    """Add entries to a catalog section; an id may be declared only once."""
+    for key, value in entries.items():
+        if key in catalog[section]:
+            raise ValueError(f"File {section[:-1]} '{key}' is declared twice ({source}).")
+        catalog[section][key] = value
+
+
 @lru_cache(maxsize=1)
 def _file_catalog():
-    """Load and validate the packaged file-format and product declarations."""
-    catalog_path = files("simtools").joinpath("resources/file_types.yml")
-    catalog = yaml.safe_load(catalog_path.read_text(encoding="utf-8"))
+    """
+    Load and validate the packaged file-format and product declarations.
+
+    The generic formats and products are in ``resources/file_types.yml``; the formats and files
+    of each simulation program, and the files of any chain stage, are in
+    ``resources/simulation_software.yml``.
+    """
+    catalog = _read_resource("resources/file_types.yml")
+    software_catalog = _read_resource(SIMULATION_SOFTWARE_CATALOG)
+    for name, software in software_catalog.get("software", {}).items():
+        _merge(catalog, _FORMATS, software.get("formats", {}), name)
+        _merge(catalog, _PRODUCTS, software.get("files", {}), name)
+    _merge(catalog, _PRODUCTS, software_catalog.get("files", {}), "stage files")
     _validate_file_catalog_schema(catalog)
     _validate_file_catalog(catalog)
     return catalog
@@ -69,6 +95,15 @@ def product_value(product_id, key):
         return _file_catalog()[_PRODUCTS][product_id][key]
     except KeyError as exc:
         raise ValueError(_UNKNOWN_PRODUCT.format(product_id=product_id)) from exc
+
+
+def products_in_directory(directory):
+    """Return the ids of the file products placed in a directory type (``run``, ``submission``)."""
+    return [
+        product_id
+        for product_id, product in _file_catalog()[_PRODUCTS].items()
+        if product.get("directory") == directory
+    ]
 
 
 def product_suffixes(product_id):

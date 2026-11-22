@@ -1,5 +1,6 @@
 """Tests for the repository validation application."""
 
+import subprocess
 from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
@@ -217,15 +218,17 @@ def test_skip_marker_requires_single_line_reason(tmp_path):
     assert "provide a single-line reason" in "\n".join(errors)
 
 
-def test_requires_git_tracked_products(monkeypatch, tmp_path):
+def test_tracked_files_reports_unreadable_repository(tmp_path):
+    with pytest.raises(ValueError, match="Not a readable Git repository"):
+        validate_repository_consistency._tracked_files(tmp_path / "missing")
+
+
+def test_requires_git_tracked_products(tmp_path):
     input_directory = tmp_path / "input"
     input_directory.mkdir()
     (input_directory / "product.ecsv").write_text("data\n", encoding="utf-8")
     _write_metadata(input_directory, "product.ecsv", "product")
-    repository = Mock(index=[])
-    monkeypatch.setattr(
-        validate_repository_consistency.pygit2, "Repository", Mock(return_value=repository)
-    )
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
 
     errors = validate_repository_consistency.validate_repository_consistency(
         tmp_path, [Path("input")], Path("input"), require_git_tracking=True
@@ -233,8 +236,12 @@ def test_requires_git_tracked_products(monkeypatch, tmp_path):
 
     assert "product file is missing or untracked" in "\n".join(errors)
     assert "metadata file is untracked" in "\n".join(errors)
-    validate_repository_consistency.pygit2.Repository.assert_called_once_with(
-        str(tmp_path.resolve())
+    subprocess.run(["git", "-C", str(tmp_path), "add", "input"], check=True)
+    assert (
+        validate_repository_consistency.validate_repository_consistency(
+            tmp_path, [Path("input")], Path("input"), require_git_tracking=True
+        )
+        == []
     )
 
 
