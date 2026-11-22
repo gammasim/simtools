@@ -3,6 +3,9 @@
 import argparse
 import logging
 import sys
+from pathlib import Path
+
+import dotenv
 
 import simtools.configuration.commandline_parser as argparser
 from simtools.configuration.argument_helpers import (
@@ -77,6 +80,20 @@ class Configurator:
         cli_config = self.parser.parse_explicit_args(cli_arglist)
         config_file = cli_config.get("config") or self._option_value(cli_arglist, "--config")
         env_file = cli_config.get("env_file", ".env")
+        user_values = dotenv.dotenv_values(Path.home() / ".config" / "simtools" / "config")
+        user_config = {
+            key.removeprefix("SIMTOOLS_").lower(): value
+            for key, value in user_values.items()
+            if key.startswith("SIMTOOLS_") and value is not None
+        }
+        accepted = {
+            option.removeprefix("--")
+            for action in self.parser._actions  # pylint: disable=protected-access
+            for option in action.option_strings
+        }
+        user_config = normalize_argument_aliases(
+            {key: value for key, value in user_config.items() if key in accepted}, self.parser
+        )
         env_config = normalize_argument_aliases(self._config_from_env(env_file), self.parser)
         file_config = normalize_argument_aliases(self._config_from_file(config_file), self.parser)
         default_config = self.parser.declared_defaults()
@@ -85,6 +102,7 @@ class Configurator:
         self._merge_sources(
             (
                 ("default", default_config),
+                ("environment", user_config),
                 ("environment", env_config),
                 ("yaml", file_config),
                 ("cli", cli_config),

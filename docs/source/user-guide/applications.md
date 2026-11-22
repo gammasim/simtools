@@ -5,12 +5,15 @@ The naming convention for simtools is `simtools-<application name>`, where `<app
 
 ## Configuration
 
-Applications in simtools are configured by the following four equivalent approaches:
+Applications in simtools accept configuration in the following order of precedence,
+from highest to lowest:
 
 1. command-line arguments
 2. configuration files (in YAML format)
-3. configuration dictionary when calling the {ref}`Configurator <configurationconfigurator>` class
-4. environment variables
+3. process environment variables
+4. the local `.env` file (or the file selected with `--env_file`)
+5. the optional user defaults file `~/.config/simtools/config`
+6. application defaults
 
 To illustrate this, the example below sets the path pointing towards the directory for all data products.
 
@@ -38,7 +41,10 @@ Configuration parameter read from a environmental variable:
 EXPORT SIMTOOLS_OUTPUT_PATH="<path name>"
 ```
 
-Configuration methods can be combined; conflicting configuration settings raise an Exception.
+The user defaults file uses the same `SIMTOOLS_` variable names and dotenv format as `.env`.
+For example, add `SIMTOOLS_OUTPUT_PATH="/path/to/output"` to `~/.config/simtools/config` to
+use that directory across applications. Settings for options unavailable in an application
+are ignored. Higher-priority sources override lower-priority values.
 Configuration parameters are generally expected in lowercase snake_case.
 Configuration parameters for each application are printed to screen when executing the application
 with the `--help` option.
