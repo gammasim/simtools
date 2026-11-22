@@ -2,6 +2,7 @@
 
 """Tests for simulate_illuminator application."""
 
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import astropy.units as u
@@ -140,3 +141,61 @@ def test_validate_pair_selection(simulate_all, light_source, telescope, is_valid
     else:
         parser.error.assert_called_once()
         assert "required for single-pair mode" in parser.error.call_args.args[0]
+
+
+_CUSTOM_CHAIN = [
+    "obdeect_illuminator",
+    "obdeect_atmosphere",
+    "obdeect_optics",
+    "stream_to_simtel",
+    "sim_telarray:bypass_optics=camera_only",
+]
+
+
+def _single_pair_args(simulation_software):
+    return {
+        "light_source": _ILLUMINATOR,
+        "telescope": _TELESCOPE,
+        "simulate_all": False,
+        "wavelength": [355 * u.nm],
+        "label": "test_label",
+        "max_workers": None,
+        "site": "North",
+        "model_version": "7.0.0",
+        "simulation_software": simulation_software,
+    }
+
+
+@patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_default_chain_passes_no_script_writer(mock_start, mock_simulator_class):
+    from simtools.applications.simulate_illuminator import main
+    from simtools.runtime import software_catalog
+
+    default = list(software_catalog.default_chain(software_catalog.LIGHT_SOURCE))
+    mock_start.return_value = Mock(args=_single_pair_args(default))
+    mock_simulator_class.return_value.simulate.return_value = [{"success": True}]
+
+    main()
+
+    assert mock_simulator_class.call_args.kwargs["script_writer"] is None
+
+
+@patch("simtools.runners.light_emission_runner.write_chain_script")
+@patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_custom_chain_passes_chain_script_writer(
+    mock_start, mock_simulator_class, mock_write_chain_script
+):
+    from simtools.applications.simulate_illuminator import main
+
+    mock_start.return_value = Mock(args=_single_pair_args(_CUSTOM_CHAIN))
+    mock_simulator_class.return_value.simulate.return_value = [{"success": True}]
+
+    main()
+
+    script_writer = mock_simulator_class.call_args.kwargs["script_writer"]
+    assert script_writer is not None
+    calibration, script_file = Mock(), Path("chain.sh")
+    script_writer(calibration, script_file)
+    mock_write_chain_script.assert_called_once_with(calibration, _CUSTOM_CHAIN, script_file)

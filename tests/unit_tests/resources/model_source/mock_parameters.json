@@ -44,6 +44,12 @@
     "unit": "cm",
     "file": false
   },
+  "mirror_offset": {
+    "value": 0.0,
+    "type": "float64",
+    "unit": "cm",
+    "file": false
+  },
   "mirror_list": {
     "value": "mirror_list_dummy.dat",
     "type": "str",

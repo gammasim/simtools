@@ -15,6 +15,13 @@ Three modes of operation are supported:
 3. Multi-pair: simulate all valid illuminator-telescope pairs from the visibility table
    in parallel, using a configurable number of CPU cores.
 
+The stages of the simulation of each illuminator-telescope pair are set with
+``--simulation_software`` (default ``light_emission sim_telarray``: the sim_telarray LightEmission
+program, then sim_telarray). Each stage is ``STAGE`` or ``STAGE:KEY=VALUE,...``; the chain starts
+with a light source stage and has no ``corsika`` stage, for example
+``obdeect_illuminator obdeect_atmosphere obdeect_optics sim_telarray:bypass_optics=camera_only``.
+See :doc:`/components/obdeect` for the stages.
+
 **Example Usage**
 
 1. Simulate illuminator with positions as defined in the simulation-model repository:

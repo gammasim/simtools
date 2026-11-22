@@ -5,6 +5,7 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
+from simtools.data_model import schema
 from simtools.io.ascii_handler import collect_data_from_file, write_data_to_file
 from simtools.production_configuration.production_file_selection import (
     SIMULATE_PROD_JOB_METADATA,
@@ -24,6 +25,7 @@ from simtools.production_configuration.production_file_selection import (
     discover_product_manifests,
     filter_manifests,
     find_manifests,
+    get_manifest_schema_metadata,
     group_selected_files,
     inventory_production_files,
     load_manifest,
@@ -53,7 +55,7 @@ def _write_manifest(base, job_name, run_number, he_interaction="qgs3", zenith=No
     simtel_file.touch()
     manifest = {
         "schema_name": "simulate_prod_job_metadata",
-        "schema_version": "1.0.0",
+        "schema_version": "2.0.0",
         "product_type": "simulate_prod_job",
         "job_id": job_name,
         "status": "complete",
@@ -64,7 +66,7 @@ def _write_manifest(base, job_name, run_number, he_interaction="qgs3", zenith=No
             "site": "North",
             "array_layout_name": "CTAO-North-Alpha",
             "model_version": "7.0.0",
-            "simulation_software": "corsika_sim_telarray",
+            "simulation_software": ["corsika", "sim_telarray"],
             "corsika_he_interaction": he_interaction,
             "azimuth_angle": {"value": 180.0, "unit": "deg"},
             "zenith_angle": zenith or {"value": 20.0, "unit": "deg"},
@@ -183,7 +185,7 @@ def test_check_manifest_rejects_paths_outside_job_directory(tmp_test_directory):
     manifest_path = _write_manifest(tmp_test_directory, "job-000001", 1)
     manifest = {
         "schema_name": "simulate_prod_job_metadata",
-        "schema_version": "1.0.0",
+        "schema_version": "2.0.0",
         "product_type": "simulate_prod_job",
         "job_id": "job-000001",
         "status": "complete",
@@ -194,7 +196,7 @@ def test_check_manifest_rejects_paths_outside_job_directory(tmp_test_directory):
             "site": "North",
             "array_layout_name": "CTAO-North-Alpha",
             "model_version": "7.0.0",
-            "simulation_software": "corsika_sim_telarray",
+            "simulation_software": ["corsika", "sim_telarray"],
             "azimuth_angle": {"value": 180.0, "unit": "deg"},
             "zenith_angle": {"value": 20.0, "unit": "deg"},
             "energy_min": {"value": 0.03, "unit": "TeV"},
@@ -334,14 +336,49 @@ def test_validate_required_production_outputs_rejects_incomplete_job(tmp_test_di
     with pytest.raises(ValueError, match="no 'sim_telarray' output"):
         validate_required_production_outputs(
             {"reduced_event_data": ["gamma.reduced_event_data.hdf5"]},
-            "corsika_sim_telarray",
+            ["corsika", "sim_telarray"],
             tmp_test_directory,
         )
 
 
 def test_validate_required_production_outputs_accepts_required_output(tmp_test_directory):
     validate_required_production_outputs(
-        {CORSIKA_SOFTWARE: ["shower.corsika.zst"]}, CORSIKA_SOFTWARE, tmp_test_directory
+        {CORSIKA_SOFTWARE: ["shower.corsika.zst"]}, [CORSIKA_SOFTWARE], tmp_test_directory
+    )
+
+
+def test_validate_required_production_outputs_uses_last_stage_of_chain(tmp_test_directory):
+    validate_required_production_outputs(
+        {"sim_telarray": ["run000001.simtel.zst"]},
+        ["corsika", "sim_telarray"],
+        tmp_test_directory,
+    )
+    with pytest.raises(ValueError, match="no 'corsika' output"):
+        validate_required_production_outputs({}, ["corsika"], tmp_test_directory)
+
+
+@pytest.mark.parametrize("last_stage", ["corsika_to_stream", "light_emission"])
+def test_validate_required_production_outputs_rejects_stage_without_result(
+    tmp_test_directory, last_stage
+):
+    chain = ["corsika", last_stage] if last_stage == "corsika_to_stream" else [last_stage]
+    with pytest.raises(ValueError, match=f"stage '{last_stage}': it does not end a production"):
+        validate_required_production_outputs(
+            {"corsika": ["shower.corsika.zst"]}, chain, tmp_test_directory
+        )
+
+
+def test_manifest_schema_versions():
+    schema_file = "simulate_prod_job_metadata.schema.yml"
+
+    assert get_manifest_schema_metadata("simulate_prod_job")["schema_version"] == "2.0.0"
+    assert (
+        "simulation_software"
+        in schema.load_schema(schema_file, "2.0.0")["properties"]["configuration"]["properties"]
+    )
+    assert (
+        "simulation_software"
+        in schema.load_schema(schema_file, "1.0.0")["properties"]["configuration"]["properties"]
     )
 
 
@@ -476,7 +513,7 @@ def test_filter_manifests_supports_unqualified_configuration_keys():
         ),
         (
             {
-                "schema_version": "1.0.0",
+                "schema_version": "2.0.0",
                 "product_type": "simulate_prod_job",
                 "status": "complete",
                 "configuration": {},

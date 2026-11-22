@@ -80,27 +80,10 @@ _ARGUMENTS = (
         "save_corsika_output",
         help=(
             "Save CORSIKA output when piping CORSIKA directly to sim_telarray "
-            "(only relevant for simulation software 'corsika_sim_telarray')."
+            "(only relevant for the simulation chain 'corsika sim_telarray')."
         ),
         action="store_true",
         default=False,
-    ),
-    cli.ArgumentDefinition(
-        "shower_route_mode",
-        help=(
-            "How air-shower photon bunches reach sim_telarray when the ray-tracing backend traces "
-            "them (only relevant for simulation software 'corsika_sim_telarray'): 'stream' pipes "
-            "them without an IACT file on disk; 'disk' keeps the CORSIKA IACT file and routes it "
-            "through a camera photon-bunch file."
-        ),
-        choices=("stream", "disk"),
-        default="stream",
-    ),
-    cli.ArgumentDefinition(
-        "shower_route_threads",
-        help="Threads per shower route process (default 1; 0 divides usable cores among routes).",
-        type=int,
-        default=1,
     ),
     cli.ArgumentDefinition(
         "reduced_event_lists",
@@ -260,7 +243,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SHOWER_ARGUMENTS,
         *cli.CORSIKA_INTERACTION_ARGUMENTS,
         *cli.SIM_TELARRAY_ARGUMENTS,
-        cli.RAY_TRACING_BACKEND,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         *cli.CORSIKA_PATH_ARGUMENTS,
