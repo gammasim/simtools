@@ -26,3 +26,17 @@ Tools to handle atmospheric models and related calculations.
 .. automodule:: simtools.atmosphere.transmission
    :members:
 ```
+
+## optical_tables
+
+```{eval-rst}
+.. automodule:: simtools.atmosphere.optical_tables
+   :members:
+```
+
+## sixs_backend
+
+```{eval-rst}
+.. automodule:: simtools.atmosphere.sixs_backend
+   :members:
+```

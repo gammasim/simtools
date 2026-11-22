@@ -1,0 +1,25 @@
+---
+applications:
+- application: simtools-derive-atmosphere-optical-tables
+  docs:
+    title: Derive obdeect tables from an ECSV file
+    summary: >-
+      Resample optical properties from an ECSV file to obdeect transmission and scattering tables.
+  configuration:
+    backend: ecsv
+    ecsv_file: ${static:atmosphere_optical_properties_exponential.ecsv}
+    wavelength_min: 300
+    wavelength_max: 500
+    wavelength_step: 100
+    altitudes: [1, 5000, 10000]
+    observation_level: 2147
+    output_path: simtools-output
+  integration_tests:
+  - test_outputs:
+    - file: obdeect_transmission.txt
+      path_descriptor: output_path
+    - file: obdeect_scattering.txt
+      path_descriptor: output_path
+  test_name: ecsv
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0

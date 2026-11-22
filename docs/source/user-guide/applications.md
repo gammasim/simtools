@@ -65,6 +65,7 @@ simtools-convert-geo-coordinates-of-array-elements <applications/simtools-conver
 simtools-create-setting-workflow <applications/simtools-create-setting-workflow>
 simtools-dependency-manifest <applications/simtools-dependency-manifest>
 simtools-dependency-versions <applications/simtools-dependency-versions>
+simtools-derive-atmosphere-optical-tables <applications/simtools-derive-atmosphere-optical-tables>
 simtools-derive-bias-curves <applications/simtools-derive-bias-curves>
 simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>
 simtools-derive-incident-angle <applications/simtools-derive-incident-angle>
