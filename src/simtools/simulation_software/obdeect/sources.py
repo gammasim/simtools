@@ -127,16 +127,36 @@ def flasher_command(
     ]
 
 
-def _profile(token, x_key, y_key):
-    """Convert a profile token into a run-description profile."""
-    kind, _, arguments = token.partition(":")
-    if kind == "table":
-        x, y = np.loadtxt(arguments, unpack=True)
-        return {"kind": kind, x_key: x.tolist(), y_key: y.tolist()}
-    return {"kind": kind} | {
-        key: float(value)
-        for key, value in (item.split("=", 1) for item in arguments.split(",") if item)
-    }
+def _angular_profile(angular):
+    """Build the angular distribution for the run description."""
+    shape = angular.shape.lower()
+    if shape == "isotropic":
+        return {"kind": "isotropic"}
+    if shape == "gauss":
+        return {"kind": "gauss", "sigma_deg": float(angular.width_deg)}
+    if shape == "filledcone":
+        return {"kind": "filled_cone", "angle_deg": float(angular.width_deg)}
+    angles, values = angular_profile(angular.shape, angular.width_deg)
+    return {"kind": "table", "angle_deg": angles.tolist(), "value": values.tolist()}
+
+
+def _pulse_profile(pulse):
+    """Build the pulse distribution for the run description."""
+    shape = pulse.shape.lower()
+    if shape in ("gauss", "tophat"):
+        if pulse.width_ns == 0:
+            return {"kind": "fixed", "time_ns": 0}
+        key = "sigma_ns" if shape == "gauss" else "width_ns"
+        return {"kind": shape, key: float(pulse.width_ns)}
+    if shape == "exponential":
+        if pulse.decay_ns <= 0:
+            return {"kind": "fixed", "time_ns": 0}
+        return {"kind": shape, "decay_ns": float(pulse.decay_ns), "mean_ns": float(pulse.decay_ns)}
+    profile = pulse_profile(pulse.shape, pulse.width_ns, pulse.decay_ns)
+    if profile is None:
+        return {"kind": "fixed", "time_ns": 0}
+    times, rates = profile
+    return {"kind": "table", "time_ns": times.tolist(), "rate": rates.tolist()}
 
 
 def illuminator_command(
@@ -150,7 +170,7 @@ def illuminator_command(
     """
     Return the command tokens that make the photons of an illuminator request.
 
-    The run description and any profile tables are written to ``work_directory``.
+    The run description is written to ``work_directory``.
     Positions are in metres.
 
     Parameters
@@ -158,11 +178,11 @@ def illuminator_command(
     request : IlluminatorRequest
         Illuminator request.
     work_directory : str or Path
-        Directory for profile tables.
+        Directory for the run description.
     output : str or Path, optional
         Output file; without it the program writes the photon stream to stdout.
     file_token : str
-        Suffix of the table file names.
+        Suffix of the run description file name.
     executable : str, optional
         Program (default: the obdeect command of the program catalog).
     simulation_models_path : str or Path, optional
@@ -174,8 +194,8 @@ def illuminator_command(
         Command tokens.
     """
     del simulation_models_path
-    angular = illuminator_angular_token(request.angular, work_directory, file_token)
-    pulse = illuminator_pulse_token(request.pulse, work_directory, file_token)
+    angular = _angular_profile(request.angular)
+    pulse = _pulse_profile(request.pulse)
     position = np.asarray(request.position_m, dtype=float)
     centre = np.asarray(request.telescope_position_m, dtype=float)
     displacement = centre - position
@@ -183,7 +203,7 @@ def illuminator_command(
     radius = float(request.telescope_radius_m)
     if distance <= 1.02 * radius:
         target = "none"
-    elif angular == "isotropic":
+    elif angular["kind"] == "isotropic":
         target = {"kind": "sphere", "centre_m": centre.tolist(), "radius_m": radius}
     else:
         target = {
@@ -197,8 +217,8 @@ def illuminator_command(
         "position_m": position.tolist(),
         "axis": list(request.pointing),
         "bunch_size": request.bunch_size,
-        "angular": _profile(angular, "angle_deg", "value"),
-        "pulse": _profile(pulse, "time_ns", "rate"),
+        "angular": angular,
+        "pulse": pulse,
         "spectrum": {"kind": "fixed", "wavelength_nm": request.wavelength_nm},
         "target": target,
     }

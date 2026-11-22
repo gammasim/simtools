@@ -75,7 +75,7 @@ factor out. The option `bypass_optics` of `sim_telarray` (values `none`, `camera
 - `none` (default): sim_telarray traces the photons through the telescope optics. For a
   `light_emission` chain, `Bypass_Optics` follows the light-source type.
 - `camera_entrance`: the photons come from obdeect at the camera entrance, for example from
-  `obdeect_optics`, `obdeect_flasher` or `obdeect_illuminator`. sim_telarray sets `Bypass_Optics`
+  `obdeect_optics` or `obdeect_flasher`. sim_telarray sets `Bypass_Optics`
   to 1 for single-mirror and 2 for dual-mirror telescopes, and applies the atmospheric extinction
   only if no upstream stage did.
 - `camera_only`: the photons come from obdeect at the camera entrance, and sim_telarray simulates
@@ -93,8 +93,6 @@ event order. The obdeect stages take one array model per run (stages with the ca
 `single_array_model`); a run with several model versions is rejected, so each model version
 needs its own run.
 
-The obdeect illuminator stage requires an obdeect release after 0.10.0.
-
 The calibration applications use obdeect through `--simulation_software` (default
 `light_emission sim_telarray`; see the next section), which runs the stages for one
 telescope: a calibration chain starts with `light_emission`, `obdeect_flasher` or
@@ -105,7 +103,8 @@ telescope: a calibration chain starts with `light_emission`, `obdeect_flasher` o
 The quantum-efficiency envelope (`obdeect_atmosphere:efficiency_envelope=qe`) thins the photons
 by the telescope QE divided by a headroom, and sim_telarray then reads the QE table divided by
 the envelope. It is on by default for a chain ending in `sim_telarray:bypass_optics=camera_only`
-and off otherwise; `efficiency_envelope=none` or `qe` overrides the default.
+and off otherwise for air-shower chains; `efficiency_envelope=none` or `qe` overrides the
+default. For calibration chains it is off, and `qe` is not supported.
 
 When an upstream stage thins the photons (`obdeect_atmosphere`, also with
 `efficiency_envelope=qe`), simtools runs sim_telarray with `min_photons=0`. sim_telarray skips

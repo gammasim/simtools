@@ -80,8 +80,6 @@ def test_illuminator_command_and_tables(tmp_path):
     tokens = sources.illuminator_command(
         _illuminator_request(), tmp_path, output=tmp_path / "i.pst", file_token="_x"
     )
-    angular = tmp_path / "light_source_angular_distribution_x.dat"
-    pulse = tmp_path / "light_source_pulse_shape_x.dat"
     assert tokens == [
         *program_command("obdeect", "obdeect"),
         "sources",
@@ -96,12 +94,14 @@ def test_illuminator_command_and_tables(tmp_path):
     assert emission["target"]["normal"] == [-1, 0, 0]
     assert emission["target"]["radius_m"] > 12
     assert description["telescopes"][0]["position_m"] == [10, 0, 5]
-    angles, intensity = np.loadtxt(angular, unpack=True)
+    angles = np.asarray(emission["angular"]["angle_deg"])
+    intensity = np.asarray(emission["angular"]["value"])
     assert angles[0] == pytest.approx(0.0)
     assert angles[-1] == pytest.approx(20.0)
     assert intensity[0] == pytest.approx(1.0)
     assert np.all(np.diff(intensity) < 0.0)
-    times, rates = np.loadtxt(pulse, unpack=True)
+    times = np.asarray(emission["pulse"]["time_ns"])
+    rates = np.asarray(emission["pulse"]["rate"])
     assert np.all(np.diff(times) > 0.0)
     assert rates.max() > 0.0
     assert np.all(rates >= 0.0)
