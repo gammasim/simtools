@@ -1,5 +1,7 @@
 """Tests for shared command-line argument definitions."""
 
+import pytest
+
 from simtools import constants
 from simtools.configuration import arguments
 from simtools.configuration.commandline_parser import CommandLineParser
@@ -97,3 +99,34 @@ def test_seed_arguments_canonical_names():
     assert args.instrument_seed == 5
     assert args.simulation_seed == [9]
     assert args.random_instrument_instances == constants.RAY_TRACING_INSTRUMENT_INSTANCES
+
+
+def test_ray_tracing_backend_argument_choices_and_default():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(arguments.RAY_TRACING_ARGUMENTS)
+
+    assert parser.parse_args([]).ray_tracing_backend is None
+    assert parser.parse_args(["--ray_tracing_backend", "obdeect"]).ray_tracing_backend == "obdeect"
+    assert arguments.RAY_TRACING_BACKEND.kwargs["choices"] == ("sim_telarray", "obdeect")
+
+
+@pytest.mark.parametrize("items", [["obdeect_star"], ["obdeect", "sim_telarray"], ["unknown"]])
+def test_ray_tracing_backend_rejects_invalid_values(items):
+    parser = CommandLineParser()
+    parser.add_argument_definitions(arguments.RAY_TRACING_ARGUMENTS)
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--ray_tracing_backend", *items])
+
+
+@pytest.mark.parametrize("value", ["obdeect_star", "unknown"])
+def test_ray_tracing_backend_rejects_invalid_configuration_values(value):
+    from simtools.configuration.argument_helpers import coerce
+
+    with pytest.raises(ValueError, match="ray_tracing_backend"):
+        coerce(arguments.RAY_TRACING_BACKEND, value, "configuration")
+
+
+def test_ray_tracing_backend_accepts_configuration_values():
+    from simtools.configuration.argument_helpers import coerce
+
+    assert coerce(arguments.RAY_TRACING_BACKEND, "obdeect", "configuration") == "obdeect"

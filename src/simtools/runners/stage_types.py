@@ -1,10 +1,11 @@
-"""Shared data products and stream output for simulation stages."""
+"""Stream input and output of simulation stages."""
 
 from dataclasses import dataclass
 
-CHERENKOV_PHOTONS = "cherenkov_photons"
-CAMERA_EVENTS = "camera_events"
-STDIN = "-"
+from simtools.simulation_software.programs import STDIO
+
+#: Stream marker of a stage input read from the standard input of the chain.
+STDIN = STDIO
 
 
 @dataclass(frozen=True)

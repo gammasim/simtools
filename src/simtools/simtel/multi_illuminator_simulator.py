@@ -44,6 +44,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
         - label: str - base label for the simulation
         - config: dict - light emission configuration
         - model_source: dict - serializable model-source selection
+        - script_writer: callable or None - writes the run script of a non-default chain
 
     Returns
     -------
@@ -78,7 +79,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
             context=context,
         )
 
-        simulator.simulate()
+        simulator.simulate(script_writer=job_spec.get("script_writer"))
         simulator.validate_simulations()
 
         _logger.info(f"Completed simulation for {illuminator} -> {telescope}")
@@ -128,6 +129,10 @@ class MultiIlluminatorSimulator:
     max_workers : int or None, optional
         Maximum number of parallel worker processes. If None, uses 60% of CPU cores.
         If <= 0, uses all available cores.
+    script_writer : callable, optional
+        Writes the run script of a simulation chain other than the default one, called as
+        ``script_writer(calibration, script_file)``. Must be picklable. None writes the
+        default chain.
     """
 
     def __init__(
@@ -140,6 +145,7 @@ class MultiIlluminatorSimulator:
         backend_config=None,
         model_reader=None,
         context=None,
+        script_writer=None,
     ):
         """Initialize the multi-illuminator simulator."""
         self._logger = logging.getLogger(__name__)
@@ -162,6 +168,7 @@ class MultiIlluminatorSimulator:
         self.max_workers = max_workers
         self.backend = backend
         self.backend_config = backend_config
+        self.script_writer = script_writer
         self.results = None
 
         self._logger.info("Using execution backend %s", self.backend)
@@ -282,6 +289,7 @@ class MultiIlluminatorSimulator:
                     "site": self.base_config.get("site"),
                     "label": self.label,
                     "config": config_with_wl,
+                    "script_writer": self.script_writer,
                     "context": self.context.to_spec(),
                 }
                 job_specs.append(job_spec)

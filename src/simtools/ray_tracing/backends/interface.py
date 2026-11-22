@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from importlib import import_module
 from typing import Protocol
 
-from simtools.constants import RAY_TRACING_BACKEND_CLASSES
+from simtools.runtime import software_catalog
 from simtools.runtime.context import RunContext
 from simtools.utils import names
 
@@ -40,23 +40,6 @@ class RayTracingBackend(Protocol):
         """Return per-photon incidence angles on the focal surface (and mirrors).
 
         Also returns the intermediate files written.
-        """
-
-
-class LightSourceRayTracingBackend(RayTracingBackend, Protocol):
-    """Ray-tracing backend that also traces calibration light sources.
-
-    Such backends set ``traces_light_sources``; for other backends sim_telarray's
-    LightEmission programs make the light and sim_telarray traces it.
-    """
-
-    def camera_photons(self, request):
-        """Return, for each light pulse of a ``LightSourceRequest``, an iterator over blocks.
-
-        Each block holds the photons crossing the camera plane (through the
-        focal-surface vertex, normal to the optical axis; telescope frame, metres):
-        ``position_m``, ``direction``, ``time_ns``, ``weight`` (photons) and
-        ``wavelength_nm``.
         """
 
 
@@ -190,14 +173,12 @@ def get_backend(name=None, *, context=None):
     """
     context = context or RunContext.from_environment()
     name = name or context.software.ray_tracing_backend
-    try:
-        module_name, class_name = RAY_TRACING_BACKEND_CLASSES[name].split(":")
-    except KeyError as exc:
-        valid_names = ", ".join(RAY_TRACING_BACKEND_CLASSES)
+    backends = software_catalog.ray_tracing_backends()
+    if name not in backends:
         raise ValueError(
-            f"Unknown ray-tracing backend {name!r}; choose from: {valid_names}"
-        ) from exc
-    return getattr(import_module(module_name), class_name)
+            f"Unknown ray-tracing backend {name!r}; choose from: {', '.join(backends)}"
+        )
+    return software_catalog.load_object(backends[name])
 
 
 def create_shower_tracer(telescope_model, name=None):
