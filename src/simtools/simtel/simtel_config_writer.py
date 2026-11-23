@@ -590,6 +590,14 @@ class SimtelConfigWriter:
                 }.items()
                 if not catalog.is_global_sim_telarray_parameter(name)
             }
+            if (
+                getattr(self, "neutral_nsb_scaling", False)
+                and "nsb_scaling_factor" in global_parameters
+            ):
+                global_parameters["nsb_scaling_factor"] = {
+                    **global_parameters["nsb_scaling_factor"],
+                    "value": 1.0,
+                }
             self._write_site_parameters(
                 file,
                 global_parameters,

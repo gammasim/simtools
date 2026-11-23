@@ -1,6 +1,7 @@
 """Write sim_telarray configuration and native tables from simulation models."""
 
 import logging
+import math
 from copy import deepcopy
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simulation.nsb import airmass_scale
 from simtools.utils import names
 
 _CORSIKA_FILE = "corsika_file"
@@ -23,6 +25,31 @@ _PRIMARY = "primary"
 _ZENITH_ANGLE = "zenith_angle"
 _AZIMUTH_ANGLE = "azimuth_angle"
 SIMTEL_SOFTWARE = "sim_telarray"
+
+
+def _scaled_nsb_parameters(parameters, settings, site_manual):
+    """Apply NSB scaling and neutralize sim_telarray settings on a copy."""
+    result = deepcopy(parameters)
+    if "nsb_pixel_rate" not in result:
+        return result
+    auto = result.get("nsb_autoscale_airmass", {}).get("value", [0.0, 0.15])
+    factor = settings["manual"] if settings["manual"] is not None else site_manual
+    if (
+        settings["autoscale"]
+        and math.isclose(factor, 1.0, rel_tol=0.0, abs_tol=0.0)
+        and not math.isclose(auto[0], 0.0, rel_tol=0.0, abs_tol=0.0)
+    ):
+        factor = airmass_scale(settings["zenith"], auto[0], auto[1])
+    rate = result["nsb_pixel_rate"]["value"]
+    if isinstance(rate, list):
+        result["nsb_pixel_rate"]["value"] = [value * factor for value in rate]
+    else:
+        result["nsb_pixel_rate"]["value"] = rate * factor
+    if "nsb_autoscale_airmass" in result:
+        result["nsb_autoscale_airmass"]["value"] = [0.0, auto[1]]
+    if "nsb_scaling_factor" in result:
+        result["nsb_scaling_factor"]["value"] = 1.0
+    return result
 
 
 def get_model_writer(model, simulation_software="sim_telarray", context=None):
@@ -73,7 +100,9 @@ class SimtelModelWriter:
         self.config_writer = None
         self.single_mirror_list_file_paths = {}
         self._telescope_model_files_exported = False
-        self._array_model_file_exported = False
+        self.array_model_file_exported = False
+        self.nsb_settings = None
+        self.nsb_site_manual = 1.0
 
     def write_sim_telarray_config_file(self, additional_models=None, label=None):
         """
@@ -99,6 +128,8 @@ class SimtelModelWriter:
                 model_directory=self.model.config_file_directory
             )
         self._add_additional_models(additional_models, parameters)
+        if self.nsb_settings is not None:
+            parameters = _scaled_nsb_parameters(parameters, self.nsb_settings, self.nsb_site_manual)
 
         # Ensure the writer label matches the config file naming label
         self._load_simtel_config_writer(label=label if label is not None else self.model.label)
@@ -239,7 +270,13 @@ class SimtelModelWriter:
         for tel_model in self.model.telescope_models.values():
             name = tel_model.name
             if name not in exported_models:
-                get_model_writer(tel_model, context=self.context).write_sim_telarray_config_file(
+                writer = get_model_writer(tel_model, context=self.context)
+                writer.nsb_settings = self.nsb_settings
+                if self.nsb_settings is not None:
+                    writer.nsb_site_manual = self.model.site_model.parameters.get(
+                        "nsb_scaling_factor", {"value": 1.0}
+                    )["value"]
+                writer.write_sim_telarray_config_file(
                     additional_models=self.model.calibration_models.get(tel_model.name)
                 )
                 exported_models.append(name)
@@ -263,13 +300,14 @@ class SimtelModelWriter:
             model_reader=self.model.model_reader,
             context=self.context,
         )
+        simtel_writer.neutral_nsb_scaling = self.nsb_settings is not None
         simtel_writer.write_array_config_file(
             config_file_path=self.model.config_file_path,
             telescope_model=self.model.telescope_models,
             site_model=self.model.site_model,
             additional_metadata=self._get_additional_simtel_metadata(),
         )
-        self._array_model_file_exported = True
+        self.array_model_file_exported = True
 
     def export_all_simtel_config_files(self):
         """
@@ -279,7 +317,7 @@ class SimtelModelWriter:
         """
         if not self._telescope_model_files_exported:
             self.export_simtel_telescope_config_files()
-        if not self._array_model_file_exported:
+        if not self.array_model_file_exported:
             self.export_sim_telarray_config_file()
 
     def _get_additional_simtel_metadata(self):

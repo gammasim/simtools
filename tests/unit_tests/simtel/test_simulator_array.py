@@ -305,7 +305,7 @@ def test_make_run_command_for_calibration_simulations_with_nsb_scaling(simtel_ru
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
     assert isinstance(result, list)
-    assert "nsb_scaling_factor=1.5" in result
+    assert "nsb_scaling_factor=1.5" not in result
 
 
 def test_make_run_command_for_calibration_simulations_with_stars(simtel_runner, mocker):
