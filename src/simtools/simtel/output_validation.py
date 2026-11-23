@@ -7,6 +7,9 @@ from pathlib import Path
 import numpy as np
 from eventio.simtel.simtelfile import SimTelFile
 
+from simtools.data_model.parameter_catalog import (
+    get_simulation_software_name_from_parameter_name,
+)
 from simtools.io.log_inspector import check_plain_logs
 from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
 from simtools.model_repository.asset_names import get_simtel_table_file_name
@@ -194,6 +197,16 @@ def _parameters_as_written(model, nsb):
     return scale_nsb_parameters(model.parameters, *nsb)
 
 
+def _sim_telarray_parameter_name(param):
+    """Return the sim_telarray metadata name of a model parameter (e.g., nsb_pixel_rate)."""
+    name = get_simulation_software_name_from_parameter_name(param)
+    if name is not None:
+        return name
+    # e.g., "reference_point_latitude" -> "latitude", "altitude" -> "corsika_observation_level"
+    name = param.replace("reference_point_", "")
+    return "corsika_observation_level" if name == "altitude" else name
+
+
 def _assert_model_parameters(metadata, model, allow_for_changes=None, nsb=None):
     """
     Return the list of model parameters whose values do not match the sim_telarray metadata.
@@ -212,10 +225,7 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None, nsb=None):
     parameters = _parameters_as_written(model, nsb)
     invalid_parameter_list = []
     for param in parameters:
-        # sim_telarray names: "reference_point_latitude" -> "latitude", "altitude" -> ...
-        sim_telarray_name = param.replace("reference_point_", "")
-        if sim_telarray_name == "altitude":
-            sim_telarray_name = "corsika_observation_level"
+        sim_telarray_name = _sim_telarray_parameter_name(param)
         if sim_telarray_name == "array_triggers" or sim_telarray_name not in metadata:
             continue
 

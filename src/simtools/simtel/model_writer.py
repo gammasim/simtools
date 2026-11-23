@@ -73,7 +73,7 @@ class SimtelModelWriter:
         self._serialized_tables = {}
         self.config_writer = None
         self.single_mirror_list_file_paths = {}
-        self._telescope_model_files_exported = False
+        self.telescope_model_files_exported = False
         self.array_model_file_exported = False
         self.nsb_settings = None
         self.nsb_site_manual = 1.0
@@ -260,7 +260,7 @@ class SimtelModelWriter:
                     f"Configuration file for telescope {name} already exists - skipping"
                 )
 
-        self._telescope_model_files_exported = True
+        self.telescope_model_files_exported = True
 
     def export_sim_telarray_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
@@ -290,7 +290,7 @@ class SimtelModelWriter:
 
         Config files are exported into the output model directory.
         """
-        if not self._telescope_model_files_exported:
+        if not self.telescope_model_files_exported:
             self.export_simtel_telescope_config_files()
         if not self.array_model_file_exported:
             self.export_sim_telarray_config_file()

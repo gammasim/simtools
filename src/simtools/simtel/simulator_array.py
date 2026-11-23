@@ -152,7 +152,11 @@ class SimulatorArray(SimtelRunner):
             manual_factor=self.context.args.get("nsb_scaling_factor"),
             autoscale=not self.context.args.get("disable_nsb_autoscaling", False),
         )
-        if writer.array_model_file_exported is True and writer.nsb_settings != nsb_settings:
+        written = (
+            writer.telescope_model_files_exported is True
+            or writer.array_model_file_exported is True
+        )
+        if written and writer.nsb_settings != nsb_settings:
             raise ValueError(
                 "NSB settings changed after configuration export; use a new array model."
             )

@@ -255,7 +255,7 @@ def test_export_all_simtel_config_files(mocker):
     array.assert_called_once()
     telescopes.reset_mock()
     array.reset_mock()
-    exporter._telescope_model_files_exported = True
+    exporter.telescope_model_files_exported = True
     exporter.array_model_file_exported = True
     exporter.export_config_files()
     telescopes.assert_not_called()
@@ -275,7 +275,7 @@ def test_export_simtel_telescope_config_files(array_model_north):
             "sim_telarray"
         ].write_sim_telarray_config_file.assert_called_once()
 
-    assert get_model_writer(am)._telescope_model_files_exported is True
+    assert get_model_writer(am).telescope_model_files_exported is True
 
 
 @pytest.mark.parametrize(("model_factor", "expected_rate"), [(None, 0.4), ("3.0", 0.6)])
@@ -334,7 +334,7 @@ def test_export_simtel_telescope_config_files_skips_duplicates(mocker, run_conte
     # Verify the logger was called for the second telescope
     # Both telescope entries share one configuration file.
 
-    assert get_model_writer(am)._telescope_model_files_exported is True
+    assert get_model_writer(am).telescope_model_files_exported is True
 
 
 def test_export_sim_telarray_config_file(array_model_north, mocker):

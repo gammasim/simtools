@@ -393,7 +393,7 @@ def _assert_nsb_metadata(tmp_path, array_model, pixel_rate, airmass):
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
     global_meta = {"nsb_scaling_factor": 1.0}
-    telescope_meta = {"nsb_pixel_rate": pixel_rate, "nsb_autoscale_airmass": airmass}
+    telescope_meta = {"nightsky_background": pixel_rate, "nsb_autoscale_airmass": airmass}
     with (
         patch("simtools.simtel.output_validation.read_sim_telarray_metadata") as read_meta,
         patch("simtools.simtel.output_validation.get_sim_telarray_telescope_id", return_value=1),
