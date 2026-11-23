@@ -76,6 +76,17 @@ def test_dc_flasher_design_is_distinct():
         assert not names.matches_array_element_name_or_design_type(other, "MSFx-FlashCam-DC")
 
 
+def test_distinct_design_types_do_not_match():
+    assert not names.matches_array_element_name_or_design_type("MSTS-FlashCam", "MSTS-NectarCam")
+    assert names.matches_array_element_name_or_design_type("MSTS-FlashCam", "MSTS-01")
+
+
+def test_configured_element_type_alias():
+    assert names.validate_array_element_name("MSF-FlashCam") == "MSFx-FlashCam"
+    assert names.get_array_element_type_from_name("MSF-FlashCam") == "MSFx"
+    assert names.model_storage_name("MSF-FlashCam") == "MSFx-FlashCam"
+
+
 def test_element_type_without_model_storage_alias_is_unchanged():
     assert names.model_storage_name("MSTN-01") == "MSTN-01"
     assert names.model_storage_name("OBS-North") == "OBS-North"

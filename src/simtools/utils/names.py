@@ -27,13 +27,13 @@ from simtools.constants import (
 
 _logger = logging.getLogger(__name__)
 
-# Preserve the historical bare MSF spelling for the pulsed model.
-_ELEMENT_TYPE_ALIASES = {"MSF": "MSFx"}
-
 
 def _canonical_element_type(array_element_type):
-    """Return the canonical element type for a historical alias."""
-    return _ELEMENT_TYPE_ALIASES.get(array_element_type, array_element_type)
+    """Return the canonical element type for a configured alias."""
+    for element_type, properties in array_elements().items():
+        if array_element_type in properties.get("aliases", []):
+            return element_type
+    return array_element_type
 
 
 def model_storage_name(array_element_name):
@@ -176,11 +176,7 @@ def matches_array_element_name_or_design_type(element_name, reference_element_na
     if "-" not in validated_element_name or "-" not in validated_reference_element_name:
         return False
 
-    if (
-        "MSFx-FlashCam-DC" in (validated_element_name, validated_reference_element_name)
-        and is_design_type(validated_element_name)
-        and is_design_type(validated_reference_element_name)
-    ):
+    if is_design_type(validated_reference_element_name):
         return False
 
     return is_design_type(validated_element_name) and (
