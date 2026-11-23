@@ -48,6 +48,9 @@ applications:
       validations:
       - type: simtel_config
         reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-01.cfg}
+        ignore_parameters:
+        - nightsky_background
+        - nsb_autoscale_airmass
     - path_descriptor: output_path
       output_sub_path: model/run000001/7.0.0
       file: CTAO-LSTN-01.cfg
@@ -56,6 +59,9 @@ applications:
       validations:
       - type: simtel_config
         reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTN-01.cfg}
+        ignore_parameters:
+        - nightsky_background
+        - nsb_autoscale_airmass
     - path_descriptor: output_path
       output_sub_path: model/run000001/5.0.0
       file: CTAO-LSTN-02.cfg
@@ -64,6 +70,9 @@ applications:
       validations:
       - type: simtel_config
         reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-02.cfg}
+        ignore_parameters:
+        - nightsky_background
+        - nsb_autoscale_airmass
     - path_descriptor: output_path
       output_sub_path: model/run000001/7.0.0
       file: CTAO-LSTN-02.cfg
@@ -72,6 +81,9 @@ applications:
       validations:
       - type: simtel_config
         reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTN-02.cfg}
+        ignore_parameters:
+        - nightsky_background
+        - nsb_autoscale_airmass
     - path_descriptor: output_path
       output_sub_path: model/run000001/5.0.0
       file: CTAO-MSTN-01.cfg
@@ -80,6 +92,9 @@ applications:
       validations:
       - type: simtel_config
         reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-MSTN-01.cfg}
+        ignore_parameters:
+        - nightsky_background
+        - nsb_autoscale_airmass
     - path_descriptor: output_path
       output_sub_path: model/run000001/7.0.0
       file: CTAO-MSTN-01.cfg
@@ -88,6 +103,9 @@ applications:
       validations:
       - type: simtel_config
         reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-MSTN-01.cfg}
+        ignore_parameters:
+        - nightsky_background
+        - nsb_autoscale_airmass
     - path_descriptor: output_path
       output_sub_path: model/run000001/5.0.0
       file: CTAO-North-alpha.cfg
@@ -96,6 +114,9 @@ applications:
       validations:
       - type: simtel_config
         reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-North-alpha.cfg}
+        ignore_parameters:
+        - nightsky_background
+        - nsb_autoscale_airmass
     - path_descriptor: output_path
       output_sub_path: model/run000001/7.0.0
       file: CTAO-North-CTAO-North-Alpha.cfg
@@ -104,6 +125,9 @@ applications:
       validations:
       - type: simtel_config
         reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-North-CTAO-North-Alpha.cfg}
+        ignore_parameters:
+        - nightsky_background
+        - nsb_autoscale_airmass
     - path_descriptor: grid_output_path
       file: proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.log.gz
     - path_descriptor: grid_output_path
@@ -125,4 +149,4 @@ applications:
             - 50
   test_name: proton_20_deg_north_check_output
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.8.0

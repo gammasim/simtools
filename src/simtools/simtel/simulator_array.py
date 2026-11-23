@@ -2,6 +2,7 @@
 
 from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.simulation.configuration import get_model_writer
+from simtools.simulation.nsb import NsbSettings
 
 
 class SimulatorArray(SimtelRunner):
@@ -148,11 +149,11 @@ class SimulatorArray(SimtelRunner):
             file_type="sim_telarray_output", run_number=run_number
         )
         writer = get_model_writer(self.array_model, "sim_telarray")
-        nsb_settings = {
-            "zenith": self._nsb_zenith_angle,
-            "manual": self.context.args.get("nsb_scaling_factor"),
-            "autoscale": not self.context.args.get("disable_nsb_autoscaling", False),
-        }
+        nsb_settings = NsbSettings(
+            zenith_angle=self._nsb_zenith_angle,
+            manual_factor=self.context.args.get("nsb_scaling_factor"),
+            autoscale=not self.context.args.get("disable_nsb_autoscaling", False),
+        )
         if writer.array_model_file_exported is True and writer.nsb_settings != nsb_settings:
             raise ValueError(
                 "NSB settings changed after configuration export; use a new array model."

@@ -1,7 +1,6 @@
 """Write sim_telarray configuration and native tables from simulation models."""
 
 import logging
-import math
 from copy import deepcopy
 from pathlib import Path
 
@@ -17,7 +16,7 @@ from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter, get_simtel_site_parameters
-from simtools.simulation.nsb import airmass_scale
+from simtools.simulation.nsb import scale_nsb_parameters, site_nsb_factor
 from simtools.utils import names
 
 _CORSIKA_FILE = "corsika_file"
@@ -25,39 +24,6 @@ _PRIMARY = "primary"
 _ZENITH_ANGLE = "zenith_angle"
 _AZIMUTH_ANGLE = "azimuth_angle"
 SIMTEL_SOFTWARE = "sim_telarray"
-
-
-def _parse_nsb_value(value):
-    """Decode numeric scalars and lists stored as strings in the model repository."""
-    if not isinstance(value, str):
-        return value
-    values = [float(item) for item in value.replace(",", " ").split()]
-    return values[0] if len(values) == 1 else values
-
-
-def _scaled_nsb_parameters(parameters, settings, site_manual):
-    """Apply NSB scaling and neutralize sim_telarray settings on a copy."""
-    result = deepcopy(parameters)
-    if "nsb_pixel_rate" not in result:
-        return result
-    auto = _parse_nsb_value(result.get("nsb_autoscale_airmass", {}).get("value", [0.0, 0.15]))
-    factor = settings["manual"] if settings["manual"] is not None else site_manual
-    if (
-        settings["autoscale"]
-        and math.isclose(factor, 1.0, rel_tol=0.0, abs_tol=0.0)
-        and not math.isclose(auto[0], 0.0, rel_tol=0.0, abs_tol=0.0)
-    ):
-        factor = airmass_scale(settings["zenith"], auto[0], auto[1])
-    rate = _parse_nsb_value(result["nsb_pixel_rate"]["value"])
-    if isinstance(rate, list):
-        result["nsb_pixel_rate"]["value"] = [value * factor for value in rate]
-    else:
-        result["nsb_pixel_rate"]["value"] = rate * factor
-    if "nsb_autoscale_airmass" in result:
-        result["nsb_autoscale_airmass"]["value"] = [0.0, auto[1]]
-    if "nsb_scaling_factor" in result:
-        result["nsb_scaling_factor"]["value"] = 1.0
-    return result
 
 
 def get_model_writer(model, simulation_software="sim_telarray", context=None):
@@ -137,7 +103,7 @@ class SimtelModelWriter:
             )
         self._add_additional_models(additional_models, parameters)
         if self.nsb_settings is not None:
-            parameters = _scaled_nsb_parameters(parameters, self.nsb_settings, self.nsb_site_manual)
+            parameters = scale_nsb_parameters(parameters, self.nsb_settings, self.nsb_site_manual)
 
         # Ensure the writer label matches the config file naming label
         self._load_simtel_config_writer(label=label if label is not None else self.model.label)
@@ -276,8 +242,7 @@ class SimtelModelWriter:
         """Export sim_telarray configuration files for all telescopes into the model directory."""
         site_manual = 1.0
         if self.nsb_settings is not None:
-            site_parameters = get_simtel_site_parameters(self.model.site_model)
-            site_manual = float(site_parameters.get("nsb_scaling_factor", {"value": 1.0})["value"])
+            site_manual = site_nsb_factor(get_simtel_site_parameters(self.model.site_model))
 
         exported_models = []
         for tel_model in self.model.telescope_models.values():

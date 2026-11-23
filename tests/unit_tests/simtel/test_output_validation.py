@@ -19,6 +19,7 @@ from simtools.simtel.output_validation import (
     validate_sim_telarray_logs,
     validate_sim_telarray_metadata,
 )
+from simtools.simulation.nsb import NsbSettings, airmass_scale
 
 
 def test_telescope_count_mismatch(tmp_path):
@@ -368,3 +369,58 @@ def test_assert_events_of_type_not_found(tmp_path, caplog):
         result = assert_events_of_type(data_file, event_type="shower")
         assert result is False
         assert "No events of type" in caplog.text
+
+
+def _nsb_array_model(settings):
+    """Return an array model mock with one telescope and optionally recorded NSB settings."""
+    array_model = MagicMock()
+    array_model.site_model.parameters = {"nsb_scaling_factor": {"value": 1.0, "type": "float64"}}
+    array_model.site_model.get_simulation_software_parameters.return_value = {}
+    array_model.sim_telarray_seed = None
+    telescope = MagicMock()
+    telescope.parameters = {
+        "nsb_pixel_rate": {"value": 0.2, "type": "float64"},
+        "nsb_autoscale_airmass": {"value": [0.84, 0.29], "type": "float64"},
+    }
+    array_model.telescope_models = {"LST-01": telescope}
+    writer = MagicMock()
+    writer.nsb_settings = settings
+    array_model.configuration_writers = {"sim_telarray": writer}
+    return array_model
+
+
+def _assert_nsb_metadata(tmp_path, array_model, pixel_rate, airmass):
+    sim_file = tmp_path / "test.simtel.zst"
+    sim_file.write_bytes(b"dummy")
+    global_meta = {"nsb_scaling_factor": 1.0}
+    telescope_meta = {"nsb_pixel_rate": pixel_rate, "nsb_autoscale_airmass": airmass}
+    with (
+        patch("simtools.simtel.output_validation.read_sim_telarray_metadata") as read_meta,
+        patch("simtools.simtel.output_validation.get_sim_telarray_telescope_id", return_value=1),
+        patch("simtools.simtel.output_validation.sim_telarray_metadata.validate_metadata_values"),
+    ):
+        read_meta.return_value = (global_meta, {1: telescope_meta})
+        assert_sim_telarray_metadata(sim_file, array_model)
+
+
+def test_assert_sim_telarray_metadata_accepts_recorded_nsb_scaling(tmp_path):
+    settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
+    array_model = _nsb_array_model(settings)
+
+    expected_rate = 0.2 * airmass_scale(20.0, 0.84, 0.29)
+
+    _assert_nsb_metadata(tmp_path, array_model, pixel_rate=expected_rate, airmass="0.0 0.29")
+
+
+def test_assert_sim_telarray_metadata_rejects_unscaled_nsb_rate(tmp_path):
+    settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
+    array_model = _nsb_array_model(settings)
+
+    with pytest.raises(ValueError, match="nsb_pixel_rate"):
+        _assert_nsb_metadata(tmp_path, array_model, pixel_rate=0.2, airmass="0.0 0.29")
+
+
+def test_assert_sim_telarray_metadata_without_recorded_nsb_uses_model_values(tmp_path):
+    array_model = _nsb_array_model(None)
+
+    _assert_nsb_metadata(tmp_path, array_model, pixel_rate=0.2, airmass="0.84 0.29")

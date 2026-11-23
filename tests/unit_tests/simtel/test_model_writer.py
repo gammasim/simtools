@@ -8,8 +8,9 @@ import astropy.units as u
 import pytest
 
 from simtools.model.array_model import ArrayModel
-from simtools.simtel.model_writer import SimtelModelWriter, _scaled_nsb_parameters
+from simtools.simtel.model_writer import SimtelModelWriter
 from simtools.simulation.configuration import get_model_writer
+from simtools.simulation.nsb import NsbSettings
 from simtools.utils.primary_particle import PrimaryParticle
 
 _NORTH = "North"
@@ -293,7 +294,7 @@ def test_export_simtel_telescope_configs_apply_resolved_site_nsb_factor(
         telescope.parameters["nsb_autoscale_airmass"] = {"value": [0.84, 0.29]}
 
     writer = get_model_writer(array)
-    writer.nsb_settings = {"zenith": 20.0, "manual": None, "autoscale": True}
+    writer.nsb_settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
     writer.export_simtel_telescope_config_files()
 
     for telescope in array.telescope_models.values():
@@ -373,7 +374,7 @@ def test_telescope_config_writes_scaled_nsb_without_mutating_model(telescope_mod
     telescope.parameters["nsb_pixel_rate"] = {"value": [0.2, 0.4]}
     telescope.parameters["nsb_autoscale_airmass"] = {"value": [0.84, 0.29]}
     writer = get_model_writer(telescope)
-    writer.nsb_settings = {"zenith": 20.0, "manual": None, "autoscale": True}
+    writer.nsb_settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
     writer.nsb_site_manual = 1.0
     mocker.patch.object(telescope.model_reader, "export_model_files")
     output = mocker.Mock()
@@ -389,46 +390,3 @@ def test_telescope_config_writes_scaled_nsb_without_mutating_model(telescope_mod
     assert parameters["nsb_pixel_rate"]["value"] == pytest.approx([0.20660017, 0.41320034])
     assert parameters["nsb_autoscale_airmass"]["value"] == [0.0, 0.29]
     assert telescope.parameters["nsb_pixel_rate"]["value"] == [0.2, 0.4]
-
-
-@pytest.mark.parametrize(
-    ("settings", "expected"),
-    [
-        ({"zenith": 20.0, "manual": None, "autoscale": True}, 0.20660017),
-        ({"zenith": 20.0, "manual": 2.0, "autoscale": True}, 0.4),
-        ({"zenith": 20.0, "manual": None, "autoscale": False}, 0.2),
-    ],
-)
-def test_scaled_parameters_preserves_reference(settings, expected):
-    parameters = {
-        "nsb_pixel_rate": {"value": [0.2, 0.4]},
-        "nsb_autoscale_airmass": {"value": [0.84, 0.29]},
-    }
-    result = _scaled_nsb_parameters(parameters, settings, 1.0)
-    assert result["nsb_pixel_rate"]["value"] == pytest.approx([expected, expected * 2])
-    assert result["nsb_autoscale_airmass"]["value"] == [0.0, 0.29]
-    assert parameters["nsb_pixel_rate"]["value"] == [0.2, 0.4]
-    assert parameters["nsb_autoscale_airmass"]["value"] == [0.84, 0.29]
-
-
-@pytest.mark.parametrize(
-    ("rate", "expected_rate"),
-    [
-        ("0.2", 0.20660017),
-        ("0.2 0.4", [0.20660017, 0.41320034]),
-        ("0.2, 0.4", [0.20660017, 0.41320034]),
-    ],
-)
-def test_scale_nsb_parameters_from_string_values(rate, expected_rate):
-    parameters = {
-        "nsb_pixel_rate": {"value": rate},
-        "nsb_autoscale_airmass": {"value": "0.84 0.29"},
-    }
-    settings = {"zenith": 20.0, "manual": None, "autoscale": True}
-
-    result = _scaled_nsb_parameters(parameters, settings, 1.0)
-
-    assert result["nsb_pixel_rate"]["value"] == pytest.approx(expected_rate)
-    assert result["nsb_autoscale_airmass"]["value"] == [0.0, 0.29]
-    assert parameters["nsb_pixel_rate"]["value"] == rate
-    assert parameters["nsb_autoscale_airmass"]["value"] == "0.84 0.29"

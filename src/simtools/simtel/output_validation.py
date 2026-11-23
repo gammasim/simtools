@@ -17,6 +17,8 @@ from simtools.sim_events.simtel_io_metadata import (
     read_sim_telarray_metadata,
 )
 from simtools.simtel import sim_telarray_metadata
+from simtools.simtel.simtel_config_writer import get_simtel_site_parameters
+from simtools.simulation.nsb import scale_nsb_parameters, site_nsb_factor
 from simtools.utils import random, value_conversion
 
 _logger = logging.getLogger(__name__)
@@ -116,7 +118,10 @@ def assert_sim_telarray_metadata(file, array_model, allow_for_changes=None):
     for metadata in telescope_meta.values():
         sim_telarray_metadata.validate_metadata_values(metadata)
     _logger.info(f"Found metadata in sim_telarray file for {len(telescope_meta)} telescopes")
-    site_mismatch = _assert_model_parameters(global_meta, array_model.site_model, allow_for_changes)
+    nsb = _recorded_nsb_expectation(array_model)
+    site_mismatch = _assert_model_parameters(
+        global_meta, array_model.site_model, allow_for_changes, nsb
+    )
     seed_mismatch = _assert_sim_telarray_seed(global_meta, array_model.sim_telarray_seed, file)
     if seed_mismatch:
         site_mismatch.append(seed_mismatch)
@@ -132,7 +137,7 @@ def assert_sim_telarray_metadata(file, array_model, allow_for_changes=None):
 
     # all mismatches are reported, not only those found first
     mismatches = [
-        _assert_model_parameters(telescope_meta[i], model, allow_for_changes)
+        _assert_model_parameters(telescope_meta[i], model, allow_for_changes, nsb)
         for i, model in enumerate(array_model.telescope_models.values(), start=1)
     ]
     mismatches.append(site_mismatch)
@@ -141,6 +146,26 @@ def assert_sim_telarray_metadata(file, array_model, allow_for_changes=None):
             "Telescope or site model parameters do not match sim_telarray metadata: "
             f"{[m for m in mismatches if m]}"
         )
+
+
+def _recorded_nsb_expectation(array_model):
+    """
+    Return the NSB settings and site factor used when the array configuration was exported.
+
+    The NSB rates are scaled when the configuration is written (see
+    ``simtools.simulation.nsb.scale_nsb_parameters``). Without recorded settings, sim_telarray
+    reads the model values unchanged.
+
+    Returns
+    -------
+    tuple or None
+        (NsbSettings, site factor), or None if no NSB scaling was recorded.
+    """
+    writer = array_model.configuration_writers.get("sim_telarray")
+    settings = getattr(writer, "nsb_settings", None)
+    if settings is None:
+        return None
+    return settings, site_nsb_factor(get_simtel_site_parameters(array_model.site_model))
 
 
 def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
@@ -162,7 +187,18 @@ def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
     return np.array(column, dtype=np.dtype(parameter_type))
 
 
-def _assert_model_parameters(metadata, model, allow_for_changes=None):
+def _sim_telarray_parameter_name(param):
+    """Return the sim_telarray metadata name of a model parameter (None if not compared)."""
+    # sim_telarray names: "reference_point_latitude" -> "latitude", "altitude" -> ...
+    sim_telarray_name = param.replace("reference_point_", "")
+    if sim_telarray_name == "altitude":
+        sim_telarray_name = "corsika_observation_level"
+    if sim_telarray_name == "array_triggers":
+        return None
+    return sim_telarray_name
+
+
+def _assert_model_parameters(metadata, model, allow_for_changes=None, nsb=None):
     """
     Return the list of model parameters whose values do not match the sim_telarray metadata.
 
@@ -174,19 +210,21 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
         Model to compare with.
     allow_for_changes: list
         Model parameters changed with the command line ('-C'); metadata may differ for these.
+    nsb: tuple or None
+        NSB settings and site factor recorded at export (see _recorded_nsb_expectation).
     """
+    parameters = model.parameters
+    if nsb is not None:
+        parameters = scale_nsb_parameters(parameters, *nsb)
     invalid_parameter_list = []
-    for param in model.parameters:
-        # sim_telarray names: "reference_point_latitude" -> "latitude", "altitude" -> ...
-        sim_telarray_name = param.replace("reference_point_", "")
-        if sim_telarray_name == "altitude":
-            sim_telarray_name = "corsika_observation_level"
-        if sim_telarray_name == "array_triggers" or sim_telarray_name not in metadata:
+    for param in parameters:
+        sim_telarray_name = _sim_telarray_parameter_name(param)
+        if sim_telarray_name not in metadata:
             continue
 
-        parameter_type = model.parameters[param]["type"]
-        model_value = model.parameters[param]["value"]
-        if param == "mirror_list" and uses_segmented_dual_mirror_geometry(model.parameters):
+        parameter_type = parameters[param]["type"]
+        model_value = parameters[param]["value"]
+        if param == "mirror_list" and uses_segmented_dual_mirror_geometry(parameters):
             model_value = "none"
         elif parameter_type == "file":
             model_value = _resolve_file_parameter_value(model_value, param, model)

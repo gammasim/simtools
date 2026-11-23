@@ -110,3 +110,22 @@ def test_simtel_config_validator_detects_assignment_difference(tmp_test_director
     mocker.patch.object(simtel, "_assignment_metadata_keys", return_value=set())
 
     assert not simtel.compare_config_files(reference_file, output_file)
+
+
+def test_compare_config_files_ignores_listed_parameters(tmp_test_directory, mocker):
+    """Ignore run-dependent parameters only when they are listed."""
+    reference_file = Path(tmp_test_directory) / "reference.cfg"
+    output_file = Path(tmp_test_directory) / "output.cfg"
+    reference_file.write_text("nightsky_background = all: 0.2\nparameter = 1\n", encoding="utf-8")
+    output_file.write_text("nightsky_background = all: 0.3\nparameter = 1\n", encoding="utf-8")
+    mocker.patch.object(simtel, "_assignment_metadata_keys", return_value=set())
+
+    assert not simtel.compare_config_files(reference_file, output_file)
+    assert simtel.compare_config_files(
+        reference_file, output_file, ignore_parameters=["nightsky_background"]
+    )
+
+    output_file.write_text("nightsky_background = all: 0.3\nparameter = 2\n", encoding="utf-8")
+    assert not simtel.compare_config_files(
+        reference_file, output_file, ignore_parameters=["nightsky_background"]
+    )
