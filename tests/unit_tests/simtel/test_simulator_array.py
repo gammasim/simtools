@@ -88,9 +88,13 @@ def test_make_run_command_sets_bypass_optics_before_show_all(simtel_runner, mock
     ]
 
 
-def test_make_run_command_calibration_simulation(simtel_runner, mocker):
+@pytest.mark.parametrize("write_hdata", [False, True])
+def test_make_run_command_calibration_simulation(simtel_runner, mocker, write_hdata):
+    simtel_runner.context = simtel_runner.context.replace(args={"write_hdata": write_hdata})
     simtel_runner.runner_service = mocker.Mock()
-    simtel_runner.runner_service.load_files.return_value = {}
+    simtel_runner.runner_service.load_files.return_value = {
+        "sim_telarray_histogram": "unused.hdata"
+    }
     simtel_runner.simulation_parameters.is_calibration_run = mocker.Mock(return_value=True)
 
     # Mock the methods
@@ -108,6 +112,7 @@ def test_make_run_command_calibration_simulation(simtel_runner, mocker):
     assert "-C" in result
     assert "show=all" in result
     assert "test.corsika" in result
+    assert ("sim_telarray_histogram" in simtel_runner.file_list) is write_hdata
 
 
 def test_make_run_command_for_calibration_simulations_basic(simtel_runner, mocker):
@@ -199,9 +204,11 @@ def test_determine_pointing_option(simtel_runner):
     assert copy_simtel_runner._determine_pointing_option() is False
 
 
-def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker):
+@pytest.mark.parametrize("write_hdata", [False, True])
+def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker, write_hdata):
     _set_context_config(simtel_runner, mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
 
+    simtel_runner.context = simtel_runner.context.replace(args={"write_hdata": write_hdata})
     simtel_runner.label = "divergent"
     simtel_runner.array_model.get_config_directory.return_value = "/config/dir"
     simtel_runner.array_model.config_file_path = "/config/file.cfg"
@@ -219,6 +226,8 @@ def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker):
     result = simtel_runner._common_run_command(run_number=1)
 
     assert isinstance(result, list)
+    expected = "hist_1.hist" if write_hdata else "/dev/null"
+    assert f"histogram_file={expected}" in result
     assert "-W" in result
     assert any("telescope_theta=25.0" in str(item) for item in result)
 

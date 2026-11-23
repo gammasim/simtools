@@ -13,9 +13,8 @@ from simtools.constants import MODEL_PARAMETER_SCHEMA_URL, SCHEMA_PATH
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.table_asset import get_simtel_serialization
+from simtools.model_repository.asset_names import ECSV_SUFFIX
 from simtools.runtime.context import RunContext
-
-ECSV_SUFFIX = ".ecsv"
 
 
 def _read_csv_spectrum(input_file, frequency_column):

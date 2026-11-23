@@ -154,6 +154,8 @@ class SimulatorArray(SimtelRunner):
             Command to run sim_telarray.
         """
         self.file_list = self.runner_service.load_files(run_number=run_number)
+        if not self.context.args.get("write_hdata"):
+            self.file_list.pop("sim_telarray_histogram", None)
         command = self._common_run_command(run_number)
 
         if self.simulation_parameters.is_calibration_run():
@@ -229,9 +231,6 @@ class SimulatorArray(SimtelRunner):
         self._log_file = self.runner_service.get_file_name(
             file_type="sim_telarray_log", run_number=run_number
         )
-        histogram_file = self.runner_service.get_file_name(
-            file_type="sim_telarray_histogram", run_number=run_number
-        )
         output_file = self.runner_service.get_file_name(
             file_type="sim_telarray_output", run_number=run_number
         )
@@ -248,6 +247,11 @@ class SimulatorArray(SimtelRunner):
             "telescope_theta": self.simulation_parameters.zenith_angle,
             "telescope_phi": self.simulation_parameters.azimuth_angle,
         }
+        histogram_file = "/dev/null"
+        if self.context.args.get("write_hdata"):
+            histogram_file = self.runner_service.get_file_name(
+                file_type="sim_telarray_histogram", run_number=run_number
+            )
         options = {
             "histogram_file": histogram_file,
             "random_state": "none",

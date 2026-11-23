@@ -28,6 +28,7 @@ from simtools.production_configuration.trigger_histograms import (
     load_dense_histogram_payloads,
     validate_derived_products,
 )
+from simtools.sim_events.production_comparison_statistics import PLOT_STATISTICS_KEY
 from simtools.sim_events.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
 )
@@ -47,7 +48,6 @@ _INVALID_PRODUCTION_ARGUMENTS = "Production arguments must be provided as label/
 
 BASELINE_KEY = "baseline"
 COMPARISON_SETS_KEY = "comparison_sets"
-PLOT_STATISTICS_KEY = "plot_statistics"
 COMPARISONS_KEY = "comparisons"
 ARRAY_LAYOUT_KEY = "array_layout_name"
 REPORT_PAGE_COLUMN = "report_page"

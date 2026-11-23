@@ -568,6 +568,10 @@ jobs:
         run: |
           bash .github/scripts/install_python_dependencies.sh --no-cache-dir -e '.[tests]'
 
+      - name: Install pytest-retry
+        if: ${{ !inputs.benchmark }}
+        run: bash .github/scripts/install_python_dependencies.sh --no-cache-dir pytest-retry
+
       - name: Integration tests
         shell: bash -l {0}
         run: |
