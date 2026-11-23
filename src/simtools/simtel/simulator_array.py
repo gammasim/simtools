@@ -35,7 +35,6 @@ class SimulatorArray(SimtelRunner):
         self.array_model = array_model
         self.io_handler = self.context.paths
         self._log_file = None
-        self._nsb_zenith_angle = simulation_parameters.zenith_angle
         # Directories searched before the model directory (e.g. scaled quantum-efficiency tables)
         self.include_directories = ()
         # min_photons override (e.g. 0 when an upstream stage thins photons); None: sim_telarray's
@@ -69,7 +68,6 @@ class SimulatorArray(SimtelRunner):
         self.file_list = self.runner_service.load_files(run_number=run_number)
         if not self.context.args.get("write_hdata"):
             self.file_list.pop("sim_telarray_histogram", None)
-        self._nsb_zenith_angle = 0.0 if bypass_optics else self.simulation_parameters.zenith_angle
         command = self._common_run_command(run_number)
 
         if self.simulation_parameters.is_calibration_run():
@@ -150,7 +148,7 @@ class SimulatorArray(SimtelRunner):
         )
         writer = get_model_writer(self.array_model, "sim_telarray")
         nsb_settings = NsbSettings(
-            zenith_angle=self._nsb_zenith_angle,
+            zenith_angle=self.simulation_parameters.zenith_angle,
             manual_factor=self.context.args.get("nsb_scaling_factor"),
             autoscale=not self.context.args.get("disable_nsb_autoscaling", False),
         )
