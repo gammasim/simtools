@@ -43,7 +43,6 @@ dependencies = [
   "python-dotenv",
   "pyyaml",
   "scipy",
-  "zstandard",
 ]
 optional-dependencies.benchmark = [ "psutil" ]
 optional-dependencies.dev = [
