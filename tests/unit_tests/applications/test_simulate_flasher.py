@@ -155,3 +155,65 @@ def test_main_rejects_unsupported_run_mode(mock_start):
     mock_start.return_value = Mock(args=args)
     with pytest.raises(ValueError, match="Unsupported run_mode: unknown"):
         main()
+
+
+def test_parallel_full_simulation_prepares_isolated_levels(tmp_test_directory):
+    from simtools.applications.simulate_flasher import _full_simulation_runs
+    from simtools.runtime.context import RunContext
+
+    context = RunContext.from_arguments(
+        {
+            "output_path": str(tmp_test_directory),
+            "run_number": 100,
+            "max_workers": 2,
+            "flasher_photons": [30000, 100000],
+            "number_of_events": [2, 3],
+            "simulation_seed": [101, 102],
+        }
+    )
+    runs = _full_simulation_runs(context)
+    assert [run.args["run_number"] for run in runs] == [100, 101]
+    assert [run.args["flasher_photons"] for run in runs] == [30000, 100000]
+    assert [run.args["number_of_events"] for run in runs] == [2, 3]
+    assert all(run.args["simulation_seed"][0] == 101 for run in runs)
+    assert runs[0].args["simulation_seed"][1] != runs[1].args["simulation_seed"][1]
+    assert [run.args["simulation_seed"] for run in runs] == [
+        run.args["simulation_seed"] for run in _full_simulation_runs(context)
+    ]
+    assert [run.paths.get_output_directory() for run in runs] == [
+        tmp_test_directory / "run000100",
+        tmp_test_directory / "run000101",
+    ]
+
+
+def test_full_simulation_runs_levels_concurrently(monkeypatch, tmp_test_directory):
+    from threading import Barrier
+
+    from simtools.applications import simulate_flasher
+    from simtools.runtime.context import RunContext
+
+    barrier = Barrier(2, timeout=5)
+    completed = []
+
+    class FakeSimulation:
+        def __init__(self, light_emission_config, **_kwargs):
+            self.run = light_emission_config["run_number"]
+
+        def simulate(self, script_writer=None):
+            barrier.wait()
+
+        def validate_simulations(self):
+            completed.append(self.run)
+
+    args = _full_simulation_args(None) | {
+        "max_workers": 2,
+        "run_number": 100,
+        "output_path": str(tmp_test_directory),
+        "flasher_photons": [30000, 100000],
+        "number_of_events": [1],
+    }
+    context = RunContext.from_arguments(args).replace(logger=Mock())
+    monkeypatch.setattr(simulate_flasher.APPLICATION.__class__, "start", lambda _self: context)
+    monkeypatch.setattr(simulate_flasher, "SimulatorLightEmission", FakeSimulation)
+    main()
+    assert sorted(completed) == [100, 101]
