@@ -103,4 +103,4 @@ applications:
             - 50
   test_name: gamma_62_deg_south_check_output
 schema_name: application_workflow.metaschema
-schema_version: 0.8.0
+schema_version: 0.7.0

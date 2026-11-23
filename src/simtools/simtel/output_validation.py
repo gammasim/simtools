@@ -187,15 +187,11 @@ def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
     return np.array(column, dtype=np.dtype(parameter_type))
 
 
-def _sim_telarray_parameter_name(param):
-    """Return the sim_telarray metadata name of a model parameter (None if not compared)."""
-    # sim_telarray names: "reference_point_latitude" -> "latitude", "altitude" -> ...
-    sim_telarray_name = param.replace("reference_point_", "")
-    if sim_telarray_name == "altitude":
-        sim_telarray_name = "corsika_observation_level"
-    if sim_telarray_name == "array_triggers":
-        return None
-    return sim_telarray_name
+def _parameters_as_written(model, nsb):
+    """Return model parameters with the NSB scaling applied as in the exported configuration."""
+    if nsb is None:
+        return model.parameters
+    return scale_nsb_parameters(model.parameters, *nsb)
 
 
 def _assert_model_parameters(metadata, model, allow_for_changes=None, nsb=None):
@@ -213,13 +209,14 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None, nsb=None):
     nsb: tuple or None
         NSB settings and site factor recorded at export (see _recorded_nsb_expectation).
     """
-    parameters = model.parameters
-    if nsb is not None:
-        parameters = scale_nsb_parameters(parameters, *nsb)
+    parameters = _parameters_as_written(model, nsb)
     invalid_parameter_list = []
     for param in parameters:
-        sim_telarray_name = _sim_telarray_parameter_name(param)
-        if sim_telarray_name not in metadata:
+        # sim_telarray names: "reference_point_latitude" -> "latitude", "altitude" -> ...
+        sim_telarray_name = param.replace("reference_point_", "")
+        if sim_telarray_name == "altitude":
+            sim_telarray_name = "corsika_observation_level"
+        if sim_telarray_name == "array_triggers" or sim_telarray_name not in metadata:
             continue
 
         parameter_type = parameters[param]["type"]

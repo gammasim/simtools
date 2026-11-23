@@ -56,4 +56,4 @@ applications:
         - nsb_autoscale_airmass
   test_name: gamma_40_deg_south_sim_telarray_only
 schema_name: application_workflow.metaschema
-schema_version: 0.8.0
+schema_version: 0.7.0
