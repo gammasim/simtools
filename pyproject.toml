@@ -43,7 +43,6 @@ dependencies = [
   "python-dotenv",
   "pyyaml",
   "scipy",
-  "zstandard",
 ]
 optional-dependencies.benchmark = [ "psutil" ]
 optional-dependencies.dev = [
@@ -70,8 +69,6 @@ optional-dependencies.tests = [
   "pytest-cov",
   "pytest-mock",
   "pytest-random-order",
-  "pytest-repeat",
-  "pytest-retry",
   "pytest-xdist",
 ]
 urls."bug tracker" = "https://github.com/gammasim/simtools/issues"

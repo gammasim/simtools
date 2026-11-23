@@ -1,6 +1,7 @@
 import io
 import struct
 import subprocess
+from compression import zstd
 from pathlib import Path
 
 import astropy.units as u
@@ -249,11 +250,10 @@ def test_iter_photon_objects_preserves_bytes_and_callback_timing(atmospheric_pro
 
 
 def test_zstd_compressed_input(tmp_test_directory, atmospheric_profile):
-    zstandard = pytest.importorskip("zstandard")
     plain = tmp_test_directory / "photons.iact"
     compressed = tmp_test_directory / "photons.iact.zst"
     _write(plain, [_bunches(2)], atmospheric_profile)
-    Path(compressed).write_bytes(zstandard.ZstdCompressor().compress(Path(plain).read_bytes()))
+    Path(compressed).write_bytes(zstd.compress(Path(plain).read_bytes()))
 
     (telescope,) = read_photon_bunches(compressed)
 

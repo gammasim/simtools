@@ -130,6 +130,9 @@ jobs:
           simulation-model-branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
           simtools-tests-branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
 
+      - name: Install pytest-retry
+        run: bash .github/scripts/install_python_dependencies.sh pytest-retry
+
       - name: Unit tests
         shell: bash -l {0}
         run: |
@@ -144,6 +147,10 @@ jobs:
           path: coverage.xml
           if-no-files-found: error
           retention-days: 3
+
+      - name: Install pytest-repeat
+        if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
+        run: bash .github/scripts/install_python_dependencies.sh pytest-repeat
 
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')

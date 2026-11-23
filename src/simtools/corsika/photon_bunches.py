@@ -9,9 +9,9 @@ import gzip
 import io
 import logging
 import os
+from compression import zstd
 
 import numpy as np
-import zstandard
 from eventio.base import KNOWN_OBJECTS, EventIOObject, read_header, read_sync_marker
 from eventio.iact import EventHeader, Photons, TelescopeData
 
@@ -126,7 +126,7 @@ def _iter_path_objects(path):
             with gzip.GzipFile(fileobj=source) as stream:
                 yield from _iter_stream_objects(stream)
         elif magic == b"\x28\xb5\x2f\xfd":
-            with zstandard.ZstdDecompressor().stream_reader(source) as stream:
+            with zstd.ZstdFile(source) as stream:
                 yield from _iter_stream_objects(stream)
         else:
             yield from _iter_stream_objects(source)
