@@ -9,6 +9,8 @@ import os
 import re
 import shutil
 import subprocess
+import sys
+from contextlib import nullcontext
 from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
@@ -125,9 +127,13 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
         collection_config,
         provenance_path=args_dict.get("provenance_path"),
     )
-    log_file = Path(log_file)
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    with log_file.open("w", encoding="utf-8") as file:
+    if args_dict.get("disable_log_file"):
+        log_stream = nullcontext(sys.stdout)
+    else:
+        log_file = Path(log_file)
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_stream = log_file.open("w", encoding="utf-8")
+    with log_stream as file:
         file.write("Running simtools applications\n")
         file.write(_runtime_environment_header(effective_runtime, source_options))
         file.write(model_provenance)

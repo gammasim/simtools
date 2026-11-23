@@ -357,6 +357,25 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     workflow_build_mock.assert_not_called()
 
 
+def test_run_applications_disable_log_file_writes_output_to_terminal(
+    monkeypatch, tmp_test_directory, capsys
+):
+    configurations = [{"application": "example", "run_application": True, "configuration": {}}]
+    log_file = tmp_test_directory / "logs" / "simtools.log"
+    _patch_run_dependencies(monkeypatch, configurations, log_file)
+    result = mock.Mock(output="application output", error_output="application error")
+    monkeypatch.setattr(
+        "simtools.job_execution.execution.run_command", mock.Mock(return_value=result)
+    )
+
+    simtools_runner.run_applications({**_runner_args(), "disable_log_file": True})
+
+    assert not log_file.exists()
+    output = capsys.readouterr().out
+    assert "application output" in output
+    assert "application error" in output
+
+
 def test_run_applications_propagates_options_to_submitted_configuration(
     monkeypatch, tmp_test_directory
 ):
