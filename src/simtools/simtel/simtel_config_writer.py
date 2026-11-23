@@ -47,6 +47,17 @@ _SKIPPED_PARAMETERS = (
 )
 
 
+def get_simtel_site_parameters(site_model):
+    """Merge sim_telarray and model parameters, with site model values taking precedence.
+
+    :meta private:
+    """
+    return {
+        **(site_model.get_simulation_software_parameters("sim_telarray") or {}),
+        **site_model.parameters,
+    }
+
+
 def _write_numeric_columns(output_path, columns):
     """Write equally long numeric columns as whitespace-separated rows."""
     with output_path.open("w", encoding="utf-8") as file:
@@ -584,10 +595,7 @@ class SimtelConfigWriter:
 
             global_parameters = {
                 name: parameter
-                for name, parameter in {
-                    **site_model.get_simulation_software_parameters("sim_telarray"),
-                    **site_model.parameters,
-                }.items()
+                for name, parameter in get_simtel_site_parameters(site_model).items()
                 if not catalog.is_global_sim_telarray_parameter(name)
             }
             if (

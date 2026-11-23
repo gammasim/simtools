@@ -332,8 +332,17 @@ def test_segmented_dual_mirror_telescope_does_not_write_mirror_list(
     ]
 
 
+@pytest.mark.parametrize(
+    ("neutral_nsb_scaling", "expected_nsb_factor"), [(False, "2.0"), (True, "1.0")]
+)
 def test_write_array_config_file(
-    simtel_config_writer, telescope_model_lst, io_handler, file_has_text, site_model_north
+    simtel_config_writer,
+    telescope_model_lst,
+    io_handler,
+    file_has_text,
+    site_model_north,
+    neutral_nsb_scaling,
+    expected_nsb_factor,
 ):
     _file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt")
     telescope_model = {
@@ -342,12 +351,16 @@ def test_write_array_config_file(
         "LSTN-03": telescope_model_lst,
         "LSTN-04": telescope_model_lst,
     }
-    site_model_north._simulation_config_parameters["sim_telarray"].update(
+    site_model_north.parameters.pop("nsb_scaling_factor", None)
+    software_parameters = site_model_north.get_simulation_software_parameters("sim_telarray")
+    software_parameters.update(
         {
             "iobuf_maximum": {"value": 1000000000},
             "random_generator": {"value": "mt19937"},
+            "nsb_scaling_factor": {"value": "2.0"},
         }
     )
+    simtel_config_writer.neutral_nsb_scaling = neutral_nsb_scaling
     simtel_config_writer.write_array_config_file(
         config_file_path=_file,
         telescope_model=telescope_model,
@@ -358,6 +371,12 @@ def test_write_array_config_file(
         array_config = file.read()
     assert array_config.count("iobuf_maximum = 1000000000") == 0
     assert array_config.count("random_generator = mt19937") == 0
+    assert [
+        line.strip()
+        for line in array_config.splitlines()
+        if line.strip().startswith("nsb_scaling_factor =")
+    ] == [f"nsb_scaling_factor = {expected_nsb_factor}"]
+    assert software_parameters["nsb_scaling_factor"]["value"] == "2.0"
 
     # sim_telarray configuration files need to end with two new lines
     with open(_file) as f:

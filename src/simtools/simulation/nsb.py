@@ -6,6 +6,8 @@ import math
 def airmass_scale(zenith_angle, airglow_fraction, extinction):
     """Calculate the NSB rate relative to zenith.
 
+    See Garstang 1989, PASP, 101, 306 for the airmass scaling of the night-sky background.
+
     Parameters
     ----------
     zenith_angle : float
