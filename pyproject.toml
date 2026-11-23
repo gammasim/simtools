@@ -69,7 +69,6 @@ optional-dependencies.tests = [
   "pytest-cov",
   "pytest-mock",
   "pytest-random-order",
-  "pytest-repeat",
   "pytest-xdist",
 ]
 urls."bug tracker" = "https://github.com/gammasim/simtools/issues"

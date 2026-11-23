@@ -148,6 +148,10 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
+      - name: Install pytest-repeat
+        if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
+        run: bash .github/scripts/install_python_dependencies.sh pytest-repeat
+
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
         shell: bash -l {0}
