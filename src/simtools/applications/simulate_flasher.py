@@ -49,6 +49,12 @@ def _validate(args_dict, config_sources, parser):
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
+        "write_hdata",
+        help="Write sim_telarray hdata histogram files.",
+        action="store_true",
+        default=False,
+    ),
+    cli.ArgumentDefinition(
         "run_mode",
         help="Flasher simulation run mode",
         type=str,

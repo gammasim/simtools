@@ -12,6 +12,14 @@ _ILLUMINATOR = "ILLN-01"
 _TELESCOPE = "MSTN-04"
 
 
+def test_write_hdata_argument():
+    from simtools.applications.simulate_illuminator import APPLICATION
+
+    parser = APPLICATION.build_parser()
+    assert parser.parse_args([]).write_hdata is False
+    assert parser.parse_args(["--write_hdata"]).write_hdata is True
+
+
 @patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
 @patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_single_pair_mode(mock_application_start, mock_simulator_class):
