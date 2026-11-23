@@ -19,8 +19,9 @@ description: |-
   $\Delta = \Delta_0 + \Delta_c + \Delta_s$. Both scaling terms must be
   nonzero for sim_telarray to apply either zenith angle correction; otherwise
   the offset is $\Delta_0$.
-  For two-mirror telescopes, a positive offset shifts the camera and focal
-  surface towards the primary mirror. The first of the
+  For two-mirror telescopes, a positive offset shifts the focal surface away
+  from the secondary mirror, typically towards the primary mirror when the
+  focal surface lies between the mirrors. The first of the
   par:focal-surface-parameters values also affects the focal surface position.
   If that value already accounts for the desired focus at a typical shower
   maximum distance, use zero offset to avoid applying an additional shift.
