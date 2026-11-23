@@ -45,6 +45,9 @@ The user defaults file uses the same `SIMTOOLS_` variable names and dotenv forma
 For example, add `SIMTOOLS_OUTPUT_PATH="/path/to/output"` to `~/.config/simtools/config` to
 use that directory across applications. Settings for options unavailable in an application
 are ignored. Higher-priority sources override lower-priority values.
+The file applies in the environment where an application runs; host user defaults are not
+automatically passed to container workflow steps. Configure those steps in the workflow or
+through the runtime environment instead.
 Configuration parameters are generally expected in lowercase snake_case.
 Configuration parameters for each application are printed to screen when executing the application
 with the `--help` option.
