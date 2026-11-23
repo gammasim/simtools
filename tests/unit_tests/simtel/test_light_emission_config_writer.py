@@ -299,8 +299,10 @@ def test_sst_m2_flasher_command(simulator_instance):
     assert "--lightpulse gauss:1.06" in options
 
     calibration_units["flasher_position"][2] = 310.84 * u.cm
-    with pytest.raises(ValueError, match="Flasher above the focal surface"):
-        get_light_source_writer(simulator_instance).add_flasher_command_options()
+    options = get_light_source_writer(simulator_instance).add_flasher_command_options()
+    assert float(
+        next(option.split()[1] for option in options if option.startswith("--distance"))
+    ) == pytest.approx(51.96)
 
 
 def test__add_flasher_command_options(simulator_instance):

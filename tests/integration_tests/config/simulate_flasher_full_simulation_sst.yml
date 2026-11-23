@@ -13,7 +13,9 @@ applications:
     telescopes: SSTS-12
     run_number: 10
     flasher_photons: 1e6
-    ray_tracing_backend: sim_telarray
+    simulation_software:
+    - light_emission
+    - sim_telarray
     instrument_seed: 1
     simulation_seed: 1
     log_level: DEBUG
