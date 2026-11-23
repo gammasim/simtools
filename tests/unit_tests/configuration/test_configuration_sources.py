@@ -1,6 +1,7 @@
 """Configuration values supplied through supported sources."""
 
 import sys
+from pathlib import Path
 
 import astropy.units as u
 import pytest
@@ -223,6 +224,51 @@ def test_configure_source_precedence(
     monkeypatch.setattr(sys, "argv", argv)
 
     assert configurator.configure()["value"] == expected
+
+
+@pytest.mark.parametrize("source", ["user", "dotenv", "environment", "yaml", "cli"])
+def test_configure_user_defaults_precedence(source, tmp_test_directory, monkeypatch):
+    home = Path(tmp_test_directory) / "home"
+    (home / ".config" / "simtools").mkdir(parents=True, exist_ok=True)
+    (home / ".config" / "simtools" / "config").write_text("SIMTOOLS_VALUE=user\n", encoding="utf-8")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.delenv("SIMTOOLS_VALUE", raising=False)
+    monkeypatch.chdir(tmp_test_directory)
+    argv = ["test", "--label", "example"]
+    if source in {"dotenv", "environment", "yaml", "cli"}:
+        (tmp_test_directory / ".env").write_text("SIMTOOLS_VALUE=dotenv\n", encoding="utf-8")
+    if source in {"environment", "yaml", "cli"}:
+        monkeypatch.setenv("SIMTOOLS_VALUE", "environment")
+    if source in {"yaml", "cli"}:
+        config_file = tmp_test_directory / "local.yml"
+        config_file.write_text("value: yaml\n", encoding="utf-8")
+        argv.extend(("--config", str(config_file)))
+    if source == "cli":
+        argv.extend(("--value", "cli"))
+    monkeypatch.setattr(sys, "argv", argv)
+
+    result = _make_configurator(ArgumentDefinition("value", default="default")).configure()
+
+    assert result["value"] == source
+
+
+def test_user_defaults_convert_values_and_ignore_other_applications(
+    tmp_test_directory, monkeypatch
+):
+    home = Path(tmp_test_directory) / "home"
+    (home / ".config" / "simtools").mkdir(parents=True, exist_ok=True)
+    (home / ".config" / "simtools" / "config").write_text(
+        "SIMTOOLS_VALUE=true\nSIMTOOLS_OTHER=ignored\n", encoding="utf-8"
+    )
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.delenv("SIMTOOLS_VALUE", raising=False)
+    monkeypatch.chdir(tmp_test_directory)
+    monkeypatch.setattr(sys, "argv", ["test", "--label", "example"])
+
+    result = _make_configurator(ArgumentDefinition("value", action="store_true")).configure()
+
+    assert result["value"] is True
+    assert "other" not in result
 
 
 def test_configure_required_argument_accepts_cli_value(monkeypatch):
