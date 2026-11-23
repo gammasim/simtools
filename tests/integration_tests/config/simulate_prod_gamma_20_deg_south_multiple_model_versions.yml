@@ -33,6 +33,7 @@ applications:
     primary_id_type: corsika7_id
     run_number: 1
     save_corsika_output: true
+    write_hdata: true
     reduced_event_lists: true
     simulation_seed:
     - 1745

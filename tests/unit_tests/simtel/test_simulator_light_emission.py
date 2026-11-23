@@ -880,9 +880,10 @@ def test_run_command_preserves_pipeline_failure(
         assert handle.read() == "diagnostic\n"
 
 
+@pytest.mark.parametrize("write_hdata", [False, True])
 @pytest.mark.parametrize(FAILING_STAGE_PARAMETER, [None, EMISSION_STAGE, SIMTEL_STAGE])
 def test_run_script_separates_diagnostics(
-    simulator_instance, tmp_test_directory, mocker, failing_stage
+    simulator_instance, tmp_test_directory, mocker, failing_stage, write_hdata
 ):
     root = Path(tmp_test_directory) / "simulation with spaces"
     source = root / "LightEmission" / FLASHER_APPLICATION
@@ -931,8 +932,14 @@ def test_run_script_separates_diagnostics(
         "simtools.simtel.simulator_light_emission.sim_telarray_env_as_string", return_value=""
     )
 
+    simulator_instance.context = simulator_instance.context.replace(
+        args={"write_hdata": write_hdata}
+    )
+    command = "".join(simulator_instance.make_run_command())
+    histogram = file_names["sim_telarray_histogram"] if write_hdata else "/dev/null"
+    assert f"histogram_file={histogram}" in command
     result = subprocess.run(
-        ["bash", "-c", "".join(simulator_instance.make_run_command())],
+        ["bash", "-c", command],
         capture_output=True,
         check=False,
         timeout=20,
@@ -1031,9 +1038,13 @@ def test_light_emission_command_and_check(default_chain_simulator):
     )
 
 
-def test_default_chain_script_text(default_chain_simulator):
+@pytest.mark.parametrize("write_hdata", [False, True])
+def test_default_chain_script_text(default_chain_simulator, write_hdata):
     """The script of the default chain is fixed text (as written before simulation chains)."""
     default_chain_simulator.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
+    default_chain_simulator.context = default_chain_simulator.context.replace(
+        args={"write_hdata": write_hdata}
+    )
     with patch.object(
         get_light_source_writer(default_chain_simulator),
         MAKE_COMMAND_METHOD,
@@ -1049,11 +1060,12 @@ def test_default_chain_script_text(default_chain_simulator):
             "{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }\n\n"
         ),
     ]
+    histogram = "/out/sim_telarray_histogram.dat" if write_hdata else "/dev/null"
     assert lines[4].endswith(
         "-C telescope_theta=0.0 -C telescope_phi=0.0 -C Bypass_Optics=1 -C random_seed=11,13 "
         "-C power_law=2.68 -C input_file=/out/iact_output.dat "
         "-C output_file=/out/sim_telarray_output.dat "
-        "-C histogram_file=/out/sim_telarray_histogram.dat\n\n\n"
+        f"-C histogram_file={histogram}\n\n\n"
     )
     assert lines[5:] == ["rm -f '/out/iact_output.dat'\n\n"]
 

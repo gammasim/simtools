@@ -8,6 +8,12 @@ from simtools.runners.simulator import Simulator
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
+        "write_hdata",
+        help="Write sim_telarray hdata histogram files.",
+        action="store_true",
+        default=False,
+    ),
+    cli.ArgumentDefinition(
         "run_mode",
         help="Calibration run mode",
         type=str,
