@@ -20,6 +20,10 @@ DEFAULT_SUM_THRESHOLD = trace.DEFAULT_SUM_THRESHOLD
 EVENT_ID_KEY = "event_id"
 
 
+class NoEventsError(ValueError):
+    """No events are available for a selected telescope."""
+
+
 @dataclass
 class EventData:
     """Plain event arrays prepared for plotting."""
@@ -49,7 +53,9 @@ def prepare_event_images(file_name, telescope, event_ids=None, max_events=None):
         file_name, telescope, event_ids, max_events=max_events, verbose=True
     )
     if not events:
-        raise ValueError(f"No events read from file {file_name}")
+        if tel_desc is None:
+            raise ValueError(f"Telescope {telescope!r} not found in file {file_name}")
+        raise NoEventsError(f"No events read from file {file_name}")
 
     event_data = {}
     n_samples = None

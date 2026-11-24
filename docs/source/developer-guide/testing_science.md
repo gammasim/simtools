@@ -125,6 +125,18 @@ the site's `camera_telescopes`:
 camera_telescopes: [LSTN-01, LSTN-02]
 ```
 
+A catalogue entry with `expand_flasher_scan: true` derives flasher response inputs and event
+plots from the simulation's `flasher_photons` and `number_of_events`. The workflow contains one
+full-simulation template, one response-analysis template and one event-plot template, in that order.
+When telescope placeholders are used, each telescope gets its own matched set of steps.
+For this expansion, telescope-specific configuration overrides apply to the simulation template;
+the response and plot steps derive their intensity settings from it.
+Use `__FLASHER_RUN__` in the analysis template's simtel file path and
+`__FLASHER_PHOTONS__` in the plot output path. Omit `simtel_file` from the plot template;
+the runner supplies it. The runner expands one file and plot per level;
+multiple levels require `max_workers` of at least 2 to produce separate files. The file template
+must lie below the simulation output path and include `/run__FLASHER_RUN__/`.
+
 `configuration_overrides` in `release.yml` sets application configuration values for all
 applications of one test, for example:
 

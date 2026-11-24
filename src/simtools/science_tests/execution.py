@@ -34,6 +34,7 @@ from simtools.runners.simtools_runner import (
 )
 from simtools.science_tests import definitions as defs
 from simtools.science_tests.acceptance import AcceptanceError, evaluate_products
+from simtools.science_tests.flasher_scan import expand as expand_flasher_scan
 from simtools.science_tests.production import (
     archive_failed_production,
     check_inputs,
@@ -312,16 +313,29 @@ def _resolve_workflow(bundle, site, test_id, definition, replacements, args):
     workflow[_APPLICATIONS] = [
         expanded
         for application in workflow.get(_APPLICATIONS, [])
-        for expanded in _expand_telescopes(application, telescopes, overrides)
+        for expanded in _expand_telescopes(
+            application,
+            telescopes,
+            overrides
+            if not definition.get("expand_flasher_scan")
+            or application.get("application") == "simtools-simulate-flasher"
+            else {},
+        )
     ]
     workflow = replace_placeholders_recursively(workflow, replacements)
     allowed_changes = set(bundle.release.get("expected_changes", []))
     for application in workflow[_APPLICATIONS]:
         configuration = application.setdefault(_CONFIGURATION, {})
         configuration.update(definition["configuration_overrides"])
+        if application.get("application") == "simtools-simulate-flasher" and args.get(
+            "max_workers"
+        ):
+            configuration["max_workers"] = args["max_workers"]
         undeclared = set(configuration.get("compare_by", [])) - allowed_changes
         if undeclared:
             raise ValueError(f"Comparison by {sorted(undeclared)} is not in expected_changes.")
+    if definition.get("expand_flasher_scan"):
+        workflow[_APPLICATIONS] = expand_flasher_scan(workflow[_APPLICATIONS])
     apply_execution_overrides(
         workflow[_APPLICATIONS], args, model_source_options(args), get_explicit_env_file(args)
     )

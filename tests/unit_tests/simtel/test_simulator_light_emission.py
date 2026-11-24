@@ -1147,3 +1147,13 @@ def test_simulate_executes_script_of_script_writer(simulator_instance, tmp_test_
         stdout=tmp_test_directory / "sub_out.log",
         stderr=tmp_test_directory / "sub_err.log",
     )
+
+
+def test_missing_flasher_model_reports_telescope_and_model_version():
+    simulator = SimulatorLightEmission.__new__(SimulatorLightEmission)
+    simulator.telescope = "SSTS-01"
+    simulator.calibration_model = None
+    with pytest.raises(ValueError, match=r"SSTS-01.*flat_fielding.*8\.0\.0.*calibration_devices"):
+        simulator._initialize_light_emission_configuration(
+            {"light_source_type": "flat_fielding", "model_version": "8.0.0"}
+        )

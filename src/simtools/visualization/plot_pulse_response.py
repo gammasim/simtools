@@ -34,6 +34,14 @@ def plot_response(summary, waves, output_file):
     labels = ("Mean event peak [ADC above pedestal]", "Mean ADC sum [ADC samples]", width_label)
     with PdfPages(output_file) as pdf:
         available_gains = [gain for gain in GAINS if np.any(summary["gain"] == gain)]
+        if not available_gains:
+            fig, ax = plt.subplots(figsize=(8, 4))
+            try:
+                ax.text(0.5, 0.5, "No triggered events were recorded.", ha="center", va="center")
+                ax.set_axis_off()
+                pdf.savefig(fig)
+            finally:
+                plt.close(fig)
         for gain in available_gains:
             fig, axes = plt.subplots(2, 2, figsize=(11, 8), constrained_layout=True)
             try:

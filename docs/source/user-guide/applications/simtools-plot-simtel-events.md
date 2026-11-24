@@ -106,6 +106,9 @@ output_path (str, optional)
      --plots signals pedestals
 ```
 
+If the file has no events for the selected telescope, the application logs a warning and
+writes no event plots. An explicitly requested missing event remains an error.
+
 ## Command line arguments
 
 ```{eval-rst}

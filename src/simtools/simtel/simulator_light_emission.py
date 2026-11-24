@@ -156,6 +156,13 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _initialize_light_emission_configuration(self, config):
         """Initialize light emission configuration from the calibration model."""
+        if self.calibration_model is None:
+            raise ValueError(
+                f"No calibration device for telescope {self.telescope!r}, "
+                f"type {config.get(LIGHT_SOURCE_TYPE)!r}, model version "
+                f"{config.get('model_version')!r}. Check calibration_devices in the selected "
+                "simulation model source or select a light source explicitly."
+            )
         flasher_type = self.calibration_model.get_parameter_value("flasher_type")
         if flasher_type:
             config[LIGHT_SOURCE_TYPE] = flasher_type.lower()

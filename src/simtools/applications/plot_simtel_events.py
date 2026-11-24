@@ -117,12 +117,20 @@ def main():
     app_context = APPLICATION.start()
 
     plots = value_conversion.ensure_list(app_context.args.get("plots"))
-    prepared_events = event_images.prepare_event_images(
-        app_context.args.get("simtel_file"),
-        app_context.args.get("telescope"),
-        value_conversion.ensure_list(app_context.args.get("event_id")),
-        max_events=app_context.args.get("max_events"),
-    )
+    try:
+        prepared_events = event_images.prepare_event_images(
+            app_context.args.get("simtel_file"),
+            app_context.args.get("telescope"),
+            value_conversion.ensure_list(app_context.args.get("event_id")),
+            max_events=app_context.args.get("max_events"),
+        )
+    except event_images.NoEventsError:
+        if app_context.args.get("event_id"):
+            raise
+        app_context.logger.warning(
+            "No events available for the selected telescope; no event plots will be produced."
+        )
+        return
     if (
         app_context.args.get("pedestal_source", PEDESTAL_SOURCE_WAVEFORM)
         == PEDESTAL_SOURCE_MONITORING

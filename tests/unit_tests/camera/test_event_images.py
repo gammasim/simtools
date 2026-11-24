@@ -30,7 +30,7 @@ def test_prepare_event_images_reads_events_and_camera():
 
 def test_prepare_event_images_rejects_empty_read():
     with mock.patch.object(event_images, "read_events", return_value=([], {}, [])):
-        with pytest.raises(ValueError, match="No events read from file"):
+        with pytest.raises(event_images.NoEventsError, match="No events read from file"):
             event_images.prepare_event_images("events.simtel", "LSTN-01")
 
 
