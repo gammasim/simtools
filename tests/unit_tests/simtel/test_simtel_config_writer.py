@@ -540,6 +540,12 @@ def test_write_dummy_telescope_configuration_includes_camera_file(
     assert "metaparam telescope add camera_config_file" in lines
 
 
+@pytest.mark.parametrize("value", ["value\ninjected = 1", "value\rinjected", "value\x00"])
+def test_reject_control_characters_in_simtel_values(simtel_config_writer, value):
+    with pytest.raises(ValueError, match="cannot contain control characters"):
+        simtel_config_writer._get_value_string_for_simtel(value)
+
+
 def test_get_value_string_for_simtel(simtel_config_writer):
     assert simtel_config_writer._get_value_string_for_simtel(None) == "none"
     assert simtel_config_writer._get_value_string_for_simtel(True) == 1
