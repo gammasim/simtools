@@ -408,6 +408,35 @@ def test_write_array_config_file_raises_for_too_long_include_filename(
         )
 
 
+@pytest.mark.parametrize(
+    ("filename", "message"),
+    [
+        ("bad<name.cfg", "Invalid sim_telarray include filename"),
+        ("bad>name.cfg", "Invalid sim_telarray include filename"),
+        ("bad\nname.cfg", "sim_telarray configuration values cannot contain control characters"),
+        ("bad\rname.cfg", "sim_telarray configuration values cannot contain control characters"),
+        ("bad\x00name.cfg", "sim_telarray configuration values cannot contain control characters"),
+    ],
+)
+def test_write_array_config_file_rejects_invalid_include_filename(
+    simtel_config_writer, io_handler, site_model_north, telescope_model_lst, filename, message
+):
+    output_file = io_handler.get_output_file(file_name="simtel-config-writer_array-invalid.txt")
+    telescope_model = {
+        "LSTN-01": mock.Mock(
+            config_file_path=Path(filename),
+            parameters=telescope_model_lst.parameters,
+        )
+    }
+
+    with pytest.raises(ValueError, match=message):
+        simtel_config_writer.write_array_config_file(
+            config_file_path=output_file,
+            telescope_model=telescope_model,
+            site_model=site_model_north,
+        )
+
+
 def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     _file = io_handler.get_output_file(file_name="simtel-config-writer_telescope.txt")
     simtel_config_writer.write_telescope_config_file(
