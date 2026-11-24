@@ -1,6 +1,9 @@
 """Read-only storage implementations for simulation model files."""
 
 import io
+import os
+import stat
+import weakref
 from pathlib import Path, PurePosixPath
 from typing import BinaryIO, Protocol
 
@@ -44,32 +47,79 @@ class DirectoryStorage:
     def __init__(self, root):
         """Create storage rooted at a model checkout directory."""
         self.root = Path(root).expanduser().resolve()
+        directory = os.open(self.root.anchor, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            for part in self.root.parts[1:]:
+                child = os.open(
+                    part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory
+                )
+                os.close(directory)
+                directory = child
+        except FileNotFoundError as exc:
+            os.close(directory)
+            raise FileNotFoundError(f"Simulation models path does not exist: {self.root}") from exc
+        except BaseException:
+            os.close(directory)
+            raise
+        self._root_descriptor = directory
+        self._close_root = weakref.finalize(self, os.close, directory)
         self.name = str(self.root)
         self.config = {"type": "filesystem", "path": str(self.root)}
 
-    def _path(self, path):
-        return self.root.joinpath(*_relative_path(path).parts)
-
     def read_bytes(self, path):
         """Read a repository-relative file as bytes."""
-        return self._path(path).read_bytes()
+        with self.open(path) as stream:
+            return stream.read()
 
     def open(self, path):
         """Open a repository-relative file as a binary stream."""
-        return self._path(path).open("rb")
+        parts = _relative_path(path).parts
+        if not parts:
+            raise ValueError("Model storage file path must not be empty")
+        directory = os.dup(self._root_descriptor)
+        try:
+            for part in parts[:-1]:
+                child = os.open(
+                    part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory
+                )
+                os.close(directory)
+                directory = child
+            descriptor = os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory)
+            return os.fdopen(descriptor, "rb")
+        finally:
+            os.close(directory)
 
     def iter_files(self, prefix):
-        """List repository-relative files below a directory prefix."""
-        directory = self._path(prefix)
-        return sorted(
-            path.relative_to(self.root).as_posix()
-            for path in directory.rglob("*")
-            if path.is_file()
-        )
+        """List repository-relative regular files without following symlinks."""
+        parts = _relative_path(prefix).parts
+        directory = os.dup(self._root_descriptor)
+        try:
+            for part in parts:
+                try:
+                    child = os.open(
+                        part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory
+                    )
+                except FileNotFoundError:
+                    return []
+                os.close(directory)
+                directory = child
+            files = []
+            for parent, _, names, descriptor in os.fwalk(".", dir_fd=directory):
+                for name in names:
+                    info = os.stat(name, dir_fd=descriptor, follow_symlinks=False)
+                    if stat.S_ISREG(info.st_mode):
+                        files.append(PurePosixPath(*parts, parent, name).as_posix())
+            return sorted(files)
+        finally:
+            os.close(directory)
 
     def exists(self, path):
         """Return whether a repository-relative file exists."""
-        return self._path(path).is_file()
+        try:
+            with self.open(path):
+                return True
+        except FileNotFoundError, IsADirectoryError:
+            return False
 
 
 class GitStorage:
