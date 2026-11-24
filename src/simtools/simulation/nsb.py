@@ -17,6 +17,9 @@ _NSB_AUTOSCALE_AIRMASS = "nsb_autoscale_airmass"
 _NSB_SCALING_FACTOR = "nsb_scaling_factor"
 _AUTOSCALE_AIRMASS_DEFAULT = [0.0, 0.15]
 
+# Model parameters whose values scale_nsb_parameters changes
+NSB_PARAMETERS = (_NSB_PIXEL_RATE, _NSB_AUTOSCALE_AIRMASS, _NSB_SCALING_FACTOR)
+
 
 def airmass_scale(zenith_angle, airglow_fraction, extinction):
     """Calculate the NSB rate relative to zenith.
@@ -84,7 +87,7 @@ def scale_nsb_parameters(parameters, settings, site_factor):
         Copy of the parameters with NSB values as seen by sim_telarray.
     """
     result = deepcopy(parameters)
-    auto = _parse_value(
+    auto = _parse_autoscale_airmass(
         parameters.get(_NSB_AUTOSCALE_AIRMASS, {}).get("value", _AUTOSCALE_AIRMASS_DEFAULT)
     )
     if _NSB_PIXEL_RATE in result:
@@ -104,6 +107,9 @@ def scale_nsb_parameters(parameters, settings, site_factor):
 def _rate_factor(auto, settings, site_factor):
     """Return the NSB rate factor for the given settings."""
     factor = settings.manual_factor if settings.manual_factor is not None else site_factor
+    # Exact comparisons on purpose, matching sim_telarray (common/sim_config.c): airmass
+    # autoscaling applies only for a scaling factor of exactly 1.0 and a non-zero airglow
+    # fraction.
     if (
         settings.autoscale
         and math.isclose(factor, 1.0, rel_tol=0.0, abs_tol=0.0)
@@ -111,6 +117,18 @@ def _rate_factor(auto, settings, site_factor):
     ):
         factor = airmass_scale(settings.zenith_angle, auto[0], auto[1])
     return factor
+
+
+def _parse_autoscale_airmass(value):
+    """Return the two nsb_autoscale_airmass values (airglow fraction, extinction coefficient)."""
+    parsed = _parse_value(value)
+    values = parsed if isinstance(parsed, (list, tuple)) else [parsed]
+    if len(values) != 2:
+        raise ValueError(
+            "nsb_autoscale_airmass requires two values (airglow fraction, extinction "
+            f"coefficient), got {value!r}"
+        )
+    return [float(item) for item in values]
 
 
 def _parse_value(value):

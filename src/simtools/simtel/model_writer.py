@@ -16,7 +16,7 @@ from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter, get_simtel_site_parameters
-from simtools.simulation.nsb import scale_nsb_parameters, site_nsb_factor
+from simtools.simulation.nsb import NSB_PARAMETERS, scale_nsb_parameters, site_nsb_factor
 from simtools.utils import names
 
 _CORSIKA_FILE = "corsika_file"
@@ -77,6 +77,8 @@ class SimtelModelWriter:
         self.array_model_file_exported = False
         self.nsb_settings = None
         self.nsb_site_manual = 1.0
+        # NSB parameters as written by write_sim_telarray_config_file; None if not scaled
+        self.written_nsb_parameters = None
 
     def write_sim_telarray_config_file(self, additional_models=None, label=None):
         """
@@ -102,8 +104,13 @@ class SimtelModelWriter:
                 model_directory=self.model.config_file_directory
             )
         self._add_additional_models(additional_models, parameters)
-        if self.nsb_settings is not None:
+        if self.nsb_settings is None:
+            self.written_nsb_parameters = None
+        else:
             parameters = scale_nsb_parameters(parameters, self.nsb_settings, self.nsb_site_manual)
+            self.written_nsb_parameters = {
+                name: parameters[name] for name in NSB_PARAMETERS if name in parameters
+            }
 
         # Ensure the writer label matches the config file naming label
         self._load_simtel_config_writer(label=label if label is not None else self.model.label)

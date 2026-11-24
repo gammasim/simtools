@@ -20,12 +20,14 @@ from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.model_repository.reader import resolve_model_reader
 from simtools.runtime.context import RunContext
 from simtools.simtel import output_validation as simtel_output_validation
+from simtools.simtel.simtel_config_writer import get_simtel_site_parameters
 from simtools.simtel.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_seeds import instance_seed_pairs
 from simtools.simulation.configuration import (
     get_light_source_writer,
     get_model_writer,
 )
+from simtools.simulation.nsb import NsbSettings, site_nsb_factor
 from simtools.utils import value_conversion
 
 AXES_OFFSETS = "axes_offsets"
@@ -536,6 +538,7 @@ class SimulatorLightEmission(SimtelRunner):
         """
         bypass = self._bypass_optics() if bypass_optics is None else bypass_optics
         theta, phi = (0.0, 0.0) if bypass else self._get_telescope_pointing()
+        self._write_config_with_nsb_scaling(theta)
         simtel_bin = str(self.context.software.sim_telarray_exe)
 
         parts = [
@@ -603,6 +606,17 @@ class SimulatorLightEmission(SimtelRunner):
         if max_photoelectrons is not None:
             environment += f"MAX_PHOTOELECTRONS={shlex.quote(str(max_photoelectrons))} "
         return environment + shlex.join(command) + "\n"
+
+    def _write_config_with_nsb_scaling(self, zenith_angle):
+        """Write the telescope configuration with simtools NSB scaling for the zenith angle."""
+        writer = get_model_writer(self.telescope_model)
+        writer.nsb_settings = NsbSettings(
+            zenith_angle=float(zenith_angle),
+            manual_factor=self.light_emission_config.get("nsb_scaling_factor"),
+            autoscale=not self.light_emission_config.get("disable_nsb_autoscaling", False),
+        )
+        writer.nsb_site_manual = site_nsb_factor(get_simtel_site_parameters(self.site_model))
+        writer.write_sim_telarray_config_file(additional_models=self.site_model)
 
     def calculate_distance_focal_plane_calibration_device(self):
         """

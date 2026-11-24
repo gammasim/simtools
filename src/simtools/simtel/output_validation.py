@@ -23,6 +23,14 @@ from simtools.utils import random, value_conversion
 
 _logger = logging.getLogger(__name__)
 
+# sim_telarray NSB scaling messages (common/sim_config.c); simtools applies all NSB scaling to
+# the configured rates, so sim_telarray must not scale again
+_SIM_TELARRAY_NSB_SCALING_MESSAGES = [
+    "NSB level is auto-scaled",
+    "NSB level is scaled by a factor",
+    "Telescope has NSB scaling factor",
+]
+
 
 def _raise_inconsistent(title, errors):
     """Raise a ValueError listing inconsistent entries under a title."""
@@ -87,7 +95,7 @@ def validate_sim_telarray_logs(
 ):
     """Validate sim_telarray log files."""
     patterns = ["Finished.", "Sim_telarray finished at"]
-    forbidden = []
+    forbidden = list(_SIM_TELARRAY_NSB_SCALING_MESSAGES)
     if expected_mc_events is not None and expected_shower_events is not None:
         patterns.append(
             f"Run(s) completed as expected after {expected_mc_events} events "
@@ -120,7 +128,10 @@ def assert_sim_telarray_metadata(file, array_model, allow_for_changes=None):
     _logger.info(f"Found metadata in sim_telarray file for {len(telescope_meta)} telescopes")
     nsb = _recorded_nsb_expectation(array_model)
     site_mismatch = _assert_model_parameters(
-        global_meta, array_model.site_model, allow_for_changes, nsb
+        global_meta,
+        array_model.site_model,
+        _site_parameters_as_written(array_model.site_model, nsb),
+        allow_for_changes,
     )
     seed_mismatch = _assert_sim_telarray_seed(global_meta, array_model.sim_telarray_seed, file)
     if seed_mismatch:
@@ -137,7 +148,12 @@ def assert_sim_telarray_metadata(file, array_model, allow_for_changes=None):
 
     # all mismatches are reported, not only those found first
     mismatches = [
-        _assert_model_parameters(telescope_meta[i], model, allow_for_changes, nsb)
+        _assert_model_parameters(
+            telescope_meta[i],
+            model,
+            _telescope_parameters_as_written(model, nsb),
+            allow_for_changes,
+        )
         for i, model in enumerate(array_model.telescope_models.values(), start=1)
     ]
     mismatches.append(site_mismatch)
@@ -153,16 +169,34 @@ def _recorded_nsb_expectation(array_model):
     Return the NSB settings and site factor used when the array configuration was exported.
 
     The NSB rates are scaled when the configuration is written (see
-    ``simtools.simulation.nsb.scale_nsb_parameters``). Without recorded settings, sim_telarray
-    reads the model values unchanged.
+    ``simtools.simulation.nsb.scale_nsb_parameters``). The validation requires the export to
+    have happened in this process; the recorded values are then taken from the writer.
+
+    Parameters
+    ----------
+    array_model: ArrayModel
+        Array model whose sim_telarray configuration was exported.
 
     Returns
     -------
     tuple or None
         (NsbSettings, site factor), or None if no NSB scaling was recorded.
+
+    Raises
+    ------
+    ValueError
+        If the array configuration was not exported in this process.
     """
     writer = array_model.configuration_writers.get("sim_telarray")
-    settings = getattr(writer, "nsb_settings", None)
+    if writer is None or not (
+        writer.telescope_model_files_exported or writer.array_model_file_exported
+    ):
+        raise ValueError(
+            "NSB values written to the sim_telarray configuration of array model "
+            f"{array_model.model_version} are unknown; validate in the process that exported "
+            "the configuration."
+        )
+    settings = writer.nsb_settings
     if settings is None:
         return None
     return settings, site_nsb_factor(get_simtel_site_parameters(array_model.site_model))
@@ -187,14 +221,46 @@ def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
     return np.array(column, dtype=np.dtype(parameter_type))
 
 
-def _parameters_as_written(model, nsb):
-    """Return model parameters with the NSB scaling applied as in the exported configuration."""
+def _site_parameters_as_written(site_model, nsb):
+    """Return site parameters with the NSB scaling applied as in the exported configuration."""
+    if nsb is None:
+        return site_model.parameters
+    return scale_nsb_parameters(site_model.parameters, *nsb)
+
+
+def _telescope_parameters_as_written(model, nsb):
+    """
+    Return telescope parameters with the NSB values recorded when the configuration was written.
+
+    Parameters
+    ----------
+    model: TelescopeModel
+        Telescope model.
+    nsb: tuple or None
+        NSB settings and site factor recorded at export (see _recorded_nsb_expectation).
+
+    Raises
+    ------
+    ValueError
+        If NSB scaling was recorded but the telescope configuration has no recorded values.
+    """
     if nsb is None:
         return model.parameters
-    return scale_nsb_parameters(model.parameters, *nsb)
+    writer = model.configuration_writers.get("sim_telarray")
+    written = None if writer is None else writer.written_nsb_parameters
+    if written is None:
+        raise ValueError(
+            f"NSB values written for telescope {model.name} are unknown; validate in the "
+            "process that exported the telescope configuration."
+        )
+    parameters = dict(model.parameters)
+    for name, written_entry in written.items():
+        if name in parameters:
+            parameters[name] = {**parameters[name], "value": written_entry["value"]}
+    return parameters
 
 
-def _assert_model_parameters(metadata, model, allow_for_changes=None, nsb=None):
+def _assert_model_parameters(metadata, model, parameters, allow_for_changes=None):
     """
     Return the list of model parameters whose values do not match the sim_telarray metadata.
 
@@ -203,13 +269,13 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None, nsb=None):
     metadata: dict
         Metadata dictionary.
     model: SiteModel, TelescopeModel
-        Model to compare with.
+        Model to compare with (used to resolve file parameters).
+    parameters: dict
+        Model parameters as expected in the sim_telarray configuration (see
+        ``_site_parameters_as_written`` and ``_telescope_parameters_as_written``).
     allow_for_changes: list
         Model parameters changed with the command line ('-C'); metadata may differ for these.
-    nsb: tuple or None
-        NSB settings and site factor recorded at export (see _recorded_nsb_expectation).
     """
-    parameters = _parameters_as_written(model, nsb)
     invalid_parameter_list = []
     for param in parameters:
         # sim_telarray names: "reference_point_latitude" -> "latitude", "altitude" -> ...

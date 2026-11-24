@@ -25,7 +25,9 @@ def light_simulation(run_context, tmp_test_directory, monkeypatch):
         model_version="6.0.2",
     )
     simulation.telescope_model.get_parameter_value.return_value = 0  # single mirror
-    simulation.site_model = Mock(site="North")
+    simulation.telescope_model.configuration_writers = {"sim_telarray": Mock()}
+    simulation.site_model = Mock(site="North", parameters={})
+    simulation.site_model.get_simulation_software_parameters.return_value = {}
     simulation.site_model.get_parameter_value_with_unit.return_value = 2156 * u.m
     simulation.site_model.get_parameter_value.return_value = "atm_trans.dat"
     simulation.calibration_model = Mock()

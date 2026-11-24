@@ -13,7 +13,10 @@ from astropy.table import QTable
 
 import simtools.simtel.simtel_file_writer as simtel_file_writer
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simtel.simtel_config_writer import (
+    SimtelConfigWriter,
+    get_simtel_site_parameters,
+)
 
 logger = logging.getLogger()
 
@@ -332,6 +335,34 @@ def test_segmented_dual_mirror_telescope_does_not_write_mirror_list(
     ]
 
 
+def test_neutral_nsb_scaling_defaults_to_false(simtel_config_writer):
+    assert simtel_config_writer.neutral_nsb_scaling is False
+
+
+def test_get_simtel_site_parameters_site_model_takes_precedence(mocker):
+    site_model = mocker.Mock(
+        parameters={"nsb_scaling_factor": {"value": 1.5}, "site_only": {"value": "a"}}
+    )
+    site_model.get_simulation_software_parameters.return_value = {
+        "nsb_scaling_factor": {"value": 2.0},
+        "iobuf_maximum": {"value": 1000},
+    }
+
+    result = get_simtel_site_parameters(site_model)
+
+    site_model.get_simulation_software_parameters.assert_called_once_with("sim_telarray")
+    assert result["nsb_scaling_factor"] == {"value": 1.5}
+    assert result["iobuf_maximum"] == {"value": 1000}
+    assert result["site_only"] == {"value": "a"}
+
+
+def test_get_simtel_site_parameters_without_software_parameters(mocker):
+    site_model = mocker.Mock(parameters={"site_only": {"value": "a"}})
+    site_model.get_simulation_software_parameters.return_value = None
+
+    assert get_simtel_site_parameters(site_model) == {"site_only": {"value": "a"}}
+
+
 @pytest.mark.parametrize(
     ("neutral_nsb_scaling", "expected_nsb_factor"), [(False, "2.0"), (True, "1.0")]
 )
@@ -383,6 +414,42 @@ def test_write_array_config_file(
         lines = f.readlines()
         assert lines[-2].endswith("\n")
         assert lines[-1] == "\n"
+
+
+@pytest.mark.parametrize("neutral_nsb_scaling", [False, True])
+@pytest.mark.parametrize("autoscale_airmass", ["0.84 0.29", [0.84, 0.29]])
+def test_write_dummy_telescope_nsb_parameters(
+    simtel_config_writer,
+    telescope_model_lst,
+    site_model_north,
+    tmp_test_directory,
+    neutral_nsb_scaling,
+    autoscale_airmass,
+):
+    telescope_model_lst.parameters["nsb_autoscale_airmass"] = {
+        "parameter": "nsb_autoscale_airmass",
+        "value": autoscale_airmass,
+    }
+    telescope_model_lst.parameters["nsb_scaling_factor"] = {
+        "parameter": "nsb_scaling_factor",
+        "value": "2.0",
+    }
+    simtel_config_writer.neutral_nsb_scaling = neutral_nsb_scaling
+    simtel_config_writer.write_array_config_file(
+        config_file_path=Path(tmp_test_directory) / "array-nsb-dummy.cfg",
+        telescope_model={"LSTN-01": telescope_model_lst},
+        site_model=site_model_north,
+    )
+    dummy_text = (Path(tmp_test_directory) / "InvalidTelescope.cfg").read_text(encoding="utf-8")
+    dummy_lines = [line.strip() for line in dummy_text.splitlines()]
+    if neutral_nsb_scaling:
+        assert "nsb_autoscale_airmass = 0.0 0.29" in dummy_lines
+        assert "nsb_scaling_factor = 1.0" in dummy_lines
+    else:
+        assert "nsb_autoscale_airmass = 0.84 0.29" in dummy_lines
+        assert "nsb_scaling_factor = 2.0" in dummy_lines
+    # the telescope parameters themselves are not modified by the dummy neutralization
+    assert telescope_model_lst.parameters["nsb_autoscale_airmass"]["value"] == autoscale_airmass
 
 
 def test_write_array_config_file_excludes_corsika_only_site_tables(

@@ -1,6 +1,7 @@
 import pytest
 
 from simtools.simulation.nsb import (
+    NSB_PARAMETERS,
     NsbSettings,
     airmass_scale,
     scale_nsb_parameters,
@@ -80,3 +81,37 @@ def test_scale_nsb_parameters_uses_site_factor_without_manual_factor():
     assert result["nsb_pixel_rate"]["value"] == pytest.approx(0.4)
     assert result["nsb_scaling_factor"]["value"] == pytest.approx(1.0)
     assert parameters["nsb_scaling_factor"]["value"] == pytest.approx(2.0)
+
+
+@pytest.mark.parametrize("airmass", ["0.84 0.29", "0.84,0.29", [0.84, 0.29], (0.84, 0.29)])
+def test_scale_nsb_parameters_autoscale_airmass_formats(airmass):
+    parameters = {
+        "nsb_pixel_rate": {"value": 0.2},
+        "nsb_autoscale_airmass": {"value": airmass},
+    }
+    settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
+
+    result = scale_nsb_parameters(parameters, settings, 1.0)
+
+    assert result["nsb_pixel_rate"]["value"] == pytest.approx(0.20660017)
+    assert result["nsb_autoscale_airmass"]["value"] == [0.0, 0.29]
+
+
+@pytest.mark.parametrize("airmass", ["0.84", "0.84 0.29 0.1", [0.84], "", None])
+def test_scale_nsb_parameters_autoscale_airmass_requires_two_values(airmass):
+    parameters = {
+        "nsb_pixel_rate": {"value": 0.2},
+        "nsb_autoscale_airmass": {"value": airmass},
+    }
+    settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
+
+    with pytest.raises(ValueError, match="nsb_autoscale_airmass requires two values"):
+        scale_nsb_parameters(parameters, settings, 1.0)
+
+
+def test_nsb_parameters_names():
+    assert set(NSB_PARAMETERS) == {
+        "nsb_pixel_rate",
+        "nsb_autoscale_airmass",
+        "nsb_scaling_factor",
+    }

@@ -23,6 +23,7 @@ from simtools.simtel import (
     simtel_file_writer,
     table_serializers,
 )
+from simtools.simulation.nsb import NsbSettings, scale_nsb_parameters
 from simtools.utils import names, value_conversion
 
 logger = logging.getLogger(__name__)
@@ -45,12 +46,25 @@ _SKIPPED_PARAMETERS = (
     "camera_config_file",
     *_FLASHER_LEGACY_PARAMETERS,
 )
+# NSB settings without any scaling (factor 1.0, no airmass autoscaling)
+_NEUTRAL_NSB = NsbSettings(zenith_angle=0.0, manual_factor=1.0, autoscale=False)
 
 
 def get_simtel_site_parameters(site_model):
-    """Merge sim_telarray and model parameters, with site model values taking precedence.
+    """
+    Merge sim_telarray software parameters with site model parameters.
 
-    :meta private:
+    Site model parameters take precedence over sim_telarray software parameters.
+
+    Parameters
+    ----------
+    site_model: SiteModel
+        Site model providing sim_telarray software parameters and model parameters.
+
+    Returns
+    -------
+    dict
+        Merged parameter dictionary.
     """
     return {
         **(site_model.get_simulation_software_parameters("sim_telarray") or {}),
@@ -116,6 +130,9 @@ class SimtelConfigWriter:
         self._context = context or RunContext.from_environment()
         self._serialized_table_cache = {}
         self._camera_file_cache = {}
+        # write nsb_scaling_factor = 1.0 because simtools applied the NSB scaling
+        # to the telescope rates
+        self.neutral_nsb_scaling = False
 
     @property
     def label(self):
@@ -609,10 +626,7 @@ class SimtelConfigWriter:
                 for name, parameter in get_simtel_site_parameters(site_model).items()
                 if not catalog.is_global_sim_telarray_parameter(name)
             }
-            if (
-                getattr(self, "neutral_nsb_scaling", False)
-                and "nsb_scaling_factor" in global_parameters
-            ):
+            if self.neutral_nsb_scaling and "nsb_scaling_factor" in global_parameters:
                 global_parameters["nsb_scaling_factor"] = {
                     **global_parameters["nsb_scaling_factor"],
                     "value": 1.0,
@@ -633,8 +647,12 @@ class SimtelConfigWriter:
             invalid_telescope_config = f"{invalid_telescope_name}.cfg"
             self._validate_include_file_name_length(invalid_telescope_config)
             file.write(f"# include <{invalid_telescope_config}>\n\n")
+            dummy_parameters = deepcopy(first_telescope.parameters)
+            if self.neutral_nsb_scaling:
+                # telescopes inherit the dummy (default) setup; it must not autoscale NSB
+                dummy_parameters = scale_nsb_parameters(dummy_parameters, _NEUTRAL_NSB, 1.0)
             self.write_dummy_telescope_configuration_file(
-                deepcopy(first_telescope.parameters),
+                dummy_parameters,
                 config_file_directory / f"{invalid_telescope_name}.cfg",
                 invalid_telescope_name,
             )

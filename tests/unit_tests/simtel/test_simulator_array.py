@@ -7,6 +7,7 @@ import astropy.units as u
 import pytest
 
 from simtools.simtel.simulator_array import SimulatorArray
+from simtools.simulation.nsb import NsbSettings
 
 logger = logging.getLogger()
 
@@ -211,6 +212,12 @@ def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker, write
     simtel_runner.array_model.export_config_files = mocker.Mock()
     simtel_runner.simulation_parameters.zenith_angle = 25.0
     simtel_runner.simulation_parameters.azimuth_angle = 180.0
+    mocker.patch(
+        "simtools.simtel.simulator_array.get_model_writer",
+        return_value=mocker.Mock(
+            telescope_model_files_exported=False, array_model_file_exported=False, nsb_settings=None
+        ),
+    )
 
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
@@ -331,7 +338,12 @@ def test_common_run_command_puts_include_directories_before_model_directory(simt
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.get_file_name.return_value = "file"
     simtel_runner.runner_service.load_files.return_value = {}
-    mocker.patch("simtools.simtel.simulator_array.get_model_writer")
+    mocker.patch(
+        "simtools.simtel.simulator_array.get_model_writer",
+        return_value=mocker.Mock(
+            telescope_model_files_exported=False, array_model_file_exported=False, nsb_settings=None
+        ),
+    )
     simtel_runner.include_directories = ("/scaled/qe-table",)
     mocker.patch.object(simtel_runner, "_determine_pointing_option", return_value=False)
 
@@ -402,3 +414,26 @@ def test_nsb_settings_rejected_after_telescope_config_export(simtel_runner, mock
 
     with pytest.raises(ValueError, match="NSB settings changed after configuration export"):
         simtel_runner.make_run_command(run_number=1, input_file="in.dat")
+
+
+def test_nsb_settings_unchanged_after_export_do_not_raise(simtel_runner, mocker):
+    """Repeating the NSB settings used for an earlier export is accepted."""
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.load_files.return_value = {}
+    simtel_runner.context = simtel_runner.context.replace(args={})
+    writer = mocker.Mock(telescope_model_files_exported=True, array_model_file_exported=True)
+    writer.nsb_settings = NsbSettings(
+        zenith_angle=simtel_runner.simulation_parameters.zenith_angle,
+        manual_factor=None,
+        autoscale=True,
+    )
+    mocker.patch("simtools.simtel.simulator_array.get_model_writer", return_value=writer)
+    mocker.patch.object(simtel_runner, "_determine_pointing_option", return_value=False)
+    mocker.patch.object(simtel_runner, "_make_run_command_for_shower_simulations", return_value=[])
+    mocker.patch.object(
+        simtel_runner.simulation_parameters, "is_calibration_run", return_value=False
+    )
+
+    simtel_runner.make_run_command(run_number=1, input_file="in.dat")
+
+    writer.export_config_files.assert_called_once()
