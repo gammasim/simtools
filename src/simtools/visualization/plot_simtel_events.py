@@ -400,6 +400,31 @@ class PlotSimtelEvent:
             event_index=event_index,
         )
 
+    def _plot_average_events(self, gain):
+        """Plot per-pixel means of the event images and individual peak positions."""
+        events = list(self.event_data.values())
+        signals = np.mean(np.stack([event.image for event in events]), axis=0)
+        peaks = np.mean(
+            np.stack([np.argmax(event.adc_samples, axis=1) for event in events]), axis=0
+        )
+        fig, axes = plt.subplots(2, 3, figsize=(15, 8), dpi=300)
+        for row, values, label in zip(axes, (signals, peaks), ("Mean signal", "Mean peak sample")):
+            self._plot_average_row(row, values, label)
+        fig.suptitle(f"{self.telescope} {gain} gain (average of {len(events)} events)")
+        fig.tight_layout()
+        return fig
+
+    def _plot_average_row(self, axes, values, label):
+        """Draw camera, pixel distribution and radial views for one quantity."""
+        plot_pixel_layout_with_image(self.camera, image=values, ax=axes[0], color_bar_label=label)
+        stats = {"median": float(np.median(values)), "std": float(np.std(values))}
+        edges = np.histogram_bin_edges(values, bins=DEFAULT_HISTOGRAM_BINS)
+        self._plot_histogram(axes[1], values, edges, stats, label, PIXEL_LABEL)
+        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"])
+        axes[2].scatter(radius, values, s=5, alpha=0.6)
+        axes[2].set_xlabel("Distance from camera centre [m]")
+        axes[2].set_ylabel(label)
+
     def _plot_camera_image_and_histogram(
         self, values, pix_ids, found_count, edges, x_label, y_label, event_index
     ):
@@ -569,6 +594,20 @@ class _StreamingPlotter(PlotSimtelEvent):
     def stream_figures(self, plots, args, output_file):
         """Generate and close each figure after it has been saved to the PDF."""
         output_file = Path(output_file)
+        if args.get("average_events", False):
+            fig = self._plot_average_events(args.get("gain", "high"))
+            try:
+                yield fig
+                if args.get("save_pngs", False):
+                    save_figure(
+                        fig,
+                        output_file.with_name("average_events.png"),
+                        figure_format=["png"],
+                        dpi=int(args.get("figure_dpi", 300)),
+                    )
+            finally:
+                plt.close(fig)
+            return
         for plot_name in self._plots_to_run(plots):
             for event_index in self.event_data:
                 fig = self._generate_single_plot(plot_name, event_index, args)

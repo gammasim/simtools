@@ -586,3 +586,32 @@ def test_timing_projection_keeps_selected_pixel_positions(mock_plotter):
     np.testing.assert_allclose(offsets[:, 0], radii[[2, 7]])
     np.testing.assert_array_equal(offsets[:, 1], [4, 8])
     plt.close(fig)
+
+
+def test_average_events_plots_each_pixel_mean(mock_plotter, tmp_test_directory):
+    first = mock_plotter.event_data[0]
+    first.adc_samples[:] = 0
+    first.adc_samples[:, 2] = 1
+    first.image = np.arange(first.number_of_pixels, dtype=float)
+    second_samples = np.zeros_like(first.adc_samples)
+    second_samples[:, 6] = 2
+    mock_plotter.event_data[1] = event_images.EventData(
+        event_id=1,
+        adc_samples=second_samples,
+        number_of_pixels=first.number_of_pixels,
+        n_samples=first.n_samples,
+        image=first.image + 10,
+    )
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"
+    ) as camera_plot:
+        figures = mock_plotter.stream_figures(
+            ["all"], {"average_events": True, "gain": "low"}, tmp_test_directory / "out.pdf"
+        )
+        fig = next(figures)
+        assert len(fig.axes) == 6
+        np.testing.assert_allclose(camera_plot.call_args_list[0].kwargs["image"], first.image + 5)
+        np.testing.assert_allclose(camera_plot.call_args_list[1].kwargs["image"], 4)
+        assert "low" in fig._suptitle.get_text()
+        assert list(figures) == []
+    assert fig.number not in plt.get_fignums()
