@@ -47,8 +47,28 @@ class EventImages:
     trace_maxima: object
 
 
-def prepare_event_images(file_name, telescope, event_ids=None, max_events=None):
-    """Read and prepare event arrays and camera geometry for plotting."""
+def prepare_event_images(file_name, telescope, event_ids=None, max_events=None, gain="high"):
+    """Read event arrays and camera geometry.
+
+    Parameters
+    ----------
+    file_name : path-like
+        Sim_telarray input file.
+    telescope : str
+        Telescope name in the input file.
+    event_ids : list of int, optional
+        Event IDs to select.
+    max_events : int, optional
+        Maximum number of events to read.
+    gain : {"high", "low"}, optional
+        Gain channel to use.
+
+    Returns
+    -------
+    EventImages
+        Prepared event arrays and camera geometry.
+    """
+    _validate_gain(gain)
     event_index, tel_desc, events = read_events(
         file_name, telescope, event_ids, max_events=max_events, verbose=True
     )
@@ -60,7 +80,8 @@ def prepare_event_images(file_name, telescope, event_ids=None, max_events=None):
     event_data = {}
     n_samples = None
     for idx, event in zip(event_index, events):
-        adc_samples, pedestals, image = trace.get_trace_data(event["adc_samples"])
+        samples = _select_gain(event["adc_samples"], gain)
+        adc_samples, pedestals, image = trace.get_trace_data(samples)
         number_of_pixels, n_samples = adc_samples.shape
         event_data[idx] = EventData(
             event_id=idx,
@@ -88,8 +109,31 @@ def prepare_event_images(file_name, telescope, event_ids=None, max_events=None):
     )
 
 
-def apply_monitoring_pedestals(event_images, file_name, telescope):
-    """Replace waveform pedestals with selected events' monitoring values (in place)."""
+def _select_gain(samples, gain):
+    """Select the requested channel and reject unavailable low-gain samples."""
+    samples = np.asarray(samples)
+    if gain == "low":
+        if samples.ndim != 3 or samples.shape[0] < 2:
+            raise ValueError("Low-gain channel is not available in the event waveform")
+        return samples[1]
+    return trace.get_adc_samples_per_gain(samples)
+
+
+def apply_monitoring_pedestals(event_images, file_name, telescope, gain="high"):
+    """Replace event pedestals with monitoring values in place.
+
+    Parameters
+    ----------
+    event_images : EventImages
+        Prepared events to update.
+    file_name : path-like
+        Sim_telarray input file.
+    telescope : str
+        Telescope name in the input file.
+    gain : {"high", "low"}, optional
+        Gain channel used to prepare the events.
+    """
+    _validate_gain(gain)
     tel_map = get_sim_telarray_telescope_id_to_telescope_name_mapping(file_name)
     tel_id = next((key for key, name in tel_map.items() if name == telescope), None)
     if tel_id is None:
@@ -104,7 +148,10 @@ def apply_monitoring_pedestals(event_images, file_name, telescope):
             monitoring = event.get("camera_monitorings", {}).get(tel_id)
             if monitoring is None:
                 continue
-            data.pedestals = _monitoring_pedestals(monitoring, data.number_of_pixels, event_id)
+            gain_index = 1 if gain == "low" else 0
+            data.pedestals = _monitoring_pedestals(
+                monitoring, data.number_of_pixels, event_id, gain_index
+            )
             data.image = trace.trace_integration(
                 data.adc_samples, data.pedestals, (INTEGRATION_WINDOW_START, data.n_samples)
             )
@@ -113,6 +160,12 @@ def apply_monitoring_pedestals(event_images, file_name, telescope):
                 return
     if remaining:
         raise ValueError(f"No monitoring pedestal found for event IDs {sorted(remaining)}")
+
+
+def _validate_gain(gain):
+    """Reject gain selections that do not identify a channel."""
+    if gain not in ("high", "low"):
+        raise ValueError("Gain must be 'high' or 'low'")
 
 
 def trace_maxima(samples, sum_threshold):
@@ -134,11 +187,11 @@ def trace_maxima(samples, sum_threshold):
     return peak_samples, pixel_ids, found_count
 
 
-def _monitoring_pedestals(monitoring, number_of_pixels, event_id):
-    """Extract calibrated per-sample high-gain pedestal values."""
+def _monitoring_pedestals(monitoring, number_of_pixels, event_id, gain_index=0):
+    """Extract calibrated per-sample pedestal values for the requested gain."""
     try:
         n_slices = monitoring["n_ped_slices"]
-        values = np.asarray(monitoring["pedestal"], dtype=float)[0]
+        values = np.asarray(monitoring["pedestal"], dtype=float)[gain_index]
         if n_slices <= 0 or values.shape != (number_of_pixels,) or not np.all(np.isfinite(values)):
             raise ValueError
         return values / n_slices

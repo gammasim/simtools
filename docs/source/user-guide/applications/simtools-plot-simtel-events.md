@@ -6,7 +6,7 @@
    :exclude-members: main
 ```
 
-Use `--pedestal_source monitoring` to use the per-pixel high-gain pedestal stored
+Use `--pedestal_source monitoring` to use the per-pixel pedestal stored
 in sim_telarray camera monitoring data for pedestal plots and signal integration.
 The default, `waveform`, estimates the pedestal separately for each event from the
 last 10 waveform samples; a pulse tail in that window can bias the estimate.
@@ -15,10 +15,19 @@ The monitoring option requires valid monitoring data for every selected event.
 The `pedestals`, `signals` and `peak_timing` plots show a camera image, a pixel histogram,
 and pixel values against distance from the camera centre for each selected event.
 The `signal_vs_radius` and `peak_vs_radius` choices provide separate radial plots.
-Signal is the pedestal-subtracted integrated high-gain waveform in digital counts;
+Signal is the pedestal-subtracted integrated waveform in digital counts;
 peak timing is the sample index of the waveform maximum. Timing plots include only
 pixels passing `--sum_threshold`. Use `--max_events` or `--event_id` to inspect
-multiple events; these plots do not average over a run.
+multiple events. The default gain is high; use `--gain low` to select low gain.
+The selected gain must be present in the input, including its monitoring pedestal
+when `--pedestal_source monitoring` is used.
+
+Use `--average_events` to produce one figure with the mean signal and mean peak
+sample index for each pixel across the selected events. Each quantity occupies one
+row with a camera image, a pixel histogram, and values against distance from the
+camera centre. Peak sample indices are averaged over all selected events without a
+timing threshold. Set `--max_events` to the number of events to include; its default
+is one. For an illumination scan, use events from one illumination level per plot.
 
 For flat-fielding events, use `--plots all --flat_fielding` to include normalized
 charge plots, or select `--plots normalized_signal normalized_signal_vs_radius`.
@@ -104,6 +113,13 @@ output_path (str, optional)
      --telescope LSTN-04 \\
      --event_id 5 10 15 \\
      --plots signals pedestals
+
+4) Plot per-pixel averages for 20 events in the low-gain channel:
+
+   simtools-plot-simtel-events \\
+     --simtel_file run000010.simtel.zst \\
+     --telescope LSTN-04 \\
+     --average_events --gain low --max_events 20
 ```
 
 If the file has no events for the selected telescope, the application logs a warning and

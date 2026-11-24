@@ -81,6 +81,12 @@ _ARGUMENTS = (
         "max_events", type=int, default=1, help="Maximum number of events to process"
     ),
     cli.ArgumentDefinition(
+        "average_events", action="store_true", help="Plot per-pixel averages over selected events"
+    ),
+    cli.ArgumentDefinition(
+        "gain", choices=["high", "low"], default="high", help="Gain channel to plot"
+    ),
+    cli.ArgumentDefinition(
         "pedestal_source",
         choices=[PEDESTAL_SOURCE_WAVEFORM, PEDESTAL_SOURCE_MONITORING],
         default=PEDESTAL_SOURCE_WAVEFORM,
@@ -117,12 +123,14 @@ def main():
     app_context = APPLICATION.start()
 
     plots = value_conversion.ensure_list(app_context.args.get("plots"))
+    gain = app_context.args.get("gain", "high")
     try:
         prepared_events = event_images.prepare_event_images(
             app_context.args.get("simtel_file"),
             app_context.args.get("telescope"),
             value_conversion.ensure_list(app_context.args.get("event_id")),
             max_events=app_context.args.get("max_events"),
+            gain=gain,
         )
     except event_images.NoEventsError:
         if app_context.args.get("event_id"):
@@ -139,6 +147,7 @@ def main():
             prepared_events,
             app_context.args.get("simtel_file"),
             app_context.args.get("telescope"),
+            gain,
         )
     generate_and_save_plots(
         plots=plots,
