@@ -814,7 +814,7 @@ class HTCondorBackend:
             try:
                 with result_path.open(encoding="utf-8") as handle:
                     payload = json.load(handle)
-            except (OSError, UnicodeError, ValueError) as exc:
+            except (OSError, ValueError) as exc:
                 failures.append(f"process {process_id}: unreadable result {result_path}: {exc}")
                 continue
             if not HTCondorBackend._valid_result(payload):

@@ -180,13 +180,20 @@ def test_write_job_payload_is_readable_by_worker(tmp_test_directory):
         assert json.load(handle)["payload_version"] == 2
 
 
-def test_worker_rejects_unregistered_function_from_payload(tmp_test_directory):
+def test_worker_round_trips_importable_function(tmp_test_directory):
+    path = Path(tmp_test_directory) / "job.json"
+    write_job_payload(JobSpec("job", 0, function=shlex.quote, item="two words"), path)
+    assert execute_job_spec(worker.load_job_payload(path)) == "'two words'"
+
+
+@pytest.mark.parametrize("name", ["no-such-module:function", "json:no_such_function", "invalid"])
+def test_worker_rejects_unresolvable_function(tmp_test_directory, name):
     path = Path(tmp_test_directory) / "job.json"
     write_job_payload(JobSpec("job", 0, command=("echo", "ok")), path)
     payload = json.loads(path.read_text(encoding="utf-8"))
-    payload["job_spec"]["value"]["function"] = "os:system"
+    payload["job_spec"]["value"]["function"] = name
     path.write_text(json.dumps(payload), encoding="utf-8")
-    with pytest.raises(ValueError, match="Unregistered worker type"):
+    with pytest.raises(ValueError, match="Cannot resolve worker function"):
         worker.load_job_payload(path)
 
 

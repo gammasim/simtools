@@ -31,14 +31,6 @@ logger = logging.getLogger(__name__)
 
 _PAYLOAD_VERSION = 2
 _JOB_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
-_WORKER_FUNCTIONS = {
-    "simtools.runners.simulator:_write_reduced_event_list_batch",
-    "simtools.production_configuration.trigger_histograms:_write_directory_group_job",
-    "simtools.production_configuration.trigger_histograms:_execute_production_job",
-    "simtools.ray_tracing.mirror_panel_psf:_optimize_single_mirror_worker",
-    "simtools.ray_tracing.psf_parameter_optimisation:_run_psf_evaluation",
-    "simtools.simtel.multi_illuminator_simulator:_simulate_illuminator_telescope_pair",
-}
 _DATA_CLASSES = {
     "simtools.ray_tracing.mirror_panel_psf:MirrorOptimizationJob",
     "simtools.ray_tracing.mirror_panel_psf:MirrorOptimizationResult",
@@ -57,6 +49,20 @@ def _registered_object(name, allowed):
 def _object_name(value):
     """Return the qualified registration name of a callable or class."""
     return f"{value.__module__}:{value.__qualname__}"
+
+
+def _resolve_worker_function(name):
+    """Resolve an importable callable from a trusted job payload."""
+    try:
+        module, qualified_name = name.split(":", 1)
+        result = importlib.import_module(module)
+        for part in qualified_name.split("."):
+            result = getattr(result, part)
+    except (AttributeError, ImportError, ValueError) as exc:
+        raise ValueError(f"Cannot resolve worker function: {name!r}.") from exc
+    if not callable(result):
+        raise ValueError(f"Worker function is not callable: {name!r}.")
+    return result
 
 
 def _encode_value(value):
@@ -371,11 +377,8 @@ def _job_with_table_path(job_spec, table_path):
 def write_job_payload(job_spec, path):
     """Serialize a versioned worker payload."""
     function = None if job_spec.function is None else _object_name(job_spec.function)
-    if (
-        function is not None
-        and _registered_object(function, _WORKER_FUNCTIONS) is not job_spec.function
-    ):
-        raise ValueError(f"Invalid registered worker function: {function}.")
+    if function is not None and _resolve_worker_function(function) is not job_spec.function:
+        raise ValueError(f"Worker function is not importable by name: {function}.")
     if job_spec.initializer is not None:
         raise ValueError("Worker initializers are not supported by HTCondor.")
     values = {field.name: getattr(job_spec, field.name) for field in fields(JobSpec)}
@@ -403,7 +406,7 @@ def _load_job_payload(path):
         raise ValueError("Worker payload does not contain a JobSpec.")
     function = values.get("function")
     if function is not None:
-        values["function"] = _registered_object(function, _WORKER_FUNCTIONS)
+        values["function"] = _resolve_worker_function(function)
     values["options"] = CommandOptions(**values["options"])
     if values.get("initializer") is not None:
         raise ValueError("Worker initializers are not supported by HTCondor.")
