@@ -1,13 +1,19 @@
 """Tests for serialized remote worker execution."""
 
-import pickle
+import json
 import shlex
 import sys
 from pathlib import Path
 
+import numpy as np
+import pytest
+from astropy import units as u
+from astropy.tests.helper import assert_quantity_allclose
+
 from simtools.job_execution import worker
 from simtools.job_execution.job import CommandOptions, JobSpec
 from simtools.job_execution.worker import execute_command, execute_job_spec, run, write_job_payload
+from simtools.ray_tracing import mirror_panel_psf
 
 
 def _square(value):
@@ -152,27 +158,74 @@ def test_worker_writes_failure_result_for_invalid_payload(tmp_test_directory):
     run_directory = Path(tmp_test_directory)
     (run_directory / "inputs").mkdir()
     (run_directory / "results").mkdir()
-    with (run_directory / "inputs" / "job-000000.pkl").open("wb") as handle:
-        pickle.dump({"payload_version": -1}, handle)
+    with (run_directory / "inputs" / "job-000000.json").open("w", encoding="utf-8") as handle:
+        json.dump({"payload_version": -1}, handle)
 
     assert run(run_directory, "job-000000") == 1
-    with (run_directory / "results" / "job-000000.pkl").open("rb") as handle:
-        result = pickle.load(handle)
+    with (run_directory / "results" / "job-000000.json").open(encoding="utf-8") as handle:
+        result = json.load(handle)
     assert result["ok"] is False
     assert result["exception"] == "ValueError"
 
 
 def test_write_job_payload_is_readable_by_worker(tmp_test_directory):
     """Payload serialization preserves the complete JobSpec."""
-    path = Path(tmp_test_directory) / "job.pkl"
-    job = JobSpec("job-000000", 0, function=_square, item=4)
+    path = Path(tmp_test_directory) / "job.json"
+    job = JobSpec("job-000000", 0, command=("echo", "ok"))
 
     write_job_payload(job, path)
 
-    with path.open("rb") as handle:
-        payload = pickle.load(handle)
-    assert payload["job_spec"] == job
-    assert payload["payload_version"] == 1
+    assert worker.load_job_payload(path) == job
+    with path.open(encoding="utf-8") as handle:
+        assert json.load(handle)["payload_version"] == 2
+
+
+def test_worker_rejects_unregistered_function_from_payload(tmp_test_directory):
+    path = Path(tmp_test_directory) / "job.json"
+    write_job_payload(JobSpec("job", 0, command=("echo", "ok")), path)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["job_spec"]["value"]["function"] = "os:system"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="Unregistered worker type"):
+        worker.load_job_payload(path)
+
+
+def test_worker_rejects_pickle_payload(tmp_test_directory):
+    path = Path(tmp_test_directory) / "job.json"
+    path.write_bytes(b"cos\nsystem\n(S'echo unsafe'\ntR.")
+    with pytest.raises(ValueError, match="Expecting value"):
+        worker.load_job_payload(path)
+
+
+def test_worker_round_trips_supported_values(tmp_test_directory):
+    path = Path(tmp_test_directory) / "job.json"
+    item = {"path": Path("data/file"), "array": np.array([1, 2]), "quantity": 3 * u.m}
+    write_job_payload(JobSpec("job", 0, command=("echo", "ok"), item=item), path)
+    restored = worker.load_job_payload(path).item
+    assert restored["path"] == item["path"]
+    np.testing.assert_array_equal(restored["array"], item["array"])
+    assert_quantity_allclose(restored["quantity"], item["quantity"])
+
+
+def test_worker_round_trips_registered_function_and_record(tmp_test_directory):
+    path = Path(tmp_test_directory) / "job.json"
+    item = mirror_panel_psf.MirrorOptimizationJob("label", {"indices": (1, 2)}, 0, 1.5)
+    job = JobSpec("job", 0, function=mirror_panel_psf._optimize_single_mirror_worker, item=item)
+    write_job_payload(job, path)
+    assert worker.load_job_payload(path) == job
+
+
+@pytest.mark.parametrize("value", [object(), np.array([object()], dtype=object)])
+def test_worker_rejects_unsupported_values(tmp_test_directory, value):
+    path = Path(tmp_test_directory) / "job.json"
+    with pytest.raises(TypeError, match=r"Unsupported worker data|Object arrays"):
+        write_job_payload(JobSpec("job", 0, command=("echo",), item=value), path)
+
+
+def test_worker_rejects_initializer(tmp_test_directory):
+    path = Path(tmp_test_directory) / "job.json"
+    with pytest.raises(ValueError, match="initializers are not supported"):
+        write_job_payload(JobSpec("job", 0, command=("echo",), initializer=_square), path)
 
 
 def test_worker_stages_tables_for_corsika_command_and_passes_local_path(
@@ -204,14 +257,14 @@ def test_worker_stages_tables_for_corsika_command_and_passes_local_path(
             "urqmd",
         ),
     )
-    worker.write_job_payload(job, run_directory / "inputs" / "job-000000.pkl")
+    worker.write_job_payload(job, run_directory / "inputs" / "job-000000.json")
 
     assert worker.run(run_directory, "job-000000", scratch_directory=scratch) == 0
 
     result = capfd.readouterr()
     assert str(scratch) in result.out
     assert not list(scratch.iterdir())
-    assert (run_directory / "results" / "job-000000.pkl").is_file()
+    assert (run_directory / "results" / "job-000000.json").is_file()
 
 
 def test_worker_does_not_stage_tables_for_non_corsika_job(tmp_test_directory, mocker):
@@ -222,7 +275,7 @@ def test_worker_does_not_stage_tables_for_non_corsika_job(tmp_test_directory, mo
     (run_directory / "inputs").mkdir()
     mocker.patch.dict("os.environ", {"SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH": str(source)})
     job = JobSpec("job-000000", 0, command=(sys.executable, "-c", "pass"))
-    worker.write_job_payload(job, run_directory / "inputs" / "job-000000.pkl")
+    worker.write_job_payload(job, run_directory / "inputs" / "job-000000.json")
 
     assert worker.run(run_directory, "job-000000") == 0
 

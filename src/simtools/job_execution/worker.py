@@ -2,11 +2,11 @@
 
 import argparse
 import copy
+import importlib
 import inspect
 import json
 import logging
 import os
-import pickle
 import re
 import shlex
 import stat
@@ -15,19 +15,119 @@ import tempfile
 import time
 import traceback
 from contextlib import ExitStack, contextmanager
-from dataclasses import replace
+from dataclasses import fields, replace
 from pathlib import Path
 
+import numpy as np
+from astropy import units as u
+
 from simtools import constants
-from simtools.job_execution.job import JobSpec
+from simtools.job_execution.job import CommandOptions, JobSpec
 from simtools.model_repository.reader import create_model_reader_from_source_config
 from simtools.runtime.context import RunContext
 from simtools.runtime.dependencies import stage_corsika_interaction_tables
 
 logger = logging.getLogger(__name__)
 
-_PAYLOAD_VERSION = 1
+_PAYLOAD_VERSION = 2
 _JOB_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+_WORKER_FUNCTIONS = {
+    "simtools.runners.simulator:_write_reduced_event_list_batch",
+    "simtools.production_configuration.trigger_histograms:_write_directory_group_job",
+    "simtools.production_configuration.trigger_histograms:_execute_production_job",
+    "simtools.ray_tracing.mirror_panel_psf:_optimize_single_mirror_worker",
+    "simtools.ray_tracing.psf_parameter_optimisation:_run_psf_evaluation",
+    "simtools.simtel.multi_illuminator_simulator:_simulate_illuminator_telescope_pair",
+}
+_DATA_CLASSES = {
+    "simtools.ray_tracing.mirror_panel_psf:MirrorOptimizationJob",
+    "simtools.ray_tracing.mirror_panel_psf:MirrorOptimizationResult",
+    "simtools.ray_tracing.psf_evaluation:_PSFEvaluationJob",
+}
+
+
+def _registered_object(name, allowed):
+    """Resolve only a statically registered callable or data class."""
+    if name not in allowed:
+        raise ValueError(f"Unregistered worker type: {name!r}.")
+    module, attribute = name.split(":", 1)
+    return getattr(importlib.import_module(module), attribute)
+
+
+def _object_name(value):
+    """Return the qualified registration name of a callable or class."""
+    return f"{value.__module__}:{value.__qualname__}"
+
+
+def _encode_value(value):
+    """Encode supported worker data without executable deserialization."""
+    if value is None or type(value) in (bool, int, float, str):
+        return value
+    if isinstance(value, u.Quantity):
+        return {"type": "quantity", "value": _encode_value(value.value), "unit": str(value.unit)}
+    if isinstance(value, np.ndarray):
+        if value.dtype.hasobject:
+            raise TypeError("Object arrays are not supported in worker payloads.")
+        return {"type": "array", "value": value.tolist(), "dtype": value.dtype.str}
+    if isinstance(value, np.generic):
+        return _encode_value(value.item())
+    return _encode_container_value(value)
+
+
+def _encode_container_value(value):
+    """Encode paths, collections and registered data records."""
+    if isinstance(value, Path):
+        return {"type": "path", "value": str(value)}
+    if isinstance(value, (list, tuple)):
+        return {
+            "type": "tuple" if isinstance(value, tuple) else "list",
+            "value": [_encode_value(item) for item in value],
+        }
+    if isinstance(value, dict) and all(isinstance(key, str) for key in value):
+        return {"type": "dict", "value": {key: _encode_value(item) for key, item in value.items()}}
+    name = _object_name(type(value))
+    if name in _DATA_CLASSES:
+        return {
+            "type": "record",
+            "name": name,
+            "value": {
+                field.name: _encode_value(getattr(value, field.name)) for field in fields(value)
+            },
+        }
+    raise TypeError(f"Unsupported worker data type: {name}.")
+
+
+def decode_worker_value(value):
+    """Decode the explicitly supported worker data types."""
+    if value is None or type(value) in (bool, int, float, str):
+        return value
+    if not isinstance(value, dict) or not isinstance(value.get("type"), str):
+        raise ValueError("Invalid worker data value.")
+    kind = value["type"]
+    data = value.get("value")
+    if kind == "path" and isinstance(data, str):
+        return Path(data)
+    if kind in ("list", "tuple") and isinstance(data, list):
+        decoded = [decode_worker_value(item) for item in data]
+        return tuple(decoded) if kind == "tuple" else decoded
+    if kind == "dict" and isinstance(data, dict):
+        return {key: decode_worker_value(item) for key, item in data.items()}
+    return _decode_special_value(kind, data, value)
+
+
+def _decode_special_value(kind, data, value):
+    """Decode quantities, arrays and registered records."""
+    if kind == "quantity" and isinstance(value.get("unit"), str):
+        return u.Quantity(decode_worker_value(data), unit=value["unit"])
+    if kind == "array" and isinstance(data, list):
+        dtype = np.dtype(value.get("dtype"))
+        if dtype.hasobject:
+            raise ValueError("Object arrays are not supported in worker payloads.")
+        return np.asarray(data, dtype=dtype)
+    if kind == "record" and isinstance(data, dict):
+        cls = _registered_object(value.get("name"), _DATA_CLASSES)
+        return cls(**{key: decode_worker_value(item) for key, item in data.items()})
+    raise ValueError(f"Unsupported worker data encoding: {kind!r}.")
 
 
 def _parser():
@@ -270,24 +370,44 @@ def _job_with_table_path(job_spec, table_path):
 
 def write_job_payload(job_spec, path):
     """Serialize a versioned worker payload."""
+    function = None if job_spec.function is None else _object_name(job_spec.function)
+    if (
+        function is not None
+        and _registered_object(function, _WORKER_FUNCTIONS) is not job_spec.function
+    ):
+        raise ValueError(f"Invalid registered worker function: {function}.")
+    if job_spec.initializer is not None:
+        raise ValueError("Worker initializers are not supported by HTCondor.")
+    values = {field.name: getattr(job_spec, field.name) for field in fields(JobSpec)}
+    values["function"] = function
+    values["options"] = {
+        field.name: getattr(job_spec.options, field.name) for field in fields(CommandOptions)
+    }
     payload = {
         "payload_version": _PAYLOAD_VERSION,
-        "job_spec": job_spec,
+        "job_spec": _encode_value(values),
     }
-    with Path(path).open("wb") as handle:
-        pickle.dump(payload, handle)
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o640)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, allow_nan=False)
 
 
 def _load_job_payload(path):
-    """Load and validate one trusted worker payload."""
-    with Path(path).open("rb") as handle:
-        payload = pickle.load(handle)
+    """Load and validate one worker payload."""
+    with Path(path).open(encoding="utf-8") as handle:
+        payload = json.load(handle)
     if not isinstance(payload, dict) or payload.get("payload_version") != _PAYLOAD_VERSION:
         raise ValueError("Unsupported worker payload format.")
-    job_spec = payload.get("job_spec")
-    if not isinstance(job_spec, JobSpec):
-        raise TypeError("Worker payload does not contain a JobSpec.")
-    return job_spec
+    values = decode_worker_value(payload.get("job_spec"))
+    if not isinstance(values, dict):
+        raise ValueError("Worker payload does not contain a JobSpec.")
+    function = values.get("function")
+    if function is not None:
+        values["function"] = _registered_object(function, _WORKER_FUNCTIONS)
+    values["options"] = CommandOptions(**values["options"])
+    if values.get("initializer") is not None:
+        raise ValueError("Worker initializers are not supported by HTCondor.")
+    return JobSpec(**values)
 
 
 def load_job_payload(path):
@@ -298,7 +418,7 @@ def load_job_payload(path):
 def _job_file(run_directory, directory, job_id):
     """Resolve a job-owned path below the private run directory."""
     validate_job_id(job_id)
-    return Path(run_directory) / directory / f"{job_id}.pkl"
+    return Path(run_directory) / directory / f"{job_id}.json"
 
 
 def validate_job_id(job_id):
@@ -310,9 +430,16 @@ def validate_job_id(job_id):
 def _write_result(path, payload):
     """Write a worker result atomically."""
     temporary = path.with_suffix(".tmp")
-    with temporary.open("wb") as handle:
-        pickle.dump(payload, handle)
+    with temporary.open("w", encoding="utf-8") as handle:
+        json.dump({"version": 1, **_encode_result(payload)}, handle, allow_nan=False)
     temporary.replace(path)
+
+
+def _encode_result(payload):
+    """Encode a successful result value using the worker data format."""
+    if payload.get("ok"):
+        return {**payload, "value": _encode_value(payload["value"])}
+    return payload
 
 
 def run(run_directory, job_id, log_file=None, scratch_directory=None):
