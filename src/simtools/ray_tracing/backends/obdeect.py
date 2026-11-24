@@ -41,6 +41,19 @@ def star_direction(zenith_angle, off_axis_x, off_axis_y):
     return tuple(direction.tolist())
 
 
+def camera_window_options(records):
+    """Return the obdeect camera-window option for these parameter records.
+
+    A model with ``camera_window_parameters`` has its window traced ("sphere": refraction,
+    Fresnel and bulk loss from the window records); obdeect then requires ``camera_filter`` to
+    be "none", so the window transmission is not counted twice. Models without a window give no
+    option and compile as before.
+    """
+    if "camera_window_parameters" in records:
+        return {"camera_window": "sphere"}
+    return {}
+
+
 class ObdeectRayTracer:
     """Trace star light through one telescope model with obdeect.
 
@@ -75,6 +88,7 @@ class ObdeectRayTracer:
                     "telescope": self.telescope_model.name,
                     "model_version": self.telescope_model.model_version,
                 },
+                **camera_window_options(records),
             )
         return self._models[key]
 

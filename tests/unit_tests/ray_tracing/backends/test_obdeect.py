@@ -14,6 +14,7 @@ from simtools.ray_tracing.backends.obdeect import (
     ObdeectBackend,
     ObdeectRayTracer,
     _at_plane,
+    camera_window_options,
     make_shower_tracer,
     star_direction,
 )
@@ -86,6 +87,25 @@ def toy_telescope(tmp_test_directory, mocker):
     writer.get_single_mirror_list_file.return_value = tmp_test_directory / "single_mirror.dat"
     telescope.configuration_writers = {"sim_telarray": writer}
     return telescope
+
+
+def test_camera_window_options():
+    assert camera_window_options({"mirror_class": _record(0)}) == {}
+    assert camera_window_options({"camera_window_parameters": _record({"shape": "sphere"})}) == {
+        "camera_window": "sphere"
+    }
+
+
+def test_optical_model_traces_the_camera_window_of_the_model(toy_telescope, mocker):
+    compile_records = mocker.patch(
+        "simtools.ray_tracing.backends.obdeect.OpticalModel.from_records"
+    )
+    tracer = ObdeectRayTracer(toy_telescope)
+    tracer.optical_model(20.0, 3)
+    assert "camera_window" not in compile_records.call_args.kwargs
+    toy_telescope.parameters["camera_window_parameters"] = _record({"shape": "sphere"})
+    tracer.optical_model(20.0, 4)
+    assert compile_records.call_args.kwargs["camera_window"] == "sphere"
 
 
 def test_make_shower_tracer(toy_telescope):
