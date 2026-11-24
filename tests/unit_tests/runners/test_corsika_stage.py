@@ -128,10 +128,15 @@ def test_output_paths_are_shell_quoted(corsika_stage_mock_array_model, tmp_test_
     lines = stage.prepare(run_number=1, output=StreamTo(("command",)))
 
     output = stage.output_file(1)
-    assert shlex.split(lines[0]) == ["export", f"CORSIKA_DATA={output.parent}"]
+    assert lines[0] == f"export CORSIKA_DATA={shlex.quote(str(output.parent))}"
     config = stage.stream_service.get_file_name("multi_pipe_config", run_number=1)
-    assert shlex.split(config.read_text(encoding="utf-8").splitlines()[-1]) == [
-        "zstd",
-        ">",
-        str(output),
-    ]
+    assert config.read_text(encoding="utf-8").splitlines()[-1] == (
+        f"zstd > {shlex.quote(str(output))}"
+    )
+
+
+def test_output_directory_rejects_line_breaks(corsika_stage_mock_array_model, tmp_test_directory):
+    stage = corsika_stage_mock_array_model
+    stage.runner_service.directory = pathlib.Path(tmp_test_directory) / "invalid\npath"
+    with pytest.raises(ValueError, match="output directory cannot contain line breaks"):
+        stage.prepare(run_number=1)

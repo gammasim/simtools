@@ -85,6 +85,9 @@ class CorsikaStage(CatalogStage):
         if input_file is not None:
             raise ValueError("CORSIKA does not read an input product.")
         self.file_list = self.runner_service.load_files(run_number=run_number)
+        run_dir = self.runner_service.get_file_name("corsika_output", run_number=run_number).parent
+        if any(character in str(run_dir) for character in ("\n", "\r")):
+            raise ValueError("CORSIKA output directory cannot contain line breaks.")
         streamed = isinstance(output, StreamTo)
         if streamed:
             self.file_list.update(self.stream_service.load_files(run_number=run_number))
@@ -93,10 +96,11 @@ class CorsikaStage(CatalogStage):
             corsika_output = self.runner_service.get_file_name(
                 "corsika_output", run_number=run_number
             )
+        if any(character in str(corsika_output) for character in ("\n", "\r")):
+            raise ValueError("CORSIKA output path cannot contain line breaks.")
         corsika_input = self.runner_service.get_file_name("corsika_input", run_number=run_number)
         self.corsika_config.generate_corsika_input_file(streamed, corsika_input, corsika_output)
 
-        run_dir = self.runner_service.get_file_name("corsika_output", run_number=run_number).parent
         accounting_command = build_accounting_command(
             [self._corsika_executable()],
             self.runner_service.get_file_name("corsika_resources", run_number=run_number),
