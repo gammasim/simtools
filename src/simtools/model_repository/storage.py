@@ -3,6 +3,7 @@
 import io
 import os
 import stat
+import weakref
 from pathlib import Path, PurePosixPath
 from typing import BinaryIO, Protocol
 
@@ -46,6 +47,22 @@ class DirectoryStorage:
     def __init__(self, root):
         """Create storage rooted at a model checkout directory."""
         self.root = Path(root).expanduser().resolve()
+        directory = os.open(self.root.anchor, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            for part in self.root.parts[1:]:
+                child = os.open(
+                    part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory
+                )
+                os.close(directory)
+                directory = child
+        except FileNotFoundError as exc:
+            os.close(directory)
+            raise FileNotFoundError(f"Simulation models path does not exist: {self.root}") from exc
+        except BaseException:
+            os.close(directory)
+            raise
+        self._root_descriptor = directory
+        self._close_root = weakref.finalize(self, os.close, directory)
         self.name = str(self.root)
         self.config = {"type": "filesystem", "path": str(self.root)}
 
@@ -59,7 +76,7 @@ class DirectoryStorage:
         parts = _relative_path(path).parts
         if not parts:
             raise ValueError("Model storage file path must not be empty")
-        directory = os.open(self.root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        directory = os.dup(self._root_descriptor)
         try:
             for part in parts[:-1]:
                 child = os.open(
@@ -75,7 +92,7 @@ class DirectoryStorage:
     def iter_files(self, prefix):
         """List repository-relative regular files without following symlinks."""
         parts = _relative_path(prefix).parts
-        directory = os.open(self.root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        directory = os.dup(self._root_descriptor)
         try:
             for part in parts:
                 try:

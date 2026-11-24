@@ -2,6 +2,7 @@
 
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -271,3 +272,15 @@ def test_export_rejects_symlinks_and_parent_escape(tmp_test_directory):
         ModelSource._export_target(destination, "../escape")
     assert not (outside / "new-file").exists()
     assert not (outside / "asset").exists()
+
+
+def test_export_directory_allows_concurrent_creation(tmp_test_directory):
+    directory = Path(tmp_test_directory) / "concurrent" / "nested"
+
+    def create_directory(_):
+        descriptor = ModelSource._open_export_directory(directory)
+        os.close(descriptor)
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(create_directory, range(32)))
+    assert directory.is_dir()

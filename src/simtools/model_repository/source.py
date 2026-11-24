@@ -427,7 +427,10 @@ class ModelSource:
                         part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory
                     )
                 except FileNotFoundError:
-                    os.mkdir(part, dir_fd=directory)
+                    try:
+                        os.mkdir(part, dir_fd=directory)
+                    except FileExistsError:
+                        pass
                     child = os.open(
                         part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory
                     )
