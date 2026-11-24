@@ -107,7 +107,7 @@ class CorsikaStage(CatalogStage):
             input_file=corsika_input,
         )
         return [
-            f"export CORSIKA_DATA={run_dir}",
+            f"export CORSIKA_DATA={shlex.quote(str(run_dir))}",
             'mkdir -p "$CORSIKA_DATA"',
             'cd "$CORSIKA_DATA" || exit 2',
             "",
@@ -127,7 +127,7 @@ class CorsikaStage(CatalogStage):
                 corsika_output = self.runner_service.get_file_name(
                     "corsika_output", run_number=run_number
                 )
-                file.write(f"zstd > {corsika_output}\n")
+                file.write(f"zstd > {shlex.quote(str(corsika_output))}\n")
         self._logger.info(f"Multipipe script: {multipipe_file}")
 
         multipipe_script = self.stream_service.get_file_name(

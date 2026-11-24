@@ -1,6 +1,7 @@
 """Tests for the CORSIKA simulation stage."""
 
 import pathlib
+import shlex
 
 import astropy.units as u
 import pytest
@@ -116,3 +117,21 @@ def test_resources(corsika_stage_mock_array_model):
     assert corsika_stage_mock_array_model.get_resources(runtime=2.5)["runtime"] == pytest.approx(
         2.5
     )
+
+
+def test_output_paths_are_shell_quoted(corsika_stage_mock_array_model, tmp_test_directory):
+    stage = corsika_stage_mock_array_model
+    stage.runner_service.directory = pathlib.Path(tmp_test_directory) / "space ; $(touch marker)"
+    stage.runner_service.directory.mkdir(parents=True)
+    stage.save_output = True
+
+    lines = stage.prepare(run_number=1, output=StreamTo(("command",)))
+
+    output = stage.output_file(1)
+    assert shlex.split(lines[0]) == ["export", f"CORSIKA_DATA={output.parent}"]
+    config = stage.stream_service.get_file_name("multi_pipe_config", run_number=1)
+    assert shlex.split(config.read_text(encoding="utf-8").splitlines()[-1]) == [
+        "zstd",
+        ">",
+        str(output),
+    ]
