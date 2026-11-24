@@ -1,6 +1,8 @@
 """Tests for the storage-neutral simulation-model source."""
 
 import json
+import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -252,3 +254,33 @@ def test_source_update_info_treats_non_mapping_metadata_as_empty(content):
         "model_update": None,
         "model_version_history": [],
     }
+
+
+def test_export_rejects_symlinks_and_parent_escape(tmp_test_directory):
+    root = Path(tmp_test_directory) / "export-security"
+    root.mkdir()
+    outside = root / "outside"
+    outside.mkdir()
+    destination = root / "destination"
+    destination.mkdir()
+    (destination / "linked").symlink_to(outside, target_is_directory=True)
+    (destination / "file").symlink_to(outside / "new-file")
+    for target in (destination / "linked" / "asset", destination / "file"):
+        with pytest.raises(OSError, match=r"Too many levels|Not a directory|File exists"):
+            ModelSource._open_export_file(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+    with pytest.raises(ValueError, match="Invalid model export path"):
+        ModelSource._export_target(destination, "../escape")
+    assert not (outside / "new-file").exists()
+    assert not (outside / "asset").exists()
+
+
+def test_export_directory_allows_concurrent_creation(tmp_test_directory):
+    directory = Path(tmp_test_directory) / "concurrent" / "nested"
+
+    def create_directory(_):
+        descriptor = ModelSource._open_export_directory(directory)
+        os.close(descriptor)
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(create_directory, range(32)))
+    assert directory.is_dir()

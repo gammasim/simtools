@@ -427,6 +427,35 @@ def test_write_array_config_file_raises_for_too_long_include_filename(
         )
 
 
+@pytest.mark.parametrize(
+    ("filename", "message"),
+    [
+        ("bad<name.cfg", "Invalid sim_telarray include filename"),
+        ("bad>name.cfg", "Invalid sim_telarray include filename"),
+        ("bad\nname.cfg", "sim_telarray configuration values cannot contain control characters"),
+        ("bad\rname.cfg", "sim_telarray configuration values cannot contain control characters"),
+        ("bad\x00name.cfg", "sim_telarray configuration values cannot contain control characters"),
+    ],
+)
+def test_write_array_config_file_rejects_invalid_include_filename(
+    simtel_config_writer, io_handler, site_model_north, telescope_model_lst, filename, message
+):
+    output_file = io_handler.get_output_file(file_name="simtel-config-writer_array-invalid.txt")
+    telescope_model = {
+        "LSTN-01": mock.Mock(
+            config_file_path=Path(filename),
+            parameters=telescope_model_lst.parameters,
+        )
+    }
+
+    with pytest.raises(ValueError, match=message):
+        simtel_config_writer.write_array_config_file(
+            config_file_path=output_file,
+            telescope_model=telescope_model,
+            site_model=site_model_north,
+        )
+
+
 def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     _file = io_handler.get_output_file(file_name="simtel-config-writer_telescope.txt")
     simtel_config_writer.write_telescope_config_file(
@@ -557,6 +586,12 @@ def test_write_dummy_telescope_configuration_includes_camera_file(
     lines = config_file.read_text(encoding="utf-8").splitlines()
     assert "camera_config_file = InvalidTelescope_single_pixel_camera.dat" in lines
     assert "metaparam telescope add camera_config_file" in lines
+
+
+@pytest.mark.parametrize("value", ["value\ninjected = 1", "value\rinjected", "value\x00"])
+def test_reject_control_characters_in_simtel_values(simtel_config_writer, value):
+    with pytest.raises(ValueError, match="cannot contain control characters"):
+        simtel_config_writer._get_value_string_for_simtel(value)
 
 
 def test_get_value_string_for_simtel(simtel_config_writer):

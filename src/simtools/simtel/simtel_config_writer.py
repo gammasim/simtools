@@ -142,6 +142,7 @@ class SimtelConfigWriter:
         logger.debug(f"Writing telescope config file {config_file_path}")
 
         telescope_name = telescope_name or self._telescope_model_name
+        self._validate_config_text(telescope_name)
         _telescope_design_model = telescope_design_model or self._telescope_design_model
         simtel_par = self._get_parameters_for_sim_telarray(
             parameters, config_file_path, telescope_name=telescope_name
@@ -155,6 +156,7 @@ class SimtelConfigWriter:
                 "#endif\n\n"
             )
             for simtel_name, simtel_value in simtel_par.items():
+                self._validate_config_text(simtel_name)
                 file.write(f"{simtel_name} = {self._get_value_string_for_simtel(simtel_value)}\n")
             metadata = self._get_sim_telarray_metadata(
                 "telescope",
@@ -469,7 +471,14 @@ class SimtelConfigWriter:
             value = 1 if value else 0
         elif isinstance(value, list | np.ndarray):
             value = value_conversion.convert_list_to_string(value, shorten_list=True)
+        self._validate_config_text(value)
         return value
+
+    @staticmethod
+    def _validate_config_text(value):
+        """Reject control characters in values written to configuration records."""
+        if any(ord(character) < 32 or ord(character) == 127 for character in str(value)):
+            raise ValueError("sim_telarray configuration values cannot contain control characters")
 
     def _config_type_meta_parameters(self, config_type, telescope_model_name, design_model):
         """Return the release/config header lines and metaparam prefix for a config type."""
@@ -546,6 +555,8 @@ class SimtelConfigWriter:
             if value is not None:
                 meta_parameters.append(f"{prefix} set {key}={value}")
 
+        for line in meta_parameters:
+            self._validate_config_text(line)
         sim_telarray_metadata.validate_metadata(meta_parameters)
         return meta_parameters
 
@@ -629,6 +640,7 @@ class SimtelConfigWriter:
             )
 
             for count, (tel_name, tel_model) in enumerate(telescope_model.items()):
+                self._validate_config_text(tel_name)
                 tel_config_file = tel_model.config_file_path.name
                 self._validate_include_file_name_length(tel_config_file)
                 file.write(f"% {tel_name}\n")
@@ -638,6 +650,9 @@ class SimtelConfigWriter:
 
     def _validate_include_file_name_length(self, file_name):
         """Validate include-file names against the sim_telarray parser word-length limit."""
+        self._validate_config_text(file_name)
+        if any(character in file_name for character in "<>"):
+            raise ValueError(f"Invalid sim_telarray include filename: {file_name!r}")
         if len(file_name) > SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH:
             raise ValueError(
                 "sim_telarray include filename exceeds parser limit "
@@ -698,6 +713,8 @@ class SimtelConfigWriter:
             sep,
             comment_char,
         ]
+        for line in lines:
+            self._validate_config_text(line)
         file.write("".join(f"{line}\n" for line in lines))
 
     def _write_simtools_parameters(self, file):
@@ -729,6 +746,8 @@ class SimtelConfigWriter:
             for key, value in meta_items.items()
             if not isinstance(value, list)
         ]
+        for line in meta_lines:
+            self._validate_config_text(line)
         sim_telarray_metadata.validate_metadata(meta_lines)
         file.write("".join(f"{self.TAB}{line}\n" for line in meta_lines))
 
@@ -747,6 +766,7 @@ class SimtelConfigWriter:
                 parameter_data=value,
             )
             if simtel_name is not None:
+                self._validate_config_text(simtel_value)
                 file.write(f"{self.TAB}{simtel_name} = {simtel_value}\n")
         for meta in self._get_sim_telarray_metadata(
             "site", site_parameters, None, additional_metadata

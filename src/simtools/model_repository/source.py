@@ -2,6 +2,7 @@
 
 import io
 import logging
+import os
 import shutil
 import threading
 from copy import deepcopy
@@ -329,7 +330,7 @@ class ModelSource:
             if isinstance(p, dict) and p.get("file") and p.get("value")
         ]
         destination = Path(dest)
-        destination.mkdir(parents=True, exist_ok=True)
+        os.close(self._open_export_directory(destination))
         exported = {}
         for parameter in selected:
             target_name, status = self._export_parameter_file(parameter, destination)
@@ -345,7 +346,7 @@ class ModelSource:
         source = self.resolve_parameter_asset(parameter)
         scope = PurePosixPath(source).parent.parent.name
         target_name = qualify_parameter_file_name(parameter, fallback_instrument=scope)
-        target = destination / target_name
+        target = self._export_target(destination, target_name)
         if not target.exists():
             self._copy(source, target)
             return target_name, "copied from model source"
@@ -357,7 +358,7 @@ class ModelSource:
         target_name = self._get_collision_file_name(original_name, source)
         parameter.setdefault(SOURCE_VALUE_KEY, original_name)
         parameter["value"] = target_name
-        target = destination / target_name
+        target = self._export_target(destination, target_name)
         if not target.exists():
             self._copy(source, target)
             return target_name, "copied from model source"
@@ -380,7 +381,7 @@ class ModelSource:
     @staticmethod
     def _matches_file(stream, target):
         """Compare a streamed storage asset with a local file in chunks."""
-        with target.open("rb") as existing:
+        with ModelSource._open_export_file(target, os.O_RDONLY) as existing:
             while True:
                 chunk = stream.read(1024 * 1024)
                 if chunk != existing.read(1024 * 1024):
@@ -390,6 +391,52 @@ class ModelSource:
 
     def _copy(self, source, target):
         """Copy a stored asset to a local destination."""
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with self.storage.open(source) as input_file, target.open("wb") as output_file:
+        with (
+            self.storage.open(source) as input_file,
+            self._open_export_file(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL) as output_file,
+        ):
             shutil.copyfileobj(input_file, output_file)
+
+    @staticmethod
+    def _export_target(destination, name):
+        """Keep metadata-derived output paths inside the destination."""
+        relative = Path(name)
+        if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+            raise ValueError(f"Invalid model export path: {name!r}")
+        return destination / relative
+
+    @staticmethod
+    def _open_export_file(target, flags):
+        """Open an export without following symlinks in any path component."""
+        directory = ModelSource._open_export_directory(target.parent)
+        try:
+            descriptor = os.open(target.name, flags | os.O_NOFOLLOW, 0o666, dir_fd=directory)
+            return os.fdopen(descriptor, "wb" if flags & os.O_WRONLY else "rb")
+        finally:
+            os.close(directory)
+
+    @staticmethod
+    def _open_export_directory(path):
+        """Open or create a directory without following any symlinks."""
+        absolute = path.absolute()
+        directory = os.open(absolute.anchor, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            for part in absolute.parts[1:]:
+                try:
+                    child = os.open(
+                        part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory
+                    )
+                except FileNotFoundError:
+                    try:
+                        os.mkdir(part, dir_fd=directory)
+                    except FileExistsError:
+                        pass
+                    child = os.open(
+                        part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory
+                    )
+                os.close(directory)
+                directory = child
+            return directory
+        except BaseException:
+            os.close(directory)
+            raise
