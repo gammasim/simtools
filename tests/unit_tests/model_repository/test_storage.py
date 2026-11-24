@@ -52,3 +52,20 @@ def test_storage_reads_identical_files(storage):
 @pytest.mark.parametrize("root_prefix", ["", "."])
 def test_storage_lists_all_files_from_repository_root(storage, root_prefix):
     assert storage.iter_files(root_prefix) == sorted(FILES)
+
+
+def test_directory_storage_rejects_symlink_traversal(tmp_test_directory):
+    root = Path(tmp_test_directory) / "symlink-model"
+    root.mkdir()
+    outside = Path(tmp_test_directory) / "symlink-outside"
+    outside.mkdir()
+    (outside / "asset").write_bytes(b"secret")
+    (root / "linked-directory").symlink_to(outside, target_is_directory=True)
+    (root / "linked-file").symlink_to(outside / "asset")
+    storage = DirectoryStorage(root)
+    for name in ("linked-directory/asset", "linked-file"):
+        with pytest.raises(OSError, match=r"Too many levels|Not a directory|File exists"):
+            storage.read_bytes(name)
+    assert storage.iter_files("") == []
+    with pytest.raises(OSError, match=r"Too many levels|Not a directory"):
+        storage.iter_files("linked-directory")
