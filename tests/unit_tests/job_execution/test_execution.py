@@ -1,7 +1,6 @@
 """Tests for the generic execution facade."""
 
-import logging
-import pickle
+import json
 import sys
 import types
 from pathlib import Path
@@ -30,11 +29,6 @@ from simtools.runtime.context import RunContext
 
 
 def _square(value):
-    return value * value
-
-
-def _log_square(value):
-    logging.getLogger(__name__).info("processing value %s", value)
     return value * value
 
 
@@ -144,7 +138,7 @@ def test_recover_submission_finished_retry_promotes_results_and_exhausts(
     )
     result_dir = retry.work_dir / "results"
     result_dir.mkdir(parents=True)
-    (result_dir / "job.pkl").write_bytes(b"result")
+    (result_dir / "job.json").write_bytes(b"result")
     backend = mocker.Mock()
     backend.is_finished.return_value = True
     backend.failed_job_ids.return_value = {"job"} if failed else set()
@@ -157,7 +151,7 @@ def test_recover_submission_finished_retry_promotes_results_and_exhausts(
             recover_submission(submission, root / "recovery", max_attempts=1)
     else:
         assert recover_submission(submission, root / "recovery", max_attempts=1)
-        assert (submission.work_dir / "results" / "job.pkl").read_bytes() == b"result"
+        assert (submission.work_dir / "results" / "job.json").read_bytes() == b"result"
     submit.assert_not_called()
     backend.collect.assert_called_once()
 
@@ -170,10 +164,10 @@ def test_retry_result_replaces_read_only_original(tmp_test_directory):
     retry_results = retry.work_dir / "results"
     original_results.mkdir(parents=True)
     retry_results.mkdir(parents=True)
-    old = original_results / "job.pkl"
+    old = original_results / "job.json"
     old.write_bytes(b"failed")
     old.chmod(0o444)
-    successful = retry_results / "job.pkl"
+    successful = retry_results / "job.json"
     successful.write_bytes(b"success")
     successful.chmod(0o644)
 
@@ -386,18 +380,20 @@ def test_worker_writes_result_and_info_log(tmp_test_directory):
     result_directory = run_directory / "results"
     result_directory.mkdir()
     write_job_payload(
-        JobSpec("job-000000", 0, function=_square, item=4), input_directory / "job-000000.pkl"
+        JobSpec("job-000000", 0, command=(sys.executable, "-c", "pass")),
+        input_directory / "job-000000.json",
     )
     assert run_worker(run_directory, "job-000000") == 0
-    with (result_directory / "job-000000.pkl").open("rb") as handle:
-        assert pickle.load(handle) == {"ok": True, "value": 16}
+    with (result_directory / "job-000000.json").open(encoding="utf-8") as handle:
+        assert json.load(handle) == {"version": 1, "ok": True, "value": 0}
 
     write_job_payload(
-        JobSpec("job-000001", 1, function=_log_square, item=4), input_directory / "job-000001.pkl"
+        JobSpec("job-000001", 1, command=(sys.executable, "-c", "raise ValueError('failure')")),
+        input_directory / "job-000001.json",
     )
     log_file = run_directory / "logs" / "job-000001.log"
-    assert run_worker(run_directory, "job-000001", log_file) == 0
-    assert "processing value 4" in log_file.read_text(encoding="utf-8")
+    assert run_worker(run_directory, "job-000001", log_file) == 1
+    assert "Job job-000001 failed" in log_file.read_text(encoding="utf-8")
 
 
 def test_worker_rejects_path_traversal_job_id(tmp_test_directory):
@@ -434,8 +430,8 @@ def test_htcondor_submit_creates_one_process_per_job(monkeypatch, tmp_test_direc
         sys.modules, "htcondor2", types.SimpleNamespace(Submit=_Submit, Schedd=lambda: _Schedd())
     )
     jobs = [
-        JobSpec("job-000000", 0, function=_square, item=1),
-        JobSpec("job-000001", 1, function=_square, item=2),
+        JobSpec("job-000000", 0, command=(sys.executable, "-c", "pass")),
+        JobSpec("job-000001", 1, command=(sys.executable, "-c", "pass")),
     ]
     options = ExecutionOptions(
         backend="htcondor",
@@ -489,9 +485,9 @@ def test_htcondor_preserves_artifacts_when_expected_output_is_missing(
     result_dir = work_dir / "results"
     input_dir.mkdir()
     result_dir.mkdir()
-    (input_dir / "job-000000.pkl").touch()
-    with (result_dir / "job-000000.pkl").open("wb") as handle:
-        pickle.dump({"ok": True, "value": 1}, handle)
+    (input_dir / "job-000000.json").touch()
+    with (result_dir / "job-000000.json").open("w", encoding="utf-8") as handle:
+        json.dump({"version": 1, "ok": True, "value": 1}, handle)
     submission = SubmissionHandle(
         backend="htcondor",
         work_dir=work_dir,

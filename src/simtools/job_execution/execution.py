@@ -270,7 +270,7 @@ def recover_submission(submission, recovery_root, *, max_attempts=3):
         )
     attempt = state["attempt"] + 1
     job_specs = [
-        load_job_payload(submission.work_dir / "inputs" / f"{job_id}.pkl")
+        load_job_payload(submission.work_dir / "inputs" / f"{job_id}.json")
         for job_id in state["failed_job_ids"]
     ]
     if any(
@@ -334,7 +334,7 @@ def _copy_successful_retry_results(original, retry, failed_job_ids):
     original_results.mkdir(parents=True, exist_ok=True)
     retry_results = retry.work_dir / "results"
     for job_id in set(retry.job_ids) - set(failed_job_ids):
-        source = retry_results / f"{job_id}.pkl"
+        source = retry_results / f"{job_id}.json"
         if source.is_file():
             with tempfile.NamedTemporaryFile(dir=original_results, delete=False) as temporary:
                 temporary_path = Path(temporary.name)

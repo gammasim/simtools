@@ -21,6 +21,17 @@ pip install "gammasimtools[htcondor]"
 HTCondor uses a shared filesystem: payloads, outputs, logs, containers, and environment files
 must be visible at the same absolute paths on the submit and execute hosts. Execute hosts need a
 compatible Python environment and the dependencies required by the job or configured container.
+Worker jobs support commands and importable Python functions. Job inputs must be trusted because
+the worker imports and executes the specified function. Job data and results
+support JSON values, paths, numeric NumPy arrays, quantities, and registered simtools records;
+arbitrary Python objects and initializers are not supported.
+
+The submission work directory and its ancestors must be owned by the submitting user or root
+and must not be writable by other users, except for sticky directories. Worker identities need
+group read and search access to job inputs and group write access to result directories. Workers
+must not have the submission user's identity or additional write access to the inputs.
+All workers with access to a result directory must be trusted: they can replace other jobs'
+results, and result files do not authenticate their originating job.
 
 ## Backend configuration
 
