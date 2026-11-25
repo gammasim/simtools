@@ -434,7 +434,7 @@ jobs:
         env:
           BRANCH: >-
             ${{ inputs.simtools_tests_branch ||
-            ''v0.40.0-nsb-rates-zenith }}
+            'v0.40.0-nsb-rates-zenith' }}
         run: |
           git check-ref-format --branch "$BRANCH"
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"
