@@ -153,8 +153,11 @@ def test_htcondor_non_container_uses_submission_python(tmp_test_directory):
         Path(tmp_test_directory) / "scheduler.log",
     )
 
-    assert submit_values["executable"] == sys.executable
-    assert submit_values["arguments"].startswith("-m simtools.job_execution.worker")
+    assert submit_values["executable"] == "/usr/bin/env"
+    assert submit_values["transfer_executable"] == "False"
+    assert submit_values["arguments"].startswith(
+        f"{sys.executable} -m simtools.job_execution.worker"
+    )
     assert "universe" not in submit_values
     entries = _environment_entries(submit_values["environment"])
     source_path = Path(__file__).resolve().parents[4] / "src"

@@ -563,7 +563,11 @@ class HTCondorBackend:
         """Build the fixed HTCondor submit attributes for the worker process."""
         python_executable = config.get("python_executable", _DEFAULT_CONTAINER_PYTHON)
         worker_arguments = [
-            *([shlex.quote(python_executable), "-P"] if uses_container else []),
+            *(
+                [shlex.quote(python_executable), "-P"]
+                if uses_container
+                else [shlex.quote(sys.executable)]
+            ),
             shlex.quote("-m"),
             shlex.quote("simtools.job_execution.worker"),
             shlex.quote("--run-directory"),
@@ -574,13 +578,14 @@ class HTCondorBackend:
             str(work_dir / "logs" / "$(job_id).log"),
         ]
         return {
-            "executable": _CONTAINER_LAUNCHER if uses_container else sys.executable,
+            "executable": _CONTAINER_LAUNCHER,
             "arguments": " ".join(worker_arguments),
             "initialdir": str(working_directory),
             "output": str(work_dir / "stdout" / "$(job_id).out"),
             "error": str(work_dir / "stderr" / "$(job_id).err"),
             "log": str(event_log),
             "should_transfer_files": "NO",
+            "transfer_executable": "False",
             "request_cpus": str(config.get("request_cpus", 1)),
         }
 
