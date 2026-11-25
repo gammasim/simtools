@@ -81,7 +81,8 @@ def validate_simtel(artifact, rule, _context):
 def validate_simtel_config(artifact, rule, _context):
     """Compare a generated sim_telarray configuration with a reference."""
     reference_file = reference.resolve_path(rule["reference"])
-    if not simtel.compare_config_files(reference_file, artifact.path):
+    ignore_parameters = rule.get("ignore_parameters", ())
+    if not simtel.compare_config_files(reference_file, artifact.path, ignore_parameters):
         raise AssertionError(
             f"Output '{artifact.path}' differs from sim_telarray reference '{reference_file}'."
         )

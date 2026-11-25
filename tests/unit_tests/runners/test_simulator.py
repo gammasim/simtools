@@ -1260,7 +1260,7 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
         expected_mc_events=500,
         expected_shower_events=1000,
         curved_atmo=False,
-        allow_for_changes=["nsb_scaling_factor", "stars"],
+        allow_for_changes=["stars"],
     )
     mock_corsika_validator.assert_not_called()
 
@@ -1268,8 +1268,8 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
 @pytest.mark.parametrize(
     ("chain_items", "expected"),
     [
-        (["sim_telarray"], ["nsb_scaling_factor", "stars"]),
-        (["corsika", "sim_telarray:bypass_optics=none"], ["nsb_scaling_factor", "stars"]),
+        (["sim_telarray"], ["stars"]),
+        (["corsika", "sim_telarray:bypass_optics=none"], ["stars"]),
         (
             [
                 "corsika",
@@ -1277,7 +1277,7 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
                 "obdeect_optics",
                 "sim_telarray:bypass_optics=camera_entrance",
             ],
-            ["nsb_scaling_factor", "stars", "atmospheric_transmission"],
+            ["stars", "atmospheric_transmission"],
         ),
     ],
 )

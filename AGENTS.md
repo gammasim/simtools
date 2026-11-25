@@ -110,8 +110,10 @@ modify files: inspect the diff and rerun the complete pre-commit suite afterward
 - Use `simtools.utils.names` helpers to validate CTAO names. Sites are `North` and
   `South`. Telescope and layout names come from
   `src/simtools/resources/array_elements.yml` and model data.
-- Schemas: preserve existing schema versions. A new schema version is a new YAML
-  document in `src/simtools/schemas`; never replace the existing one.
+- Schemas: a backward-incompatible schema change is a new YAML document with a new
+  `schema_version` in `src/simtools/schemas`. Backward-compatible changes (such as a new
+  optional key) are added to the existing version's document and keep its
+  `schema_version`. Never replace or delete an existing document.
 - Model versions in new configs are semantic and have no leading `v`. Integration
   names that vary by model version use `by_version`.
 - Use SHA-256 for integrity and configuration digests. Any other algorithm requires an

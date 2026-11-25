@@ -708,7 +708,7 @@ class Simulator:
 
     def _allowed_metadata_changes(self):
         """Model parameters that sim_telarray may read differently from the model (-C options)."""
-        allowed = ["nsb_scaling_factor", "stars"]
+        allowed = ["stars"]
         if any(self.chain.skipped_factors(name) for name in self.chain.stages):
             # the zero-depth table replaces the atmospheric transmission of the model
             allowed.append("atmospheric_transmission")

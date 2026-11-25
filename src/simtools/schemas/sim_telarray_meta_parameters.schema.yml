@@ -52,6 +52,14 @@ generated_meta_parameters:
     scope: global
     mode: set
     value_schema: {kind: scalar, data_type: number}
+  nsb_autoscaling:
+    scope: global
+    mode: set
+    value_schema: {kind: scalar, data_type: boolean}
+  nsb_applied_scaling_factor:
+    scope: telescope
+    mode: set
+    value_schema: {kind: scalar, data_type: number}
   primary:
     scope: global
     mode: set

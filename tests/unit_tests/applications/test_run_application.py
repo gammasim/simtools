@@ -90,6 +90,8 @@ def test_runtime_model_source_does_not_require_a_host_reader(
     env["PYTHONPATH"] = str(Path(simtools_root_path) / "src")
     env["SIMTOOLS_SIM_TELARRAY_PATH"] = str(simtel_bin.parent)
     env["SIMTOOLS_SIM_TELARRAY_EXECUTABLE"] = "sim_telarray"
+    # Isolate from the user's ~/.config/simtools/config, which may define host model paths.
+    env["HOME"] = str(root)
     result = subprocess.run(
         [
             sys.executable,

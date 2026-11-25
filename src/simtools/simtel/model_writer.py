@@ -15,7 +15,13 @@ from simtools.runtime.context import RunContext
 from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter, get_simtel_site_parameters
+from simtools.simulation.nsb import (
+    NSB_PARAMETERS,
+    nsb_rate_factor,
+    scale_nsb_parameters,
+    site_nsb_factor,
+)
 from simtools.utils import names
 
 _CORSIKA_FILE = "corsika_file"
@@ -72,8 +78,12 @@ class SimtelModelWriter:
         self._serialized_tables = {}
         self.config_writer = None
         self.single_mirror_list_file_paths = {}
-        self._telescope_model_files_exported = False
-        self._array_model_file_exported = False
+        self.telescope_model_files_exported = False
+        self.array_model_file_exported = False
+        self.nsb_settings = None
+        self.nsb_site_manual = 1.0
+        # NSB parameters as written by write_sim_telarray_config_file; None if not scaled
+        self.written_nsb_parameters = None
 
     def write_sim_telarray_config_file(self, additional_models=None, label=None):
         """
@@ -99,12 +109,26 @@ class SimtelModelWriter:
                 model_directory=self.model.config_file_directory
             )
         self._add_additional_models(additional_models, parameters)
+        metadata = None
+        if self.nsb_settings is None:
+            self.written_nsb_parameters = None
+        else:
+            metadata = {
+                "nsb_applied_scaling_factor": nsb_rate_factor(
+                    parameters, self.nsb_settings, self.nsb_site_manual
+                )
+            }
+            parameters = scale_nsb_parameters(parameters, self.nsb_settings, self.nsb_site_manual)
+            self.written_nsb_parameters = {
+                name: parameters[name] for name in NSB_PARAMETERS if name in parameters
+            }
 
         # Ensure the writer label matches the config file naming label
         self._load_simtel_config_writer(label=label if label is not None else self.model.label)
         self.config_writer.write_telescope_config_file(
             config_file_path=self.model.config_file_path,
             parameters=parameters,
+            additional_metadata=metadata,
         )
         return self.model.config_file_path
 
@@ -235,11 +259,18 @@ class SimtelModelWriter:
 
     def export_simtel_telescope_config_files(self):
         """Export sim_telarray configuration files for all telescopes into the model directory."""
+        site_manual = 1.0
+        if self.nsb_settings is not None:
+            site_manual = site_nsb_factor(get_simtel_site_parameters(self.model.site_model))
+
         exported_models = []
         for tel_model in self.model.telescope_models.values():
             name = tel_model.name
             if name not in exported_models:
-                get_model_writer(tel_model, context=self.context).write_sim_telarray_config_file(
+                writer = get_model_writer(tel_model, context=self.context)
+                writer.nsb_settings = self.nsb_settings
+                writer.nsb_site_manual = site_manual
+                writer.write_sim_telarray_config_file(
                     additional_models=self.model.calibration_models.get(tel_model.name)
                 )
                 exported_models.append(name)
@@ -248,7 +279,7 @@ class SimtelModelWriter:
                     f"Configuration file for telescope {name} already exists - skipping"
                 )
 
-        self._telescope_model_files_exported = True
+        self.telescope_model_files_exported = True
 
     def export_sim_telarray_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
@@ -263,13 +294,14 @@ class SimtelModelWriter:
             model_reader=self.model.model_reader,
             context=self.context,
         )
+        simtel_writer.neutral_nsb_scaling = self.nsb_settings is not None
         simtel_writer.write_array_config_file(
             config_file_path=self.model.config_file_path,
             telescope_model=self.model.telescope_models,
             site_model=self.model.site_model,
             additional_metadata=self._get_additional_simtel_metadata(),
         )
-        self._array_model_file_exported = True
+        self.array_model_file_exported = True
 
     def export_all_simtel_config_files(self):
         """
@@ -277,9 +309,9 @@ class SimtelModelWriter:
 
         Config files are exported into the output model directory.
         """
-        if not self._telescope_model_files_exported:
+        if not self.telescope_model_files_exported:
             self.export_simtel_telescope_config_files()
-        if not self._array_model_file_exported:
+        if not self.array_model_file_exported:
             self.export_sim_telarray_config_file()
 
     def _get_additional_simtel_metadata(self):
@@ -304,6 +336,8 @@ class SimtelModelWriter:
         metadata = {
             "nsb_integrated_flux": self.model.site_model.get_nsb_integrated_flux(),
         }
+        if self.nsb_settings is not None:
+            metadata["nsb_autoscaling"] = int(self.nsb_settings.autoscale)
         for metadata_key, args_key in {
             _PRIMARY: _PRIMARY,
             _AZIMUTH_ANGLE: _AZIMUTH_ANGLE,
