@@ -211,6 +211,12 @@ def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker, write
     simtel_runner.array_model.export_config_files = mocker.Mock()
     simtel_runner.simulation_parameters.zenith_angle = 25.0
     simtel_runner.simulation_parameters.azimuth_angle = 180.0
+    mocker.patch(
+        "simtools.simtel.simulator_array.get_model_writer",
+        return_value=mocker.Mock(
+            telescope_model_files_exported=False, array_model_file_exported=False, nsb_settings=None
+        ),
+    )
 
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
@@ -305,7 +311,7 @@ def test_make_run_command_for_calibration_simulations_with_nsb_scaling(simtel_ru
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
     assert isinstance(result, list)
-    assert "nsb_scaling_factor=1.5" in result
+    assert "nsb_scaling_factor=1.5" not in result
 
 
 def test_make_run_command_for_calibration_simulations_with_stars(simtel_runner, mocker):
@@ -331,7 +337,12 @@ def test_common_run_command_puts_include_directories_before_model_directory(simt
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.get_file_name.return_value = "file"
     simtel_runner.runner_service.load_files.return_value = {}
-    mocker.patch("simtools.simtel.simulator_array.get_model_writer")
+    mocker.patch(
+        "simtools.simtel.simulator_array.get_model_writer",
+        return_value=mocker.Mock(
+            telescope_model_files_exported=False, array_model_file_exported=False, nsb_settings=None
+        ),
+    )
     simtel_runner.include_directories = ("/scaled/qe-table",)
     mocker.patch.object(simtel_runner, "_determine_pointing_option", return_value=False)
 
@@ -362,3 +373,43 @@ def test_make_run_command_sets_min_photons_when_overridden(simtel_runner, mocker
     simtel_runner.min_photons = None
     command = simtel_runner.make_run_command(run_number=1, input_file="in.dat")
     assert not any("min_photons" in item for item in command)
+
+
+@pytest.mark.parametrize("bypass_optics", [None, 1, 3])
+def test_nsb_settings_use_pointing_zenith_with_bypassed_optics(
+    simtel_runner, mocker, bypass_optics
+):
+    """NSB scaling follows the pointing zenith angle, also when optics are bypassed."""
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.load_files.return_value = {}
+    writer = mocker.Mock(
+        telescope_model_files_exported=False, array_model_file_exported=False, nsb_settings=None
+    )
+    mocker.patch("simtools.simtel.simulator_array.get_model_writer", return_value=writer)
+    mocker.patch.object(simtel_runner, "_determine_pointing_option", return_value=False)
+    mocker.patch.object(simtel_runner, "_make_run_command_for_shower_simulations", return_value=[])
+    mocker.patch.object(
+        simtel_runner.simulation_parameters, "is_calibration_run", return_value=False
+    )
+
+    simtel_runner.make_run_command(run_number=1, input_file="in.dat", bypass_optics=bypass_optics)
+
+    assert writer.nsb_settings.zenith_angle == simtel_runner.simulation_parameters.zenith_angle
+
+
+def test_nsb_settings_rejected_after_telescope_config_export(simtel_runner, mocker):
+    """Changed NSB settings must not be applied after telescope configuration files exist."""
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.load_files.return_value = {}
+    writer = mocker.Mock(
+        telescope_model_files_exported=True, array_model_file_exported=False, nsb_settings=None
+    )
+    mocker.patch("simtools.simtel.simulator_array.get_model_writer", return_value=writer)
+    mocker.patch.object(simtel_runner, "_determine_pointing_option", return_value=False)
+    mocker.patch.object(simtel_runner, "_make_run_command_for_shower_simulations", return_value=[])
+    mocker.patch.object(
+        simtel_runner.simulation_parameters, "is_calibration_run", return_value=False
+    )
+
+    with pytest.raises(ValueError, match="NSB settings changed after configuration export"):
+        simtel_runner.make_run_command(run_number=1, input_file="in.dat")

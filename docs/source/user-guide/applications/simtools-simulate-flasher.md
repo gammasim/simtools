@@ -209,3 +209,5 @@ run_number (int, optional)
 .. simtools-integration-example::
     :file: simulate_flasher_full_simulation_mst_nectarcam.yml
 ```
+
+Use `--disable_nsb_autoscaling` to disable the zenith-dependent NSB correction.

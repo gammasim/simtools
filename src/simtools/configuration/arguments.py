@@ -851,7 +851,15 @@ SIM_TELARRAY_SEED_FILE = _argument(
     default="sim_telarray_instrument_seeds.txt",
 )
 
-SIM_TELARRAY_ARGUMENTS = (*SEED_ARGUMENTS, SIM_TELARRAY_SEED_FILE)
+DISABLE_NSB_AUTOSCALING = _argument(
+    "disable_nsb_autoscaling",
+    _SIM_TELARRAY_CONFIGURATION_GROUP,
+    help="Disable zenith-dependent NSB autoscaling; a manual NSB factor still applies.",
+    action="store_true",
+    default=False,
+)
+
+SIM_TELARRAY_ARGUMENTS = (*SEED_ARGUMENTS, SIM_TELARRAY_SEED_FILE, DISABLE_NSB_AUTOSCALING)
 
 SOURCE_DISTANCE = _argument(
     "source_distance",

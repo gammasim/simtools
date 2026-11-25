@@ -76,6 +76,8 @@ def test_runtime_model_source_does_not_require_a_host_reader(
         if not key.startswith("SIMTOOLS_SIMULATION_MODELS_")
     }
     env["PYTHONPATH"] = str(Path(simtools_root_path) / "src")
+    # Isolate from the user's ~/.config/simtools/config, which may define host model paths.
+    env["HOME"] = str(root)
     result = subprocess.run(
         [
             sys.executable,

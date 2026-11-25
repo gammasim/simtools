@@ -15,6 +15,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from simtools.io.output_paths import OutputPaths
 from simtools.simtel.simulator_light_emission import LIGHT_SOURCE_POSITION, SimulatorLightEmission
 from simtools.simulation.configuration import get_light_source_writer
+from simtools.simulation.nsb import NsbSettings
 
 MAKE_COMMAND_METHOD = "make_command"
 
@@ -45,6 +46,17 @@ POSITION_M = "position_m"
 TELESCOPE_SPHERE_RADIUS = "telescope_sphere_radius"
 
 
+@pytest.fixture
+def telescope_writer(simulator_instance):
+    """Telescope model configuration writer; records the sim_telarray configuration writes."""
+    writer = Mock()
+    simulator_instance.telescope_model.configuration_writers = {"sim_telarray": writer}
+    simulator_instance.site_model.parameters = {}
+    simulator_instance.site_model.get_simulation_software_parameters.return_value = {}
+    return writer
+
+
+@pytest.mark.usefixtures("telescope_writer")
 def test__make_simtel_script_bypass_optics_condition(simulator_instance):
     # Setup minimal mocks
     simulator_instance.telescope_model.config_file_directory = "/mock/config"
@@ -78,6 +90,7 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
         assert "Bypass_Optics=1" not in options
 
 
+@pytest.mark.usefixtures("telescope_writer")
 def test__make_simtel_script_uses_generated_atmospheric_transmission_file(simulator_instance):
     simulator_instance.telescope_model.config_file_path = "/mock/config/CTAO-MSTN-04.cfg"
     simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2200 * u.m
@@ -882,6 +895,7 @@ def test_run_command_preserves_pipeline_failure(
 
 @pytest.mark.parametrize("write_hdata", [False, True])
 @pytest.mark.parametrize(FAILING_STAGE_PARAMETER, [None, EMISSION_STAGE, SIMTEL_STAGE])
+@pytest.mark.usefixtures("telescope_writer")
 def test_run_script_separates_diagnostics(
     simulator_instance, tmp_test_directory, mocker, failing_stage, write_hdata
 ):
@@ -987,7 +1001,7 @@ def test_flasher_above_focal_surface(simulator_instance, mirror_class, flasher_z
 
 
 @pytest.fixture
-def default_chain_simulator(simulator_instance):
+def default_chain_simulator(simulator_instance, telescope_writer):
     simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2156 * u.m
     simulator_instance.site_model.get_parameter_value.return_value = ATM_TRANS_DAT
     simulator_instance.telescope_model.config_file_directory = "/mock/config"
@@ -1068,6 +1082,38 @@ def test_default_chain_script_text(default_chain_simulator, write_hdata):
         f"-C histogram_file={histogram}\n\n\n"
     )
     assert lines[5:] == ["rm -f '/out/iact_output.dat'\n\n"]
+
+
+@pytest.mark.parametrize(
+    ("light_config", "expected_settings"),
+    [
+        ({LIGHT_SOURCE_TYPE: FLAT_FIELDING}, NsbSettings(0.0, None, True)),
+        (
+            {
+                LIGHT_SOURCE_TYPE: ILLUMINATOR,
+                "nsb_scaling_factor": 2.0,
+                "disable_nsb_autoscaling": True,
+            },
+            NsbSettings(20.0, 2.0, False),
+        ),
+    ],
+)
+def test_make_sim_telarray_command_writes_config_with_nsb_settings(
+    default_chain_simulator, telescope_writer, light_config, expected_settings
+):
+    simulator = default_chain_simulator
+    simulator.light_emission_config = light_config
+    simulator.site_model.get_simulation_software_parameters.return_value = {
+        "nsb_scaling_factor": {"value": 1.5}
+    }
+    with patch.object(simulator, TELESCOPE_POINTING_METHOD, return_value=(20.0, 30.0)):
+        simulator.make_sim_telarray_command()
+
+    assert telescope_writer.nsb_settings == expected_settings
+    assert telescope_writer.nsb_site_manual == pytest.approx(1.5)
+    telescope_writer.write_sim_telarray_config_file.assert_called_once_with(
+        additional_models=simulator.site_model
+    )
 
 
 @pytest.mark.parametrize(("light_source_type", "bypass"), [(FLAT_FIELDING, 1), (ILLUMINATOR, 0)])

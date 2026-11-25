@@ -102,3 +102,5 @@ and observation height without constructing a CORSIKA configuration.
 See [configuration and file formats](../../developer-guide/simulation_formats.md)
 for the interfaces used to add formats. Available simulation programs remain
 CORSIKA7 and sim_telarray.
+
+Use `--disable_nsb_autoscaling` to disable the zenith-dependent NSB correction. A configured manual NSB scaling factor still applies.

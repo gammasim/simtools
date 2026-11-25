@@ -111,8 +111,16 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
         run_time = read_runtime_environment(runtime_environment)
     container_env = {}
     if effective_runtime and run_time:
+        mount_args = {
+            **args_dict,
+            "_metadata_configuration_sources": {
+                key: value
+                for key, value in args_dict.get("_metadata_configuration_sources", {}).items()
+                if key in explicit_source_options
+            },
+        }
         source_options, run_time = _mount_environment_model_source(
-            args_dict, source_options, run_time
+            mount_args, source_options, run_time
         )
         run_time, container_env = _container_simtools_environment(run_time)
 
