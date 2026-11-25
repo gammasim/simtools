@@ -5,6 +5,7 @@ import logging
 from contextlib import closing
 from pathlib import Path
 
+import astropy.units as u
 import numpy as np
 
 from simtools.data_model.metadata_collector import MetadataCollector
@@ -468,7 +469,7 @@ class PlotSimtelEvent:
 
     def _plot_vs_radius(self, values, pixel_ids, label, event_index):
         """Plot pixel values against their distance from the camera-coordinate origin."""
-        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"])
+        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"]) * u.cm.to(u.m)
         fig, ax = plt.subplots(dpi=300)
         ax.scatter(radius[pixel_ids], values, s=6, alpha=0.5, linewidths=0)
         ax.set_xlabel("distance from camera centre [m]")
@@ -510,7 +511,7 @@ class PlotSimtelEvent:
         stats = {"median": float(np.median(values)), "std": float(np.std(values))}
         edges = np.histogram_bin_edges(values, bins=DEFAULT_HISTOGRAM_BINS)
         self._plot_histogram(axes[1], values, edges, stats, label, PIXEL_LABEL)
-        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"])
+        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"]) * u.cm.to(u.m)
         axes[2].scatter(radius, values, s=5, alpha=0.6)
         axes[2].set_xlabel("Distance from camera centre [m]")
         axes[2].set_ylabel(label)
@@ -534,7 +535,7 @@ class PlotSimtelEvent:
             self.camera, image=np.ma.masked_invalid(image), ax=ax1, color_bar_label=x_label
         )
         self._plot_histogram(ax2, values, edges, stats, x_label, y_label)
-        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"])
+        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"]) * u.cm.to(u.m)
         ax3.scatter(radius[pix_ids], values, s=5, alpha=0.6)
         ax3.set_xlabel("Distance from camera centre [m]")
         ax3.set_ylabel(x_label)

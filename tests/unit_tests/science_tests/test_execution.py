@@ -336,7 +336,18 @@ def test_prepare_test_expands_flashes_from_catalogue(bundle):
         {
             APPLICATION: "simtools-analyze-flasher-response",
             CONFIGURATION: {
-                "simtel_files": ["/scan/run__FLASHER_RUN__/data__FLASHER_RUN__.zst"],
+                "simtel_files": [
+                    "/".join(
+                        (
+                            "",
+                            "scan",
+                            "run__FLASHER_RUN__",
+                            "sim_telarray",
+                            "run__FLASHER_RUN__",
+                            "data__FLASHER_RUN__.zst",
+                        )
+                    )
+                ],
             },
         },
         {
@@ -362,7 +373,8 @@ def test_prepare_flasher_scan_expands_telescope_specific_levels(bundle):
         }
     }
     path = (
-        f"{defs.CANDIDATE_SITE_PATH}/{defs.TELESCOPE}/run__FLASHER_RUN__/event__FLASHER_RUN__.zst"
+        f"{defs.CANDIDATE_SITE_PATH}/{defs.TELESCOPE}/"
+        f"run__FLASHER_RUN__/sim_telarray/run__FLASHER_RUN__/event__FLASHER_RUN__.zst"
     )
     write_workflow(
         bundle,

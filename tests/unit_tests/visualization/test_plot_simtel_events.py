@@ -309,7 +309,8 @@ def test_signal_vs_radius_uses_camera_positions_and_integrated_signal(mock_plott
     points = figure.axes[0].collections[0].get_offsets()
 
     np.testing.assert_allclose(
-        points[:, 0], np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"])
+        points[:, 0],
+        np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"]) / 100,
     )
     np.testing.assert_allclose(points[:, 1], event.image)
     plt.close(figure)
@@ -323,7 +324,7 @@ def test_peak_vs_radius_uses_selected_pixel_positions(mock_plotter):
     points = figure.axes[0].collections[0].get_offsets()
 
     radius = np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"])
-    np.testing.assert_allclose(points[:, 0], radius[pixel_ids])
+    np.testing.assert_allclose(points[:, 0], radius[pixel_ids] / 100)
     np.testing.assert_allclose(points[:, 1], peaks)
     plt.close(figure)
 
@@ -660,7 +661,7 @@ def test_timing_projection_keeps_selected_pixel_positions(mock_plotter):
     np.testing.assert_array_equal(image[[2, 7]], [4, 8])
     offsets = fig.axes[2].collections[0].get_offsets()
     radii = np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"])
-    np.testing.assert_allclose(offsets[:, 0], radii[[2, 7]])
+    np.testing.assert_allclose(offsets[:, 0], radii[[2, 7]] / 100)
     np.testing.assert_array_equal(offsets[:, 1], [4, 8])
     plt.close(fig)
 

@@ -58,8 +58,10 @@ def _expand_one(applications):
             "Flasher scan analysis requires one simtel_files template with __FLASHER_RUN__."
         )
     template = file_templates[0]
-    if f"/run{_RUN}/" not in template:
-        raise ValueError("Flasher scan file template must include the per-run directory.")
+    if f"/run{_RUN}/sim_telarray/run{_RUN}/" not in template:
+        raise ValueError(
+            "Flasher scan file template must include the per-run directory and sim_telarray run."
+        )
     output_path = config.get("output_path")
     if output_path and not template.startswith(f"{str(output_path).rstrip('/')}/"):
         raise ValueError("Flasher scan file template must be below the simulation output_path.")
@@ -68,7 +70,7 @@ def _expand_one(applications):
             "Flasher scan plot must omit simtel_file and use __FLASHER_PHOTONS__ in output_path."
         )
     if len(levels) == 1:
-        template = template.replace(f"/run{_RUN}/", "/")
+        template = template.replace(f"/run{_RUN}/sim_telarray/", "/sim_telarray/", 1)
     run_number = int(config.get("run_number", 1))
     if run_number < 1 or run_number + len(levels) - 1 > 999999:
         raise ValueError("Flasher scan run numbers must be between 1 and 999999.")

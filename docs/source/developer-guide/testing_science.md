@@ -135,7 +135,8 @@ Use `__FLASHER_RUN__` in the analysis template's simtel file path and
 `__FLASHER_PHOTONS__` in the plot output path. Omit `simtel_file` from the plot template;
 the runner supplies it. The runner expands one file and plot per level;
 multiple levels require `max_workers` of at least 2 to produce separate files. The file template
-must lie below the simulation output path and include `/run__FLASHER_RUN__/`.
+must lie below the simulation output path and include
+`/run__FLASHER_RUN__/sim_telarray/run__FLASHER_RUN__/`.
 
 `configuration_overrides` in `release.yml` sets application configuration values for all
 applications of one test, for example:

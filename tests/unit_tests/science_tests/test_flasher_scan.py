@@ -20,7 +20,18 @@ def _workflow(levels):
         {
             "application": "simtools-analyze-flasher-response",
             "configuration": {
-                "simtel_files": ["/simulation/run__FLASHER_RUN__/event__FLASHER_RUN__.zst"],
+                "simtel_files": [
+                    "/".join(
+                        (
+                            "",
+                            "simulation",
+                            "run__FLASHER_RUN__",
+                            "sim_telarray",
+                            "run__FLASHER_RUN__",
+                            "event__FLASHER_RUN__.zst",
+                        )
+                    )
+                ],
             },
         },
         {
@@ -38,7 +49,8 @@ def test_expand_flasher_scan_uses_simulation_levels():
     assert apps[1]["configuration"]["illumination"] == [30, 100, 300]
     assert apps[1]["configuration"]["events_per_level"] == [20]
     assert apps[1]["configuration"]["simtel_files"] == [
-        f"/simulation/run{run}/event{run}.zst" for run in ("000100", "000101", "000102")
+        f"/simulation/run{run}/sim_telarray/run{run}/event{run}.zst"
+        for run in ("000100", "000101", "000102")
     ]
     assert [app["configuration"]["output_path"] for app in apps[2:]] == [
         "/report/30",
@@ -50,8 +62,13 @@ def test_expand_flasher_scan_uses_simulation_levels():
 
 def test_expand_flasher_scan_handles_one_level():
     apps = flasher_scan.expand(_workflow([30]))
-    assert apps[1]["configuration"]["simtel_files"] == ["/simulation/event000100.zst"]
-    assert apps[2]["configuration"]["simtel_file"] == "/simulation/event000100.zst"
+    assert apps[1]["configuration"]["simtel_files"] == [
+        "/simulation/sim_telarray/run000100/event000100.zst"
+    ]
+    assert (
+        apps[2]["configuration"]["simtel_file"]
+        == "/simulation/sim_telarray/run000100/event000100.zst"
+    )
 
 
 @pytest.mark.parametrize("levels", [[], [0, 10], [10, 10]])
