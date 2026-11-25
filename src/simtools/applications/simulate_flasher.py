@@ -211,51 +211,7 @@ def main():
     )
 
     if app_context.args["run_mode"] == "full_simulation":
-        telescopes = (
-            get_array_elements_for_layout(
-                app_context.args["array_layout_name"],
-                model_reader=app_context.model_reader,
-                context=app_context,
-            )
-            if app_context.args.get("array_layout_name") is not None
-            else value_conversion.ensure_list(app_context.args["telescopes"])
-        )
-        script_writer = light_emission_runner.script_writer_for_chain(
-            app_context.args.get("simulation_software")
-        )
-        runs = _full_simulation_runs(app_context)
-        if len(runs) == 1:
-            for tel in telescopes:
-                simulation = SimulatorLightEmission(
-                    light_emission_config=app_context.args,
-                    telescope=tel,
-                    label=app_context.args.get("label"),
-                    model_reader=app_context.model_reader,
-                    context=app_context,
-                )
-                _run_light_sources([simulation], script_writer)
-        else:
-            groups = [
-                [
-                    SimulatorLightEmission(
-                        light_emission_config=run.args,
-                        telescope=tel,
-                        label=run.args.get("label"),
-                        model_reader=app_context.model_reader,
-                        context=run,
-                    )
-                    for tel in telescopes
-                ]
-                for run in runs
-            ]
-            with ThreadPoolExecutor(
-                max_workers=min(app_context.args["max_workers"], len(runs))
-            ) as pool:
-                futures = [
-                    pool.submit(_run_light_sources, group, script_writer) for group in groups
-                ]
-                for future in futures:
-                    future.result()
+        _run_full_simulation(app_context)
     elif app_context.args["run_mode"] == "direct_injection":
         Simulator.simulate_direct_injection_sequence(
             label=app_context.args.get("label"), context=app_context
@@ -264,6 +220,51 @@ def main():
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 
     app_context.logger.info("Flasher simulation completed.")
+
+
+def _run_full_simulation(context):
+    """Run the configured full-simulation light-source chain."""
+    telescopes = (
+        get_array_elements_for_layout(
+            context.args["array_layout_name"],
+            model_reader=context.model_reader,
+            context=context,
+        )
+        if context.args.get("array_layout_name") is not None
+        else value_conversion.ensure_list(context.args["telescopes"])
+    )
+    script_writer = light_emission_runner.script_writer_for_chain(
+        context.args.get("simulation_software")
+    )
+    runs = _full_simulation_runs(context)
+    if len(runs) == 1:
+        for telescope in telescopes:
+            simulation = SimulatorLightEmission(
+                light_emission_config=context.args,
+                telescope=telescope,
+                label=context.args.get("label"),
+                model_reader=context.model_reader,
+                context=context,
+            )
+            _run_light_sources([simulation], script_writer)
+    else:
+        groups = [
+            [
+                SimulatorLightEmission(
+                    light_emission_config=run.args,
+                    telescope=telescope,
+                    label=run.args.get("label"),
+                    model_reader=context.model_reader,
+                    context=run,
+                )
+                for telescope in telescopes
+            ]
+            for run in runs
+        ]
+        with ThreadPoolExecutor(max_workers=min(context.args["max_workers"], len(runs))) as pool:
+            futures = [pool.submit(_run_light_sources, group, script_writer) for group in groups]
+            for future in futures:
+                future.result()
 
 
 def _run_light_sources(simulations, script_writer):
