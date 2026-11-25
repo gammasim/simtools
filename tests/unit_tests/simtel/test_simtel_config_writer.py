@@ -547,6 +547,13 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     assert not file_has_text(_file, "longitude = -70.316345")
     assert file_has_text(_file, "metaparam telescope set longitude=-70.316345")
 
+    simtel_config_writer.write_telescope_config_file(
+        config_file_path=_file,
+        parameters={},
+        additional_metadata={"nsb_applied_scaling_factor": 1.5},
+    )
+    assert file_has_text(_file, "metaparam telescope set nsb_applied_scaling_factor=1.5")
+
 
 def test_write_tel_config_file_orders_generated_parameters_and_metadata(
     simtel_config_writer, tmp_test_directory, mocker

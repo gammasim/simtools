@@ -3,6 +3,7 @@ import pytest
 from simtools.simulation.nsb import (
     NsbSettings,
     airmass_scale,
+    nsb_rate_factor,
     scale_nsb_parameters,
     site_nsb_factor,
 )
@@ -92,3 +93,14 @@ def test_scale_nsb_parameters_autoscale_airmass_requires_two_values(airmass):
 
     with pytest.raises(ValueError, match="nsb_autoscale_airmass requires two values"):
         scale_nsb_parameters(parameters, settings, 1.0)
+
+
+@pytest.mark.parametrize(
+    ("manual_factor", "autoscale", "expected"),
+    [(None, True, 1.0330008543), (2.0, True, 2.0), (None, False, 1.0)],
+)
+def test_nsb_rate_factor(manual_factor, autoscale, expected):
+    parameters = {"nsb_autoscale_airmass": {"value": "0.84 0.29"}}
+    settings = NsbSettings(zenith_angle=20.0, manual_factor=manual_factor, autoscale=autoscale)
+
+    assert nsb_rate_factor(parameters, settings, 1.0) == pytest.approx(expected)

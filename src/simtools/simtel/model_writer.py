@@ -16,7 +16,12 @@ from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter, get_simtel_site_parameters
-from simtools.simulation.nsb import NSB_PARAMETERS, scale_nsb_parameters, site_nsb_factor
+from simtools.simulation.nsb import (
+    NSB_PARAMETERS,
+    nsb_rate_factor,
+    scale_nsb_parameters,
+    site_nsb_factor,
+)
 from simtools.utils import names
 
 _CORSIKA_FILE = "corsika_file"
@@ -104,9 +109,15 @@ class SimtelModelWriter:
                 model_directory=self.model.config_file_directory
             )
         self._add_additional_models(additional_models, parameters)
+        metadata = None
         if self.nsb_settings is None:
             self.written_nsb_parameters = None
         else:
+            metadata = {
+                "nsb_applied_scaling_factor": nsb_rate_factor(
+                    parameters, self.nsb_settings, self.nsb_site_manual
+                )
+            }
             parameters = scale_nsb_parameters(parameters, self.nsb_settings, self.nsb_site_manual)
             self.written_nsb_parameters = {
                 name: parameters[name] for name in NSB_PARAMETERS if name in parameters
@@ -117,6 +128,7 @@ class SimtelModelWriter:
         self.config_writer.write_telescope_config_file(
             config_file_path=self.model.config_file_path,
             parameters=parameters,
+            additional_metadata=metadata,
         )
         return self.model.config_file_path
 
@@ -324,6 +336,8 @@ class SimtelModelWriter:
         metadata = {
             "nsb_integrated_flux": self.model.site_model.get_nsb_integrated_flux(),
         }
+        if self.nsb_settings is not None:
+            metadata["nsb_autoscaling"] = int(self.nsb_settings.autoscale)
         for metadata_key, args_key in {
             _PRIMARY: _PRIMARY,
             _AZIMUTH_ANGLE: _AZIMUTH_ANGLE,

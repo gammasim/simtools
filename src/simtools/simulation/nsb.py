@@ -91,7 +91,7 @@ def scale_nsb_parameters(parameters, settings, site_factor):
         parameters.get(_NSB_AUTOSCALE_AIRMASS, {}).get("value", _AUTOSCALE_AIRMASS_DEFAULT)
     )
     if _NSB_PIXEL_RATE in result:
-        factor = _rate_factor(auto, settings, site_factor)
+        factor = nsb_rate_factor(parameters, settings, site_factor)
         rate = _parse_value(result[_NSB_PIXEL_RATE]["value"])
         if isinstance(rate, list):
             result[_NSB_PIXEL_RATE]["value"] = [value * factor for value in rate]
@@ -102,6 +102,29 @@ def scale_nsb_parameters(parameters, settings, site_factor):
     if _NSB_SCALING_FACTOR in result:
         result[_NSB_SCALING_FACTOR]["value"] = 1.0
     return result
+
+
+def nsb_rate_factor(parameters, settings, site_factor):
+    """Return the factor applied to the NSB pixel rates (see ``scale_nsb_parameters``).
+
+    Parameters
+    ----------
+    parameters : dict
+        Model parameters (name -> {"value": ...}), values may be strings.
+    settings : NsbSettings
+        NSB settings used for the export.
+    site_factor : float
+        Site NSB scaling factor.
+
+    Returns
+    -------
+    float
+        Dimensionless NSB rate factor.
+    """
+    auto = _parse_autoscale_airmass(
+        parameters.get(_NSB_AUTOSCALE_AIRMASS, {}).get("value", _AUTOSCALE_AIRMASS_DEFAULT)
+    )
+    return _rate_factor(auto, settings, site_factor)
 
 
 def _rate_factor(auto, settings, site_factor):

@@ -213,8 +213,18 @@ def test_get_additional_simtel_metadata(array_model_north, mocker, run_context):
     assert metadata[_ZENITH_ANGLE] == pytest.approx(20.0)
     assert metadata["ha_angle"] == pytest.approx(0.0)
     assert metadata["dec_angle"] == pytest.approx(30.0)
+    assert "nsb_autoscaling" not in metadata
     assert metadata["INSTRUME"] == "CTAO-North"
     assert metadata[_PDGID] == 22
+
+
+def test_get_additional_simtel_metadata_records_nsb_autoscaling(array_model_north, mocker):
+    array_model = copy.deepcopy(array_model_north)
+    mocker.patch.object(array_model.site_model, _NSB_FLUX, return_value=42.0)
+    writer = get_model_writer(array_model)
+    writer.nsb_settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=False)
+
+    assert writer._get_additional_simtel_metadata()["nsb_autoscaling"] == 0
 
 
 def test_metadata_from_corsika_input_uses_shower_parameters(array_model_north, mocker, run_context):
@@ -391,3 +401,5 @@ def test_telescope_config_writes_scaled_nsb_without_mutating_model(telescope_mod
     assert parameters["nsb_autoscale_airmass"]["value"] == [0.0, 0.29]
     assert telescope.parameters["nsb_pixel_rate"]["value"] == [0.2, 0.4]
     assert writer.written_nsb_parameters["nsb_pixel_rate"] == parameters["nsb_pixel_rate"]
+    metadata = output.write_telescope_config_file.call_args.kwargs["additional_metadata"]
+    assert metadata["nsb_applied_scaling_factor"] == pytest.approx(1.0330008543)
