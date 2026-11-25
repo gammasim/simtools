@@ -12,9 +12,14 @@ peak, ADC sum, width, and mean-waveform plots. Error bars show event-to-event
 standard deviations; the peak curve is the mean of individual-event peaks.
 
 Supply one file per intensity, or one file containing all steps in declared
-order. `events_per_level` must match the actual counts; one value broadcasts to
-all steps. Analyze only scan files containing the declared calibration events.
-The illumination axis is the requested photon count, not detected p.e.
+order. `events_per_level` gives the requested counts; one value broadcasts to
+all steps. With one file per level, fewer recorded events are accepted, including
+zero. The summary reports recorded and expected counts; a zero-event level has
+unavailable (`NaN`) measurements rather than zero signal. Response statistics
+use recorded events only and can be biased by the trigger. For a single file
+containing multiple levels, a nonzero event count must match exactly so that level
+assignment is unambiguous; an entirely empty file is reported as zero for every level. The illumination axis is the requested photon count,
+not detected p.e.
 
 Monitoring pedestals are converted to per-sample values separately for both
 gains. If monitoring is unavailable, provide an explicit per-sample pedestal.

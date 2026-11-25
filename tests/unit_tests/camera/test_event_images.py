@@ -30,8 +30,35 @@ def test_prepare_event_images_reads_events_and_camera():
 
 def test_prepare_event_images_rejects_empty_read():
     with mock.patch.object(event_images, "read_events", return_value=([], {}, [])):
-        with pytest.raises(ValueError, match="No events read from file"):
+        with pytest.raises(event_images.NoEventsError, match="No events read from file"):
             event_images.prepare_event_images("events.simtel", "LSTN-01")
+
+
+def test_image_preparation_rejects_unknown_gain():
+    with pytest.raises(ValueError, match="Gain must be 'high' or 'low'"):
+        event_images.prepare_event_images("events.simtel", "LSTN-01", gain="unknown")
+    with pytest.raises(ValueError, match="Gain must be 'high' or 'low'"):
+        event_images.apply_monitoring_pedestals(None, "events.simtel", "LSTN-01", gain="unknown")
+
+
+def test_prepare_low_gain_selects_its_waveform():
+    samples = np.zeros((2, 2, 12))
+    samples[1, :, 4] = [10, 20]
+    np.testing.assert_array_equal(event_images._select_gain(samples, "low"), samples[1])
+    np.testing.assert_array_equal(event_images._select_gain(samples, "high"), samples[0])
+
+
+def test_prepare_low_gain_rejects_missing_channel():
+    samples = np.zeros((1, 2, 12))
+    with pytest.raises(ValueError, match="Low-gain channel is not available"):
+        event_images._select_gain(samples, "low")
+
+
+def test_low_gain_monitoring_pedestal():
+    monitoring = {"n_ped_slices": 2, "pedestal": [[2, 4], [6, 8]]}
+    np.testing.assert_array_equal(event_images._monitoring_pedestals(monitoring, 2, 4, 1), [3, 4])
+    with pytest.raises(ValueError, match="Missing or invalid monitoring pedestal for event 4"):
+        event_images._monitoring_pedestals({"n_ped_slices": 2, "pedestal": [[2, 4]]}, 2, 4, 1)
 
 
 def test_trace_maxima_selects_peaks_and_handles_empty_threshold():

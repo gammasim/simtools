@@ -260,12 +260,49 @@ def test__add_illuminator_command_options_with_custom_position_and_pointing(simu
         assert result[8] == "-a uniform"  # angular distribution
 
 
-def test__add_flasher_command_options_above_focal_surface_raises(simulator_instance):
-    with (
-        patch.object(simulator_instance, "flasher_above_focal_surface", return_value=True),
-        pytest.raises(ValueError, match=r"ff-1m has no direction option.*obdeect"),
-    ):
-        get_light_source_writer(simulator_instance).add_flasher_command_options()
+def test_sst_m2_flasher_command(simulator_instance):
+    telescope = {
+        "mirror_class": 2,
+        "camera_body_shape": 0,
+    }
+    telescope_units = {
+        "focal_surface_parameters": [258.88, -0.00471698] * u.cm,
+        "focus_offset": None,
+        "camera_body_diameter": 57 * u.cm,
+    }
+    calibration = {
+        "flasher_bunch_size": 1,
+        "flasher_angular_distribution": "FilledCone",
+        "flasher_pulse_shape": ["Gauss", 1.06, 0.0],
+    }
+    calibration_units = {
+        "flasher_position": [0 * u.cm, 0 * u.cm, 206.92 * u.cm, "primary_mirror_frame"],
+        "flasher_wavelength": 405 * u.nm,
+        "flasher_angular_distribution_width": 30 * u.deg,
+    }
+    simulator_instance.telescope_model.get_parameter_value.side_effect = telescope.get
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
+        telescope_units.get
+    )
+    simulator_instance.calibration_model.get_parameter_value.side_effect = calibration.get
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        calibration_units.get
+    )
+    simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 1500000}
+
+    options = get_light_source_writer(simulator_instance).add_flasher_command_options()
+
+    assert float(
+        next(option.split()[1] for option in options if option.startswith("--distance"))
+    ) == (pytest.approx(51.96))
+    assert "--spectrum 405" in options
+    assert "--lightpulse gauss:1.06" in options
+
+    calibration_units["flasher_position"][2] = 310.84 * u.cm
+    options = get_light_source_writer(simulator_instance).add_flasher_command_options()
+    assert float(
+        next(option.split()[1] for option in options if option.startswith("--distance"))
+    ) == pytest.approx(51.96)
 
 
 def test__add_flasher_command_options(simulator_instance):

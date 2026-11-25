@@ -190,6 +190,17 @@ def test_source_reads_ecsv_with_parameter_metadata_and_checks_asset_paths(tmp_te
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         source.get_parameter_table({**parameter_data, "value": "missing.ecsv"})
 
+    table["group_id"].description = None
+    table.write(output, format="ascii.ecsv", overwrite=True)
+    invalid_source = ModelSource(MemoryStorage({asset_path: Path(output).read_bytes()}))
+    with pytest.raises(ValueError, match="Table column 'group_id' has no description") as error:
+        invalid_source.get_parameter_table(parameter_data)
+    message = str(error.value)
+    assert "North" in message
+    assert "LSTN-01" in message
+    assert "camera_trigger_groups" in message
+    assert asset_path in message
+
 
 def test_source_exports_parameter_assets_without_overwriting(tmp_test_directory):
     """Assets are copied from memory and colliding different contents are qualified."""

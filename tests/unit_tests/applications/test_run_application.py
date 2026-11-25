@@ -53,8 +53,20 @@ def test_runtime_model_source_does_not_require_a_host_reader(
 ):
     root = Path(tmp_test_directory)
     engine = root / "fake-container-engine"
-    engine.write_text("#!/bin/sh\nexit 0\n")
+    engine.write_text(
+        "#!/bin/sh\n"
+        'case " $* " in\n'
+        '  *" --version "*) echo "Release: 2024.271.0" ;;\n'
+        '  *" cat "*) exit 1 ;;\n'
+        '  *) echo "NUMBER OF VERSION : 7.7550" ;;\n'
+        "esac\n"
+    )
     engine.chmod(0o755)
+    simtel_bin = root / "fake-simtel" / "bin"
+    simtel_bin.mkdir(parents=True)
+    simtel_executable = simtel_bin / "sim_telarray"
+    simtel_executable.write_text("#!/bin/sh\nexit 0\n")
+    simtel_executable.chmod(0o755)
     config = root / "workflow.yml"
     config.write_text(
         yaml.safe_dump(
@@ -76,6 +88,8 @@ def test_runtime_model_source_does_not_require_a_host_reader(
         if not key.startswith("SIMTOOLS_SIMULATION_MODELS_")
     }
     env["PYTHONPATH"] = str(Path(simtools_root_path) / "src")
+    env["SIMTOOLS_SIM_TELARRAY_PATH"] = str(simtel_bin.parent)
+    env["SIMTOOLS_SIM_TELARRAY_EXECUTABLE"] = "sim_telarray"
     # Isolate from the user's ~/.config/simtools/config, which may define host model paths.
     env["HOME"] = str(root)
     result = subprocess.run(

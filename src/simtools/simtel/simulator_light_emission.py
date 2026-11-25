@@ -20,6 +20,7 @@ from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.model_repository.reader import resolve_model_reader
 from simtools.runtime.context import RunContext
 from simtools.simtel import output_validation as simtel_output_validation
+from simtools.simtel.photon_bunch_file import bypass_optics_level
 from simtools.simtel.simtel_config_writer import get_simtel_site_parameters
 from simtools.simtel.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_seeds import instance_seed_pairs
@@ -157,6 +158,13 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _initialize_light_emission_configuration(self, config):
         """Initialize light emission configuration from the calibration model."""
+        if self.calibration_model is None:
+            raise ValueError(
+                f"No calibration device for telescope {self.telescope!r}, "
+                f"type {config.get(LIGHT_SOURCE_TYPE)!r}, model version "
+                f"{config.get('model_version')!r}. Check calibration_devices in the selected "
+                "simulation model source or select a light source explicitly."
+            )
         flasher_type = self.calibration_model.get_parameter_value("flasher_type")
         if flasher_type:
             config[LIGHT_SOURCE_TYPE] = flasher_type.lower()
@@ -294,8 +302,10 @@ class SimulatorLightEmission(SimtelRunner):
         return self._seeds()
 
     def _bypass_optics(self):
-        """Return sim_telarray's Bypass_Optics value: 1 for flat fielding, else 0."""
-        return 1 if self.light_emission_config[LIGHT_SOURCE_TYPE] == FLAT_FIELDING else 0
+        """Return the optics bypass level for the default light-emission chain."""
+        if self.light_emission_config[LIGHT_SOURCE_TYPE] == FLAT_FIELDING:
+            return bypass_optics_level(is_dual_mirror(self.telescope_model))
+        return 0
 
     def make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
         """Return the lines of the default run script: LightEmission program, then sim_telarray."""

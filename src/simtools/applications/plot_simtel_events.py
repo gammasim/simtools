@@ -81,6 +81,12 @@ _ARGUMENTS = (
         "max_events", type=int, default=1, help="Maximum number of events to process"
     ),
     cli.ArgumentDefinition(
+        "average_events", action="store_true", help="Plot per-pixel averages over selected events"
+    ),
+    cli.ArgumentDefinition(
+        "gain", choices=["high", "low"], default="high", help="Gain channel to plot"
+    ),
+    cli.ArgumentDefinition(
         "pedestal_source",
         choices=[PEDESTAL_SOURCE_WAVEFORM, PEDESTAL_SOURCE_MONITORING],
         default=PEDESTAL_SOURCE_WAVEFORM,
@@ -88,6 +94,11 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "save_pngs", action="store_true", help="Also save individual PNG images per plot"
+    ),
+    cli.ArgumentDefinition(
+        "flat_fielding",
+        action="store_true",
+        help="Include median-normalized charge plots when using --plots all",
     ),
 )
 
@@ -112,12 +123,22 @@ def main():
     app_context = APPLICATION.start()
 
     plots = value_conversion.ensure_list(app_context.args.get("plots"))
-    prepared_events = event_images.prepare_event_images(
-        app_context.args.get("simtel_file"),
-        app_context.args.get("telescope"),
-        value_conversion.ensure_list(app_context.args.get("event_id")),
-        max_events=app_context.args.get("max_events"),
-    )
+    gain = app_context.args.get("gain", "high")
+    try:
+        prepared_events = event_images.prepare_event_images(
+            app_context.args.get("simtel_file"),
+            app_context.args.get("telescope"),
+            value_conversion.ensure_list(app_context.args.get("event_id")),
+            max_events=app_context.args.get("max_events"),
+            gain=gain,
+        )
+    except event_images.NoEventsError:
+        if app_context.args.get("event_id"):
+            raise
+        app_context.logger.warning(
+            "No events available for the selected telescope; no event plots will be produced."
+        )
+        return
     if (
         app_context.args.get("pedestal_source", PEDESTAL_SOURCE_WAVEFORM)
         == PEDESTAL_SOURCE_MONITORING
@@ -126,6 +147,7 @@ def main():
             prepared_events,
             app_context.args.get("simtel_file"),
             app_context.args.get("telescope"),
+            gain,
         )
     generate_and_save_plots(
         plots=plots,

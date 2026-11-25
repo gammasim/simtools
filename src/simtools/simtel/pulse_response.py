@@ -1,5 +1,6 @@
 """Characterize tabulated pulses and raw gain-resolved flasher waveforms."""
 
+import logging
 from pathlib import Path
 
 import astropy.units as u
@@ -41,6 +42,8 @@ TEMPLATE_KIND = "template_kind"
 GAIN = "gain"
 REFERENCE = "single_pe"
 INTENSITY_DEPENDENT = "intensity_dependent"
+
+logger = logging.getLogger(__name__)
 
 
 def template_responses(model, illuminations, width_fraction=0.95, threshold_adc=None):
@@ -258,7 +261,7 @@ def flasher_responses(
     -------
     astropy.table.Table, list
         Per-event metrics and mean-waveform dictionaries for each step, pixel and gain.
-        All events must match the declared ordered scan; missing events are errors.
+        Multi-level files with some missing events cannot be assigned unambiguously.
     """
     levels = _positive_levels(illuminations)
     counts = np.asarray(events_per_level, dtype=int)
@@ -276,7 +279,14 @@ def flasher_responses(
         indices = np.arange(len(levels)) if len(files) == 1 else np.array([index])
         expected_steps = np.repeat(indices, counts[indices])
         for row, wave, dt in _read_scan_file(
-            file, telescope, pixels, levels, expected_steps, width_options, pedestal
+            file,
+            telescope,
+            pixels,
+            levels,
+            expected_steps,
+            width_options,
+            pedestal,
+            allow_incomplete=len(files) == len(levels),
         ):
             rows.append(row)
             key = (row["step"], row[PIXEL], row["gain"])
@@ -294,7 +304,12 @@ def flasher_responses(
                 WAVEFORM: total / count,
             }
         )
-    return _metrics_table(rows, "photons", width_fraction, threshold_adc), waves
+    table = _metrics_table(rows, "photons", width_fraction, threshold_adc)
+    table.meta["scan_levels"] = levels.tolist()
+    table.meta["scan_expected_events"] = counts.tolist()
+    table.meta["scan_pixels"] = list(pixels)
+    table.meta["response_selection"] = "Recorded triggers only; mean response may be biased."
+    return table, waves
 
 
 def _accumulate_waveform(sums, key, wave, dt):
@@ -314,6 +329,7 @@ def _read_scan_file(
     width_options,
     pedestal,
     *,
+    allow_incomplete=False,
     stream_factory=SimTelFile,
     mapping_reader=get_sim_telarray_telescope_id_to_telescope_name_mapping,
 ):
@@ -345,7 +361,10 @@ def _read_scan_file(
                 yield row, wave, dt
             count += 1
     if count != len(expected_steps):
-        raise ValueError(f"Event count in {file}: expected {len(expected_steps)}, found {count}")
+        message = f"Event count in {file}: expected {len(expected_steps)}, found {count}"
+        if count and not allow_incomplete:
+            raise ValueError(message)
+        logger.warning("%s; response is conditional on recorded triggers.", message)
 
 
 def _event_waveforms(event, tel_id, pixels, pedestal):
@@ -378,7 +397,41 @@ def _pedestals(event, tel_id, shape, pedestal):
 
 def _metrics_table(rows, axis, fraction, threshold):
     """Attach units and width conventions to response measurements."""
-    table = Table(rows=rows)
+    if rows:
+        table = Table(rows=rows)
+    else:
+        table = Table(
+            names=(
+                "file",
+                EVENT_ID,
+                "step",
+                PIXEL,
+                "gain",
+                RESPONSE,
+                INTENSITY,
+                PEAK,
+                ADC_SUM,
+                INTEGRAL,
+                PEAK_TIME,
+                WIDTH,
+                "truncated",
+            ),
+            dtype=(
+                "U1",
+                int,
+                int,
+                int,
+                "U8",
+                "U16",
+                float,
+                float,
+                float,
+                float,
+                float,
+                float,
+                bool,
+            ),
+        )
     for name in (PEAK, ADC_SUM):
         table[name].unit = u.ct
     table[INTEGRAL].unit = u.ct * u.ns
@@ -419,6 +472,21 @@ def write_response(table, waves, output_directory, name):
     return path
 
 
+def _summarize_group(group, keys, metadata):
+    """Aggregate measurements for one response group."""
+    row = {key: group[key][0] for key in keys}
+    row["event_count"] = len(group)
+    if "scan_expected_events" in metadata:
+        row["expected_event_count"] = metadata["scan_expected_events"][int(row["step"])]
+    row["truncated_count"] = int(np.sum(group["truncated"]))
+    for name in (PEAK, ADC_SUM, INTEGRAL, WIDTH):
+        values = np.asarray(group[name], dtype=float)
+        finite = values[np.isfinite(values)]
+        row[name] = float(np.mean(finite)) if finite.size else float("nan")
+        row[f"{name}_std"] = float(np.std(finite)) if finite.size else float("nan")
+    return row
+
+
 def summarize_response(table):
     """Aggregate event metrics per intensity, gain and pixel, retaining dispersion.
 
@@ -438,18 +506,36 @@ def summarize_response(table):
     if PIXEL in table.colnames:
         keys.append(PIXEL)
     rows = []
-    for group in table.group_by(keys).groups:
-        row = {key: group[key][0] for key in keys}
-        row["event_count"] = len(group)
-        row["truncated_count"] = int(np.sum(group["truncated"]))
-        for name in (PEAK, ADC_SUM, INTEGRAL, WIDTH):
-            values = np.asarray(group[name], dtype=float)
-            finite = values[np.isfinite(values)]
-            row[name] = float(np.mean(finite)) if finite.size else float("nan")
-            row[f"{name}_std"] = float(np.std(finite)) if finite.size else float("nan")
-        rows.append(row)
+    for group in table.group_by(keys).groups if len(table) else []:
+        rows.append(_summarize_group(group, keys, table.meta))
+    _append_missing_scan_rows(table, rows)
     summary = Table(rows=rows, meta=table.meta)
+    if "scan_levels" in table.meta:
+        summary.sort(["step", PIXEL, "gain"])
     for name in (PEAK, ADC_SUM, INTEGRAL, WIDTH):
         summary[name].unit = table[name].unit
         summary[f"{name}_std"].unit = table[name].unit
     return summary
+
+
+def _append_missing_scan_rows(table, rows):
+    """Represent unrecorded levels without manufacturing measurements."""
+    if "scan_levels" in table.meta:
+        present = {(row["step"], row[PIXEL]) for row in rows}
+        for step, level in enumerate(table.meta["scan_levels"]):
+            for pixel in table.meta["scan_pixels"]:
+                if (step, pixel) in present:
+                    continue
+                row = {
+                    INTENSITY: level,
+                    "gain": "none",
+                    RESPONSE: FLASHER,
+                    "step": step,
+                    PIXEL: pixel,
+                    "event_count": 0,
+                    "expected_event_count": table.meta["scan_expected_events"][step],
+                    "truncated_count": 0,
+                }
+                for name in (PEAK, ADC_SUM, INTEGRAL, WIDTH):
+                    row[name] = row[f"{name}_std"] = float("nan")
+                rows.append(row)

@@ -90,6 +90,14 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
         assert "Bypass_Optics=1" not in options
 
 
+@pytest.mark.parametrize(("mirror_class", "expected"), [(1, 1), (2, 2)])
+def test_flasher_bypasses_mirrors(simulator_instance, mirror_class, expected):
+    simulator_instance.telescope_model.get_parameter_value.return_value = mirror_class
+    simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
+
+    assert simulator_instance._bypass_optics() == expected
+
+
 @pytest.mark.usefixtures("telescope_writer")
 def test__make_simtel_script_uses_generated_atmospheric_transmission_file(simulator_instance):
     simulator_instance.telescope_model.config_file_path = "/mock/config/CTAO-MSTN-04.cfg"
@@ -1185,3 +1193,13 @@ def test_simulate_executes_script_of_script_writer(simulator_instance, tmp_test_
         stdout=tmp_test_directory / "sub_out.log",
         stderr=tmp_test_directory / "sub_err.log",
     )
+
+
+def test_missing_flasher_model_reports_telescope_and_model_version():
+    simulator = SimulatorLightEmission.__new__(SimulatorLightEmission)
+    simulator.telescope = "SSTS-01"
+    simulator.calibration_model = None
+    with pytest.raises(ValueError, match=r"SSTS-01.*flat_fielding.*8\.0\.0.*calibration_devices"):
+        simulator._initialize_light_emission_configuration(
+            {"light_source_type": "flat_fielding", "model_version": "8.0.0"}
+        )

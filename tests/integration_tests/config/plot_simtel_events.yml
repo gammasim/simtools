@@ -23,5 +23,23 @@ applications:
     - path_descriptor: output_path
       file: event_plots_full_simulation_run000010_North_7.0.0_simtools-simulate-flasher_LSTN-04.simtel.plot_simtel_events.meta.yml
   test_name: flasher_event_plots
+- application: simtools-plot-simtel-events
+  docs:
+    title: Plot average LST flasher images
+    summary: Average signal and peak position per pixel over multiple flasher events.
+  configuration:
+    simtel_file: ${generated:full_simulation_run000010_North_7.0.0_simtools-simulate-flasher_LSTN-04.simtel.zst}
+    average_events: true
+    gain: low
+    max_events: 5
+    telescope: LSTN-04
+    output_file: average_plots
+    test: true
+    output_path: simtools-output
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: average_plots_full_simulation_run000010_North_7.0.0_simtools-simulate-flasher_LSTN-04.simtel.pdf
+  test_name: flasher_average_plots
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

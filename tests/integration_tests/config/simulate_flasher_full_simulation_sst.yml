@@ -1,0 +1,42 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  docs:
+    title: Simulate an SSFS flash for a South SST
+    summary: Propagate an M2 flasher pulse to the camera of SSTS-12.
+  configuration:
+    run_mode: full_simulation
+    light_source: SSFS-design
+    model_version: 8.0.0
+    output_path: simtools-output
+    site: South
+    telescopes: SSTS-12
+    run_number: 10
+    flasher_photons: 1e6
+    simulation_software:
+    - light_emission
+    - sim_telarray
+    instrument_seed: 1
+    simulation_seed: 1
+    log_level: DEBUG
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: full_simulation_run000010_South_8.0.0_simulate_flasher_SSTS-12.simtel.zst
+      output_sub_path: sim_telarray
+      validations:
+      - type: simtel
+        event_type: flasher
+        event:
+          pe_sum:
+            range:
+            - 80000
+            - 190000
+          photons:
+            range:
+            - 350000
+            - 500000
+  model_version_use_current: true
+  test_name: full_simulation_ssfs_design
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0

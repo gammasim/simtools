@@ -9,6 +9,8 @@ import os
 import re
 import shutil
 import subprocess
+import sys
+from contextlib import nullcontext
 from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
@@ -133,28 +135,17 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
         collection_config,
         provenance_path=args_dict.get("provenance_path"),
     )
-    log_file = Path(log_file)
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    with log_file.open("w", encoding="utf-8") as file:
+    if args_dict.get("disable_log_file"):
+        log_stream = nullcontext(sys.stdout)
+    else:
+        log_file = Path(log_file)
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_stream = log_file.open("w", encoding="utf-8")
+    with log_stream as file:
         file.write("Running simtools applications\n")
         file.write(_runtime_environment_header(effective_runtime, source_options))
         file.write(model_provenance)
-        try:
-            versions = dependencies.get_version_string(
-                run_time, include_software_versions=True, context=context
-            )
-        except FileNotFoundError as exc:
-            logger.info("Host simulation versions unavailable; using runtime identity: %s", exc)
-            versions = dependencies.get_version_string(
-                run_time, include_software_versions=False, context=context
-            )
-        file.write(versions)
-        try:
-            manifest = dependencies.get_dependency_manifest(run_time or None, context=context)
-            file.write(f"Runtime simtools: {manifest.get('simtools', {})}\n")
-            file.write(f"Runtime build options: {manifest.get('build_options', {})}\n")
-        except (OSError, ValueError, subprocess.SubprocessError) as exc:
-            file.write(f"Runtime identity unavailable: {exc}\n")
+        _write_runtime_identity(file, run_time, context)
         try:
             for config in configurations:
                 app = config.get("application")
@@ -200,6 +191,26 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
                 associated_activities=associated_activities,
                 context=context,
             )
+
+
+def _write_runtime_identity(file, run_time, context):
+    """Write available software versions and runtime identity to the workflow log."""
+    try:
+        versions = dependencies.get_version_string(
+            run_time, include_software_versions=True, context=context
+        )
+    except FileNotFoundError as exc:
+        logger.info("Host simulation versions unavailable; using runtime identity: %s", exc)
+        versions = dependencies.get_version_string(
+            run_time, include_software_versions=False, context=context
+        )
+    file.write(versions)
+    try:
+        manifest = dependencies.get_dependency_manifest(run_time or None, context=context)
+        file.write(f"Runtime simtools: {manifest.get('simtools', {})}\n")
+        file.write(f"Runtime build options: {manifest.get('build_options', {})}\n")
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+        file.write(f"Runtime identity unavailable: {exc}\n")
 
 
 def get_explicit_env_file(args_dict):

@@ -254,3 +254,11 @@ def test_load_yaml_requires_mapping(tmp_test_directory):
     path.write_text("- item\n", encoding=UTF_8)
     with pytest.raises(ValueError, match="Expected a mapping"):
         defs.load_yaml(path)
+
+
+def test_catalogue_schema_adds_flasher_expansion_in_new_version():
+    old = schema.load_schema("science_tests/catalogue.schema.yml", "0.3.0")
+    latest = schema.load_schema("science_tests/catalogue.schema.yml", "latest")
+    assert "expand_flasher_scan" not in old["definitions"]["TestDefinition"]["properties"]
+    assert latest["schema_version"] == "0.4.0"
+    assert "expand_flasher_scan" in latest["definitions"]["TestDefinition"]["properties"]
