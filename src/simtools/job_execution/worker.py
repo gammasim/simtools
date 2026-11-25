@@ -38,14 +38,6 @@ _DATA_CLASSES = {
 }
 
 
-def _registered_object(name, allowed):
-    """Resolve only a statically registered callable or data class."""
-    if name not in allowed:
-        raise ValueError(f"Unregistered worker type: {name!r}.")
-    module, attribute = name.split(":", 1)
-    return getattr(importlib.import_module(module), attribute)
-
-
 def _object_name(value):
     """Return the qualified registration name of a callable or class."""
     return f"{value.__module__}:{value.__qualname__}"
@@ -131,7 +123,11 @@ def _decode_special_value(kind, data, value):
             raise ValueError("Object arrays are not supported in worker payloads.")
         return np.asarray(data, dtype=dtype)
     if kind == "record" and isinstance(data, dict):
-        cls = _registered_object(value.get("name"), _DATA_CLASSES)
+        name = value.get("name")
+        if name not in _DATA_CLASSES:
+            raise ValueError(f"Unregistered worker type: {name!r}.")
+        module, attribute = name.split(":", 1)
+        cls = getattr(importlib.import_module(module), attribute)
         return cls(**{key: decode_worker_value(item) for key, item in data.items()})
     raise ValueError(f"Unsupported worker data encoding: {kind!r}.")
 
@@ -395,8 +391,8 @@ def write_job_payload(job_spec, path):
         json.dump(payload, handle, allow_nan=False)
 
 
-def _load_job_payload(path):
-    """Load and validate one worker payload."""
+def load_job_payload(path):
+    """Load a versioned JobSpec payload from a trusted execution work directory."""
     with Path(path).open(encoding="utf-8") as handle:
         payload = json.load(handle)
     if not isinstance(payload, dict) or payload.get("payload_version") != _PAYLOAD_VERSION:
@@ -411,11 +407,6 @@ def _load_job_payload(path):
     if values.get("initializer") is not None:
         raise ValueError("Worker initializers are not supported by HTCondor.")
     return JobSpec(**values)
-
-
-def load_job_payload(path):
-    """Load a versioned JobSpec payload from a trusted execution work directory."""
-    return _load_job_payload(path)
 
 
 def _job_file(run_directory, directory, job_id):
@@ -433,16 +424,11 @@ def validate_job_id(job_id):
 def _write_result(path, payload):
     """Write a worker result atomically."""
     temporary = path.with_suffix(".tmp")
-    with temporary.open("w", encoding="utf-8") as handle:
-        json.dump({"version": 1, **_encode_result(payload)}, handle, allow_nan=False)
-    temporary.replace(path)
-
-
-def _encode_result(payload):
-    """Encode a successful result value using the worker data format."""
     if payload.get("ok"):
-        return {**payload, "value": _encode_value(payload["value"])}
-    return payload
+        payload = {**payload, "value": _encode_value(payload["value"])}
+    with temporary.open("w", encoding="utf-8") as handle:
+        json.dump({"version": 1, **payload}, handle, allow_nan=False)
+    temporary.replace(path)
 
 
 def run(run_directory, job_id, log_file=None, scratch_directory=None):
@@ -455,7 +441,7 @@ def run(run_directory, job_id, log_file=None, scratch_directory=None):
     previous_table_path = os.environ.get("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
     try:
         file_handler = _configure_worker_logging(log_file)
-        job_spec = _load_job_payload(input_path)
+        job_spec = load_job_payload(input_path)
         with _stage_tables_for_job(job_spec, scratch_directory) as staged_tables:
             if staged_tables is not None:
                 table_path, job_spec = staged_tables
