@@ -28,6 +28,30 @@ def test_parser_requires_telescope():
         parser.parse_args(["--simtel_files", "a.simtel.zst"])
 
 
+def test_make_pixel_map_normalizes_active_pixels_and_preserves_disabled_zeros():
+    table = app._make_pixel_map(np.array([2.0, 4.0, 0.0, 100.0]), [True, True, True, False])
+
+    np.testing.assert_allclose(table["relative_rate"], [1.0, 2.0, 0.0, 0.0])
+    np.testing.assert_allclose(table["relative_rate_error"], np.sqrt([2.0, 4.0, 0.0, 0.0]) / 2.0)
+    assert np.mean(table["relative_rate"][:3]) == pytest.approx(1.0)
+
+
+def test_make_pixel_map_does_not_infer_disabled_pixels_from_zero_counts():
+    table = app._make_pixel_map(np.array([0.0, 4.0, 8.0]), [True, True, True])
+
+    np.testing.assert_allclose(table["relative_rate"], [0.0, 1.0, 2.0])
+
+
+def test_make_pixel_map_rejects_wrong_mask_size():
+    with pytest.raises(ValueError, match="active pixel mask must match"):
+        app._make_pixel_map(np.array([1.0, 2.0]), [True])
+
+
+def test_make_pixel_map_rejects_no_active_pixels():
+    with pytest.raises(ValueError, match="no active pixels"):
+        app._make_pixel_map(np.array([0.0, 0.0]), [False, False])
+
+
 def _simtel_files(directory, names):
     files = [Path(directory) / name for name in names]
     for file in files:
@@ -50,6 +74,7 @@ def test_main_writes_pixel_map(mocker, tmp_test_directory, run_context):
         "sum_true_photoelectrons",
         return_value=(np.array([1.0, 3.0]), 7),
     )
+    mocker.patch.object(app, "active_pixel_mask", return_value=np.array([True, False]))
 
     app.main()
 
@@ -58,7 +83,7 @@ def test_main_writes_pixel_map(mocker, tmp_test_directory, run_context):
     assert table.meta["number_of_events"] == 7
     assert table.meta["telescope"] == "MSTN-design"
     assert table.meta["input_files"] == [str(a_file), str(b_file)]
-    np.testing.assert_allclose(table["relative_rate"], [0.5, 1.5])
+    np.testing.assert_allclose(table["relative_rate"], [1.0, 0.0])
 
 
 def test_main_plots_pixel_map(mocker, tmp_test_directory, run_context):
@@ -72,6 +97,7 @@ def test_main_plots_pixel_map(mocker, tmp_test_directory, run_context):
     context = run_context.replace(args=args)
     mocker.patch.object(type(app.APPLICATION), "start", return_value=context)
     mocker.patch.object(app, "sum_true_photoelectrons", return_value=(np.array([1.0, 3.0]), 2))
+    mocker.patch.object(app, "active_pixel_mask", return_value=np.array([True, True]))
     camera = mocker.patch.object(app, "read_camera", return_value="camera")
     plot = mocker.patch.object(app, "plot_pixel_map")
 

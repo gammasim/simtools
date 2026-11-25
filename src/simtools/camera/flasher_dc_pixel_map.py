@@ -132,6 +132,37 @@ def relative_pixel_map(pe_sum):
     )
 
 
+def active_pixel_mask(simtel_files, telescope):
+    """Return a mask using the HV-disabled pixel list in each simulation file."""
+    reference_mask = None
+    for file_name in simtel_files:
+        tel_id = _telescope_id(file_name, telescope)
+        with SimTelFile(file_name, skip_calibration=False) as simtel:
+            description = simtel.telescope_descriptions[tel_id]
+            camera_size = len(description["camera_settings"]["pixel_x"])
+            try:
+                disabled = description["disabled_pixels"]["HV_disabled"]
+            except KeyError as exc:
+                raise ValueError(
+                    f"Disabled-pixel metadata is missing for telescope '{telescope}' "
+                    f"in '{file_name}'."
+                ) from exc
+            mask = np.ones(camera_size, dtype=bool)
+            disabled_ids = np.asarray(disabled, dtype=np.int64)
+            if np.any((disabled_ids < 0) | (disabled_ids >= camera_size)):
+                raise ValueError(f"Disabled pixel ID is outside the camera range in '{file_name}'.")
+            mask[disabled_ids] = False
+            if reference_mask is None:
+                reference_mask = mask
+            elif not np.array_equal(reference_mask, mask):
+                raise ValueError(
+                    f"Disabled-pixel metadata differs between input files for '{telescope}'."
+                )
+    if reference_mask is None:
+        raise ValueError(f"No sim_telarray files supplied for telescope '{telescope}'.")
+    return reference_mask
+
+
 def write_pixel_map(table, output_file, *, number_of_events=None, telescope=None, input_files=None):
     """
     Write the relative pixel map as ECSV.

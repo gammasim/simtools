@@ -12,12 +12,16 @@ TELESCOPE = "MSTN-design"
 TEL_ID = 3
 
 
-def _simtel_file(events):
+def _simtel_file(events, disabled_pixels=()):
     """Return a patched SimTelFile yielding the given events and a telescope ID mapping."""
     simtel = mock.MagicMock()
     simtel.__enter__.return_value = simtel
     simtel.__iter__.side_effect = lambda: iter(events)
     simtel.header = {"tel_id": [TEL_ID]}
+    description = {"camera_settings": {"pixel_x": np.zeros(3)}}
+    if disabled_pixels is not None:
+        description["disabled_pixels"] = {"HV_disabled": np.asarray(disabled_pixels)}
+    simtel.telescope_descriptions = {TEL_ID: description}
     return (
         mock.patch.object(pixel_map, "SimTelFile", return_value=simtel),
         mock.patch.object(
@@ -55,6 +59,55 @@ def test_relative_pixel_map_zero_mean_raises():
 def test_relative_pixel_map_empty_raises():
     with pytest.raises(ValueError, match="Mean photo-electron count per pixel is zero"):
         pixel_map.relative_pixel_map(np.array([]))
+
+
+def test_active_pixel_mask_marks_reported_high_voltage_disabled_pixels():
+    file_patch, mapping_patch = _simtel_file([], disabled_pixels=[1])
+    with file_patch, mapping_patch:
+        mask = pixel_map.active_pixel_mask(["run.simtel.zst"], TELESCOPE)
+
+    np.testing.assert_array_equal(mask, [True, False, True])
+
+
+def test_active_pixel_mask_rejects_inconsistent_files(mocker):
+    first_simtel = mock.MagicMock()
+    first_simtel.__enter__.return_value = first_simtel
+    first_simtel.telescope_descriptions = {
+        TEL_ID: {
+            "camera_settings": {"pixel_x": np.zeros(3)},
+            "disabled_pixels": {"HV_disabled": np.array([1])},
+        }
+    }
+    second_simtel = mock.MagicMock()
+    second_simtel.__enter__.return_value = second_simtel
+    second_simtel.telescope_descriptions = {
+        TEL_ID: {
+            "camera_settings": {"pixel_x": np.zeros(3)},
+            "disabled_pixels": {"HV_disabled": np.array([2])},
+        }
+    }
+    mocker.patch.object(pixel_map, "SimTelFile", side_effect=[first_simtel, second_simtel])
+    mocker.patch.object(
+        pixel_map,
+        "get_sim_telarray_telescope_id_to_telescope_name_mapping",
+        return_value={TEL_ID: TELESCOPE},
+    )
+    with pytest.raises(ValueError, match="metadata differs between input files"):
+        pixel_map.active_pixel_mask(["a.simtel.zst", "b.simtel.zst"], TELESCOPE)
+
+
+def test_active_pixel_mask_rejects_missing_disabled_metadata():
+    file_patch, mapping_patch = _simtel_file([], disabled_pixels=None)
+    with file_patch, mapping_patch:
+        with pytest.raises(ValueError, match="Disabled-pixel metadata is missing"):
+            pixel_map.active_pixel_mask(["run.simtel.zst"], TELESCOPE)
+
+
+def test_active_pixel_mask_rejects_out_of_range_ids():
+    file_patch, mapping_patch = _simtel_file([], disabled_pixels=[3])
+    with file_patch, mapping_patch:
+        with pytest.raises(ValueError, match="outside the camera range"):
+            pixel_map.active_pixel_mask(["run.simtel.zst"], TELESCOPE)
 
 
 def test_write_and_read_roundtrip(tmp_test_directory):

@@ -9,7 +9,7 @@
 ```{eval-rst}
 Derive the relative per-pixel illumination map of a DC flat-fielding device (e.g. ``MSFx-FlashCam-DC``)
 from a low-intensity flasher simulation. The application sums the true photo-electrons per pixel
-over all events and writes the map normalised to a mean of 1 (ECSV columns: ``pixel_id``,
+over all events and writes a relative DC illumination map normalised to a mean of 1 over existing pixels (ECSV columns: ``pixel_id``,
 ``relative_rate``).
 
 The map includes light-concentrator acceptance, photon detection efficiency and, with the obdeect
@@ -19,7 +19,8 @@ Requirements for the input simulations:
 
 * ``simtools-simulate-flasher --run_mode full_simulation`` with sim_telarray configured to store
   photo-electrons (``store_photoelectrons``).
-* Night-sky background and camera noise switched off.
+* Night-sky background and camera noise switched off; set ``qe_variation`` to zero and use uniform relative QE for existing pixels.
+* Preserve disabled-pixel metadata; disabled camera slots are zero and excluded from the mean.
 * Enough events to reach the required precision in every pixel; inspect the output uncertainties.
   Keep the event intensity below sim_telarray's photon-bunch limit.
 

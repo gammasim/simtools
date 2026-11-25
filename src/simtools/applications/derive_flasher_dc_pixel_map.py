@@ -4,7 +4,8 @@ Derive the relative per-pixel rate map of the FlashCam DC flasher.
 
 The map is built from the true photo-electrons per pixel in sim_telarray files of a
 low-intensity full flasher simulation (sim_telarray parameter ``store_photoelectrons``).
-The relative rate of each pixel is its photo-electron sum divided by the camera mean.
+The relative rate is the photo-electron sum divided by the mean over enabled pixels.
+Slots listed as HV-disabled in the simulation metadata are excluded and set to zero.
 
 Example
 -------
@@ -19,8 +20,12 @@ Example
 
 from pathlib import Path
 
+import numpy as np
+from astropy.table import Table
+
 from simtools.application.definition import ApplicationDefinition
 from simtools.camera.flasher_dc_pixel_map import (
+    active_pixel_mask,
     plot_pixel_map,
     read_camera,
     relative_pixel_map,
@@ -80,7 +85,7 @@ def main():
     telescope = args["telescope"]
 
     pe_sum, number_of_events = sum_true_photoelectrons(simtel_files, telescope)
-    table = relative_pixel_map(pe_sum)
+    table = _make_pixel_map(pe_sum, active_pixel_mask(simtel_files, telescope))
     write_pixel_map(
         table,
         Path(output_dir) / args[OUTPUT_FILE],
@@ -91,6 +96,28 @@ def main():
     if args[PLOT]:
         camera = read_camera(simtel_files[0], telescope)
         plot_pixel_map(table, camera, Path(output_dir) / Path(args[OUTPUT_FILE]).stem)
+
+
+def _make_pixel_map(pe_sum, active_mask):
+    """Normalize active pixels and preserve disabled camera slots as zeros."""
+    pe = np.asarray(pe_sum, dtype=np.float64)
+    active = np.asarray(active_mask, dtype=bool)
+    if active.shape != pe.shape:
+        raise ValueError("The active pixel mask must match the photo-electron array shape.")
+    if not np.any(active):
+        raise ValueError("The active pixel mask contains no active pixels.")
+
+    active_map = relative_pixel_map(pe[active])
+    table = Table(
+        {
+            "pixel_id": np.arange(pe.size, dtype=np.int64),
+            "relative_rate": np.zeros(pe.size, dtype=np.float64),
+            "relative_rate_error": np.zeros(pe.size, dtype=np.float64),
+        }
+    )
+    table["relative_rate"][active] = active_map["relative_rate"]
+    table["relative_rate_error"][active] = active_map["relative_rate_error"]
+    return table
 
 
 if __name__ == "__main__":
