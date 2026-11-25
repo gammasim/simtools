@@ -51,9 +51,6 @@ applications:
       validations:
       - type: simtel_config
         reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTS-02.cfg}
-        ignore_parameters:
-        - nightsky_background
-        - nsb_autoscale_airmass
   test_name: gamma_40_deg_south_sim_telarray_only
 schema_name: application_workflow.metaschema
 schema_version: 0.7.0
