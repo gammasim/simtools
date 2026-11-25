@@ -18,6 +18,9 @@ array_layout_name : str
     Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
 array_element_list : list
     List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
+zenith_angle : float, optional
+    Zenith angle (deg) used to scale the NSB pixel rates as in a simulation at this zenith
+    angle. Without it, the model NSB rates are written unscaled.
 
 **Example**
 

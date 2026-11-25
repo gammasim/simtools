@@ -12,8 +12,10 @@ TEMPLATE_DIR = "template_dir"
 BASELINE_VERSION = "baseline_version"
 
 
-def _post_parse(args_dict, _config_sources, _parser):
+def _post_parse(args_dict, _config_sources, parser):
     """Keep validation-only commands free of log-file writes."""
+    if args_dict.get("max_workers") is not None and args_dict["max_workers"] < 2:
+        parser.error("--max_workers must be at least 2 for separate flasher intensity runs.")
     if args_dict.get("dry_run"):
         args_dict["disable_log_file"] = True
 
@@ -59,6 +61,11 @@ APPLICATION = ApplicationDefinition.for_module(
                 "Select one or more tests to execute; can be repeated. Prerequisites must be "
                 "selected explicitly."
             ),
+        ),
+        cli.ArgumentDefinition(
+            "max_workers",
+            type=int,
+            help="Override parallel flasher intensity workers (minimum: 2).",
         ),
         cli.ArgumentDefinition(
             "run_label",

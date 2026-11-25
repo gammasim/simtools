@@ -5,6 +5,7 @@ import logging
 from contextlib import closing
 from pathlib import Path
 
+import astropy.units as u
 import numpy as np
 
 from simtools.data_model.metadata_collector import MetadataCollector
@@ -32,7 +33,11 @@ DEFAULT_STEP_TRACES_INTERVAL = 10
 PLOT_CHOICES = [
     "pedestals",
     "signals",
+    "signal_vs_radius",
+    "normalized_signal",
+    "normalized_signal_vs_radius",
     "peak_timing",
+    "peak_vs_radius",
     "time_traces",
     "waveforms",
     "step_traces",
@@ -141,7 +146,7 @@ class PlotSimtelEvent:
             DPI for saved PNG files.
         """
         output_file = Path(output_file)
-        plots = self._plots_to_run(plots)
+        plots = self._plots_to_run(plots, flat_fielding=args.get("flat_fielding", False))
 
         for plot_name in plots:
             for event_index in self.event_data:
@@ -191,10 +196,14 @@ class PlotSimtelEvent:
         _logger.info(SAVED_PDF_MESSAGE, output_file)
         MetadataCollector.dump(args, output_file, add_activity_name=True)
 
-    def _plots_to_run(self, plots):
+    def _plots_to_run(self, plots, flat_fielding=False):
         """Generate list of plots to run based on user input."""
         if "all" in plots:
-            return list(self._plot_definitions.keys())
+            return [
+                name
+                for name in self._plot_definitions
+                if flat_fielding or not name.startswith("normalized_signal")
+            ]
         return value_conversion.ensure_list(plots)
 
     @property
@@ -203,9 +212,16 @@ class PlotSimtelEvent:
         return {
             "pedestals": (self.plot_pedestals, {}),
             "signals": (self.plot_signals, {}),
+            "signal_vs_radius": (self.plot_signal_vs_radius, {}),
+            "normalized_signal": (self.plot_normalized_signal, {}),
+            "normalized_signal_vs_radius": (self.plot_normalized_signal_vs_radius, {}),
             "peak_timing": (
                 self.plot_peak_timing,
                 {"sum_threshold": DEFAULT_SUM_THRESHOLD, "timing_bins": None},
+            ),
+            "peak_vs_radius": (
+                self.plot_peak_vs_radius,
+                {"sum_threshold": DEFAULT_SUM_THRESHOLD},
             ),
             "time_traces": (
                 self.plot_time_traces,
@@ -387,6 +403,81 @@ class PlotSimtelEvent:
             event_index=event_index,
         )
 
+    def plot_signal_vs_radius(self, event_index):
+        """Plot pedestal-subtracted integrated signal against camera radius in metres."""
+        event = self.event_data[event_index]
+        return self._plot_vs_radius(
+            event.image, np.arange(event.number_of_pixels), "integrated signal [d.c.]", event_index
+        )
+
+    def _normalized_signal(self, event_index):
+        """Normalize enabled finite pixel charges by their median, keeping outliers."""
+        charge = np.asarray(self.event_data[event_index].image, dtype=float)
+        valid = np.isfinite(charge) & np.asarray(self.camera.pixels["pix_on"], dtype=bool)
+        pixel_ids = np.flatnonzero(valid)
+        if not pixel_ids.size:
+            _logger.warning("Cannot normalize charge: no enabled finite pixel values")
+            return None, None
+        median = np.median(charge[pixel_ids])
+        if median <= 0:
+            _logger.warning("Cannot normalize charge: median is not positive")
+            return None, None
+        return charge[pixel_ids] / median, pixel_ids
+
+    def plot_normalized_signal(self, event_index):
+        """Plot median-normalized pixel charge on the camera and as a histogram."""
+        values, pixel_ids = self._normalized_signal(event_index)
+        if values is None:
+            return None
+        image = np.ma.masked_all(self.event_data[event_index].number_of_pixels)
+        image[pixel_ids] = values
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4), dpi=300)
+        label = "charge / median charge"
+        plot_pixel_layout_with_image(self.camera, image=image, ax=ax1, color_bar_label=label)
+        low, high = np.min(values), np.max(values)
+        if low == high:
+            low, high = low - 0.5, high + 0.5
+        edges = np.linspace(low, high, DEFAULT_HISTOGRAM_BINS)
+        stats = {
+            "considered": pixel_ids.size,
+            "found": pixel_ids.size,
+            "mean": np.mean(values),
+            "median": np.median(values),
+            "std": np.std(values),
+        }
+        self._plot_histogram(ax2, values, edges, stats, label, PIXEL_LABEL)
+        fig.suptitle(self._make_title(label, event_index))
+        fig.tight_layout()
+        return fig
+
+    def plot_normalized_signal_vs_radius(self, event_index):
+        """Plot median-normalized pixel charge against camera radius."""
+        values, pixel_ids = self._normalized_signal(event_index)
+        if values is None:
+            return None
+        return self._plot_vs_radius(values, pixel_ids, "charge / median charge", event_index)
+
+    def plot_peak_vs_radius(self, event_index, sum_threshold=DEFAULT_SUM_THRESHOLD):
+        """Plot peak sample index against camera radius for pixels passing the threshold."""
+        peaks, pixel_ids, _ = self.trace_maxima(
+            self.event_data[event_index].adc_samples, sum_threshold=sum_threshold
+        )
+        if peaks is None or pixel_ids is None:
+            _logger.warning("No pixels exceeded sum_threshold for peak timing")
+            return None
+        return self._plot_vs_radius(peaks, pixel_ids, "peak sample", event_index)
+
+    def _plot_vs_radius(self, values, pixel_ids, label, event_index):
+        """Plot pixel values against their distance from the camera-coordinate origin."""
+        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"]) * u.cm.to(u.m)
+        fig, ax = plt.subplots(dpi=300)
+        ax.scatter(radius[pixel_ids], values, s=6, alpha=0.5, linewidths=0)
+        ax.set_xlabel("distance from camera centre [m]")
+        ax.set_ylabel(label)
+        ax.set_title(self._make_title(label, event_index))
+        fig.tight_layout()
+        return fig
+
     def plot_pedestals(self, event_index):
         """Plot pedestal values for all pixels."""
         values = self.event_data[event_index].pedestals
@@ -399,6 +490,31 @@ class PlotSimtelEvent:
             y_label=PIXEL_LABEL,
             event_index=event_index,
         )
+
+    def _plot_average_events(self, gain):
+        """Plot per-pixel means of the event images and individual peak positions."""
+        events = list(self.event_data.values())
+        signals = np.mean(np.stack([event.image for event in events]), axis=0)
+        peaks = np.mean(
+            np.stack([np.argmax(event.adc_samples, axis=1) for event in events]), axis=0
+        )
+        fig, axes = plt.subplots(2, 3, figsize=(15, 8), dpi=300)
+        for row, values, label in zip(axes, (signals, peaks), ("Mean signal", "Mean peak sample")):
+            self._plot_average_row(row, values, label)
+        fig.suptitle(f"{self.telescope} {gain} gain (average of {len(events)} events)")
+        fig.tight_layout()
+        return fig
+
+    def _plot_average_row(self, axes, values, label):
+        """Draw camera, pixel distribution and radial views for one quantity."""
+        plot_pixel_layout_with_image(self.camera, image=values, ax=axes[0], color_bar_label=label)
+        stats = {"median": float(np.median(values)), "std": float(np.std(values))}
+        edges = np.histogram_bin_edges(values, bins=DEFAULT_HISTOGRAM_BINS)
+        self._plot_histogram(axes[1], values, edges, stats, label, PIXEL_LABEL)
+        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"]) * u.cm.to(u.m)
+        axes[2].scatter(radius, values, s=5, alpha=0.6)
+        axes[2].set_xlabel("Distance from camera centre [m]")
+        axes[2].set_ylabel(label)
 
     def _plot_camera_image_and_histogram(
         self, values, pix_ids, found_count, edges, x_label, y_label, event_index
@@ -419,9 +535,9 @@ class PlotSimtelEvent:
             self.camera, image=np.ma.masked_invalid(image), ax=ax1, color_bar_label=x_label
         )
         self._plot_histogram(ax2, values, edges, stats, x_label, y_label)
-        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"])
+        radius = np.hypot(self.camera.pixels["x"], self.camera.pixels["y"]) * u.cm.to(u.m)
         ax3.scatter(radius[pix_ids], values, s=5, alpha=0.6)
-        ax3.set_xlabel("Distance from camera centre [cm]")
+        ax3.set_xlabel("Distance from camera centre [m]")
         ax3.set_ylabel(x_label)
 
         fig.suptitle(self._make_title(x_label, event_index))
@@ -569,7 +685,21 @@ class _StreamingPlotter(PlotSimtelEvent):
     def stream_figures(self, plots, args, output_file):
         """Generate and close each figure after it has been saved to the PDF."""
         output_file = Path(output_file)
-        for plot_name in self._plots_to_run(plots):
+        if args.get("average_events", False):
+            fig = self._plot_average_events(args.get("gain", "high"))
+            try:
+                yield fig
+                if args.get("save_pngs", False):
+                    save_figure(
+                        fig,
+                        output_file.with_name("average_events.png"),
+                        figure_format=["png"],
+                        dpi=int(args.get("figure_dpi", 300)),
+                    )
+            finally:
+                plt.close(fig)
+            return
+        for plot_name in self._plots_to_run(plots, flat_fielding=args.get("flat_fielding", False)):
             for event_index in self.event_data:
                 fig = self._generate_single_plot(plot_name, event_index, args)
                 if fig is None:

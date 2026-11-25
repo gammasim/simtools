@@ -32,6 +32,13 @@ source stage and has no ``corsika`` stage. The direct-injection run mode accepts
 
 See :doc:`/components/obdeect` for the stages.
 
+For multiple emitted-photon levels, ``--max_workers`` greater than one runs each level
+as a separate simulation, with successive run numbers and output directories such as
+``run000100/`` and ``run000101/`` below the output path. A single worker writes the
+full sequence to one file. Size the worker count for the CPU, memory and disk resources
+available; each level runs its own light-emission and sim_telarray chain.
+
+
 **Photon counts and matching run modes**
 
 The ``flasher_photons`` setting has a different meaning in each run mode:
@@ -209,6 +216,8 @@ run_number (int, optional)
 .. simtools-integration-example::
     :file: simulate_flasher_full_simulation_mst_nectarcam.yml
 ```
+
+Use `--disable_nsb_autoscaling` to disable the zenith-dependent NSB correction.
 
 ```{eval-rst}
 **FlashCam DC flasher example**

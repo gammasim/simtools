@@ -52,3 +52,38 @@ def test_storage_reads_identical_files(storage):
 @pytest.mark.parametrize("root_prefix", ["", "."])
 def test_storage_lists_all_files_from_repository_root(storage, root_prefix):
     assert storage.iter_files(root_prefix) == sorted(FILES)
+
+
+def test_directory_storage_rejects_symlink_traversal(tmp_test_directory):
+    root = Path(tmp_test_directory) / "symlink-model"
+    root.mkdir()
+    outside = Path(tmp_test_directory) / "symlink-outside"
+    outside.mkdir()
+    (outside / "asset").write_bytes(b"secret")
+    (root / "linked-directory").symlink_to(outside, target_is_directory=True)
+    (root / "linked-file").symlink_to(outside / "asset")
+    storage = DirectoryStorage(root)
+    for name in ("linked-directory/asset", "linked-file"):
+        with pytest.raises(OSError, match=r"Too many levels|Not a directory|File exists"):
+            storage.read_bytes(name)
+    assert storage.iter_files("") == []
+    with pytest.raises(OSError, match=r"Too many levels|Not a directory"):
+        storage.iter_files("linked-directory")
+
+
+def test_directory_storage_remains_anchored_when_ancestor_is_replaced(tmp_test_directory):
+    base = Path(tmp_test_directory)
+    parent = base / "model-parent"
+    root = parent / "model"
+    root.mkdir(parents=True)
+    (root / "asset").write_bytes(b"original")
+    storage = DirectoryStorage(root)
+
+    parent.rename(base / "original-parent")
+    replacement = base / "replacement"
+    (replacement / "model").mkdir(parents=True)
+    (replacement / "model" / "asset").write_bytes(b"substitute")
+    parent.symlink_to(replacement, target_is_directory=True)
+
+    assert storage.read_bytes("asset") == b"original"
+    assert storage.iter_files("") == ["asset"]

@@ -791,3 +791,57 @@ def test_apply_changes_to_sim_telarray_production_table_deprecated_patch_update(
     assert maintenance._apply_changes_to_sim_telarray_production_table(data, changes, "7.0.0", True)
     assert "min_photons" not in data["parameters"]["LSTN-design"]
     assert "min_photons" in data["deprecated_parameters"]
+
+
+def test_workflow_parameter_overwrites_existing_with_ignore_flag(tmp_test_directory, caplog):
+    root = Path(tmp_test_directory)
+    target = maintenance.get_model_parameter_file_path(
+        root, "LSTN-design", "fadc_pulse_shape", "2.0.1"
+    )
+    target.parent.mkdir(parents=True)
+    target.write_text('{"parameter_version": "2.0.1", "value": 30}', encoding="utf-8")
+    changes = {
+        "LSTN-design": {"fadc_pulse_shape": {"version": "2.0.1", "activity_id": "activity-id"}}
+    }
+    context = Mock(args={"ignore_existing_parameter_version": True})
+    with patch(
+        "simtools.model_repository.maintenance.ascii_handler.collect_data_from_git",
+        return_value={"parameter_version": "2.0.1", "value": 25},
+    ):
+        maintenance._apply_changes_to_model_parameters(changes, root, context=context)
+    assert json.loads(target.read_text(encoding="utf-8"))["value"] == 25
+    assert "overwrit" in caplog.text.lower()
+
+
+def test_workflow_parameter_overwrites_existing_asset(tmp_test_directory, caplog):
+    root = Path(tmp_test_directory)
+    target = maintenance.get_model_parameter_file_path(
+        root, "LSTN-design", "fadc_pulse_shape", "2.0.1"
+    )
+    target.parent.mkdir(parents=True)
+    asset = target.parent / FILE_PARAMETER_ASSET
+    asset.write_bytes(b"old")
+    target.write_text(
+        json.dumps({"parameter_version": "2.0.1", "file": True, "value": FILE_PARAMETER_ASSET}),
+        encoding="utf-8",
+    )
+    changes = {
+        "LSTN-design": {"fadc_pulse_shape": {"version": "2.0.1", "activity_id": "activity-id"}}
+    }
+    context = Mock(args={"ignore_existing_parameter_version": True})
+    data = {"parameter_version": "2.0.1", "file": True, "value": FILE_PARAMETER_ASSET}
+    response = Mock()
+    response.__enter__ = Mock(return_value=Mock(read=Mock(return_value=b"new")))
+    response.__exit__ = Mock(return_value=False)
+    with (
+        patch(
+            "simtools.model_repository.maintenance.ascii_handler.collect_data_from_git",
+            return_value=data,
+        ),
+        patch(
+            "simtools.model_repository.maintenance.urllib.request.urlopen", return_value=response
+        ),
+    ):
+        maintenance._apply_changes_to_model_parameters(changes, root, context=context)
+    assert asset.read_bytes() == b"new"
+    assert "overwriting existing model parameter asset" in caplog.text.lower()

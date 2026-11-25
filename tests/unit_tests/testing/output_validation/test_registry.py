@@ -172,7 +172,20 @@ def test_registry_simtel_config_validator(mocker):
 
     registry.validate_simtel_config(artifact, {"reference": "reference.cfg"}, {})
 
-    compare.assert_called_once_with(reference_file, artifact.path)
+    compare.assert_called_once_with(reference_file, artifact.path, ())
+
+
+def test_registry_simtel_config_validator_passes_ignored_parameters(mocker):
+    """Pass the parameters the rule excludes from the comparison."""
+    artifact = OutputArtifact(Path("output.cfg"), {})
+    reference_file = Path("reference.cfg")
+    mocker.patch.object(registry.reference, "resolve_path", return_value=reference_file)
+    compare = mocker.patch.object(registry.simtel, "compare_config_files", return_value=True)
+    rule = {"reference": "reference.cfg", "ignore_parameters": ["nightsky_background"]}
+
+    registry.validate_simtel_config(artifact, rule, {})
+
+    compare.assert_called_once_with(reference_file, artifact.path, ["nightsky_background"])
 
 
 def test_registry_simtel_config_validator_reports_difference(mocker):

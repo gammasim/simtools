@@ -13,7 +13,10 @@ from astropy.table import QTable
 
 import simtools.simtel.simtel_file_writer as simtel_file_writer
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simtel.simtel_config_writer import (
+    SimtelConfigWriter,
+    get_simtel_site_parameters,
+)
 
 logger = logging.getLogger()
 
@@ -370,8 +373,34 @@ def test_write_telescope_config_serializes_uniform_nsb_for_all_pixels(
     assert "nightsky_background = all: 0.2\n" in config_path.read_text()
 
 
+def test_get_simtel_site_parameters_site_model_takes_precedence(mocker):
+    site_model = mocker.Mock(
+        parameters={"nsb_scaling_factor": {"value": 1.5}, "site_only": {"value": "a"}}
+    )
+    site_model.get_simulation_software_parameters.return_value = {
+        "nsb_scaling_factor": {"value": 2.0},
+        "iobuf_maximum": {"value": 1000},
+    }
+
+    result = get_simtel_site_parameters(site_model)
+
+    site_model.get_simulation_software_parameters.assert_called_once_with("sim_telarray")
+    assert result["nsb_scaling_factor"] == {"value": 1.5}
+    assert result["iobuf_maximum"] == {"value": 1000}
+    assert result["site_only"] == {"value": "a"}
+
+
+@pytest.mark.parametrize(
+    ("neutral_nsb_scaling", "expected_nsb_factor"), [(False, "2.0"), (True, "1.0")]
+)
 def test_write_array_config_file(
-    simtel_config_writer, telescope_model_lst, io_handler, file_has_text, site_model_north
+    simtel_config_writer,
+    telescope_model_lst,
+    io_handler,
+    file_has_text,
+    site_model_north,
+    neutral_nsb_scaling,
+    expected_nsb_factor,
 ):
     _file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt")
     telescope_model = {
@@ -380,12 +409,16 @@ def test_write_array_config_file(
         "LSTN-03": telescope_model_lst,
         "LSTN-04": telescope_model_lst,
     }
-    site_model_north._simulation_config_parameters["sim_telarray"].update(
+    site_model_north.parameters.pop("nsb_scaling_factor", None)
+    software_parameters = site_model_north.get_simulation_software_parameters("sim_telarray")
+    software_parameters.update(
         {
             "iobuf_maximum": {"value": 1000000000},
             "random_generator": {"value": "mt19937"},
+            "nsb_scaling_factor": {"value": "2.0"},
         }
     )
+    simtel_config_writer.neutral_nsb_scaling = neutral_nsb_scaling
     simtel_config_writer.write_array_config_file(
         config_file_path=_file,
         telescope_model=telescope_model,
@@ -396,12 +429,50 @@ def test_write_array_config_file(
         array_config = file.read()
     assert array_config.count("iobuf_maximum = 1000000000") == 0
     assert array_config.count("random_generator = mt19937") == 0
+    assert [
+        line.strip()
+        for line in array_config.splitlines()
+        if line.strip().startswith("nsb_scaling_factor =")
+    ] == [f"nsb_scaling_factor = {expected_nsb_factor}"]
+    assert software_parameters["nsb_scaling_factor"]["value"] == "2.0"
 
     # sim_telarray configuration files need to end with two new lines
     with open(_file) as f:
         lines = f.readlines()
         assert lines[-2].endswith("\n")
         assert lines[-1] == "\n"
+
+
+@pytest.mark.parametrize("neutral_nsb_scaling", [False, True])
+def test_write_dummy_telescope_nsb_parameters(
+    simtel_config_writer,
+    telescope_model_lst,
+    site_model_north,
+    tmp_test_directory,
+    neutral_nsb_scaling,
+):
+    telescope_model_lst.parameters["nsb_autoscale_airmass"] = {
+        "parameter": "nsb_autoscale_airmass",
+        "value": [0.84, 0.29],
+    }
+    telescope_model_lst.parameters["nsb_scaling_factor"] = {
+        "parameter": "nsb_scaling_factor",
+        "value": "2.0",
+    }
+    simtel_config_writer.neutral_nsb_scaling = neutral_nsb_scaling
+    simtel_config_writer.write_array_config_file(
+        config_file_path=Path(tmp_test_directory) / "array-nsb-dummy.cfg",
+        telescope_model={"LSTN-01": telescope_model_lst},
+        site_model=site_model_north,
+    )
+    dummy_text = (Path(tmp_test_directory) / "InvalidTelescope.cfg").read_text(encoding="utf-8")
+    dummy_lines = [line.strip() for line in dummy_text.splitlines()]
+    if neutral_nsb_scaling:
+        assert "nsb_autoscale_airmass = 0.0 0.29" in dummy_lines
+        assert "nsb_scaling_factor = 1.0" in dummy_lines
+    else:
+        assert "nsb_autoscale_airmass = 0.84 0.29" in dummy_lines
+        assert "nsb_scaling_factor = 2.0" in dummy_lines
 
 
 def test_write_array_config_file_excludes_corsika_only_site_tables(
@@ -439,6 +510,35 @@ def test_write_array_config_file_raises_for_too_long_include_filename(
     }
 
     with pytest.raises(ValueError, match=r"^sim_telarray include filename exceeds parser limit"):
+        simtel_config_writer.write_array_config_file(
+            config_file_path=output_file,
+            telescope_model=telescope_model,
+            site_model=site_model_north,
+        )
+
+
+@pytest.mark.parametrize(
+    ("filename", "message"),
+    [
+        ("bad<name.cfg", "Invalid sim_telarray include filename"),
+        ("bad>name.cfg", "Invalid sim_telarray include filename"),
+        ("bad\nname.cfg", "sim_telarray configuration values cannot contain control characters"),
+        ("bad\rname.cfg", "sim_telarray configuration values cannot contain control characters"),
+        ("bad\x00name.cfg", "sim_telarray configuration values cannot contain control characters"),
+    ],
+)
+def test_write_array_config_file_rejects_invalid_include_filename(
+    simtel_config_writer, io_handler, site_model_north, telescope_model_lst, filename, message
+):
+    output_file = io_handler.get_output_file(file_name="simtel-config-writer_array-invalid.txt")
+    telescope_model = {
+        "LSTN-01": mock.Mock(
+            config_file_path=Path(filename),
+            parameters=telescope_model_lst.parameters,
+        )
+    }
+
+    with pytest.raises(ValueError, match=message):
         simtel_config_writer.write_array_config_file(
             config_file_path=output_file,
             telescope_model=telescope_model,
@@ -484,6 +584,13 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     )
     assert not file_has_text(_file, "longitude = -70.316345")
     assert file_has_text(_file, "metaparam telescope set longitude=-70.316345")
+
+    simtel_config_writer.write_telescope_config_file(
+        config_file_path=_file,
+        parameters={},
+        additional_metadata={"nsb_applied_scaling_factor": 1.5},
+    )
+    assert file_has_text(_file, "metaparam telescope set nsb_applied_scaling_factor=1.5")
 
 
 def test_write_tel_config_file_orders_generated_parameters_and_metadata(
@@ -576,6 +683,12 @@ def test_write_dummy_telescope_configuration_includes_camera_file(
     lines = config_file.read_text(encoding="utf-8").splitlines()
     assert "camera_config_file = InvalidTelescope_single_pixel_camera.dat" in lines
     assert "metaparam telescope add camera_config_file" in lines
+
+
+@pytest.mark.parametrize("value", ["value\ninjected = 1", "value\rinjected", "value\x00"])
+def test_reject_control_characters_in_simtel_values(simtel_config_writer, value):
+    with pytest.raises(ValueError, match="cannot contain control characters"):
+        simtel_config_writer._get_value_string_for_simtel(value)
 
 
 def test_get_value_string_for_simtel(simtel_config_writer):

@@ -83,3 +83,20 @@ def test_setup_forwards_release_settings(mocker):
         baseline_version=args[BASELINE_VERSION_KEY],
         simulation_models_git_revision=args[MODEL_REVISION_KEY],
     )
+
+
+def test_parser_accepts_max_workers(monkeypatch):
+    monkeypatch.setattr(
+        sys, "argv", ["run_science_tests.py", "--release_dir", RELEASE_PATH, "--max_workers", "8"]
+    )
+    assert run_science_tests.APPLICATION._parse()["max_workers"] == 8
+
+
+def test_max_workers_rejects_one_for_separate_intensities(capsys):
+    import argparse
+
+    import pytest
+
+    with pytest.raises(SystemExit, match="2"):
+        run_science_tests._post_parse({"max_workers": 1}, {}, argparse.ArgumentParser())
+    assert "must be at least 2" in capsys.readouterr().err

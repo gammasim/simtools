@@ -5,6 +5,7 @@ import numpy as np
 
 from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.simulation.configuration import get_model_writer
+from simtools.simulation.nsb import NsbSettings, nsb_rate_factor
 
 
 def sim_telarray_nsb_scale(nsb_scaling_factor, nsb_autoscale_airmass, zenith_angle):
@@ -30,16 +31,13 @@ def sim_telarray_nsb_scale(nsb_scaling_factor, nsb_autoscale_airmass, zenith_ang
     float
         NSB scaling factor.
     """
-    if not np.isclose(nsb_scaling_factor, 1.0, rtol=0, atol=0) or not nsb_autoscale_airmass:
-        return float(nsb_scaling_factor)
-    airglow_fraction, extinction = nsb_autoscale_airmass[:2]
-    if np.isclose(airglow_fraction, 0.0, rtol=0, atol=0):
-        return 1.0
-    zenith_rad = u.Quantity(zenith_angle, u.deg).to_value(u.rad)
-    airmass = (1.0 - 0.96 * np.sin(zenith_rad) ** 2) ** -0.5
-    return float(
-        ((1.0 - airglow_fraction) + airglow_fraction * airmass)
-        * np.exp(-extinction * (airmass - 1.0))
+    parameters = {}
+    if nsb_autoscale_airmass:
+        parameters["nsb_autoscale_airmass"] = {"value": nsb_autoscale_airmass}
+    return nsb_rate_factor(
+        parameters,
+        NsbSettings(u.Quantity(zenith_angle, u.deg).to_value(u.deg), nsb_scaling_factor, True),
+        1.0,
     )
 
 
@@ -199,7 +197,7 @@ class SimulatorArray(SimtelRunner):
         ).to_value("m")
 
         options = {"Altitude": altitude}
-        for key in ("nsb_scaling_factor", "stars"):
+        for key in ("stars",):
             if key in cfg:
                 options[key] = cfg[key]
                 # stars cannot be 'None' (only 'none')
@@ -234,7 +232,19 @@ class SimulatorArray(SimtelRunner):
         output_file = self.runner_service.get_file_name(
             file_type="sim_telarray_output", run_number=run_number
         )
-        get_model_writer(self.array_model, "sim_telarray").export_config_files()
+        writer = get_model_writer(self.array_model, "sim_telarray")
+        nsb_settings = NsbSettings(
+            zenith_angle=self.simulation_parameters.zenith_angle,
+            manual_factor=self.context.args.get("nsb_scaling_factor"),
+            autoscale=not self.context.args.get("disable_nsb_autoscaling", False),
+        )
+        written = writer.telescope_model_files_exported or writer.array_model_file_exported
+        if written and writer.nsb_settings != nsb_settings:
+            raise ValueError(
+                "NSB settings changed after configuration export; use a new array model."
+            )
+        writer.nsb_settings = nsb_settings
+        writer.export_config_files()
 
         cmd = [
             str(self.context.software.sim_telarray_exe),

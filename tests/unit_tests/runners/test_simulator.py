@@ -770,6 +770,8 @@ def _dc_models(mocker, nsb_rate, dc_rate=0.1, device_name="CAL01", **telescope_p
     )
 
     array_model = mocker.Mock()
+    array_model.site_model.parameters = {}
+    array_model.site_model.get_simulation_software_parameters.return_value = {}
     array_model.site_model.get_parameter_value.return_value = None
     array_model.telescope_models = {"LSTN-01": telescope_model}
     array_model.calibration_models = {"LSTN-01": {device_name: calibration_model}}
@@ -921,6 +923,33 @@ def test_apply_flasher_dc_pixel_rate_manual_nsb_scaling(mocker, run_context):
 
     _, new_rate = telescope_model.overwrite_model_parameter.call_args.args
     assert new_rate == pytest.approx([0.5, 1.0, 1.5])
+
+
+def test_apply_flasher_dc_pixel_rate_respects_disabled_autoscaling(mocker, run_context):
+    simulator = _dc_simulator(
+        mocker, run_context, dc_rate=0.1, zenith_angle=60.0, disable_nsb_autoscaling=True
+    )
+    array_model, telescope_model, _ = _dc_models(
+        mocker, nsb_rate=0.2, nsb_autoscale_airmass=[0.84, 0.29]
+    )
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    _, new_rate = telescope_model.overwrite_model_parameter.call_args.args
+    assert new_rate == pytest.approx([0.25, 0.3, 0.35])
+
+
+def test_apply_flasher_dc_pixel_rate_uses_site_scaling(mocker, run_context):
+    simulator = _dc_simulator(mocker, run_context, dc_rate=0.2)
+    array_model, telescope_model, _ = _dc_models(mocker, nsb_rate=0.1)
+    array_model.site_model.parameters = {"nsb_scaling_factor": {"value": 2.0}}
+    simulator.array_models = [array_model]
+
+    simulator._apply_flasher_dc_pixel_rate()
+
+    _, new_rate = telescope_model.overwrite_model_parameter.call_args.args
+    assert new_rate == pytest.approx([0.15, 0.2, 0.25])
 
 
 def test_apply_flasher_dc_pixel_rate_rejects_offaxis_function(mocker, run_context):
@@ -1500,7 +1529,7 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
         expected_mc_events=500,
         expected_shower_events=1000,
         curved_atmo=False,
-        allow_for_changes=["nsb_scaling_factor", "stars"],
+        allow_for_changes=["stars"],
     )
     mock_corsika_validator.assert_not_called()
 
@@ -1508,8 +1537,8 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
 @pytest.mark.parametrize(
     ("chain_items", "expected"),
     [
-        (["sim_telarray"], ["nsb_scaling_factor", "stars"]),
-        (["corsika", "sim_telarray:bypass_optics=none"], ["nsb_scaling_factor", "stars"]),
+        (["sim_telarray"], ["stars"]),
+        (["corsika", "sim_telarray:bypass_optics=none"], ["stars"]),
         (
             [
                 "corsika",
@@ -1517,7 +1546,7 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
                 "obdeect_optics",
                 "sim_telarray:bypass_optics=camera_entrance",
             ],
-            ["nsb_scaling_factor", "stars", "atmospheric_transmission"],
+            ["stars", "atmospheric_transmission"],
         ),
     ],
 )

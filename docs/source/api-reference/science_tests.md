@@ -33,6 +33,13 @@ their reports.
    :members:
 ```
 
+## flasher_scan
+
+```{eval-rst}
+.. automodule:: science_tests.flasher_scan
+   :members:
+```
+
 ## execution
 
 ```{eval-rst}

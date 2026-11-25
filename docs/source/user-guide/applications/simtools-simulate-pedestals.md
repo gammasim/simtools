@@ -56,3 +56,5 @@ nominal value. A list of stars can be provided to simulate additional contributi
 .. simtools-integration-example::
     :file: simulate_pedestals_nsb_only_20_deg_north.yml
 ```
+
+Use `--disable_nsb_autoscaling` to disable the zenith-dependent NSB correction. A manual `--nsb_scaling_factor` still applies.

@@ -303,3 +303,109 @@ def test_log_planned(bundle, caplog):
         execution.log_planned(prepare(bundle))
     assert "Planned science test: derive.north" in caplog.text
     assert Path(caplog.records[-1].getMessage().split(": ")[-1]).name == DERIVE
+
+
+def test_prepare_test_overrides_workers_only_for_flasher(bundle):
+    write_workflow(
+        bundle,
+        WORKFLOW_YML,
+        {APPLICATION: "simtools-simulate-flasher", CONFIGURATION: {"max_workers": 4}},
+        {APPLICATION: "simtools-analyze-flasher-response", CONFIGURATION: {}},
+    )
+    applications = prepare(bundle, args={"max_workers": 8}).workflow[APPLICATIONS]
+    assert applications[0][CONFIGURATION]["max_workers"] == 8
+    assert "max_workers" not in applications[1][CONFIGURATION]
+    assert prepare(bundle).workflow[APPLICATIONS][0][CONFIGURATION]["max_workers"] == 4
+
+
+def test_prepare_test_expands_flashes_from_catalogue(bundle):
+    bundle.catalogue[DERIVE]["expand_flasher_scan"] = True
+    write_workflow(
+        bundle,
+        WORKFLOW_YML,
+        {
+            APPLICATION: "simtools-simulate-flasher",
+            CONFIGURATION: {
+                "run_mode": "full_simulation",
+                "max_workers": 4,
+                "flasher_photons": [30, 100],
+                "number_of_events": 20,
+                "run_number": 100,
+            },
+        },
+        {
+            APPLICATION: "simtools-analyze-flasher-response",
+            CONFIGURATION: {
+                "simtel_files": [
+                    "/".join(
+                        (
+                            "",
+                            "scan",
+                            "run__FLASHER_RUN__",
+                            "sim_telarray",
+                            "run__FLASHER_RUN__",
+                            "data__FLASHER_RUN__.zst",
+                        )
+                    )
+                ],
+            },
+        },
+        {
+            APPLICATION: "simtools-plot-simtel-events",
+            CONFIGURATION: {
+                "output_path": "/report/__FLASHER_PHOTONS__",
+            },
+        },
+    )
+    apps = prepare(bundle).workflow[APPLICATIONS]
+    assert apps[1][CONFIGURATION]["illumination"] == [30, 100]
+    assert len(apps) == 4
+    assert apps[-1][CONFIGURATION]["output_path"] == "/report/100"
+
+
+def test_prepare_flasher_scan_expands_telescope_specific_levels(bundle):
+    bundle.catalogue[DERIVE]["expand_flasher_scan"] = True
+    bundle.suites[NORTH]["camera_telescopes"] = [LSTN_01, MSTN_01]
+    bundle.suites[NORTH]["telescope_configuration_overrides"] = {
+        DERIVE: {
+            LSTN_01: {"flasher_photons": [10, 100]},
+            MSTN_01: {"flasher_photons": [30, 300, 3000]},
+        }
+    }
+    path = (
+        f"{defs.CANDIDATE_SITE_PATH}/{defs.TELESCOPE}/"
+        f"run__FLASHER_RUN__/sim_telarray/run__FLASHER_RUN__/event__FLASHER_RUN__.zst"
+    )
+    write_workflow(
+        bundle,
+        WORKFLOW_YML,
+        {
+            APPLICATION: "simtools-simulate-flasher",
+            CONFIGURATION: {
+                "telescopes": [defs.TELESCOPE],
+                "run_mode": "full_simulation",
+                "max_workers": 4,
+                "flasher_photons": [10, 20],
+                "number_of_events": 20,
+                "output_path": f"{defs.CANDIDATE_SITE_PATH}/{defs.TELESCOPE}",
+            },
+        },
+        {
+            APPLICATION: "simtools-analyze-flasher-response",
+            CONFIGURATION: {
+                "telescope": defs.TELESCOPE,
+                "simtel_files": [path],
+            },
+        },
+        {
+            APPLICATION: "simtools-plot-simtel-events",
+            CONFIGURATION: {
+                "telescope": defs.TELESCOPE,
+                "output_path": f"{defs.REPORT_PATH}/{defs.TELESCOPE}/__FLASHER_PHOTONS__",
+            },
+        },
+    )
+    apps = prepare(bundle).workflow[APPLICATIONS]
+    assert [app[CONFIGURATION]["illumination"] for app in apps[2:4]] == [[10, 100], [30, 300, 3000]]
+    assert len(apps[4:]) == 5
+    assert all("flasher_photons" not in app[CONFIGURATION] for app in apps[2:])

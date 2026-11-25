@@ -695,6 +695,14 @@ def corsika_config_mock_array_model(corsika_config_data, model_version, run_cont
     site_model_writer = mock.MagicMock()
     site_model_writer.get_atmospheric_profile_file_name.return_value = "atmprof_south.dat"
     array_model.site_model.configuration_writers = {"sim_telarray": site_model_writer}
+    # Array model writer: nothing exported yet (NSB settings may be set on first export)
+    array_model.configuration_writers = {
+        "sim_telarray": mock.MagicMock(
+            telescope_model_files_exported=False,
+            array_model_file_exported=False,
+            nsb_settings=None,
+        )
+    }
 
     corsika_params_from_repository = {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},

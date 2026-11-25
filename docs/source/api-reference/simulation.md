@@ -6,6 +6,9 @@ Shared run settings and selection of software-specific configuration writers.
 .. automodule:: simtools.sim_events.simulation_parameters
    :members:
 
+.. automodule:: simtools.simulation.nsb
+   :members:
+
 .. automodule:: simtools.simulation.configuration
    :members:
 

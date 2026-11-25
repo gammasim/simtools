@@ -130,3 +130,11 @@ def test_ray_tracing_backend_accepts_configuration_values():
     from simtools.configuration.argument_helpers import coerce
 
     assert coerce(arguments.RAY_TRACING_BACKEND, "obdeect", "configuration") == "obdeect"
+
+
+def test_disable_nsb_autoscaling_option():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(arguments.SIM_TELARRAY_ARGUMENTS)
+
+    assert parser.parse_args(["--disable_nsb_autoscaling"]).disable_nsb_autoscaling is True
+    assert parser.parse_args([]).disable_nsb_autoscaling is False

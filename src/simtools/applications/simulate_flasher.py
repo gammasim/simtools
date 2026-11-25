@@ -2,14 +2,21 @@
 
 """Simulate flasher devices used e.g. for camera flat fielding."""
 
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from types import MappingProxyType
+
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import scientific_int
+from simtools.constants import SIMTEL_MAX_SEED
+from simtools.io.output_paths import OutputPaths
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.runners import light_emission_runner
 from simtools.runners.simulator import Simulator
 from simtools.runtime import software_catalog
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
+from simtools.utils import random as simtools_random
 from simtools.utils import value_conversion
 
 _LIGHT_SOURCE_GROUP = "light source"
@@ -129,7 +136,7 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "max_workers",
         group="execution",
-        help="Maximum parallel direct-injection runs (default: 1, sequential).",
+        help="Maximum parallel intensity runs (default: 1).",
         type=int,
         default=1,
     ),
@@ -216,16 +223,39 @@ def main():
         script_writer = light_emission_runner.script_writer_for_chain(
             app_context.args.get("simulation_software")
         )
-        for tel in telescopes:
-            light_source = SimulatorLightEmission(
-                light_emission_config=app_context.args,
-                telescope=tel,
-                label=app_context.args.get("label"),
-                model_reader=app_context.model_reader,
-                context=app_context,
-            )
-            light_source.simulate(script_writer=script_writer)
-            light_source.validate_simulations()
+        runs = _full_simulation_runs(app_context)
+        if len(runs) == 1:
+            for tel in telescopes:
+                simulation = SimulatorLightEmission(
+                    light_emission_config=app_context.args,
+                    telescope=tel,
+                    label=app_context.args.get("label"),
+                    model_reader=app_context.model_reader,
+                    context=app_context,
+                )
+                _run_light_sources([simulation], script_writer)
+        else:
+            groups = [
+                [
+                    SimulatorLightEmission(
+                        light_emission_config=run.args,
+                        telescope=tel,
+                        label=run.args.get("label"),
+                        model_reader=app_context.model_reader,
+                        context=run,
+                    )
+                    for tel in telescopes
+                ]
+                for run in runs
+            ]
+            with ThreadPoolExecutor(
+                max_workers=min(app_context.args["max_workers"], len(runs))
+            ) as pool:
+                futures = [
+                    pool.submit(_run_light_sources, group, script_writer) for group in groups
+                ]
+                for future in futures:
+                    future.result()
     elif app_context.args["run_mode"] == "direct_injection":
         Simulator.simulate_direct_injection_sequence(
             label=app_context.args.get("label"), context=app_context
@@ -234,6 +264,52 @@ def main():
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 
     app_context.logger.info("Flasher simulation completed.")
+
+
+def _run_light_sources(simulations, script_writer):
+    """Run and validate the light-source chains for one intensity."""
+    for simulation in simulations:
+        simulation.simulate(script_writer=script_writer)
+        simulation.validate_simulations()
+
+
+def _full_simulation_runs(context):
+    """Prepare isolated level runs when parallel intensity execution is requested."""
+    args = context.args
+    workers = args.get("max_workers", 1)
+    if isinstance(workers, bool) or not isinstance(workers, int) or workers < 1:
+        raise ValueError("max_workers must be a positive integer for full_simulation.")
+    photons = value_conversion.parse_typed_sequence(args.get("flasher_photons"), int)
+    if workers <= 1 or len(photons) <= 1:
+        return [context]
+    events = value_conversion.parse_typed_sequence(args.get("number_of_events", 1), int)
+    if len(events) == 1:
+        events *= len(photons)
+    if len(events) != len(photons):
+        raise ValueError("Provide one event count or one per photon intensity.")
+    base = Path(context.paths.output_path["default"])
+    run_number = int(args.get("run_number", 1))
+    seeds = args.get("simulation_seed")
+    level_seeds = None
+    if seeds:
+        seeds = value_conversion.ensure_list(seeds)
+        level_seeds = simtools_random.instance_seeds(seeds[-1], len(photons), SIMTEL_MAX_SEED)
+    runs = []
+    for index, (photons_at_level, events_at_level) in enumerate(zip(photons, events, strict=True)):
+        number = run_number + index
+        output = base / f"run{number:06d}"
+        options = dict(args)
+        options.update(
+            run_number=number,
+            flasher_photons=photons_at_level,
+            number_of_events=events_at_level,
+            output_path=str(output),
+        )
+        if level_seeds is not None:
+            options["simulation_seed"] = [*seeds[:-1], level_seeds[index]]
+        paths = OutputPaths(output, model_path=context.paths.model_path)
+        runs.append(context.replace(args=MappingProxyType(options), paths=paths))
+    return runs
 
 
 if __name__ == "__main__":

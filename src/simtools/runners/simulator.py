@@ -30,8 +30,10 @@ from simtools.sim_events.hdf5_output_validation import validate_sim_events
 from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
 from simtools.sim_events.simulation_parameters import SimulationParameters
 from simtools.simtel import output_validation as simtel_output_validation
-from simtools.simtel.simulator_array import add_dc_flasher_rate, sim_telarray_nsb_scale
+from simtools.simtel.simtel_config_writer import get_simtel_site_parameters
+from simtools.simtel.simulator_array import add_dc_flasher_rate
 from simtools.simulation.configuration import get_model_writer, get_shower_configuration
+from simtools.simulation.nsb import NsbSettings, nsb_rate_factor, site_nsb_factor
 from simtools.utils import general, value_conversion
 
 _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
@@ -760,10 +762,15 @@ class Simulator:
                 "DC flasher simulation cannot compensate an active 'nsb_sky_map'; "
                 "disable it for this run."
             )
-        factor = sim_telarray_nsb_scale(
-            self.context.args.get("nsb_scaling_factor", 1.0),
-            telescope_model.get_parameter_value("nsb_autoscale_airmass"),
-            zenith_angle,
+        auto = telescope_model.get_parameter_value("nsb_autoscale_airmass")
+        nsb_parameters = {"nsb_autoscale_airmass": {"value": auto}} if auto is not None else {}
+        settings = NsbSettings(
+            zenith_angle=zenith_angle,
+            manual_factor=self.context.args.get("nsb_scaling_factor"),
+            autoscale=not self.context.args.get("disable_nsb_autoscaling", False),
+        )
+        factor = nsb_rate_factor(
+            nsb_parameters, settings, site_nsb_factor(get_simtel_site_parameters(site_model))
         )
         for parameter in ("mirror_degraded_reflection", "secondary_mirror_degraded_reflection"):
             try:
@@ -826,7 +833,7 @@ class Simulator:
 
     def _allowed_metadata_changes(self):
         """Model parameters that sim_telarray may read differently from the model (-C options)."""
-        allowed = ["nsb_scaling_factor", "stars"]
+        allowed = ["stars"]
         if any(self.chain.skipped_factors(name) for name in self.chain.stages):
             # the zero-depth table replaces the atmospheric transmission of the model
             allowed.append("atmospheric_transmission")
