@@ -54,6 +54,43 @@ def test_get_list_of_array_element_types():
     assert "ILLN" in names.get_list_of_array_element_types(
         array_element_class="calibration_devices", site="North"
     )
+    calibration_types = names.get_list_of_array_element_types(
+        array_element_class="calibration_devices", site=None
+    )
+    assert "MSFx" in calibration_types
+
+
+@pytest.mark.parametrize("name", ["MSFx-FlashCam", "MSFx-FlashCam-DC"])
+def test_flashcam_flasher_names(name):
+    assert names.validate_array_element_name(name) == name
+    assert names.get_array_element_type_from_name(name) == "MSFx"
+    assert names.is_design_type(name)
+    assert names.model_storage_name(name) == name
+    assert names.get_collection_name_from_array_element_name(name) == "calibration_devices"
+
+
+def test_dc_flasher_design_is_distinct():
+    assert names.get_array_element_id_from_name("MSFx-FlashCam-DC") == "FlashCam-DC"
+    for other in ("MSFx-FlashCam", "MSFx-NectarCam"):
+        assert not names.matches_array_element_name_or_design_type("MSFx-FlashCam-DC", other)
+        assert not names.matches_array_element_name_or_design_type(other, "MSFx-FlashCam-DC")
+
+
+def test_distinct_design_types_do_not_match():
+    assert not names.matches_array_element_name_or_design_type("MSTS-FlashCam", "MSTS-NectarCam")
+    assert names.matches_array_element_name_or_design_type("MSTS-FlashCam", "MSTS-01")
+
+
+def test_configured_element_type_alias():
+    assert names.validate_array_element_name("MSF-FlashCam") == "MSFx-FlashCam"
+    assert names.get_array_element_type_from_name("MSF-FlashCam") == "MSFx"
+    assert names.model_storage_name("MSF-FlashCam") == "MSFx-FlashCam"
+
+
+def test_element_type_without_model_storage_alias_is_unchanged():
+    assert names.model_storage_name("MSTN-01") == "MSTN-01"
+    assert names.model_storage_name("OBS-North") == "OBS-North"
+    assert names.model_storage_name(None) is None
 
 
 def test_instrument_class_key_to_collection():

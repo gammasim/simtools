@@ -1,0 +1,47 @@
+---
+# This workflow stores true photoelectrons, but the current sim_telarray path
+# still runs electronics. Increase events for a statistically precise map.
+applications:
+- application: simtools-simulate-flasher
+  docs:
+    title: Simulate 365 nm FlashCam illumination
+    summary: Generate photoelectrons for the relative DC illumination map.
+  configuration:
+    run_mode: full_simulation
+    light_source: MSFx-FlashCam
+    telescopes: [MSTx-FlashCam]
+    model_version: 8.0.0
+    site: North
+    run_number: 1
+    number_of_events: 10
+    flasher_photons: 1000000
+    instrument_seed: 12345
+    simulation_seed: 12345
+    simulation_software: [obdeect_flasher, 'sim_telarray:bypass_optics=camera_entrance']
+    label: dc_illumination
+    output_path: __OUTPUT__/simulation
+    overwrite_model_parameters: >-
+      {"MSTx-FlashCam": {"qe_variation": 0, "store_photoelectrons": 0,
+      "nsb_pixel_rate": 0, "fadc_noise": 0}, "MSFx-FlashCam":
+      {"flasher_wavelength": 365, "flasher_angular_distribution": "Lambertian"}}
+  test_name: flashcam_dc_illumination_simulation
+- application: simtools-derive-flasher-dc-pixel-map
+  docs:
+    title: Derive the FlashCam DC illumination map
+    summary: Normalize true photoelectron counts over existing camera pixels.
+  configuration:
+    simtel_files:
+    - __OUTPUT__/simulation/sim_telarray/full_simulation_run000001_North_8.0.0_dc_illumination_MSTx-FlashCam.simtel.zst
+    telescope: MSTx-FlashCam
+    output_file: flashcam_dc_illumination.ecsv
+    output_path: __OUTPUT__
+  test_name: flashcam_dc_illumination_map
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: flashcam_dc_illumination.ecsv
+      validations:
+      - type: table
+        minimum_rows: 1764
+schema_name: application_workflow.metaschema
+schema_version: 0.7.0

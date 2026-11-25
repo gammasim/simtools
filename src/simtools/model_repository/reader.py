@@ -257,7 +257,8 @@ class SimulationModelReader:
     def get_design_model(self, model_version, array_element_name, collection="telescopes"):
         """Return the design model for an array element."""
         table = self.read_production_table(collection, model_version)
-        return table["design_model"].get(array_element_name, array_element_name)
+        storage_name = names.model_storage_name(array_element_name)
+        return table["design_model"].get(storage_name, storage_name)
 
     def get_array_elements_of_type(self, array_element_type, model_version, collection):
         """Return non-design elements of one type."""
@@ -427,10 +428,11 @@ class SimulationModelReader:
             return self._get_sim_telarray_array_element_list(
                 array_element_name, production, ignore_missing_design_model
             )
+        storage_name = names.model_storage_name(array_element_name)
         if names.is_design_type(array_element_name):
-            return [array_element_name]
-        design = production["design_model"].get(array_element_name)
-        return [element for element in (design, array_element_name) if element]
+            return [storage_name]
+        design = production["design_model"].get(storage_name)
+        return [element for element in (design, storage_name) if element]
 
     def _get_sim_telarray_array_element_list(
         self, array_element_name, production, ignore_missing_design_model=False

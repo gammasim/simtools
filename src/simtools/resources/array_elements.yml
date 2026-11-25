@@ -135,7 +135,8 @@ data:
     collection: "calibration_devices"
     observatory: "CTAO"
     site: ["North", "South"]
-    design_types: ["FlashCam", "NectarCam", "test"]
+    aliases: ["MSF"]
+    design_types: ["FlashCam", "FlashCam-DC", "NectarCam", "test"]
     description: "Flat-fielding device (MST)"
   LSFN:
     collection: "calibration_devices"

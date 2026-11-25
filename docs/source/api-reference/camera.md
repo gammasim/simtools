@@ -27,6 +27,13 @@ etc.) are required inputs.
    :members:
 ```
 
+### flasher_dc_pixel_map
+
+```{eval-rst}
+.. automodule:: simtools.camera.flasher_dc_pixel_map
+   :members:
+```
+
 ## Single photon-electron spectral analysis
 
 ### single_photon_electron_spectrum

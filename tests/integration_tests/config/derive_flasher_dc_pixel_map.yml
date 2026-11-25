@@ -1,0 +1,22 @@
+---
+applications:
+- application: simtools-derive-flasher-dc-pixel-map
+  docs:
+    title: Derive a DC flasher pixel map
+    summary: Sum true photo-electrons from an MST FlashCam flasher run into a relative pixel map.
+  configuration:
+    simtel_files:
+    - ${generated:full_simulation_run000010_South_7.0.0_simulate_flasher_MSTS-04.simtel.zst}
+    telescope: MSTS-04
+    output_file: flasher_dc_relative_pixel_map.ecsv
+    output_path: simtools-output
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: flasher_dc_relative_pixel_map.ecsv
+      validations:
+      - type: table
+        minimum_rows: 1
+  test_name: derive_flasher_dc_pixel_map
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0

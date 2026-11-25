@@ -1,0 +1,1 @@
+Add the run mode `dc` to `simtools-simulate-flasher` for the FlashCam DC flat-fielding device. Add `simtools-derive-flasher-dc-pixel-map` to derive its relative per-pixel illumination from a flasher simulation.

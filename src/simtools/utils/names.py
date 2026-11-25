@@ -28,6 +28,22 @@ from simtools.constants import (
 _logger = logging.getLogger(__name__)
 
 
+def _canonical_element_type(array_element_type):
+    """Return the canonical element type for a configured alias."""
+    for element_type, properties in array_elements().items():
+        if array_element_type in properties.get("aliases", []):
+            return element_type
+    return array_element_type
+
+
+def model_storage_name(array_element_name):
+    """Return the model repository name, resolving historical element type aliases."""
+    if array_element_name is None or "-" not in array_element_name:
+        return array_element_name
+    element_type, _, element_id = array_element_name.partition("-")
+    return f"{_canonical_element_type(element_type)}-{element_id}"
+
+
 @cache
 def array_elements():
     """
@@ -103,7 +119,9 @@ def array_element_design_types(array_element_type):
     if array_element_type is None:
         return default_types
     try:
-        return array_elements()[array_element_type].get("design_types", default_types)
+        return array_elements()[_canonical_element_type(array_element_type)].get(
+            "design_types", default_types
+        )
     except KeyError as exc:
         raise ValueError(f"Invalid name {array_element_type}") from exc
 
@@ -156,6 +174,9 @@ def matches_array_element_name_or_design_type(element_name, reference_element_na
         return True
 
     if "-" not in validated_element_name or "-" not in validated_reference_element_name:
+        return False
+
+    if is_design_type(validated_reference_element_name):
         return False
 
     return is_design_type(validated_element_name) and (
@@ -284,14 +305,14 @@ def validate_array_element_name(array_element_name):
         Validated name.
     """
     try:
-        _array_element_type, _array_element_id = array_element_name.split("-")
+        _array_element_type, _array_element_id = array_element_name.split("-", maxsplit=1)
     except ValueError as exc:
         msg = f"Invalid name {array_element_name}"
         raise ValueError(msg) from exc
     if _array_element_type == "OBS":
         return f"OBS-{validate_site_name(_array_element_id)}"
     return (
-        _validate_name(_array_element_type, array_elements())
+        _validate_name(_canonical_element_type(_array_element_type), array_elements())
         + "-"
         + validate_array_element_id_name(_array_element_id, _array_element_type)
     )
@@ -341,7 +362,9 @@ def get_array_element_type_from_name(array_element_name):
     except ValueError:  # any other telescope or calibration device
         if array_element_name.startswith("OBS-"):
             return validate_site_name(array_element_name.split("-", maxsplit=1)[1])
-        return _validate_name(array_element_name.split("-")[0], array_elements())
+        return _validate_name(
+            _canonical_element_type(array_element_name.split("-")[0]), array_elements()
+        )
 
 
 def get_array_element_id_from_name(array_element_name):
@@ -360,7 +383,8 @@ def get_array_element_id_from_name(array_element_name):
     """
     try:
         return validate_array_element_id_name(
-            array_element_name.split("-")[1], array_element_name.split("-")[0]
+            array_element_name.split("-", maxsplit=1)[1],
+            array_element_name.split("-", maxsplit=1)[0],
         )
     except IndexError as exc:
         raise ValueError(f"Invalid name {array_element_name}") from exc

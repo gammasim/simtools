@@ -189,8 +189,9 @@ def pytest_generate_tests(metafunc):
     if "config" not in metafunc.fixturenames:
         return
 
-    # These multi-step workflows are exercised as a whole in test_saturation_workflows.
+    # Multi-step workflows are exercised as a whole in their dedicated tests.
     saturation_workflows = {
+        "derive_flashcam_dc_illumination.yml",
         "validate_pulse_response.yml",
         "validate_saturation_direct_injection_lst.yml",
         "validate_saturation_flasher_lst.yml",

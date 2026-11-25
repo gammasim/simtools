@@ -95,7 +95,11 @@ def validate_sim_telarray_logs(
 ):
     """Validate sim_telarray log files."""
     patterns = ["Finished.", "Sim_telarray finished at"]
-    forbidden = list(_SIM_TELARRAY_NSB_SCALING_MESSAGES)
+    forbidden = [
+        "Too many photon bunches",
+        "Synchronization error.",
+        *_SIM_TELARRAY_NSB_SCALING_MESSAGES,
+    ]
     if expected_mc_events is not None and expected_shower_events is not None:
         patterns.append(
             f"Run(s) completed as expected after {expected_mc_events} events "

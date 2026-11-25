@@ -1,0 +1,39 @@
+%YAML 1.2
+---
+title: Schema for flasher_dc_relative_pixel_map model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: flasher_dc_relative_pixel_map
+description: |-
+  Relative illumination per pixel of the DC flasher (MSFx-FlashCam-DC). Used as weights w_i
+  in the per-pixel rate nsb_pixel_rate_i + flasher_dc_pixel_rate * w_i.
+  The mean of relative_rate over all pixels is 1.
+short_description: Relative DC flasher illumination per pixel.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: pixel_id
+        description: Pixel identifier.
+        type: int64
+        unit: dimensionless
+        required: true
+      - name: relative_rate
+        description: Relative DC flasher illumination of the pixel (mean 1 over pixels).
+        type: float64
+        unit: dimensionless
+        required: true
+instrument:
+  class: Calibration
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Calibration
+simulation_software:
+  - name: simtools
+    version: ">0.27.1"

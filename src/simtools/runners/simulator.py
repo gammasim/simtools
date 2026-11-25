@@ -16,6 +16,7 @@ from simtools.job_execution import execution, runner_services
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model_repository.reader import with_resolved_model_reader
 from simtools.runners import chain_spec
 from simtools.runners.chain_runner import ChainRunner
@@ -29,7 +30,10 @@ from simtools.sim_events.hdf5_output_validation import validate_sim_events
 from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
 from simtools.sim_events.simulation_parameters import SimulationParameters
 from simtools.simtel import output_validation as simtel_output_validation
+from simtools.simtel.simtel_config_writer import get_simtel_site_parameters
+from simtools.simtel.simulator_array import add_dc_flasher_rate
 from simtools.simulation.configuration import get_model_writer, get_shower_configuration
+from simtools.simulation.nsb import NsbSettings, nsb_rate_factor, site_nsb_factor
 from simtools.utils import general, value_conversion
 
 _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
@@ -157,6 +161,7 @@ class Simulator:
 
         self.array_models, self.corsika_configurations = self._initialize_array_models()
         self._overwrite_flasher_photons_for_direct_injection()
+        self._apply_flasher_dc_pixel_rate()
         self._simulation_runner = self._initialize_simulation_runner()
         self.runner_service = runner_services.RunnerServices(
             self.simulation_parameters[0],
@@ -691,7 +696,11 @@ class Simulator:
     @staticmethod
     def _get_calibration_device_types(run_mode):
         """Return the calibration device types for a run mode."""
-        return ["flat_fielding"] if run_mode == "direct_injection" else []
+        if run_mode == "direct_injection":
+            return ["flat_fielding"]
+        if run_mode == "pedestals_flasher_dc":
+            return ["flat_fielding_dc"]
+        return []
 
     def _overwrite_flasher_photons_for_direct_injection(self):
         """Overwrite direct-injection photons-per-pixel in calibration models."""
@@ -705,6 +714,122 @@ class Simulator:
                     calibration_model.overwrite_model_parameter(
                         "flasher_photons_at_pixel", flasher_photons
                     )
+
+    def _apply_flasher_dc_pixel_rate(self):
+        """Add the FlashCam DC flasher rate to the NSB pixel rate of each telescope model."""
+        if self.run_mode != "pedestals_flasher_dc":
+            return
+
+        dc_rate_override = self.context.args.get("flasher_dc_pixel_rate")
+        for array_model, parameters in zip(
+            value_conversion.ensure_list(self.array_models), self.simulation_parameters
+        ):
+            for telescope_name, telescope_model in array_model.telescope_models.items():
+                calibration_model = self._get_dc_calibration_model(
+                    array_model, telescope_name, telescope_model
+                )
+                nsb_factor = self._nsb_factor_not_applying_to_dc_light(
+                    array_model, telescope_model, parameters.zenith_angle
+                )
+                self._add_dc_rate_to_telescope(
+                    telescope_name,
+                    telescope_model,
+                    calibration_model,
+                    dc_rate_override,
+                    nsb_factor,
+                )
+
+    def _nsb_factor_not_applying_to_dc_light(self, array_model, telescope_model, zenith_angle):
+        """
+        Return the sim_telarray NSB factors that do not apply to DC flasher light.
+
+        Divide the DC contribution by sim_telarray's NSB scaling, mirror and camera
+        degradation, and collection efficiency to obtain the requested registered rate.
+        """
+        offaxis = telescope_model.get_parameter_value("nsb_offaxis")
+        if offaxis and not np.isclose(offaxis[0], 0.0, rtol=0, atol=0):
+            raise ValueError(
+                "DC flasher simulation requires a constant 'nsb_offaxis' (function 0); "
+                f"found function {offaxis[0]}."
+            )
+        site_model = array_model.site_model
+        try:
+            sky_map = site_model.get_parameter_value("nsb_sky_map")
+        except InvalidModelParameterError:
+            sky_map = None
+        if sky_map:
+            raise ValueError(
+                "DC flasher simulation cannot compensate an active 'nsb_sky_map'; "
+                "disable it for this run."
+            )
+        auto = telescope_model.get_parameter_value("nsb_autoscale_airmass")
+        nsb_parameters = {"nsb_autoscale_airmass": {"value": auto}} if auto is not None else {}
+        settings = NsbSettings(
+            zenith_angle=zenith_angle,
+            manual_factor=self.context.args.get("nsb_scaling_factor"),
+            autoscale=not self.context.args.get("disable_nsb_autoscaling", False),
+        )
+        factor = nsb_rate_factor(
+            nsb_parameters, settings, site_nsb_factor(get_simtel_site_parameters(site_model))
+        )
+        for parameter in ("mirror_degraded_reflection", "secondary_mirror_degraded_reflection"):
+            try:
+                factor *= telescope_model.get_parameter_value(parameter)
+            except InvalidModelParameterError:
+                continue
+        for parameter in ("camera_degraded_efficiency", "pm_collection_efficiency"):
+            try:
+                factor *= telescope_model.get_parameter_value(parameter)
+            except InvalidModelParameterError:
+                continue
+        return factor
+
+    @staticmethod
+    def _get_dc_calibration_model(array_model, telescope_name, telescope_model):
+        """Return the flat_fielding_dc calibration model of a telescope (raise if missing)."""
+        device_name = telescope_model.get_calibration_device_name("flat_fielding_dc")
+        calibration_model = array_model.calibration_models.get(telescope_name, {}).get(device_name)
+        if calibration_model is None:
+            raise ValueError(
+                f"Telescope {telescope_name} has no 'flat_fielding_dc' calibration device. "
+                "Add it to the 'calibration_devices' parameter to simulate the DC flasher."
+            )
+        return calibration_model
+
+    def _add_dc_rate_to_telescope(
+        self, telescope_name, telescope_model, calibration_model, dc_rate_override, nsb_factor
+    ):
+        """Overwrite the telescope nsb_pixel_rate with the DC flasher rate added per pixel."""
+        dc_rate_ghz = (
+            dc_rate_override
+            if dc_rate_override is not None
+            else calibration_model.get_parameter_value("flasher_dc_pixel_rate")
+        )
+        table = calibration_model.get_parameter_table("flasher_dc_relative_pixel_map")
+        raw_pixel_id = np.asarray(table["pixel_id"])
+        pixel_id = np.asarray(raw_pixel_id, dtype=int)
+        if not np.array_equal(raw_pixel_id, pixel_id):
+            raise ValueError("DC relative pixel map pixel_id values must be integers.")
+        if not np.array_equal(np.sort(pixel_id), np.arange(len(pixel_id))):
+            raise ValueError("DC relative pixel map must contain each pixel_id once, from zero.")
+        camera_pixels = int(telescope_model.get_parameter_value("camera_pixels"))
+        if len(pixel_id) != camera_pixels:
+            raise ValueError(
+                f"DC relative pixel map has {len(pixel_id)} pixels, but the camera has "
+                f"{camera_pixels}."
+            )
+        order = np.argsort(pixel_id)
+        relative_rate = np.asarray(table["relative_rate"], dtype=float)[order]
+        if not np.isclose(np.mean(relative_rate), 1.0):
+            raise ValueError("DC relative pixel rates must have a mean of 1.")
+
+        nsb_old = telescope_model.get_parameter_value("nsb_pixel_rate")
+        nsb_new = add_dc_flasher_rate(nsb_old, dc_rate_ghz, relative_rate, nsb_factor)
+        telescope_model.overwrite_model_parameter("nsb_pixel_rate", nsb_new)
+        self.logger.info(
+            f"Telescope {telescope_name}: DC flasher rate {dc_rate_ghz} GHz added to NSB pixel "
+            f"rate (divided by sim_telarray NSB factor {nsb_factor:.4f})"
+        )
 
     def _allowed_metadata_changes(self):
         """Model parameters that sim_telarray may read differently from the model (-C options)."""

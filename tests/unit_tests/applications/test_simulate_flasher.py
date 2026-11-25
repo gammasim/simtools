@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from simtools.applications import simulate_flasher
 from simtools.applications.simulate_flasher import (
     _validate,
     _validate_max_photoelectrons,
@@ -32,6 +33,28 @@ def test_max_photoelectrons_rejects_outside_limits(value, capsys):
     with pytest.raises(SystemExit, match="2"):
         _validate_max_photoelectrons({"max_photoelectrons": value}, {}, argparse.ArgumentParser())
     assert "must be at least 1000 and less than 500000000" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "option", ["light_source", "light_source_type", "flasher_photons", "max_photoelectrons"]
+)
+def test_dc_rejects_pulsed_options(option, capsys):
+    args = {"run_mode": "dc", "number_of_events": [10], option: 1000}
+    with pytest.raises(SystemExit, match="2"):
+        _validate_max_photoelectrons(args, {}, argparse.ArgumentParser())
+    assert f"--{option}" in capsys.readouterr().err
+
+
+def test_dc_dispatches_to_pedestal_simulator(mocker, run_context):
+    context = run_context.replace(args={"run_mode": "dc", "number_of_events": [10]})
+    mocker.patch.object(type(simulate_flasher.APPLICATION), "start", return_value=context)
+    simulator = mocker.patch.object(simulate_flasher, "Simulator")
+    simulate_flasher.main()
+    args = simulator.call_args.kwargs["context"].args
+    assert args["run_mode"] == "pedestals_flasher_dc"
+    assert args["number_of_events"] == 10
+    simulator.return_value.simulate.assert_called_once()
+    simulator.return_value.validate_simulations.assert_called_once()
 
 
 def _argument(application, name):
@@ -116,6 +139,7 @@ def test_main_full_simulation_custom_chain_writes_chain_script(
 def test_validate_checks_photoelectrons_and_chain(capsys):
     args = {
         "run_mode": "direct_injection",
+        "light_source": "LSFN-design",
         "max_photoelectrons": None,
         "simulation_software": ["obdeect_flasher"],
     }

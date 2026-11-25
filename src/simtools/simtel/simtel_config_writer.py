@@ -181,6 +181,15 @@ class SimtelConfigWriter:
             )
             for simtel_name, simtel_value in simtel_par.items():
                 self._validate_config_text(simtel_name)
+                if simtel_name == "nightsky_background" and isinstance(
+                    simtel_value, list | np.ndarray
+                ):
+                    if len(simtel_value) and all(rate == simtel_value[0] for rate in simtel_value):
+                        file.write(f"{simtel_name} = all: {simtel_value[0]}\n")
+                        continue
+                    for pixel, rate in enumerate(simtel_value):
+                        file.write(f"{simtel_name} = ({pixel}-{pixel}): {rate}\n")
+                    continue
                 file.write(f"{simtel_name} = {self._get_value_string_for_simtel(simtel_value)}\n")
             metadata = self._get_sim_telarray_metadata(
                 "telescope",

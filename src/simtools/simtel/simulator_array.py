@@ -1,8 +1,94 @@
 """Simulation runner for array simulations."""
 
+import astropy.units as u
+import numpy as np
+
 from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.simulation.configuration import get_model_writer
-from simtools.simulation.nsb import NsbSettings
+from simtools.simulation.nsb import NsbSettings, nsb_rate_factor
+
+
+def sim_telarray_nsb_scale(nsb_scaling_factor, nsb_autoscale_airmass, zenith_angle):
+    """
+    Return the NSB scaling factor that sim_telarray applies to ``nightsky_background``.
+
+    A manual scaling factor other than 1 takes precedence. Otherwise, the factor follows
+    ``nsb_autoscale_airmass`` (airglow fraction, extinction) and the zenith angle, using the
+    airmass of Garstang (1989) as in sim_telarray.
+
+    Parameters
+    ----------
+    nsb_scaling_factor: float
+        Manual NSB scaling factor.
+    nsb_autoscale_airmass: list of float or None
+        Airglow fraction and extinction coefficient; no autoscaling if None or the
+        fraction is zero.
+    zenith_angle: astropy.units.Quantity or float
+        Zenith angle of the telescope pointing (float in degrees).
+
+    Returns
+    -------
+    float
+        NSB scaling factor.
+    """
+    parameters = {}
+    if nsb_autoscale_airmass:
+        parameters["nsb_autoscale_airmass"] = {"value": nsb_autoscale_airmass}
+    return nsb_rate_factor(
+        parameters,
+        NsbSettings(u.Quantity(zenith_angle, u.deg).to_value(u.deg), nsb_scaling_factor, True),
+        1.0,
+    )
+
+
+def add_dc_flasher_rate(nsb_pixel_rate, dc_rate_ghz, relative_rate, nsb_factor=1.0):
+    """
+    Add the FlashCam DC flasher rate to the per-pixel NSB rate.
+
+    Computes ``nsb_pixel_rate + dc_rate_ghz * relative_rate / nsb_factor`` pixel by pixel.
+    sim_telarray multiplies the summed rate by ``nsb_factor`` before registration.
+
+    Parameters
+    ----------
+    nsb_pixel_rate: float or list of float
+        NSB rate per pixel (GHz). A scalar is broadcast to all pixels.
+    dc_rate_ghz: float
+        DC flasher pixel rate (GHz).
+    relative_rate: list of float
+        Relative DC rate per pixel (mean 1), ordered by pixel index.
+    nsb_factor: float
+        Factor sim_telarray applies to the NSB rate but not to the DC flasher light.
+
+    Returns
+    -------
+    list of float
+        New NSB rate per pixel (GHz).
+
+    Raises
+    ------
+    ValueError
+        If the NSB rate list and the relative rate map have different lengths.
+    """
+    relative = np.asarray(relative_rate, dtype=float)
+    nsb = np.atleast_1d(np.asarray(nsb_pixel_rate, dtype=float))
+    if relative.ndim != 1 or relative.size == 0:
+        raise ValueError("DC relative pixel map must be a non-empty one-dimensional array.")
+    if not np.all(np.isfinite(relative)) or np.any(relative < 0):
+        raise ValueError("DC relative pixel rates must be finite and non-negative.")
+    if not np.isfinite(dc_rate_ghz) or dc_rate_ghz < 0:
+        raise ValueError("DC flasher rate must be finite and non-negative.")
+    if not np.isfinite(nsb_factor) or nsb_factor <= 0:
+        raise ValueError("NSB scale factor must be finite and greater than zero.")
+    if not np.all(np.isfinite(nsb)) or np.any(nsb < 0):
+        raise ValueError("NSB pixel rates must be finite and non-negative.")
+    if nsb.size == 1:
+        nsb = np.full(relative.size, nsb[0])
+    if nsb.size != relative.size:
+        raise ValueError(
+            f"NSB pixel rate has {nsb.size} entries, but the DC relative pixel map has "
+            f"{relative.size} entries."
+        )
+    return [float(value) for value in nsb + dc_rate_ghz * relative / nsb_factor]
 
 
 class SimulatorArray(SimtelRunner):
@@ -119,7 +205,7 @@ class SimulatorArray(SimtelRunner):
                     options[key] = "none"
 
         run_mode = cfg.get("run_mode")
-        if run_mode in ("pedestals", "pedestals_nsb_only"):
+        if run_mode in ("pedestals", "pedestals_nsb_only", "pedestals_flasher_dc"):
             n_events = cfg.get("number_of_pedestal_events", cfg["number_of_events"])
             options["pedestal_events"] = n_events
         if run_mode == "pedestals_nsb_only":

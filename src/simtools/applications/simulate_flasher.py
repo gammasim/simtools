@@ -32,6 +32,29 @@ def _validate_max_photoelectrons(args_dict, _config_sources, parser):
         _MAX_PHOTOELECTRONS_MIN <= max_photoelectrons < _MAX_PHOTOELECTRONS_MAX
     ):
         parser.error("--max_photoelectrons must be at least 1000 and less than 500000000.")
+    if args_dict.get("run_mode") in ("direct_injection", "full_simulation") and not (
+        args_dict.get("light_source") or args_dict.get("light_source_type")
+    ):
+        parser.error("A light source is required for pulsed flasher runs.")
+    if (
+        args_dict.get("run_mode") == "dc"
+        and len(value_conversion.ensure_list(args_dict.get("number_of_events"))) != 1
+    ):
+        parser.error("DC runs require one number of events.")
+    if args_dict.get("run_mode") == "dc":
+        for option in (
+            "light_source",
+            "light_source_type",
+            "flasher_photons",
+            "max_photoelectrons",
+        ):
+            if args_dict.get(option) is not None:
+                parser.error(
+                    f"--{option} is not used for DC runs; "
+                    "the telescope model selects the DC device."
+                )
+    elif args_dict.get("flasher_dc_pixel_rate") is not None:
+        parser.error("--flasher_dc_pixel_rate requires --run_mode dc.")
 
 
 def _validate_simulation_software(args_dict, _config_sources, parser):
@@ -65,20 +88,20 @@ _ARGUMENTS = (
         "run_mode",
         help="Flasher simulation run mode",
         type=str,
-        choices=["direct_injection", "full_simulation"],
+        choices=["direct_injection", "full_simulation", "dc"],
         required=True,
     ),
     cli.ArgumentDefinition(
         "light_source",
         exclusive_group=_LIGHT_SOURCE_GROUP,
-        exclusive_group_required=True,
+        exclusive_group_required=False,
         help="Flasher device associated with a specific telescope, i.e. MSFx-FlashCam",
         type=str,
     ),
     cli.ArgumentDefinition(
         "light_source_type",
         exclusive_group=_LIGHT_SOURCE_GROUP,
-        exclusive_group_required=True,
+        exclusive_group_required=False,
         help="Type of the light source (e.g. flat_fielding)",
         type=str,
     ),
@@ -100,6 +123,16 @@ _ARGUMENTS = (
         type=scientific_int,
         nargs="+",
     ),
+    cli.ArgumentDefinition(
+        "flasher_dc_pixel_rate",
+        help="Mean DC rate in GHz; defaults to the model value.",
+        type=float,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "nsb_scaling_factor", type=float, default=1.0, help="NSB scaling factor."
+    ),
+    cli.ArgumentDefinition("stars", type=str, default=None, help="Stars contributing to NSB."),
     cli.ArgumentDefinition(
         "max_workers",
         group="execution",
@@ -128,6 +161,8 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.RUN_NUMBER,
+        cli.AZIMUTH_ANGLE,
+        cli.ZENITH_ANGLE,
         *cli.SIM_TELARRAY_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
@@ -149,6 +184,19 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
+    if app_context.args["run_mode"] == "dc":
+        args = dict(app_context.args)
+        args["run_mode"] = "pedestals_flasher_dc"
+        args["number_of_events"] = value_conversion.ensure_list(args["number_of_events"])[0]
+        simulator = Simulator(
+            label=args.get("label"),
+            model_reader=app_context.model_reader,
+            context=app_context.replace(args=args),
+        )
+        simulator.simulate()
+        simulator.validate_simulations()
+        return
+
     tel_string = (
         f"telescope(s) {app_context.args['telescopes']}"
         if app_context.args.get("telescopes")
@@ -163,51 +211,7 @@ def main():
     )
 
     if app_context.args["run_mode"] == "full_simulation":
-        telescopes = (
-            get_array_elements_for_layout(
-                app_context.args["array_layout_name"],
-                model_reader=app_context.model_reader,
-                context=app_context,
-            )
-            if app_context.args.get("array_layout_name") is not None
-            else value_conversion.ensure_list(app_context.args["telescopes"])
-        )
-        script_writer = light_emission_runner.script_writer_for_chain(
-            app_context.args.get("simulation_software")
-        )
-        runs = _full_simulation_runs(app_context)
-        if len(runs) == 1:
-            for tel in telescopes:
-                simulation = SimulatorLightEmission(
-                    light_emission_config=app_context.args,
-                    telescope=tel,
-                    label=app_context.args.get("label"),
-                    model_reader=app_context.model_reader,
-                    context=app_context,
-                )
-                _run_light_sources([simulation], script_writer)
-        else:
-            groups = [
-                [
-                    SimulatorLightEmission(
-                        light_emission_config=run.args,
-                        telescope=tel,
-                        label=run.args.get("label"),
-                        model_reader=app_context.model_reader,
-                        context=run,
-                    )
-                    for tel in telescopes
-                ]
-                for run in runs
-            ]
-            with ThreadPoolExecutor(
-                max_workers=min(app_context.args["max_workers"], len(runs))
-            ) as pool:
-                futures = [
-                    pool.submit(_run_light_sources, group, script_writer) for group in groups
-                ]
-                for future in futures:
-                    future.result()
+        _run_full_simulation(app_context)
     elif app_context.args["run_mode"] == "direct_injection":
         Simulator.simulate_direct_injection_sequence(
             label=app_context.args.get("label"), context=app_context
@@ -216,6 +220,51 @@ def main():
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 
     app_context.logger.info("Flasher simulation completed.")
+
+
+def _run_full_simulation(context):
+    """Run the configured full-simulation light-source chain."""
+    telescopes = (
+        get_array_elements_for_layout(
+            context.args["array_layout_name"],
+            model_reader=context.model_reader,
+            context=context,
+        )
+        if context.args.get("array_layout_name") is not None
+        else value_conversion.ensure_list(context.args["telescopes"])
+    )
+    script_writer = light_emission_runner.script_writer_for_chain(
+        context.args.get("simulation_software")
+    )
+    runs = _full_simulation_runs(context)
+    if len(runs) == 1:
+        for telescope in telescopes:
+            simulation = SimulatorLightEmission(
+                light_emission_config=context.args,
+                telescope=telescope,
+                label=context.args.get("label"),
+                model_reader=context.model_reader,
+                context=context,
+            )
+            _run_light_sources([simulation], script_writer)
+    else:
+        groups = [
+            [
+                SimulatorLightEmission(
+                    light_emission_config=run.args,
+                    telescope=telescope,
+                    label=run.args.get("label"),
+                    model_reader=context.model_reader,
+                    context=run,
+                )
+                for telescope in telescopes
+            ]
+            for run in runs
+        ]
+        with ThreadPoolExecutor(max_workers=min(context.args["max_workers"], len(runs))) as pool:
+            futures = [pool.submit(_run_light_sources, group, script_writer) for group in groups]
+            for future in futures:
+                future.result()
 
 
 def _run_light_sources(simulations, script_writer):

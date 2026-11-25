@@ -6,7 +6,11 @@ from copy import deepcopy
 import astropy.units as u
 import pytest
 
-from simtools.simtel.simulator_array import SimulatorArray
+from simtools.simtel.simulator_array import (
+    SimulatorArray,
+    add_dc_flasher_rate,
+    sim_telarray_nsb_scale,
+)
 
 logger = logging.getLogger()
 
@@ -274,6 +278,100 @@ def test_make_run_command_for_calibration_simulations_pedestals_nsb_only(simtel_
     assert "pedestal_events=800" in result
     assert any("fadc_noise=0.0" in str(item) for item in result)
     assert any("gain_variation=0.0" in str(item) for item in result)
+
+
+def test_add_dc_flasher_rate_scalar_nsb_broadcasts_to_map():
+    result = add_dc_flasher_rate(0.2, 0.5, [0.5, 1.0, 1.5])
+
+    assert isinstance(result, list)
+    assert all(isinstance(value, float) for value in result)
+    assert result == pytest.approx([0.45, 0.7, 0.95])
+
+
+def test_add_dc_flasher_rate_list_nsb_per_pixel():
+    result = add_dc_flasher_rate([0.1, 0.2, 0.3], 0.1, [1.0, 0.0, 2.0])
+
+    assert result == pytest.approx([0.2, 0.2, 0.5])
+
+
+def test_add_dc_flasher_rate_zero_rate_keeps_nsb():
+    result = add_dc_flasher_rate([0.1, 0.2], 0.0, [1.0, 3.0])
+
+    assert result == pytest.approx([0.1, 0.2])
+
+
+def test_add_dc_flasher_rate_divides_dc_part_by_nsb_factor():
+    result = add_dc_flasher_rate([0.1, 0.2], 0.4, [1.0, 2.0], nsb_factor=2.0)
+
+    assert result == pytest.approx([0.3, 0.6])
+
+
+@pytest.mark.parametrize(
+    ("scaling_factor", "autoscale", "zenith", "expected"),
+    [
+        (5.0, [0.84, 0.29], 20.0, 5.0),
+        (1.000001, [0.84, 0.29], 60.0, 1.000001),
+        (1.0, None, 20.0, 1.0),
+        (1.0, [0.0, 0.29], 20.0, 1.0),
+        (1.0, [0.84, 0.29], 0.0, 1.0),
+        # sim_telarray: airmass = (1 - 0.96 sin^2 z)^-0.5 (Garstang 1989)
+        (1.0, [0.84, 0.29], 60.0, 1.3500),
+    ],
+)
+def test_sim_telarray_nsb_scale(scaling_factor, autoscale, zenith, expected):
+    assert sim_telarray_nsb_scale(scaling_factor, autoscale, zenith) == pytest.approx(
+        expected, abs=1e-4
+    )
+
+
+def test_sim_telarray_nsb_scale_accepts_quantity():
+    assert sim_telarray_nsb_scale(1.0, [0.84, 0.29], 60.0 * u.deg) == pytest.approx(
+        1.3500, abs=1e-4
+    )
+
+
+def test_sim_telarray_nsb_scale_applies_autoscale_for_tiny_nonzero_airglow():
+    assert sim_telarray_nsb_scale(1.0, [1e-12, 0.29], 60.0) == pytest.approx(0.77256, abs=1e-4)
+
+
+def test_add_dc_flasher_rate_length_mismatch():
+    with pytest.raises(ValueError, match="NSB pixel rate has 2 entries"):
+        add_dc_flasher_rate([0.1, 0.2], 0.1, [1.0, 1.0, 1.0])
+
+
+@pytest.mark.parametrize(
+    ("nsb", "dc_rate", "relative", "factor", "message"),
+    [
+        (0.0, 0.0, [1.0], 0.0, "greater than zero"),
+        (0.0, -0.1, [1.0], 1.0, "DC flasher rate"),
+        (0.0, float("nan"), [1.0], 1.0, "DC flasher rate"),
+        (0.0, 0.1, [float("nan")], 1.0, "relative pixel rates"),
+        (0.0, 0.1, [-1.0], 1.0, "relative pixel rates"),
+        (-0.1, 0.1, [1.0], 1.0, "NSB pixel rates"),
+    ],
+)
+def test_add_dc_flasher_rate_rejects_invalid_inputs(nsb, dc_rate, relative, factor, message):
+    with pytest.raises(ValueError, match=message):
+        add_dc_flasher_rate(nsb, dc_rate, relative, factor)
+
+
+def test_make_run_command_for_calibration_simulations_pedestals_flasher_dc(simtel_runner, mocker):
+    mock_config = mocker.Mock()
+    mock_config.args = {
+        "run_mode": "pedestals_flasher_dc",
+        "number_of_events": 1000,
+        "number_of_pedestal_events": 700,
+    }
+    _set_context_config(simtel_runner, mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 1800.0
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert "pedestal_events=700" in result
+    assert not any("laser_events" in str(item) for item in result)
 
 
 def test_make_run_command_for_calibration_simulations_pedestals_dark(simtel_runner, mocker):
