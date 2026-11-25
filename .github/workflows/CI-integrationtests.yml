@@ -28,7 +28,7 @@ on:
         description: 'simtools-tests branch'
         required: false
         type: string
-        default: 'main'
+        default: 'v0.40.0-nsb-rates-zenith'
   workflow_call:
     inputs:
       simulation_model_repository:
@@ -45,7 +45,7 @@ on:
         description: 'simtools-tests branch'
         required: false
         type: string
-        default: 'main'
+        default: 'v0.40.0-nsb-rates-zenith'
       container_image:
         description: 'Container image to use for tests'
         required: false
@@ -434,7 +434,7 @@ jobs:
         env:
           BRANCH: >-
             ${{ inputs.simtools_tests_branch ||
-            'main' }}
+            ''v0.40.0-nsb-rates-zenith }}
         run: |
           git check-ref-format --branch "$BRANCH"
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"
