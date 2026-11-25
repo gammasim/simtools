@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import gzip
 import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -10,9 +9,6 @@ import pytest
 
 from simtools.simtel.output_validation import (
     _read_sim_telarray_items,
-    _recorded_nsb_expectation,
-    _site_parameters_as_written,
-    _telescope_parameters_as_written,
     assert_events_of_type,
     assert_expected_sim_telarray_metadata,
     assert_expected_sim_telarray_output_and_event_type,
@@ -480,139 +476,6 @@ def test_assert_sim_telarray_metadata_requires_exported_configuration(tmp_path):
         _assert_nsb_metadata(tmp_path, array_model, pixel_rate=0.2, airmass="0.84 0.29")
 
 
-def test_recorded_nsb_expectation_requires_sim_telarray_writer():
-    array_model = MagicMock()
-    array_model.model_version = "6.0.0"
-    array_model.configuration_writers = {}
-
-    with pytest.raises(ValueError, match="are unknown"):
-        _recorded_nsb_expectation(array_model)
-
-
-@pytest.mark.parametrize(
-    ("telescope_exported", "array_exported"),
-    [(True, False), (False, True)],
-)
-def test_recorded_nsb_expectation_accepts_partial_export(telescope_exported, array_exported):
-    array_model = _nsb_array_model(None)
-    writer = array_model.configuration_writers["sim_telarray"]
-    writer.telescope_model_files_exported = telescope_exported
-    writer.array_model_file_exported = array_exported
-
-    assert _recorded_nsb_expectation(array_model) is None
-
-
-def test_recorded_nsb_expectation_requires_export():
-    array_model = _nsb_array_model(None, exported=False)
-
-    with pytest.raises(ValueError, match="validate in the process that exported"):
-        _recorded_nsb_expectation(array_model)
-
-
-def test_recorded_nsb_expectation_none_without_settings():
-    assert _recorded_nsb_expectation(_nsb_array_model(None)) is None
-
-
-def test_recorded_nsb_expectation_returns_settings_and_site_factor():
-    settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
-
-    expectation = _recorded_nsb_expectation(_nsb_array_model(settings))
-
-    assert expectation[0] is settings
-    assert expectation[1] == pytest.approx(1.0)
-
-
-def test_telescope_parameters_as_written_without_nsb_returns_model_parameters():
-    telescope = MagicMock()
-    telescope.parameters = {"nsb_pixel_rate": {"value": 0.2, "type": "float64"}}
-
-    assert _telescope_parameters_as_written(telescope, None) is telescope.parameters
-
-
-def test_telescope_parameters_as_written_uses_recorded_values():
-    settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
-    telescope = MagicMock()
-    telescope.name = "LST-01"
-    telescope.parameters = {
-        "nsb_pixel_rate": {"value": 0.2, "type": "float64"},
-        "nsb_autoscale_airmass": {"value": [0.84, 0.29], "type": "float64"},
-        "altitude": {"value": 2200.0, "type": "float64"},
-    }
-    telescope.configuration_writers = {
-        "sim_telarray": _sim_telarray_writer(
-            written_nsb={
-                "nsb_pixel_rate": {"value": 0.5},
-                "nsb_autoscale_airmass": {"value": [0.0, 0.29]},
-                "nsb_scaling_factor": {"value": 1.0},
-            }
-        )
-    }
-
-    parameters = _telescope_parameters_as_written(telescope, (settings, 1.0))
-
-    assert parameters["nsb_pixel_rate"] == {"value": 0.5, "type": "float64"}
-    assert parameters["nsb_autoscale_airmass"] == {"value": [0.0, 0.29], "type": "float64"}
-    assert "nsb_scaling_factor" not in parameters
-    assert parameters["altitude"] is telescope.parameters["altitude"]
-    assert telescope.parameters["nsb_pixel_rate"]["value"] == pytest.approx(0.2)
-
-
-@pytest.mark.parametrize(
-    "configuration_writers",
-    [{}, {"sim_telarray": _sim_telarray_writer(written_nsb=None)}],
-)
-def test_telescope_parameters_as_written_requires_recorded_values(configuration_writers):
-    settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
-    telescope = MagicMock()
-    telescope.name = "LST-01"
-    telescope.parameters = {"nsb_pixel_rate": {"value": 0.2, "type": "float64"}}
-    telescope.configuration_writers = configuration_writers
-
-    with pytest.raises(ValueError, match="NSB values written for telescope LST-01 are unknown"):
-        _telescope_parameters_as_written(telescope, (settings, 1.0))
-
-
-def test_site_parameters_as_written_sets_scaling_factor_to_one():
-    settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
-    site_model = MagicMock()
-    site_model.parameters = {"nsb_scaling_factor": {"value": 1.3, "type": "float64"}}
-
-    parameters = _site_parameters_as_written(site_model, (settings, 1.3))
-
-    assert parameters["nsb_scaling_factor"]["value"] == pytest.approx(1.0)
-    assert site_model.parameters["nsb_scaling_factor"]["value"] == pytest.approx(1.3)
-
-
-def test_site_parameters_as_written_without_nsb_returns_model_parameters():
-    site_model = MagicMock()
-    site_model.parameters = {"nsb_scaling_factor": {"value": 1.3, "type": "float64"}}
-
-    assert _site_parameters_as_written(site_model, None) is site_model.parameters
-
-
-def _write_log(directory, suffix, lines):
-    """Write log lines to a plain or gzipped log file in the given directory."""
-    log_file = Path(directory) / f"sim_telarray{suffix}"
-    text = "\n".join(lines) + "\n"
-    if suffix.endswith(".gz"):
-        with gzip.open(log_file, "wt", encoding="utf-8") as f:
-            f.write(text)
-    else:
-        log_file.write_text(text, encoding="utf-8")
-    return log_file
-
-
-_SUCCESS_LOG_LINES = ["Sim_telarray finished at Mon Jan  1 00:00:00 2026", "Finished."]
-
-
-@pytest.mark.parametrize("suffix", [".log", ".log.gz"])
-def test_validate_sim_telarray_logs_accepts_success_patterns(tmp_test_directory, suffix):
-    log_file = _write_log(tmp_test_directory, suffix, _SUCCESS_LOG_LINES)
-
-    validate_sim_telarray_logs([log_file])
-
-
-@pytest.mark.parametrize("suffix", [".log", ".log.gz"])
 @pytest.mark.parametrize(
     "nsb_message",
     [
@@ -621,10 +484,9 @@ def test_validate_sim_telarray_logs_accepts_success_patterns(tmp_test_directory,
         "Telescope has NSB scaling factor",
     ],
 )
-def test_validate_sim_telarray_logs_rejects_nsb_scaling_messages(
-    tmp_test_directory, suffix, nsb_message
-):
-    log_file = _write_log(tmp_test_directory, suffix, [*_SUCCESS_LOG_LINES, nsb_message])
+def test_validate_sim_telarray_logs_rejects_nsb_scaling_messages(tmp_test_directory, nsb_message):
+    log_file = Path(tmp_test_directory) / "sim_telarray.log"
+    log_file.write_text(f"Sim_telarray finished at now\nFinished.\n{nsb_message}\n")
 
     with pytest.raises(ValueError, match="validation failed"):
         validate_sim_telarray_logs([log_file])

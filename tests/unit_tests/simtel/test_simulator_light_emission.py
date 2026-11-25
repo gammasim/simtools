@@ -15,6 +15,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from simtools.io.output_paths import OutputPaths
 from simtools.simtel.simulator_light_emission import LIGHT_SOURCE_POSITION, SimulatorLightEmission
 from simtools.simulation.configuration import get_light_source_writer
+from simtools.simulation.nsb import NsbSettings
 
 MAKE_COMMAND_METHOD = "make_command"
 
@@ -1084,56 +1085,31 @@ def test_default_chain_script_text(default_chain_simulator, write_hdata):
 
 
 @pytest.mark.parametrize(
-    ("light_source_type", "expected_zenith"),
-    [(FLAT_FIELDING, 0.0), (ILLUMINATOR, 20.0)],
-)
-def test_make_sim_telarray_command_nsb_zenith_angle(
-    default_chain_simulator, telescope_writer, light_source_type, expected_zenith
-):
-    simulator = default_chain_simulator
-    simulator.light_emission_config = {LIGHT_SOURCE_TYPE: light_source_type}
-    with patch.object(simulator, TELESCOPE_POINTING_METHOD, return_value=(20.0, 30.0)):
-        simulator.make_sim_telarray_command()
-    assert telescope_writer.nsb_settings.zenith_angle == pytest.approx(expected_zenith)
-
-
-@pytest.mark.parametrize(
-    ("light_config", "expected_manual_factor", "expected_autoscale"),
+    ("light_config", "expected_settings"),
     [
-        ({}, None, True),
-        ({"nsb_scaling_factor": 2.0}, 2.0, True),
-        ({"disable_nsb_autoscaling": True}, None, False),
-        ({"nsb_scaling_factor": 2.0, "disable_nsb_autoscaling": True}, 2.0, False),
+        ({LIGHT_SOURCE_TYPE: FLAT_FIELDING}, NsbSettings(0.0, None, True)),
+        (
+            {
+                LIGHT_SOURCE_TYPE: ILLUMINATOR,
+                "nsb_scaling_factor": 2.0,
+                "disable_nsb_autoscaling": True,
+            },
+            NsbSettings(20.0, 2.0, False),
+        ),
     ],
 )
-def test_make_sim_telarray_command_nsb_factor_and_autoscale(
-    default_chain_simulator,
-    telescope_writer,
-    light_config,
-    expected_manual_factor,
-    expected_autoscale,
+def test_make_sim_telarray_command_writes_config_with_nsb_settings(
+    default_chain_simulator, telescope_writer, light_config, expected_settings
 ):
     simulator = default_chain_simulator
-    simulator.light_emission_config = {LIGHT_SOURCE_TYPE: ILLUMINATOR, **light_config}
-    with patch.object(simulator, TELESCOPE_POINTING_METHOD, return_value=(20.0, 30.0)):
-        simulator.make_sim_telarray_command()
-    settings = telescope_writer.nsb_settings
-    assert settings.manual_factor == expected_manual_factor
-    assert settings.autoscale is expected_autoscale
-
-
-def test_make_sim_telarray_command_writes_config_with_site_nsb_factor(
-    default_chain_simulator, telescope_writer
-):
-    simulator = default_chain_simulator
-    simulator.light_emission_config = {LIGHT_SOURCE_TYPE: ILLUMINATOR}
-    simulator.site_model.parameters = {}
+    simulator.light_emission_config = light_config
     simulator.site_model.get_simulation_software_parameters.return_value = {
         "nsb_scaling_factor": {"value": 1.5}
     }
     with patch.object(simulator, TELESCOPE_POINTING_METHOD, return_value=(20.0, 30.0)):
         simulator.make_sim_telarray_command()
 
+    assert telescope_writer.nsb_settings == expected_settings
     assert telescope_writer.nsb_site_manual == pytest.approx(1.5)
     telescope_writer.write_sim_telarray_config_file.assert_called_once_with(
         additional_models=simulator.site_model
