@@ -534,6 +534,11 @@ def _apply_model_parameter_entry(
             simulation_models_path,
             setting_workflows_git_tag,
             setting_workflows_git_repository,
+            **(
+                {"overwrite": True}
+                if context and context.args.get("ignore_existing_parameter_version", False)
+                else {}
+            ),
         )
     elif param_data.get("value") is not None:
         _create_new_model_parameter_entry(
@@ -579,6 +584,7 @@ def _download_model_parameter_from_workflow(
     simulation_models_path,
     setting_workflows_git_tag="main",
     setting_workflows_git_repository=DEFAULT_SIMULATION_WORKFLOWS,
+    overwrite=False,
 ):
     """
     Download a model parameter entry from the simulation workflow repository.
@@ -598,7 +604,7 @@ def _download_model_parameter_from_workflow(
         f"output/{telescope}/{param}/{param_data['activity_id']}/"
         f"{param}/{param}-{param_data['version']}.json"
     )
-    if target_file.exists():
+    if target_file.exists() and not overwrite:
         _logger.info(
             "Model parameter file already exists for requested version: '%s'.", target_file
         )
@@ -610,6 +616,9 @@ def _download_model_parameter_from_workflow(
             setting_workflows_git_tag,
         )
         return
+
+    if target_file.exists():
+        _logger.warning("Overwriting existing model parameter file: %s", target_file)
 
     _logger.info(f"Downloading model parameter '{telescope} - {param}' from '{source_file}'.")
     downloaded_data = ascii_handler.collect_data_from_git(
@@ -641,11 +650,12 @@ def _download_model_parameter_from_workflow(
         source_file,
         setting_workflows_git_repository,
         setting_workflows_git_tag,
+        overwrite=overwrite,
     )
 
 
 def _copy_model_parameter_asset_from_workflow(
-    parameter_data, target_file, source_file, git_repository, git_branch
+    parameter_data, target_file, source_file, git_repository, git_branch, overwrite=False
 ):
     """Copy a file asset referenced by a workflow parameter JSON into the model repository."""
     if not parameter_data.get("file"):
@@ -657,9 +667,11 @@ def _copy_model_parameter_asset_from_workflow(
 
     target_asset = resolve_asset_path(asset_value, target_file)
     if target_asset.exists():
-        if target_asset.is_file():
+        if not target_asset.is_file():
+            raise IsADirectoryError(f"Model parameter asset path is not a file: {target_asset}")
+        if not overwrite:
             return
-        raise IsADirectoryError(f"Model parameter asset path is not a file: {target_asset}")
+        _logger.warning("Overwriting existing model parameter asset: %s", target_asset)
 
     source_asset = (Path(source_file).parent / asset_value).as_posix()
     repository_url = str(git_repository).rstrip("/")

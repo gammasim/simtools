@@ -159,17 +159,20 @@ def test_main_rejects_unsupported_run_mode(mock_start):
 
 def test_parallel_full_simulation_prepares_isolated_levels(tmp_test_directory):
     from simtools.applications.simulate_flasher import _full_simulation_runs
+    from simtools.io.output_paths import OutputPaths
     from simtools.runtime.context import RunContext
 
     context = RunContext.from_arguments(
         {
             "output_path": str(tmp_test_directory),
+            "model_path": str(tmp_test_directory / "input-models"),
             "run_number": 100,
             "max_workers": 2,
             "flasher_photons": [30000, 100000],
             "number_of_events": [2, 3],
             "simulation_seed": [101, 102],
-        }
+        },
+        paths=OutputPaths(tmp_test_directory, model_path=str(tmp_test_directory / "input-models")),
     )
     runs = _full_simulation_runs(context)
     assert [run.args["run_number"] for run in runs] == [100, 101]
@@ -184,6 +187,11 @@ def test_parallel_full_simulation_prepares_isolated_levels(tmp_test_directory):
         tmp_test_directory / "run000100",
         tmp_test_directory / "run000101",
     ]
+    assert [run.paths.get_model_configuration_directory("8.0.0") for run in runs] == [
+        tmp_test_directory / "run000100/model/8.0.0",
+        tmp_test_directory / "run000101/model/8.0.0",
+    ]
+    assert all(run.paths.model_path == str(tmp_test_directory / "input-models") for run in runs)
 
 
 def test_full_simulation_runs_levels_concurrently(monkeypatch, tmp_test_directory):
