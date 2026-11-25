@@ -125,7 +125,7 @@ def _decode_special_value(kind, data, value):
     """Decode quantities, arrays and registered records."""
     if kind == "quantity" and isinstance(value.get("unit"), str):
         return u.Quantity(decode_worker_value(data), unit=value["unit"])
-    if kind == "array" and isinstance(data, list):
+    if kind == "array" and isinstance(data, (list, bool, int, float, str)):
         dtype = np.dtype(value.get("dtype"))
         if dtype.hasobject:
             raise ValueError("Object arrays are not supported in worker payloads.")

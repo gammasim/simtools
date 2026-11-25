@@ -214,6 +214,17 @@ def test_worker_round_trips_supported_values(tmp_test_directory):
     assert_quantity_allclose(restored["quantity"], item["quantity"])
 
 
+def test_worker_round_trips_zero_dimensional_array(tmp_test_directory):
+    path = Path(tmp_test_directory) / "job.json"
+    item = np.array(1, dtype=np.int32)
+    write_job_payload(JobSpec("job", 0, command=("echo",), item=item), path)
+    restored = worker.load_job_payload(path).item
+    assert isinstance(restored, np.ndarray)
+    assert restored.shape == ()
+    assert restored.dtype == item.dtype
+    np.testing.assert_array_equal(restored, item)
+
+
 def test_worker_round_trips_registered_function_and_record(tmp_test_directory):
     path = Path(tmp_test_directory) / "job.json"
     item = mirror_panel_psf.MirrorOptimizationJob("label", {"indices": (1, 2)}, 0, 1.5)

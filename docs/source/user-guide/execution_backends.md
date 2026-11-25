@@ -30,6 +30,8 @@ The submission work directory and its ancestors must be owned by the submitting 
 and must not be writable by other users, except for sticky directories. Worker identities need
 group read and search access to job inputs and group write access to result directories. Workers
 must not have the submission user's identity or additional write access to the inputs.
+All workers with access to a result directory must be trusted: they can replace other jobs'
+results, and result files do not authenticate their originating job.
 
 ## Backend configuration
 
