@@ -8,8 +8,15 @@ CORSIKA_PATH = "/workdir/simulation_software/corsika7"
 
 # Schema path
 SCHEMA_PATH = files("simtools") / "schemas"
+# Release tag whose schema files are referenced by URL in data-product metadata.
+# Pinned to a tag (not ``main``) so that a stored URL resolves to fixed content.
+# Update when a new simtools release is tagged.
+SIMTOOLS_SCHEMA_REF = "v0.39.0"
 # Schema URL
-SCHEMA_URL = "https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas"
+SCHEMA_URL = (
+    "https://raw.githubusercontent.com/gammasim/simtools/"
+    f"{SIMTOOLS_SCHEMA_REF}/src/simtools/schemas"
+)
 # URL for files in the main branch of the GitHub repository
 GITHUB_BLOB_BASE = "https://github.com/gammasim/simtools/blob/main/"
 # Path to metadata jsonschema

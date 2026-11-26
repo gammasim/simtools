@@ -16,7 +16,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 from cycler import cycler
-from PIL import Image
+from PIL import Image, PngImagePlugin
 
 from simtools.utils import value_conversion
 from simtools.visualization import matplotlib_backend
@@ -27,6 +27,9 @@ gridspec = lazy_module("matplotlib.gridspec")
 pdf_backend = lazy_module("matplotlib.backends.backend_pdf")
 
 _FIGURE_SUFFIXES = {".eps", ".jpeg", ".jpg", ".pdf", ".png", ".ps", ".svg"}
+# Keys under which a metadata dictionary is embedded as JSON (PNG text chunk, PDF Subject).
+_PNG_METADATA_KEY = "cta"
+_PDF_METADATA_KEY = "Subject"
 _PLOT_KWARGS = set(
     "color linestyle linewidth marker markersize markerfacecolor markeredgecolor "
     "markeredgewidth alpha label zorder dashes gapcolor solid_capstyle solid_joinstyle "
@@ -508,6 +511,35 @@ def _canonicalize(value):
     return value
 
 
+def figure_metadata(metadata, figure_format):
+    """
+    Return ``savefig`` metadata embedding a metadata dictionary as JSON.
+
+    PNG files store the JSON in a text chunk and PDF files in the Subject field, because
+    matplotlib drops unknown PDF Info keys. Other formats carry no embedded metadata.
+
+    Parameters
+    ----------
+    metadata : dict or None
+        Metadata to embed, for example a ``cta`` metadata block.
+    figure_format : str
+        Figure format (``png``, ``pdf``, ...).
+
+    Returns
+    -------
+    dict or None
+        Keyword values for ``fig.savefig(metadata=...)``, or None if nothing is embedded.
+    """
+    if not metadata:
+        return None
+    payload = json.dumps(metadata, sort_keys=True, default=str, ensure_ascii=True)
+    if figure_format == "png":
+        return {_PNG_METADATA_KEY: payload}
+    if figure_format == "pdf":
+        return {_PDF_METADATA_KEY: payload}
+    return None
+
+
 def save_figure(
     fig,
     output_file,
@@ -517,6 +549,7 @@ def save_figure(
     close=False,
     pil_kwargs=None,
     context=None,
+    metadata=None,
 ):
     """
     Save figure to output file(s).
@@ -541,6 +574,10 @@ def save_figure(
         Close the figure after saving. Defaults to False.
     pil_kwargs : dict, optional
         Keyword arguments passed to Pillow when saving PNG files.
+    context : RunContext, optional
+        Context providing the figure output settings.
+    metadata : dict, optional
+        Metadata embedded in PNG and PDF files as JSON (see :func:`figure_metadata`).
     """
     args = figure_output_settings(context)
     configured_dpi = args.get("figure_dpi")
@@ -557,6 +594,9 @@ def save_figure(
         save_kwargs = {"format": fmt, "bbox_inches": "tight", "dpi": save_dpi}
         if fmt == "png" and pil_kwargs is not None:
             save_kwargs["pil_kwargs"] = pil_kwargs
+        embedded = figure_metadata(metadata, fmt)
+        if embedded is not None:
+            save_kwargs["metadata"] = embedded
         fig.savefig(_file, **save_kwargs)
         if fmt == "png" and png_palette:
             convert_png_to_palette(_file)
@@ -570,10 +610,12 @@ def save_figure(
 class _PdfReport:
     """Write PDF pages and close each figure after it is appended."""
 
-    def __init__(self, path):
+    def __init__(self, path, metadata=None):
         path = Path(path).absolute()
         path.parent.mkdir(parents=True, exist_ok=True)
-        self._document = pdf_backend.PdfPages(path.as_posix())
+        self._document = pdf_backend.PdfPages(
+            path.as_posix(), metadata=figure_metadata(metadata, "pdf")
+        )
         self.page_labels = []
 
     def add(self, fig):
@@ -594,7 +636,7 @@ class _PdfReport:
 
 
 @contextmanager
-def pdf_report(path):
+def pdf_report(path, metadata=None):
     """
     Write figures to a multi-page PDF, closing each figure after it is added.
 
@@ -602,13 +644,15 @@ def pdf_report(path):
     ----------
     path : pathlib.Path or str
         Destination PDF path.
+    metadata : dict, optional
+        Metadata embedded in the PDF as JSON (see :func:`figure_metadata`).
 
     Yields
     ------
     _PdfReport
         Report with an ``add(fig)`` method.
     """
-    report = _PdfReport(path)
+    report = _PdfReport(path, metadata)
     try:
         yield report
     finally:
@@ -626,11 +670,16 @@ def convert_png_to_palette(png_file):
     """
     png_file = Path(png_file)
     with Image.open(png_file) as image:
+        text_chunks = {key: value for key, value in image.info.items() if isinstance(value, str)}
         if image.mode == "RGBA":
             palette_image = image.quantize(colors=256, method=Image.Quantize.FASTOCTREE)
         else:
             palette_image = image.convert("RGB").quantize(colors=256)
+    # Quantizing drops PNG text chunks; carry them over so embedded metadata is kept.
+    pnginfo = PngImagePlugin.PngInfo()
+    for key, value in text_chunks.items():
+        pnginfo.add_text(key, value)
     buffer = BytesIO()
-    palette_image.save(buffer, format="PNG", optimize=True)
+    palette_image.save(buffer, format="PNG", optimize=True, pnginfo=pnginfo)
     if buffer.tell() < png_file.stat().st_size:
         png_file.write_bytes(buffer.getvalue())

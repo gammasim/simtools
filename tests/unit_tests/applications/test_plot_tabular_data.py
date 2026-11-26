@@ -22,6 +22,16 @@ def calls_fixture(monkeypatch):
     """Replace plotting and metadata output by recorders (no files are written)."""
     calls = {"plot": [], "dump": [], "generate": []}
 
+    class _Collector:
+        def __init__(self, args_dict, context=None):
+            self.args_dict = args_dict
+
+        def get_top_level_metadata(self):
+            return {"cta": {"product": {"filename": self.args_dict.get("output_file")}}}
+
+        def write(self, output_file, add_activity_name=False):
+            calls["dump"].append((self.args_dict, output_file, add_activity_name))
+
     def _generate(**kwargs):
         calls["generate"].append(kwargs)
         return [{"id": 1}, {"id": 2}], [Path("out/a.pdf"), Path("out/b.pdf")]
@@ -34,11 +44,7 @@ def calls_fixture(monkeypatch):
             generate_plot_configurations=_generate,
         ),
     )
-    monkeypatch.setattr(
-        app,
-        "MetadataCollector",
-        SimpleNamespace(dump=lambda *args, **kwargs: calls["dump"].append((args, kwargs))),
-    )
+    monkeypatch.setattr(app, "MetadataCollector", _Collector)
     return calls
 
 
@@ -74,7 +80,14 @@ def test_data_file_mode_plots_lowercased_configuration(tmp_test_directory, calls
 
     assert calls["plot"][0]["config"] == {"type": "line"}
     assert calls["plot"][0]["output_file"] == Path("out/figure.pdf")
-    assert len(calls["dump"]) == 1
+    assert calls["plot"][0]["metadata"] == {"cta": {"product": {"filename": "figure.pdf"}}}
+    assert calls["dump"] == [
+        (
+            {"plot_config": str(config_file), "output_file": "figure.pdf"},
+            Path("out/figure.pdf"),
+            True,
+        )
+    ]
 
 
 def test_model_parameter_mode_plots_every_generated_configuration(calls):
@@ -89,4 +102,8 @@ def test_model_parameter_mode_plots_every_generated_configuration(calls):
     )
 
     assert [call["config"] for call in calls["plot"]] == [{"id": 1}, {"id": 2}]
-    assert len(calls["dump"]) == 2
+    assert [call["metadata"]["cta"]["product"]["filename"] for call in calls["plot"]] == [
+        "a.pdf",
+        "b.pdf",
+    ]
+    assert [dump[0]["output_file"] for dump in calls["dump"]] == ["a.pdf", "b.pdf"]

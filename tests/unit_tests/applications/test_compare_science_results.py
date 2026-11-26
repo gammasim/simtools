@@ -6,6 +6,8 @@ import yaml
 from astropy.table import Table
 
 from simtools.applications import compare_science_results as application
+from simtools.data_model import product_checksum
+from simtools.runtime.context import Activity
 
 CANNOT_COMPARE_EFFICIENCY_COMPONENTS_REF = "Cannot compare efficiency components: 'ref'"
 CAM_EFF = "cam_eff"
@@ -44,7 +46,7 @@ def run_main(mocker, output, **overrides):
         "tolerance": [["cam_eff=0.1"]],
         "require_wavelength_tables": False,
     } | overrides
-    context = mocker.Mock(args=args)
+    context = mocker.Mock(args=args, activity=Activity.from_arguments(args))
     context.paths.get_output_directory.return_value = output
     mocker.patch(
         "simtools.application.definition.ApplicationDefinition.start", return_value=context
@@ -62,6 +64,10 @@ def test_main_compares_all_telescopes(tmp_test_directory, mocker):
 
     assert result[STATUS] == "complete"
     assert result[COMPARISONS][TELESCOPE]["changes"][CAM_EFF]["advisory"] is True
+    sidecar = yaml.safe_load((root / "science-comparison.meta.yml").read_text(encoding=UTF_8))
+    assert product_checksum.verify_sha256(
+        root / RESULT_FILE, expected=sidecar["cta"]["product"]["sha256"]
+    )
     assert result[COMPARISONS][TELESCOPE]["table_diagnostics"] == [
         CANNOT_COMPARE_EFFICIENCY_COMPONENTS_REF,
         CANNOT_COMPARE_EFFICIENCY_COMPONENTS_REF,

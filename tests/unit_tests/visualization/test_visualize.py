@@ -2,6 +2,7 @@
 
 # pylint: disable=protected-access,redefined-outer-name,unused-argument
 
+import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from astropy.table import Table
-from PIL import Image
+from PIL import Image, PngImagePlugin
 
 from simtools.visualization import visualize
 
@@ -537,3 +538,79 @@ def test_plot_1d_comparison_panel_figure_size(panel, figsize):
         assert fig.get_size_inches() == pytest.approx(figsize or (8, 8))
     finally:
         plt.close(fig)
+
+
+_EMBEDDED_METADATA = {"product": {"description": "metadata-marker-7f3a"}, "contact": {"name": "x"}}
+
+
+@pytest.mark.parametrize(
+    ("figure_format", "expected_key"),
+    [("png", "cta"), ("pdf", "Subject"), ("svg", None)],
+)
+def test_figure_metadata_embeds_json_by_format(figure_format, expected_key):
+    embedded = visualize.figure_metadata(_EMBEDDED_METADATA, figure_format)
+
+    if expected_key is None:
+        assert embedded is None
+    else:
+        assert list(embedded) == [expected_key]
+        assert json.loads(embedded[expected_key]) == _EMBEDDED_METADATA
+
+
+def test_figure_metadata_is_none_without_metadata():
+    assert visualize.figure_metadata(None, "png") is None
+    assert visualize.figure_metadata({}, "pdf") is None
+
+
+def test_save_figure_passes_metadata_to_savefig(tmp_test_directory, mocker):
+    # savefig is stubbed for file paths in unit tests; assert the metadata handed to matplotlib.
+    figure, _ = plt.subplots()
+    savefig = mocker.patch.object(figure, "savefig")
+
+    visualize.save_figure(
+        figure,
+        Path(tmp_test_directory) / "figure_with_metadata",
+        figure_format=["png", "pdf", "svg"],
+        metadata=_EMBEDDED_METADATA,
+    )
+
+    calls = {call.kwargs["format"]: call.kwargs for call in savefig.call_args_list}
+    assert json.loads(calls["png"]["metadata"]["cta"]) == _EMBEDDED_METADATA
+    assert json.loads(calls["pdf"]["metadata"]["Subject"]) == _EMBEDDED_METADATA
+    assert "metadata" not in calls["svg"]
+
+
+def test_save_figure_without_metadata_does_not_pass_metadata(tmp_test_directory, mocker):
+    figure, _ = plt.subplots()
+    savefig = mocker.patch.object(figure, "savefig")
+
+    visualize.save_figure(figure, Path(tmp_test_directory) / "figure", figure_format=["png"])
+
+    assert "metadata" not in savefig.call_args.kwargs
+
+
+def test_pdf_report_embeds_metadata_as_subject(tmp_test_directory):
+    output_pdf = Path(tmp_test_directory) / "report_with_metadata.pdf"
+    figure, axis = plt.subplots()
+    axis.plot([0, 1], [0, 1])
+
+    with visualize.pdf_report(output_pdf, metadata=_EMBEDDED_METADATA) as report:
+        report.add(figure)
+
+    assert b"metadata-marker-7f3a" in output_pdf.read_bytes()
+
+
+def test_convert_png_to_palette_keeps_embedded_metadata(tmp_test_directory):
+    png_file = Path(tmp_test_directory) / "figure_metadata.png"
+    rng = np.random.default_rng(seed=1)
+    gradient = np.linspace(0, 255, 200 * 200).reshape(200, 200)
+    pixels = np.stack([gradient, gradient.T, rng.integers(0, 4, (200, 200)) * 60], axis=-1)
+    pnginfo = PngImagePlugin.PngInfo()
+    pnginfo.add_text("cta", json.dumps(_EMBEDDED_METADATA))
+    Image.fromarray(pixels.astype(np.uint8)).save(png_file, pnginfo=pnginfo)
+
+    visualize.convert_png_to_palette(png_file)
+
+    with Image.open(png_file) as image:
+        assert image.mode == "P"
+        assert json.loads(image.info["cta"]) == _EMBEDDED_METADATA

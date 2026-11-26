@@ -15,6 +15,7 @@ from simtools.constants import (
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.model.model_parameter import InvalidModelParameterError
+from simtools.runtime import dependencies
 from simtools.sim_events.simtel_io_metadata import normalize_sim_telarray_metadata
 from simtools.utils.primary_particle import PrimaryParticle
 
@@ -33,10 +34,16 @@ _REGISTRY_SAMPLE_ARGS = {
     "dec": 0.0,
     "label": "simtools-registry",
     "activity_id": "12345678-1234-5678-1234-567812345678",
+    "application_label": "simulate_prod",
+    "user_name": "registry",
+    "user_organization": "registry",
+    "user_email": "registry@example.org",
+    "simtel_version": "0.0.0",
+    "corsika_version": "0.0.0",
 }
 
 
-def get_ctao_simtel_metadata(args, site_model=None, created=None):
+def get_ctao_simtel_metadata(args, site_model=None, created=None, calibration=False):
     """
     Build CTAO metadata for a sim_telarray configuration.
 
@@ -48,66 +55,107 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None):
         Site model providing the NSB scaling factor when ``args`` does not override it.
     created : astropy.time.Time, optional
         Timestamp used for the product creation and activity start fields.
+    calibration : bool, optional
+        Build metadata for calibration (light source) runs without a primary particle.
+        Air-shower specific keywords are then omitted.
 
     Returns
     -------
     dict
         FITS keywords and serialized values ready for sim_telarray ``metaparam`` lines.
+        Keywords without a known value (e.g. contact information not provided) are omitted.
     """
     site = args.get("site")
     if site not in ("North", "South"):
         raise ValueError(f"Unsupported CTAO site for sim_telarray metadata: {site!r}")
-    if not args.get("primary"):
+    if not calibration and not args.get("primary"):
         raise ValueError("A primary particle is required for CTAO sim_telarray metadata.")
 
     created = Time.now() if created is None else created
-    primary = PrimaryParticle(args.get("primary_id_type") or "common_name", args["primary"])
     activity_id = str(
         uuid.UUID(str(args["activity_id"])) if args.get("activity_id") else uuid.uuid4()
     )
     production_id = args.get("production_id") or args.get("label") or "simulate_prod"
+    if calibration:
+        title, datatype = "Simulated CTAO calibration events", "CalibrationSim"
+        content = {"SIMNSB": _get_nsb_factor(args, site_model)}
+    else:
+        primary = PrimaryParticle(args.get("primary_id_type") or "common_name", args["primary"])
+        title, datatype = "Simulated CTAO air-shower events", "AirShowerSim"
+        content = {
+            "PDGID": int(primary.pdg_id),
+            "MSNGR": _get_messenger(primary),
+            "SIMZEN": _get_angle_degrees(args, "zenith_angle", required=True),
+            "SIMAZ": _get_angle_degrees(args, "azimuth_angle", required=True),
+            "SIMHA": _get_angle_degrees(args, "ha"),
+            "SIMDEC": _get_angle_degrees(args, "dec"),
+            "SIMNSB": _get_nsb_factor(args, site_model),
+        }
     metadata = {
         "CTAOMETA": PRODUCT_MODEL_VERSION,
-        "TITLE": "Simulated CTAO air-shower events",
+        "TITLE": title,
         "DATALEVL": "SIM",
         "DATADIV": "Event",
-        "DATAASSO": "Array",
-        "DATATYPE": "AirShowerSim",
+        "DATAASSO": "Telescope" if calibration and args.get("telescope") else "Array",
+        "DATATYPE": datatype,
         "DATAID": str(uuid.uuid4()),
         "TELESCOP": "Simulated-CTAO",
         "INSTRUME": f"CTAO-{site}",
-        "PDGID": int(primary.pdg_id),
-        "MSNGR": _get_messenger(primary),
         "LICENSE": "CC-BY-SA-4.0",
         "LICENURL": "https://creativecommons.org/licenses/by-sa/4.0/",
         "MODEL": "ctao",
         "MODELVER": PRODUCT_MODEL_VERSION,
         "MODELURL": "https://www.ctao.org/",
         "CREATED": _format_time(created),
-        "AUTHOR": args.get("user_name") or "not set",
-        "ORIGIN": args.get("user_organization") or "not set",
+        "AUTHOR": args.get("user_name"),
+        "ORIGIN": args.get("user_organization"),
         "EMAIL": _get_email(args),
         "ACTPROC": "simulation",
-        "ACTIVITY": "simulate_prod",
+        "ACTIVITY": args.get("application_label") or "simulate_prod",
         "ACTID": activity_id,
         "ACTSTART": _format_time(created),
         "SOFTWARE": "simtools",
         "SOFTVER": version.__version__,
         "SOFTURL": "https://github.com/gammasim/simtools",
+        "SIMTELVER": args.get("simtel_version"),
+        "CORSIKAVER": args.get("corsika_version"),
         "ACTCONF": production_id,
         "SIMPROD": production_id,
-        "SIMZEN": _get_angle_degrees(args, "zenith_angle", required=True),
-        "SIMAZ": _get_angle_degrees(args, "azimuth_angle", required=True),
-        "SIMHA": _get_angle_degrees(args, "ha"),
-        "SIMDEC": _get_angle_degrees(args, "dec"),
-        "SIMNSB": _get_nsb_factor(args, site_model),
+        **content,
     }
     return {key: value for key, value in metadata.items() if value is not None}
 
 
+def get_software_versions(context=None):
+    """
+    Return sim_telarray and CORSIKA versions from the build options for CTAO metadata.
+
+    Parameters
+    ----------
+    context : RunContext, optional
+        Run context providing the software installation paths.
+
+    Returns
+    -------
+    dict
+        Keys ``simtel_version`` and ``corsika_version`` (only versions that are known).
+    """
+    try:
+        build_options = dependencies.get_build_options(context=context)
+    except FileNotFoundError, TypeError:
+        return {}
+    versions = {
+        "simtel_version": build_options.get("simtel_tag"),
+        "corsika_version": build_options.get("corsika_build_id"),
+    }
+    return {key: str(value) for key, value in versions.items() if value is not None}
+
+
 def _get_email(args):
-    """Return the contact email (placeholder if unset); raise for a malformed address."""
-    email = args.get("user_email") or "not-set@example.org"
+    """Return the contact email (None if unset); raise for a malformed address."""
+    email = args.get("user_email")
+    if email is None:
+        return None
     if not _is_valid_email(email):
         raise ValueError(f"Invalid contact email for CTAO sim_telarray metadata: {email!r}")
     return email
@@ -381,7 +429,7 @@ def _build_model_parameter_definition(source_name):
     model_schema = schema.get_model_parameter_schema(source_name)
     emitted_name, mode = _get_emitted_name_and_mode(model_schema)
     scope = "global" if model_schema.get("instrument", {}).get("class") == "Site" else "telescope"
-    return {
+    definition = {
         "name": emitted_name,
         "scope": scope,
         "mode": mode,
@@ -391,6 +439,9 @@ def _build_model_parameter_definition(source_name):
             or _derive_value_schema(model_schema)
         ),
     }
+    if model_schema.get("description"):
+        definition["description"] = " ".join(model_schema["description"].split())
+    return definition
 
 
 def _get_software_definition(model_schema):

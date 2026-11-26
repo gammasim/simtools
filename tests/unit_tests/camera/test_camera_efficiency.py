@@ -11,6 +11,7 @@ from astropy.table import Table
 
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.camera.camera_efficiency_calculator import CameraEfficiencyCalculator
+from simtools.data_model import product_checksum
 from simtools.simulation.configuration import get_model_writer
 
 logger = logging.getLogger()
@@ -174,6 +175,12 @@ def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_f
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.export_results()
     assert "Exporting summary results" in caplog.text
+
+    results_file = camera_efficiency_lst._file["results"]
+    assert "cta" in Table.read(results_file, format="ascii.ecsv").meta
+    assert product_checksum.verify_sha256(results_file)
+    summary_file = Path(str(results_file).replace(".ecsv", "_summary.yml"))
+    assert summary_file.with_name(summary_file.stem + ".meta.yml").exists()
 
 
 def test_analyze(camera_efficiency_lst, prepare_results_file):

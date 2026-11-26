@@ -9,6 +9,7 @@ import astropy.units as u
 import simtools.data_model.model_data_writer as writer
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.data_model.metadata_collector import write_sidecar_metadata
 from simtools.layout.array_layout_utils import create_regular_array, write_array_elements_info_yaml
 
 _ARGUMENTS = (
@@ -82,12 +83,17 @@ def main():
             context=app_context,
         )
 
+        info_file = app_context.paths.get_output_directory() / Path(output_file).with_suffix(
+            ".info.yml"
+        )
         write_array_elements_info_yaml(
             array_table,
             app_context.args["site"],
             app_context.args["model_version"],
-            app_context.paths.get_output_directory() / Path(output_file).with_suffix(".info.yml"),
+            info_file,
         )
+        # info.yml is a model-repository file with a closed schema: metadata goes to a sidecar
+        write_sidecar_metadata(info_file, context=app_context)
 
 
 if __name__ == "__main__":

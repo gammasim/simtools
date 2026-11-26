@@ -19,7 +19,8 @@ from pathlib import Path
 
 from astropy.table import Table
 
-from simtools.data_model import schema
+from simtools.data_model import product_checksum, schema
+from simtools.data_model.metadata_collector import MetadataCollector, write_sidecar_metadata
 from simtools.io import ascii_handler
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.telescope_model import TelescopeModel, trigger_threshold_parameter
@@ -28,10 +29,16 @@ from simtools.production_configuration.jobs_io import read_job_grid, serialize_j
 from simtools.utils.value_conversion import ensure_list
 
 _ECSV_FORMAT = "ascii.ecsv"
+# Metadata keys of the scan grid: the job-grid metadata of the base grid plus the parameter sets.
 _KEPT_METADATA = (
     "model_parameter_sets",
+    "cta",
     "site",
     "simulation_software",
+    "coordinate_system",
+    "direction_grid_density",
+    "direction_grid_density_unit",
+    "corsika_limits",
     "job_grid_summary",
     "job_grid_format_version",
 )
@@ -188,6 +195,9 @@ def _clean_scan_grid_metadata(output_file):
     table = Table.read(output_file, format=_ECSV_FORMAT)
     table.meta = {key: table.meta[key] for key in _KEPT_METADATA if key in table.meta}
     table.write(output_file, format=_ECSV_FORMAT, overwrite=True)
+    if product_checksum.embedded_sha256(output_file) is not None:
+        # the rewritten metadata changes the content: update the embedded checksum
+        product_checksum.write_embedded_sha256(output_file)
 
 
 def _threshold_values(threshold_param, trigger_thresholds=None):
@@ -262,6 +272,7 @@ def _generate_scan_grid(curve_name, curve_definition, args, telescope, io_handle
     ascii_handler.write_data_to_file(
         _scan_config(curve_name, telescope, args), scan_config_file, sort_keys=False
     )
+    write_sidecar_metadata(scan_config_file, args_dict=args, context=context)
     primary, energy_range_arg = curve_definition
     production_configuration = {
         key: args[key] for key in _PRODUCTION_GRID_ARGS if args.get(key) not in (None, "")
@@ -274,7 +285,12 @@ def _generate_scan_grid(curve_name, curve_definition, args, telescope, io_handle
             "label": curve_name,
         }
     )
-    generate_job_grid(production_configuration, base_grid_file, context=context)
+    generate_job_grid(
+        production_configuration,
+        base_grid_file,
+        metadata=MetadataCollector(args, context=context).get_top_level_metadata(),
+        context=context,
+    )
     expand_job_grid_with_scan(base_grid_file, scan_config_file, scan_grid_file)
 
 

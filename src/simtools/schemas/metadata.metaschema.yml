@@ -117,6 +117,15 @@ definitions:
             default: null
             description: |-
               Product identifier.
+          sha256:
+            anyOf:
+              - type: string
+                pattern: "^[0-9a-f]{64}$"
+              - type: "null"
+            default: null
+            description: |-
+              SHA-256 checksum of the data product file (see simtools.data_model.product_checksum
+              for the rule). Not set for plots and markdown reports.
           data:
             title: Data
             required:

@@ -77,12 +77,79 @@ def test_get_angle_preserves_angular_units():
     assert sim_telarray_metadata._get_angle({}, "ha") is None
 
 
-def test_get_ctao_simtel_metadata_uses_contact_defaults():
+def test_get_ctao_simtel_metadata_omits_unknown_contact():
     metadata = sim_telarray_metadata.get_ctao_simtel_metadata(_BASE_ARGS)
 
-    assert metadata["AUTHOR"] == "not set"
-    assert metadata["ORIGIN"] == "not set"
-    assert metadata["EMAIL"] == "not-set@example.org"
+    assert "AUTHOR" not in metadata
+    assert "ORIGIN" not in metadata
+    assert "EMAIL" not in metadata
+
+
+def test_get_ctao_simtel_metadata_calibration_run():
+    args = {
+        "site": "North",
+        "telescope": "MSTN-02",
+        "label": "illuminator",
+        "activity_id": "12345678-1234-5678-1234-567812345678",
+        "application_label": "simulate_illuminator",
+        "simtel_version": "2025.246.0",
+        "corsika_version": "78010",
+    }
+
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(args, calibration=True)
+
+    assert metadata["DATATYPE"] == "CalibrationSim"
+    assert metadata["TITLE"] == "Simulated CTAO calibration events"
+    assert metadata["DATAASSO"] == "Telescope"
+    assert metadata["DATALEVL"] == "SIM"
+    assert metadata["ACTIVITY"] == "simulate_illuminator"
+    assert metadata["ACTID"] == args["activity_id"]
+    assert metadata["SIMTELVER"] == "2025.246.0"
+    assert metadata["CORSIKAVER"] == "78010"
+    for air_shower_key in ("PDGID", "MSNGR", "SIMZEN", "SIMAZ", "SIMHA", "SIMDEC"):
+        assert air_shower_key not in metadata
+    assert math.isclose(metadata["SIMNSB"], 1.0)
+
+
+def test_get_ctao_simtel_metadata_calibration_array_association():
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(
+        {"site": "South", "label": "flasher"}, calibration=True
+    )
+
+    assert metadata["DATAASSO"] == "Array"
+    assert metadata["INSTRUME"] == "CTAO-South"
+    assert metadata["ACTIVITY"] == "simulate_prod"
+
+
+def test_get_ctao_simtel_metadata_air_shower_activity_from_application():
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(
+        {**_BASE_ARGS, "application_label": "simulate_prod"}
+    )
+
+    assert metadata["ACTIVITY"] == "simulate_prod"
+    assert metadata["DATATYPE"] == "AirShowerSim"
+    assert "SIMTELVER" not in metadata
+
+
+def test_get_software_versions_from_build_options(mocker):
+    mocker.patch(
+        "simtools.simtel.sim_telarray_metadata.dependencies.get_build_options",
+        return_value={"simtel_tag": "v2025-11-30-rc", "corsika_build_id": 78010, "other": "x"},
+    )
+
+    assert sim_telarray_metadata.get_software_versions() == {
+        "simtel_version": "v2025-11-30-rc",
+        "corsika_version": "78010",
+    }
+
+
+def test_get_software_versions_without_build_options(mocker):
+    mocker.patch(
+        "simtools.simtel.sim_telarray_metadata.dependencies.get_build_options",
+        side_effect=FileNotFoundError,
+    )
+
+    assert sim_telarray_metadata.get_software_versions() == {}
 
 
 @pytest.mark.parametrize(
@@ -163,7 +230,8 @@ def test_ctao_registry_uses_simtools_keywords():
 
     assert registry["dataid"]["source_type"] == "ctao_datamodel"
     assert registry["simnsb"]["value_schema"]["data_type"] == "number"
-    assert set(registry) == {keyword.lower() for keyword in metadata}
+    assert set(registry) >= {keyword.lower() for keyword in metadata}
+    assert {"author", "origin", "email", "simtelver", "corsikaver"} <= set(registry)
 
 
 @pytest.mark.parametrize(

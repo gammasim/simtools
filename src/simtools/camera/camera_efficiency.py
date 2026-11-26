@@ -14,6 +14,7 @@ from simtools.camera.camera_efficiency_calculator import (
     RESULT_COLUMN_DESCRIPTIONS,
     CameraEfficiencyCalculator,
 )
+from simtools.data_model.metadata_collector import MetadataCollector, write_sidecar_metadata
 from simtools.io import ascii_handler
 from simtools.model.model_utils import export_model_files, initialize_simulation_models
 from simtools.model_repository.asset_names import get_simtel_table_file_name
@@ -384,10 +385,16 @@ class CameraEfficiency:
             self._logger.error("Cannot export results because they do not exist")
         else:
             self._logger.info(f"Exporting camera efficiency table to {self._file['results']}")
-            self._results.write(self._file["results"], format=f"ascii{ECSV_SUFFIX}", overwrite=True)
+            writer.ModelDataWriter.write_product_data(
+                output_file=self._file["results"],
+                output_file_format=f"ascii{ECSV_SUFFIX}",
+                product_data=self._results,
+                context=self.context,
+            )
             _results_summary_file = str(self._file["results"]).replace(ECSV_SUFFIX, "_summary.yml")
             self._logger.info(f"Exporting summary results to {_results_summary_file}")
             ascii_handler.write_data_to_file(self.results_summary(), Path(_results_summary_file))
+            write_sidecar_metadata(_results_summary_file, context=self.context)
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
@@ -632,7 +639,14 @@ class CameraEfficiency:
         plot_file = self.output_dir.joinpath(
             self.label + "_" + self.telescope_model.name + "_" + plot_title
         )
-        visualize.save_figure(fig, plot_file, log_title=f"{plot_title} efficiency")
+        visualize.save_figure(
+            fig,
+            plot_file,
+            log_title=f"{plot_title} efficiency",
+            metadata=MetadataCollector(
+                self.context.args, context=self.context
+            ).get_top_level_metadata(),
+        )
 
     def dump_nsb_pixel_rate(self):
         """Write NSB pixel rate parameter file."""

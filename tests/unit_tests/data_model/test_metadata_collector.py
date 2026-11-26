@@ -9,11 +9,12 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
 from astropy.table import Table
 
 import simtools.data_model.metadata_collector as metadata_collector
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
-from simtools.data_model import schema
+from simtools.data_model import product_checksum, schema
 from simtools.sim_events import metadata_reader as event_metadata_reader
 from simtools.simtel import metadata_reader as simtel_metadata_reader
 
@@ -460,3 +461,190 @@ def test_read_input_metadata_from_yml_or_json_no_file():
     collector = metadata_collector.MetadataCollector(args_dict={})
     with pytest.raises(FileNotFoundError, match=r"Failed reading metadata from missing_file\.yml"):
         collector._read_input_metadata_from_yml_or_json("missing_file.yml")
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    [
+        (
+            {"site": "South", "telescope": "MSTS-07"},
+            {"site": "South", "class": "telescope", "type": "MSTS", "id": "MSTS-07"},
+        ),
+        (
+            {"site": "North", "instrument": "ILLN-01"},
+            {"site": "North", "class": "calibration_device", "type": "ILLN", "id": "ILLN-01"},
+        ),
+        (
+            {"instrument": "OBS-North"},
+            {"site": "North", "class": "site", "type": "North", "id": "OBS-North"},
+        ),
+        (
+            {"site": "South", "instrument": "CTAO-South-Alpha"},
+            {"site": "South", "class": "array", "id": "CTAO-South-Alpha"},
+        ),
+    ],
+)
+def test_fill_instrument_meta(args, expected):
+    collector = metadata_collector.MetadataCollector(args_dict={"label": "test", **args})
+    instrument = collector.top_level_meta["cta"]["instrument"]
+    assert {key: value for key, value in instrument.items() if value is not None} == expected
+    assert instrument.keys() == {"class", "id", "site", "type"}
+
+
+def test_fill_instrument_meta_is_complete_for_site_only():
+    collector = metadata_collector.MetadataCollector(args_dict={"label": "test", "site": "North"})
+    instrument = collector.top_level_meta["cta"]["instrument"]
+    assert {"class", "type", "id", "site"} <= instrument.keys()
+    assert "ID" not in instrument
+
+
+def test_fill_product_meta_without_data_model_has_no_placeholders():
+    collector = metadata_collector.MetadataCollector(
+        args_dict={"label": "test", "output_file": None}
+    )
+    product = collector.top_level_meta["cta"]["product"]
+    assert "filename" not in product
+    assert product["format"] is None
+    assert product["data"]["model"] == {"name": None, "version": None}
+    assert "undefined_model_name" not in str(collector.top_level_meta)
+
+
+def test_fill_product_meta_from_model_parameter_schema():
+    collector = metadata_collector.MetadataCollector(
+        args_dict={"label": "test", "output_file": "altitude-1.0.0.json"},
+        model_parameter_name="altitude",
+    )
+    product = collector.get_top_level_metadata()["cta"]["product"]
+    assert product["data"]["model"]["name"] == "altitude"
+    assert product["data"]["model"]["version"] == "0.1.0"
+    assert product["data"]["model"]["url"].startswith("https://")
+    assert product["data"]["model"]["url"].endswith("/model_parameters/altitude.schema.yml")
+    assert product["description"].startswith("Altitude above sea level of site centre. Telescope")
+    assert product["filename"] == "altitude-1.0.0.json"
+    assert product["format"] == "json"
+
+
+def test_fill_product_meta_writes_file_name_without_directory():
+    collector = metadata_collector.MetadataCollector(
+        args_dict={"label": "test", "output_file": "/abs/output/table.ecsv"}
+    )
+    product = collector.top_level_meta["cta"]["product"]
+    assert product["filename"] == "table.ecsv"
+    assert product["format"] == "ecsv"
+
+
+def test_output_metadata_has_no_local_schema_path(tmp_test_directory):
+    local_schema = tmp_test_directory / "local.schema.yml"
+    local_schema.write_text("name: local\nschema_version: 1.0.0\n", encoding="utf-8")
+    collector = metadata_collector.MetadataCollector(
+        args_dict={"label": "test", "schema_file": str(local_schema)}
+    )
+    assert collector.get_top_level_metadata()["cta"]["product"]["data"]["model"]["name"] == "local"
+    assert "url" not in collector.get_top_level_metadata()["cta"]["product"]["data"]["model"]
+    assert collector.get_data_model_schema_file_name() == str(local_schema)
+
+
+def test_fill_activity_meta_defaults_to_context_activity_id(args_dict_site):
+    args = {key: value for key, value in args_dict_site.items() if key != "activity_id"}
+    collector = metadata_collector.MetadataCollector(args_dict=args)
+    activity = collector.top_level_meta["cta"]["activity"]
+    assert activity["id"] == collector.context.activity.activity_id
+    assert activity["id"] != "UNDEFINED_ACTIVITY_ID"
+
+
+def test_application_configuration_omits_local_paths(args_dict_site):
+    args = {
+        **args_dict_site,
+        "simulation_models_path": "../simulation-models",
+        "user_name": "Jane Doe",
+    }
+    collector = metadata_collector.MetadataCollector(args_dict=args)
+    arguments = collector.top_level_meta["cta"]["context"]["application_configuration"]["arguments"]
+    assert "output_path" not in arguments
+    assert "simulation_models_path" not in arguments
+    assert arguments["user_name"] == "Jane Doe"
+    assert arguments["site"] == "South"
+
+
+def test_get_data_model_schema_file_name_unknown_model_parameter():
+    collector = metadata_collector.MetadataCollector(args_dict={"label": "test"})
+    collector.model_parameter_name = "parameter_without_schema_file"
+    assert collector.get_data_model_schema_file_name() is None
+
+
+@pytest.mark.parametrize(
+    ("instrument", "expected_class"),
+    [("Dummy-Telescope", "array"), ("configuration_corsika", "array")],
+)
+def test_fill_instrument_meta_for_special_names(instrument, expected_class):
+    collector = metadata_collector.MetadataCollector(
+        args_dict={"label": "test", "instrument": instrument}
+    )
+    assert collector.top_level_meta["cta"]["instrument"]["class"] == expected_class
+    assert collector.top_level_meta["cta"]["instrument"]["id"] == instrument
+
+
+def test_data_model_url_for_remote_and_packaged_schema():
+    assert metadata_collector._data_model_url("https://example.org/a.schema.yml") == (
+        "https://example.org/a.schema.yml"
+    )
+    assert metadata_collector._data_model_url(None) is None
+    assert metadata_collector._data_model_url(
+        metadata_collector.SCHEMA_PATH / "model_parameters" / "altitude.schema.yml"
+    ).endswith("/model_parameters/altitude.schema.yml")
+
+
+def test_written_metadata_without_site_is_valid_input(tmp_test_directory):
+    collector = metadata_collector.MetadataCollector(
+        args_dict={"label": "test", "output_file": "table.ecsv"}
+    )
+    metadata_file = collector.write(tmp_test_directory / "table.yml")
+    reread = metadata_collector.MetadataCollector(
+        args_dict={"label": "test"}, metadata_file_name=metadata_file
+    )
+    assert reread.input_metadata[0]["cta"]["instrument"]["site"] is None
+
+
+def test_fill_product_meta_description_prefers_application_description():
+    collector = metadata_collector.MetadataCollector(
+        args_dict={
+            "label": "test",
+            "output_file": "altitude-1.0.0.json",
+            "_application_description": "Submit a model parameter.",
+        },
+        model_parameter_name="altitude",
+    )
+    assert collector.top_level_meta["cta"]["product"]["description"] == (
+        "Submit a model parameter."
+    )
+
+
+def test_fill_product_meta_description_falls_back_to_schema_description():
+    collector = metadata_collector.MetadataCollector(
+        args_dict={"label": "test", "output_file": "altitude-1.0.0.json"},
+        model_parameter_name="altitude",
+    )
+    description = collector.top_level_meta["cta"]["product"]["description"]
+    assert description.startswith("Altitude above sea level of site centre. Telescope")
+
+
+def test_fill_product_meta_description_is_none_without_any_source():
+    collector = metadata_collector.MetadataCollector(args_dict={"label": "test"})
+    assert "description" not in collector.top_level_meta["cta"]["product"]
+
+
+def test_write_sidecar_metadata_writes_checksum_and_cta_block(tmp_test_directory):
+    data_file = Path(tmp_test_directory) / "summary.yml"
+    data_file.write_text("value: 1\n", encoding="utf-8")
+    args = {"label": "test", "_application_description": "Summarize a test."}
+
+    sidecar = metadata_collector.write_sidecar_metadata(data_file, args_dict=args)
+
+    assert Path(sidecar).name == "summary.meta.yml"
+
+    metadata = yaml.safe_load(Path(sidecar).read_text(encoding="utf-8"))["cta"]
+    assert metadata["product"]["filename"] == "summary.yml"
+    assert metadata["product"]["format"] == "yml"
+    assert metadata["product"]["description"] == "Summarize a test."
+    assert metadata["product"]["sha256"] == product_checksum.sha256_of_file(data_file)
+    assert product_checksum.verify_sha256(data_file, expected=metadata["product"]["sha256"])

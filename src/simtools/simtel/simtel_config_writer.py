@@ -111,7 +111,12 @@ class SimtelConfigWriter:
         return self._label
 
     def write_telescope_config_file(
-        self, config_file_path, parameters, telescope_name=None, telescope_design_model=None
+        self,
+        config_file_path,
+        parameters,
+        telescope_name=None,
+        telescope_design_model=None,
+        global_metadata=None,
     ):
         """
         Write the sim_telarray config file for a single telescope.
@@ -126,6 +131,8 @@ class SimtelConfigWriter:
             Name of the telescope (use self._telescope_model_name if None)
         telescope_design_model: str
             Telescope design model.
+        global_metadata: dict, optional
+            Global sim_telarray metadata written as ``metaparam global set`` lines.
         """
         logger.debug(f"Writing telescope config file {config_file_path}")
 
@@ -159,7 +166,13 @@ class SimtelConfigWriter:
                     if parameter in simtel_par
                 ],
             )
-            file.write("".join(f"{meta}\n" for meta in metadata))
+            global_lines = [
+                f"metaparam global set {key}={value}"
+                for key, value in (global_metadata or {}).items()
+                if value is not None
+            ]
+            sim_telarray_metadata.validate_metadata(global_lines)
+            file.write("".join(f"{meta}\n" for meta in [*metadata, *global_lines]))
 
     @staticmethod
     def _uses_unified_fadc_schema(parameter_name, parameter_data):

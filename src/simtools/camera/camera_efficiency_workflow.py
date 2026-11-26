@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 from simtools.camera.camera_efficiency import CameraEfficiency
+from simtools.data_model.metadata_collector import write_sidecar_metadata
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.model.model_utils import export_model_files, initialize_simulation_models
 from simtools.utils import names
@@ -80,6 +81,7 @@ def run_camera_efficiency(
     )
     logger.info("Writing results summary to %s", summary_path)
     write_data_to_file(results, summary_path, unique_lines=True)
+    write_sidecar_metadata(summary_path, args_dict=config, context=context)
     plot_paths = sorted(
         path for path in output_path.iterdir() if path.suffix.lower() in {".png", ".pdf", ".svg"}
     )

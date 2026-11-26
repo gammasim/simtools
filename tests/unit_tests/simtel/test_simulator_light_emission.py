@@ -17,6 +17,10 @@ from simtools.io.output_paths import OutputPaths
 from simtools.simtel.simulator_light_emission import LIGHT_SOURCE_POSITION, SimulatorLightEmission
 from simtools.simulation.configuration import get_light_source_writer
 
+_CALIBRATION_METADATA_PATH = (
+    "simtools.simtel.simulator_light_emission.get_calibration_simtel_metadata"
+)
+
 MAKE_COMMAND_METHOD = "make_command"
 
 
@@ -408,7 +412,10 @@ def test___init__(tmp_test_directory, run_context):
     output_path = Path(tmp_test_directory) / "output"
     context = run_context.replace(paths=OutputPaths(output_path, run_context.paths.model_path))
 
-    with patch(models_path) as mock_init_models:
+    with (
+        patch(models_path) as mock_init_models,
+        patch(_CALIBRATION_METADATA_PATH, return_value={}),
+    ):
         mock_telescope_model = Mock()
         mock_telescope_model.configuration_writers = {"sim_telarray": Mock()}
         mock_site_model = Mock()
@@ -456,7 +463,9 @@ def test___init__(tmp_test_directory, run_context):
         # Verify telescope model config file was written
         mock_telescope_model.configuration_writers[
             "sim_telarray"
-        ].write_sim_telarray_config_file.assert_called_once_with(additional_models=mock_site_model)
+        ].write_sim_telarray_config_file.assert_called_once_with(
+            additional_models=mock_site_model, global_metadata={}
+        )
 
 
 def test___init___passes_custom_model_directory(tmp_test_directory, run_context):
@@ -464,7 +473,10 @@ def test___init___passes_custom_model_directory(tmp_test_directory, run_context)
     models_path = "simtools.simtel.simulator_light_emission.initialize_simulation_models"
     model_directory = Path(tmp_test_directory) / "model" / "isolated"
 
-    with patch(models_path) as mock_init_models:
+    with (
+        patch(models_path) as mock_init_models,
+        patch(_CALIBRATION_METADATA_PATH, return_value={}),
+    ):
         telescope = Mock(configuration_writers={"sim_telarray": Mock()})
         mock_init_models.return_value = (telescope, Mock(), Mock())
         SimulatorLightEmission(
@@ -482,6 +494,41 @@ def test___init___passes_custom_model_directory(tmp_test_directory, run_context)
     assert mock_init_models.call_args.kwargs["model_directory"] == model_directory
 
 
+def test___init___writes_calibration_metadata_to_telescope_config(tmp_test_directory, run_context):
+    """Light emission telescope configuration carries the CTAO calibration metadata."""
+    models_path = "simtools.simtel.simulator_light_emission.initialize_simulation_models"
+    telescope = Mock(configuration_writers={"sim_telarray": Mock()})
+    telescope.name = "LSTN-01"
+    site_model = Mock()
+    site_model.site = "North"
+    calibration_model = Mock()
+    calibration_model.get_parameter_value.return_value = None
+    metadata = {"CTAOMETA": "2.2.0", "DATATYPE": "CalibrationSim"}
+    with (
+        patch(models_path) as mock_init_models,
+        patch(_CALIBRATION_METADATA_PATH, return_value=metadata) as mock_metadata,
+        patch("simtools.simtel.simulator_light_emission.get_model_writer") as mock_writer,
+    ):
+        mock_init_models.return_value = (telescope, site_model, calibration_model)
+        SimulatorLightEmission(
+            {
+                "site": "North",
+                "telescope": "LSTN-01",
+                "light_source": "calibration_device",
+                "model_version": "6.0.0",
+            },
+            label="test_label",
+            context=run_context,
+        )
+
+    assert mock_metadata.call_args.args[0]["telescope"] == "LSTN-01"
+    assert mock_metadata.call_args.args[1] is site_model
+    assert (
+        mock_writer.return_value.write_sim_telarray_config_file.call_args.kwargs["global_metadata"]
+        == metadata
+    )
+
+
 def test___init___with_wavelength(tmp_test_directory, run_context):
 
     # Mock the dependencies
@@ -489,7 +536,10 @@ def test___init___with_wavelength(tmp_test_directory, run_context):
     output_path = Path(tmp_test_directory) / "output"
     context = run_context.replace(paths=OutputPaths(output_path, run_context.paths.model_path))
 
-    with patch(models_path) as mock_init_models:
+    with (
+        patch(models_path) as mock_init_models,
+        patch(_CALIBRATION_METADATA_PATH, return_value={}),
+    ):
         mock_telescope_model = Mock()
         mock_telescope_model.configuration_writers = {"sim_telarray": Mock()}
         mock_site_model = Mock()

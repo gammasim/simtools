@@ -136,6 +136,7 @@ class ApplicationDefinition:
         if defer_required_validation:
             self._validate_required_values(args_dict, config_builder.parser)
         args_dict["_metadata_configuration_sources"] = dict(config_builder.config_sources)
+        args_dict["_application_description"] = self._description_line()
         return args_dict
 
     @staticmethod

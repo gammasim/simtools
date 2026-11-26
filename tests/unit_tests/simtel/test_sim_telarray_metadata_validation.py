@@ -2,6 +2,7 @@
 
 import pytest
 
+from simtools.data_model import parameter_catalog as catalog
 from simtools.simtel import sim_telarray_metadata
 
 
@@ -11,6 +12,21 @@ def test_get_meta_parameter_registry_uses_generated_and_model_parameter_sources(
     assert registry["simtools_version"]["source_type"] == "generated"
     assert registry["random_mono_prob"]["source_type"] == "model_parameter"
     assert registry["simzen"]["source_type"] == "ctao_datamodel"
+
+
+def test_get_meta_parameter_registry_exports_model_parameter_descriptions():
+    registry = sim_telarray_metadata.get_meta_parameter_registry(source_type="model_parameter")[
+        "meta_parameters"
+    ]
+    schema_descriptions = {
+        " ".join(model_schema["description"].split())
+        for model_schema in catalog.model_parameters().values()
+        if model_schema.get("description")
+    }
+
+    assert registry, "expected model-parameter entries in the registry"
+    assert all(definition.get("description") for definition in registry.values())
+    assert all(definition["description"] in schema_descriptions for definition in registry.values())
 
 
 def test_get_meta_parameter_registry_filters_by_source_type():

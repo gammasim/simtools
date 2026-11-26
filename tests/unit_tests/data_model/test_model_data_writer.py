@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
+import json
 import logging
+import uuid
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -12,6 +14,11 @@ from astropy.table import Table
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
+from simtools.data_model.product_checksum import (
+    embedded_sha256,
+    sha256_of_file,
+    verify_sha256,
+)
 from simtools.io import ascii_handler
 from simtools.io.output_paths import OutputPaths
 from simtools.utils import names
@@ -367,3 +374,106 @@ def test_read_schema_dict(tmp_test_directory):
         mock_schema_file.return_value = Path("test_param.schema.yml")
         with pytest.raises(ValueError, match=r"Schema version 3\.0\.0 not found for test_param"):
             w1._read_schema_dict("test_param", "3.0.0")
+
+
+def test_write_model_parameter_without_metadata_has_unique_id(tmp_test_directory):
+    parameter = writer.ModelDataWriter.write_model_parameter(
+        parameter_name="num_gains",
+        value=1,
+        instrument="LSTN-01",
+        parameter_version="1.1.0",
+        output_file="num_gains.json",
+        output_path=tmp_test_directory,
+        check_for_existing_parameter=False,
+    )
+    assert parameter["unique_id"] is not None
+    assert uuid.UUID(parameter["unique_id"]).version == 7
+    written = json.loads((Path(tmp_test_directory) / "num_gains.json").read_text(encoding="utf-8"))
+    assert written["unique_id"] == parameter["unique_id"]
+
+
+def test_write_model_parameter_dict_json_fills_unique_id(tmp_test_directory):
+    model_writer = writer.ModelDataWriter(output_path=tmp_test_directory)
+    model_writer.write_model_parameter_dict_json(
+        "position.json", {"parameter": "array_element_position_ground", "unique_id": None}
+    )
+    written = json.loads((Path(tmp_test_directory) / "position.json").read_text(encoding="utf-8"))
+    assert uuid.UUID(written["unique_id"]).version == 7
+
+
+def test_write_model_parameter_metadata_describes_parameter_schema(tmp_test_directory):
+    writer.ModelDataWriter.write_model_parameter(
+        parameter_name="altitude",
+        value=2100.0,
+        unit="m",
+        instrument="OBS-North",
+        parameter_version="9.9.9",
+        output_file="altitude-9.9.9.json",
+        output_path=tmp_test_directory,
+        metadata_input_dict={"label": "test", "site": "North"},
+        check_for_existing_parameter=False,
+    )
+    metadata_file = next(Path(tmp_test_directory).glob("altitude-9.9.9*.meta.yml"))
+    product = ascii_handler.collect_data_from_file(metadata_file)["cta"]["product"]
+    assert product["data"]["model"]["name"] == "altitude"
+    assert product["data"]["model"]["version"] == "0.1.0"
+    assert product["filename"] == "altitude-9.9.9.json"
+
+
+def test_write_data_ecsv_without_metadata_embeds_cta_block_and_checksum(tmp_test_directory):
+    model_writer = writer.ModelDataWriter(output_path=tmp_test_directory)
+    model_writer.output_file = Path(tmp_test_directory) / "table_no_meta.ecsv"
+    model_writer.write_data(product_data=Table({"pixel": [25, 30, 28]}))
+
+    table = Table.read(model_writer.output_file, format=ascii_format)
+    product = table.meta["cta"]["product"]
+    assert product["format"] == "ecsv"
+    assert product["sha256"] == embedded_sha256(model_writer.output_file)
+    assert verify_sha256(model_writer.output_file)
+    assert not (Path(tmp_test_directory) / "table_no_meta.meta.yml").exists()
+
+
+def test_write_data_json_without_metadata_writes_sidecar_with_checksum(tmp_test_directory):
+    model_writer = writer.ModelDataWriter(output_path=tmp_test_directory)
+    model_writer.output_file = Path(tmp_test_directory) / "dict_no_meta.json"
+    model_writer.write_data(product_data={"value": 5.5})
+
+    sidecar = next(Path(tmp_test_directory).glob("dict_no_meta*.meta.yml"))
+    product = ascii_handler.collect_data_from_file(sidecar)["cta"]["product"]
+    assert product["sha256"] == sha256_of_file(model_writer.output_file)
+    assert verify_sha256(model_writer.output_file, expected=product["sha256"])
+
+
+def test_write_model_parameter_without_metadata_writes_cta_sidecar(tmp_test_directory):
+    writer.ModelDataWriter.write_model_parameter(
+        parameter_name="num_gains",
+        value=1,
+        instrument="LSTN-01",
+        parameter_version="1.1.0",
+        output_file="num_gains.json",
+        output_path=tmp_test_directory,
+        check_for_existing_parameter=False,
+    )
+    sidecar = next(Path(tmp_test_directory).glob("num_gains*.meta.yml"))
+    cta = ascii_handler.collect_data_from_file(sidecar)["cta"]
+    assert cta["product"]["id"] is not None
+    assert cta["product"]["sha256"] == sha256_of_file(Path(tmp_test_directory) / "num_gains.json")
+    assert cta["instrument"]["id"] == "LSTN-01"
+
+
+def test_with_run_context_metadata_fills_only_missing_contact_and_application_entries():
+    run_args = {
+        "user_name": "run user",
+        "user_email": "user@example.org",
+        "user_orcid": None,
+        "_application_description": "Submit a model parameter.",
+        "output_path": "/local/output",
+    }
+
+    filled = writer._with_run_context_metadata({"user_name": "given"}, run_args)
+
+    assert filled == {
+        "user_name": "given",
+        "user_email": "user@example.org",
+        "_application_description": "Submit a model parameter.",
+    }

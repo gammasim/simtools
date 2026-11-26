@@ -11,9 +11,10 @@ from astropy import units as u
 from astropy.table import Table
 
 from simtools.constants import SCHEMA_PATH, SCHEMA_URL
-from simtools.data_model import validate_data
+from simtools.data_model import product_checksum, validate_data
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.job_execution.job import JobSpec
+from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.utils.value_conversion import get_value_as_quantity, get_value_in_unit
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,15 @@ _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
 _OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "model_parameter_set")
+# Job-grid metadata entries that are omitted when not applicable (value None).
+_NOT_APPLICABLE_METADATA_KEYS = (
+    "coordinate_system",
+    "direction_grid_density",
+    "direction_grid_density_unit",
+    "corsika_limits",
+)
+# Row fields holding lookup-table limits; "not available" marks a failed lookup.
+_LOOKUP_ROW_KEYS = ("energy_min_lookup_limit", "lookup_core_scatter_max", "lookup_view_cone_max")
 SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
     """primary azimuth_angle zenith_angle energy_range core_scatter view_cone showers_per_run
     model_version array_layout_name corsika_le_interaction corsika_he_interaction
@@ -66,11 +76,19 @@ def _cast_scalar(value, dtype):
     return str(value) if dtype is str else dtype.type(value).item()
 
 
+def _job_row_value(job_row, name):
+    """Return a job-row value; array layout templates are resolved for the row's model version."""
+    value = job_row.get(name)
+    if name == "array_layout_name" and value is not None:
+        value = resolve_array_layout_name(value, job_row.get("model_version"))
+    return value
+
+
 def _serialize_job_row(job_row):
     """Serialize one job row to the on-disk schema."""
     serialized_row = {}
     for name in JOB_GRID_SCHEMA.columns:
-        value = job_row.get(name)
+        value = _job_row_value(job_row, name)
         if value is None:
             if name in JOB_GRID_SCHEMA.optional_columns:
                 continue
@@ -142,11 +160,18 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     """
     output_path = Path(output_file)
     serialized_rows = [_serialize_job_row(job_row) for job_row in job_rows]
-    metadata = metadata.copy() if metadata else {}
+    metadata = {
+        key: value
+        for key, value in (metadata or {}).items()
+        if not (key in _NOT_APPLICABLE_METADATA_KEYS and value is None)
+    }
     model_metadata = metadata.setdefault("cta", {}).setdefault("product", {}).setdefault("data", {})
     model_metadata.setdefault("model", {})["url"] = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
+    metadata["cta"]["product"][product_checksum.SHA256_KEY] = product_checksum.CHECKSUM_PLACEHOLDER
     metadata["job_grid_format_version"] = JOB_GRID_SCHEMA.version
-    metadata["job_grid_summary"] = build_job_grid_summary(job_rows)
+    metadata["job_grid_summary"] = build_job_grid_summary(
+        job_rows, lookup_configured=bool(metadata.get("corsika_limits"))
+    )
 
     if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
@@ -174,6 +199,7 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     output_table = _validate_job_grid_table(output_table)
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
+    product_checksum.write_embedded_sha256(output_path)
 
 
 def read_job_grid(input_file):
@@ -500,8 +526,21 @@ def _summary_integer_text(values):
     return f"[{min_value:d}, {max_value:d}]"
 
 
-def build_job_grid_summary(rows):
-    """Build a user-facing summary of generated job-grid values."""
+def build_job_grid_summary(rows, lookup_configured=False):
+    """Build a user-facing summary of generated job-grid values.
+
+    Energies are always reported in GeV, core scatter in m and view cones in deg, so the
+    summary does not depend on the units of the input rows. A field without any value is
+    ``None`` (not applicable), except lookup-table limits: when a lookup table is configured,
+    a missing lookup limit is reported as ``"not available"`` (lookup failed).
+
+    Parameters
+    ----------
+    rows : list[dict]
+        Job rows in the in-memory schema.
+    lookup_configured : bool, optional
+        True if the job grid was generated with a lookup table (``corsika_limits``).
+    """
     if not rows:
         return {"simulation_rows": 0, "total_showers": 0}
 
@@ -511,23 +550,27 @@ def build_job_grid_summary(rows):
     ]
 
     def text(key, summary_unit=None):
-        return format_quantity_field(rows, key, summary_unit)
+        if any(row.get(key) is not None for row in rows):
+            return format_quantity_field(rows, key, summary_unit)
+        if key in _LOOKUP_ROW_KEYS and lookup_configured:
+            return "not available"
+        return None
 
     return {
         "simulation_rows": len(rows),
-        "energy_min_used": text("energy_min"),
-        "energy_max_used": text("energy_max"),
-        "energy_min_configured": text("configured_energy_min"),
-        "energy_max_configured": text("configured_energy_max"),
+        "energy_min_used": text("energy_min", u.GeV),
+        "energy_max_used": text("energy_max", u.GeV),
+        "energy_min_configured": text("configured_energy_min", u.GeV),
+        "energy_max_configured": text("configured_energy_max", u.GeV),
         "energy_min_lookup_limit": text("energy_min_lookup_limit", u.GeV),
-        "core_scatter_max_used": text("core_scatter_max"),
-        "core_scatter_max_configured": text("configured_core_scatter_max"),
-        "core_scatter_max_lookup_limit": text("lookup_core_scatter_max"),
-        "view_cone_min_used": text("view_cone_min"),
-        "view_cone_max_used": text("view_cone_max"),
-        "view_cone_min_configured": text("configured_view_cone_min"),
-        "view_cone_max_configured": text("configured_view_cone_max"),
-        "view_cone_max_lookup_limit": text("lookup_view_cone_max"),
+        "core_scatter_max_used": text("core_scatter_max", u.m),
+        "core_scatter_max_configured": text("configured_core_scatter_max", u.m),
+        "core_scatter_max_lookup_limit": text("lookup_core_scatter_max", u.m),
+        "view_cone_min_used": text("view_cone_min", u.deg),
+        "view_cone_max_used": text("view_cone_max", u.deg),
+        "view_cone_min_configured": text("configured_view_cone_min", u.deg),
+        "view_cone_max_configured": text("configured_view_cone_max", u.deg),
+        "view_cone_max_lookup_limit": text("lookup_view_cone_max", u.deg),
         "showers_per_run_min": min(showers_per_run_values),
         "showers_per_run_max": max(showers_per_run_values),
         "showers_per_run_used": _summary_integer_text(showers_per_run_values),

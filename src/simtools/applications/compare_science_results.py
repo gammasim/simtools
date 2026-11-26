@@ -9,6 +9,7 @@ to the output path.
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.data_model.metadata_collector import MetadataCollector, write_sidecar_metadata
 from simtools.science_tests import telescope_throughput as throughput
 from simtools.visualization import plot_science_comparison as plots
 from simtools.visualization.visualize import pdf_report
@@ -85,7 +86,8 @@ def main():
         baselines = throughput.load_results(args[_BASELINE_PATH])
         candidates = throughput.load_results(args[_CANDIDATE_PATH])
         tolerances = throughput.parse_tolerances(args[_TOLERANCE])
-        with pdf_report(output / _REPORT_FILE) as pdf_pages:
+        report_metadata = MetadataCollector(args, context=context).get_top_level_metadata()
+        with pdf_report(output / _REPORT_FILE, metadata=report_metadata) as pdf_pages:
             for telescope in args[_TELESCOPES] or sorted(set(baselines) | set(candidates)):
                 result[_COMPARISONS][telescope] = _compare_telescope(
                     telescope, baselines, candidates, tolerances, args, pdf_pages
@@ -100,6 +102,7 @@ def main():
     if result[_COMPARISONS] and not result[_DIAGNOSTICS]:
         result[_STATUS] = throughput.COMPLETE
     throughput.write_json(output / "science-comparison.json", result)
+    write_sidecar_metadata(output / "science-comparison.json", context=context)
 
 
 def _compare_telescope(telescope, baselines, candidates, tolerances, args, pdf_pages):

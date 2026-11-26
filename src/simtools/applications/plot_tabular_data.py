@@ -6,6 +6,8 @@ Model parameter mode (``--parameter``) plots a model parameter using the plottin
 configurations defined in its schema file.
 """
 
+from pathlib import Path
+
 import simtools.utils.general as gen
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -105,20 +107,17 @@ def _plot_data_file(app_context):
             {"__SETTING_WORKFLOW__": setting_workflow},
         )
 
+    output_path = app_context.paths.get_output_file(output_file)
+    metadata = MetadataCollector(app_context.args, context=app_context)
     plot_tables.plot(
         config=plot_config["plot"],
-        output_file=app_context.paths.get_output_file(output_file),
+        output_file=output_path,
         data_path=app_context.args.get("data_search_path"),
         model_reader=app_context.model_reader,
         context=app_context,
+        metadata=metadata.get_top_level_metadata(),
     )
-
-    MetadataCollector.dump(
-        app_context.args,
-        app_context.paths.get_output_file(output_file),
-        add_activity_name=True,
-        context=app_context,
-    )
+    metadata.write(output_path, add_activity_name=True)
 
 
 def _plot_model_parameter(app_context):
@@ -138,15 +137,17 @@ def _plot_model_parameter(app_context):
     )
 
     for plot_config, output_file in zip(plot_configs, output_files):
+        metadata = MetadataCollector(
+            {**app_context.args, "output_file": Path(output_file).name}, context=app_context
+        )
         plot_tables.plot(
             config=plot_config,
             output_file=output_file,
             model_reader=app_context.model_reader,
             context=app_context,
+            metadata=metadata.get_top_level_metadata(),
         )
-        MetadataCollector.dump(
-            app_context.args, output_file=output_file, add_activity_name=True, context=app_context
-        )
+        metadata.write(output_file, add_activity_name=True)
 
 
 if __name__ == "__main__":

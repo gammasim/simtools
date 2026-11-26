@@ -7,13 +7,30 @@ import packaging.version
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
-from simtools.data_model import schema, validate_data
+from simtools.data_model import product_checksum, schema, validate_data
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler
 from simtools.io.output_paths import OutputPaths
 from simtools.runtime.context import RunContext
 from simtools.utils import names, value_conversion
+
+# run-context arguments that identify the producer and the application of a data product
+_RUN_CONTEXT_METADATA_KEYS = (
+    "user_name",
+    "user_email",
+    "user_orcid",
+    "user_organization",
+    "_application_description",
+)
+
+
+def _with_run_context_metadata(metadata_input_dict, run_args):
+    """Fill missing contact and application entries from the run-context arguments."""
+    for key in _RUN_CONTEXT_METADATA_KEYS:
+        if metadata_input_dict.get(key) is None and run_args.get(key) is not None:
+            metadata_input_dict[key] = run_args[key]
+    return metadata_input_dict
 
 
 class ModelDataWriter:
@@ -175,33 +192,35 @@ class ModelDataWriter:
             output_file, output_path_label=writer.output_label
         )
 
-        unique_id = None
-        metadata = None
-        if metadata_input_dict is not None:
-            metadata_input_dict = dict(metadata_input_dict)
-            metadata_input_dict["output_file"] = Path(output_file).name
-            metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
-            if metadata_input_dict.get("activity_id") is None:
-                activity_id = gen.extract_uuid7_from_path(output_file)
-                if activity_id is not None:
-                    metadata_input_dict["activity_id"] = activity_id
-            metadata = MetadataCollector(args_dict=metadata_input_dict, context=context)
-            unique_id = (
-                metadata.get_top_level_metadata().get("cta", {}).get("product", {}).get("id")
-            )
+        metadata_input_dict = _with_run_context_metadata(
+            dict(metadata_input_dict or {}), writer.context.args
+        )
+        metadata_input_dict.setdefault("instrument", instrument)
+        metadata_input_dict["output_file"] = Path(output_file).name
+        metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
+        if metadata_input_dict.get("activity_id") is None:
+            activity_id = gen.extract_uuid7_from_path(output_file)
+            if activity_id is not None:
+                metadata_input_dict["activity_id"] = activity_id
+        metadata = MetadataCollector(
+            args_dict=metadata_input_dict,
+            model_parameter_name=parameter_name,
+            context=context,
+        )
+        unique_id = metadata.get_top_level_metadata().get("cta", {}).get("product", {}).get("id")
 
         _json_dict = writer.get_validated_parameter_dict(
             parameter_name,
             value,
             instrument,
             parameter_version,
-            unique_id,
+            unique_id or gen.get_uuid(),
             model_parameter_schema_version=model_parameter_schema_version,
             unit=unit,
         )
         output_file = writer.write_model_parameter_dict_json(output_file, _json_dict)
-        if metadata is not None:
-            metadata.write(output_file)
+        metadata.set_product_checksum(product_checksum.sha256_of_file(output_file))
+        metadata.write(output_file)
         return _json_dict
 
     def check_for_existing_parameter(self, parameter_name, instrument, parameter_version):
@@ -486,11 +505,26 @@ class ModelDataWriter:
         if product_data is None:
             return
 
-        if metadata is not None:
-            product_data.meta.update(
-                value_conversion.change_dict_keys_case(metadata.get_top_level_metadata(), True)
+        explicit_metadata = metadata is not None
+        if metadata is None:
+            metadata = self._default_metadata()
+        is_ecsv = Path(self.output_file).suffix == ".ecsv" and not isinstance(product_data, dict)
+        if is_ecsv:
+            metadata.set_product_checksum(product_checksum.CHECKSUM_PLACEHOLDER)
+        if explicit_metadata or is_ecsv:
+            self._embed_metadata(product_data, metadata)
+
+        self._write_product_data(product_data)
+        self._store_checksum(metadata, is_ecsv)
+        # embedded metadata (ecsv) is written with the data; sidecars otherwise
+        if explicit_metadata or not is_ecsv:
+            metadata.write(
+                metadata_output_file or self.output_file,
+                add_activity_name=True,
             )
 
+    def _write_product_data(self, product_data):
+        """Write product data (table or model-parameter dictionary) to the output file."""
         self._logger.info(f"Writing data to {self.output_file}")
         if isinstance(product_data, dict) and Path(self.output_file).suffix == ".json":
             self.write_model_parameter_dict_json(self.output_file, product_data)
@@ -500,11 +534,34 @@ class ModelDataWriter:
         except IORegistryError:
             self._logger.error(f"Error writing model data to {self.output_file}.")
             raise
-        if metadata is not None:
-            metadata.write(
-                metadata_output_file or self.output_file,
-                add_activity_name=True,
-            )
+
+    def _store_checksum(self, metadata, is_ecsv):
+        """Compute the checksum of the written file and store it in the metadata."""
+        if is_ecsv:
+            metadata.set_product_checksum(product_checksum.write_embedded_sha256(self.output_file))
+        else:
+            metadata.set_product_checksum(product_checksum.sha256_of_file(self.output_file))
+
+    def _default_metadata(self):
+        """Return metadata collected from the run context for the output file."""
+        output_file = Path(self.output_file)
+        return MetadataCollector(
+            args_dict={
+                **self.context.args,
+                "output_file": output_file.name,
+                "output_file_format": output_file.suffix.lstrip("."),
+            },
+            context=self.context,
+        )
+
+    @staticmethod
+    def _embed_metadata(product_data, metadata):
+        """Embed the top-level metadata in the table meta (dictionaries carry no meta)."""
+        if isinstance(product_data, dict):
+            return
+        product_data.meta.update(
+            value_conversion.change_dict_keys_case(metadata.get_top_level_metadata(), True)
+        )
 
     def write_model_parameter_dict_json(self, file_name, data_dict):
         """
@@ -527,6 +584,8 @@ class ModelDataWriter:
         Path
             Resolved output file path.
         """
+        if "unique_id" in data_dict and data_dict["unique_id"] is None:
+            data_dict["unique_id"] = gen.get_uuid()
         data_dict = ModelDataWriter.prepare_data_dict_for_writing(data_dict)
         output_file = self.io_handler.get_output_file(
             file_name, output_path_label=self.output_label

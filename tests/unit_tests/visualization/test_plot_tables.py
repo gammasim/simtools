@@ -40,8 +40,21 @@ def test_plot(mock_read_table_data, mock_visualize, run_context):
     )
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
     mock_visualize.save_figure.assert_called_once_with(
-        mock_fig, output_file, close=True, context=run_context
+        mock_fig, output_file, close=True, context=run_context, metadata=None
     )
+
+
+@mock.patch("simtools.visualization.plot_tables.visualize")
+@mock.patch("simtools.visualization.plot_tables.read_table_data")
+def test_plot_passes_metadata_to_save_figure(mock_read_table_data, mock_visualize, run_context):
+    config = {"tables": []}
+    metadata = {"cta": {"product": {"format": "png"}}}
+    mock_read_table_data.return_value = {}
+    mock_visualize.plot_1d.return_value = mock.MagicMock()
+
+    plot_tables.plot(config, "output.png", context=run_context, metadata=metadata)
+
+    assert mock_visualize.save_figure.call_args.kwargs["metadata"] == metadata
 
 
 def test_select_values_from_table_accepts_unitless_schema_value_for_unit_column():

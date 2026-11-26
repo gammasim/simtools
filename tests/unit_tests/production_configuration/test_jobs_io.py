@@ -6,7 +6,8 @@ import pytest
 from astropy.table import Table
 
 import simtools.applications.simulate_prod as app
-from simtools.constants import SCHEMA_PATH
+from simtools.constants import SCHEMA_PATH, SIMTOOLS_SCHEMA_REF
+from simtools.data_model import product_checksum
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration import jobs_io
 
@@ -88,6 +89,18 @@ def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_direct
     assert "overwrite_model_parameters" not in read_rows[0]
     assert read_rows[1]["overwrite_model_parameters"] == "overwrite file.yaml"
     assert read_rows[1]["scan_label"] == "asum220"
+
+
+def test_serialize_job_grid_embeds_verifiable_checksum(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+
+    jobs_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
+
+    stored = product_checksum.embedded_sha256(output_file)
+    assert stored is not None
+    assert stored != product_checksum.CHECKSUM_PLACEHOLDER
+    assert product_checksum.verify_sha256(output_file, expected=stored)
+    assert Table.read(output_file, format="ascii.ecsv").meta["cta"]["product"]["sha256"] == stored
 
 
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
@@ -342,3 +355,89 @@ def test_parameter_scan_overwrites_assign_merge_or_skip(row_updates, expected):
     args = jobs_io.job_grid_row_to_simulate_prod_args({**_job_rows()[0], **row_updates}, metadata)
 
     assert args.get("overwrite_model_parameters") == expected
+
+
+def test_serialize_job_grid_resolves_array_layout_by_version(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid_by_version.ecsv"
+    rows = _job_rows()
+    rows[0]["array_layout_name"] = {
+        "by_version": {"<7.0.0": "LSTN-01", ">=7.0.0": "CTAO-North-Alpha"}
+    }
+
+    jobs_io.serialize_job_grid(rows, output_file, metadata=_metadata())
+
+    assert Table.read(output_file, format="ascii.ecsv")["array_layout_name"][0] == (
+        "CTAO-North-Alpha"
+    )
+
+
+def test_serialize_job_grid_omits_not_applicable_metadata(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid_null_metadata.ecsv"
+    metadata = {
+        **_metadata(),
+        "coordinate_system": None,
+        "direction_grid_density": None,
+        "direction_grid_density_unit": None,
+        "corsika_limits": None,
+    }
+
+    jobs_io.serialize_job_grid(_job_rows(), output_file, metadata=metadata)
+    output_meta = Table.read(output_file, format="ascii.ecsv").meta
+
+    assert output_meta["site"] == "North"
+    assert not {
+        "coordinate_system",
+        "direction_grid_density",
+        "direction_grid_density_unit",
+        "corsika_limits",
+    } & set(output_meta)
+
+
+def test_build_job_grid_summary_reports_energies_in_gev():
+    rows = [
+        {**_job_rows()[0], "energy_max": 10 * u.TeV},
+        {**_job_rows()[0], "energy_max": 5 * u.GeV},
+    ]
+
+    summary = jobs_io.build_job_grid_summary(rows)
+
+    assert summary["energy_max_used"] == "[5, 10000] GeV"
+    assert summary["energy_min_used"] == "30 GeV"
+
+
+def test_build_job_grid_summary_lookup_fields_none_or_not_available():
+    rows = _job_rows()
+
+    without_lookup = jobs_io.build_job_grid_summary(rows, lookup_configured=False)
+    with_lookup = jobs_io.build_job_grid_summary(rows, lookup_configured=True)
+
+    assert without_lookup["energy_min_lookup_limit"] is None
+    assert without_lookup["core_scatter_max_lookup_limit"] is None
+    assert without_lookup["view_cone_max_lookup_limit"] is None
+    assert with_lookup["energy_min_lookup_limit"] == "not available"
+    assert with_lookup["core_scatter_max_lookup_limit"] == "not available"
+    assert with_lookup["view_cone_max_lookup_limit"] == "not available"
+
+
+def test_build_job_grid_summary_reports_found_lookup_limits():
+    rows = [{**_job_rows()[0], "lookup_core_scatter_max": 1000 * u.m}]
+
+    summary = jobs_io.build_job_grid_summary(rows, lookup_configured=True)
+
+    assert summary["core_scatter_max_lookup_limit"] == "1000 m"
+    assert summary["view_cone_max_lookup_limit"] == "not available"
+
+
+def test_serialize_job_grid_links_schema_pinned_to_release(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid_schema_url.ecsv"
+
+    jobs_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
+    url = Table.read(output_file, format="ascii.ecsv").meta["cta"]["product"]["data"]["model"][
+        "url"
+    ]
+
+    assert url == (
+        f"https://raw.githubusercontent.com/gammasim/simtools/{SIMTOOLS_SCHEMA_REF}"
+        "/src/simtools/schemas/job_grid_density.schema.yml"
+    )
+    assert "/main/" not in url

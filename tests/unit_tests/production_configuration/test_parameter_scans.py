@@ -1,13 +1,15 @@
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import astropy.units as u
 import pytest
 import yaml
 from astropy.table import Table
 from jsonschema.exceptions import ValidationError
 
+from simtools.data_model import product_checksum
 from simtools.io.output_paths import OutputPaths
-from simtools.production_configuration import parameter_scans
+from simtools.production_configuration import jobs_io, parameter_scans
 
 _MODULE = "simtools.production_configuration.parameter_scans"
 _OVERWRITE_BASE = {
@@ -40,6 +42,29 @@ def _base_args(tmp_test_directory):
         "trigger_thresholds": None,
         "output_path": str(Path(tmp_test_directory) / "bias_curves"),
     }
+
+
+def _base_job_rows():
+    return [
+        {
+            "run_number": 1,
+            "primary": "gamma",
+            "azimuth_angle": 45 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "energy_min": 30 * u.GeV,
+            "energy_max": 10 * u.TeV,
+            "cores_per_shower": 10,
+            "core_scatter_max": 200 * u.m,
+            "view_cone_min": 0 * u.deg,
+            "view_cone_max": 5 * u.deg,
+            "showers_per_run": 1000,
+            "nsb_rate": 0.24,
+            "model_version": "7.0.0",
+            "array_layout_name": "LSTN-01",
+            "corsika_le_interaction": "urqmd",
+            "corsika_he_interaction": "epos",
+        }
+    ]
 
 
 def _run_expansion(tmp_test_directory, scan_config):
@@ -192,6 +217,10 @@ def test_expand_job_grid_with_scan_validates_configuration(tmp_test_directory):
                 "job_grid_summary",
                 "job_grid_format_version",
             },
+        ),
+        (
+            {"cta": {"product": {}}, "coordinate_system": None, "some_other_key": 1},
+            {"cta", "coordinate_system"},
         ),
         ({"some_other_key": "value", "random_key": 456}, set()),
     ],
@@ -363,3 +392,45 @@ def test_validate_required_args_rejects_missing_required_argument(tmp_test_direc
     args["site"] = ""
     with pytest.raises(ValueError, match="Missing required argument: --site"):
         parameter_scans.generate_scan_grids(args, Mock())
+
+
+def test_expand_job_grid_with_scan_keeps_base_grid_metadata(tmp_test_directory):
+    base_metadata = {
+        "site": "North",
+        "coordinate_system": "ha_dec",
+        "cta": {"product": {"data": {"model": {"url": "https://example.org/schema.yml"}}}},
+    }
+    scan_config_path = Path(tmp_test_directory) / "scan_config.yml"
+    scan_config_path.write_text(
+        yaml.safe_dump(
+            _scan_config(
+                {
+                    "overwrite": {**_OVERWRITE_BASE, "changes": {}},
+                    "parameters": [
+                        {
+                            "name": "dsum_threshold",
+                            "path": "changes.LSTN-01.dsum_threshold",
+                            "values": [22, 23],
+                            "label": "dsum",
+                            "label_separator": "",
+                        }
+                    ],
+                }
+            )
+        ),
+        encoding="utf-8",
+    )
+    base_grid = Path(tmp_test_directory) / "base_grid.ecsv"
+    jobs_io.serialize_job_grid(_base_job_rows(), base_grid, metadata=base_metadata)
+    scan_grid = Path(tmp_test_directory) / "scan_grid.ecsv"
+
+    parameter_scans.expand_job_grid_with_scan(base_grid, scan_config_path, scan_grid)
+    scan_meta = Table.read(scan_grid, format="ascii.ecsv").meta
+
+    base_cta = Table.read(base_grid, format="ascii.ecsv").meta["cta"]
+    scan_cta = dict(scan_meta["cta"])
+    assert scan_cta["product"].pop("sha256") != base_cta["product"].pop("sha256")
+    assert scan_cta == base_cta
+    assert product_checksum.verify_sha256(scan_grid)
+    assert scan_meta["coordinate_system"] == "ha_dec"
+    assert set(scan_meta["model_parameter_sets"]) == {"dsum22", "dsum23"}

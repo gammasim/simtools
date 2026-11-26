@@ -19,8 +19,9 @@ from astropy.table import Table
 
 import simtools.utils.general as gen
 import simtools.version
-from simtools.constants import METADATA_JSON_SCHEMA
-from simtools.data_model import metadata_model, schema, schema_loader
+from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH, SCHEMA_URL
+from simtools.data_model import metadata_model, product_checksum, schema, schema_loader
+from simtools.data_model.product_checksum import SHA256_KEY
 from simtools.io import ascii_handler
 from simtools.io.file_type import product_suffixes
 from simtools.runtime.context import RunContext
@@ -41,6 +42,24 @@ _FORMAT_READERS = {
     "sim_telarray_output": "simtools.simtel.metadata_reader",
     "corsika_output": "simtools.sim_events.metadata_reader",
 }
+# application arguments that point to the local file system (never written to metadata)
+_LOCAL_PATH_ARGUMENTS = frozenset(
+    {
+        "data_path",
+        "data_search_path",
+        "env_file",
+        "grid_output_path",
+        "log_file",
+        "log_file_path",
+        "output_path",
+        "runtime_environment_file",
+        "simulation_models_git_path",
+        "simulation_models_path",
+        "value_data_path",
+    }
+)
+# instrument classes of array element collections (see array_elements.yml)
+_INSTRUMENT_CLASSES = {"telescopes": "telescope", "calibration_devices": "calibration_device"}
 
 
 class MetadataCollector:
@@ -90,6 +109,9 @@ class MetadataCollector:
         self.collect_meta_data()
         if clean_meta:
             self.top_level_meta = self.clean_meta_data(self.top_level_meta)
+            metadata_model.add_required_fields(
+                self.top_level_meta, observatory=self.observatory, schema_version=schema_version
+            )
 
     def collect_meta_data(self):
         """Collect and verify product metadata for each main-level metadata type."""
@@ -102,14 +124,25 @@ class MetadataCollector:
                 self._logger.debug(f"Method _fill_{meta_type}_meta not implemented")
 
     def get_top_level_metadata(self):
-        """Return top level metadata dictionary (with updated activity end time)."""
+        """
+        Return top level metadata dictionary for output.
+
+        The activity end time is updated. Local schema file paths are replaced by the URL
+        of the schema (or removed if the schema is not available from a URL).
+        """
         try:
             self.top_level_meta[self.observatory]["activity"]["end"] = self.args_dict.get(
                 "activity_end", gen.now_date_time_in_isoformat()
             )
         except KeyError:
             pass
-        return self.top_level_meta
+        metadata = deepcopy(self.top_level_meta)
+        model = metadata.get(self.observatory, {}).get("product", {}).get("data", {}).get("model")
+        if model is not None and "url" in model:
+            model["url"] = _data_model_url(model["url"])
+            if model["url"] is None:
+                model.pop("url")
+        return metadata
 
     @staticmethod
     def dump(args_dict, output_file, add_activity_name=False, context=None):
@@ -121,7 +154,7 @@ class MetadataCollector:
     def write(self, yml_file=None, keys_lower_case=True, add_activity_name=False):
         """Write top level metadata to a yaml file and return its name."""
         metadata = self.get_top_level_metadata()
-        activity_name = metadata.get("cta", {}).get("activity", {}).get("name", "").rstrip(".")
+        activity_name = (metadata.get("cta", {}).get("activity", {}).get("name") or "").rstrip(".")
         suffix = f".{activity_name}.meta.yml" if add_activity_name else ".meta.yml"
         if yml_file is None:
             raise TypeError("No output file for metadata defined")
@@ -141,6 +174,10 @@ class MetadataCollector:
         self._logger.info(f"Writing metadata to {yml_file}")
         return yml_file
 
+    def set_product_checksum(self, sha256):
+        """Set the SHA-256 checksum of the data product (``product.sha256``)."""
+        self.top_level_meta[self.observatory]["product"][SHA256_KEY] = sha256
+
     def get_data_model_schema_file_name(self):
         """Return data model schema file name (command line, metadata, model name, input)."""
         if self.args_dict.get("schema_file"):
@@ -156,8 +193,15 @@ class MetadataCollector:
             pass
 
         if self.model_parameter_name:
-            self._logger.debug(f"Schema file from data model name: {self.model_parameter_name}")
-            return str(schema.get_model_parameter_schema_file(self.model_parameter_name))
+            try:
+                schema_file = str(schema.get_model_parameter_schema_file(self.model_parameter_name))
+            except FileNotFoundError:
+                self._logger.debug(
+                    f"No schema file for model parameter {self.model_parameter_name}"
+                )
+            else:
+                self._logger.debug(f"Schema file from data model name: {self.model_parameter_name}")
+                return schema_file
 
         try:
             url = self.input_metadata[0][self.observatory]["product"]["data"]["model"]["url"]
@@ -246,7 +290,11 @@ class MetadataCollector:
         """Add the resolved, sanitized application configuration to the context."""
         if "application_configuration" not in context_dict:
             return
-        arguments = {key: value for key, value in self.args_dict.items() if not key.startswith("_")}
+        arguments = {
+            key: value
+            for key, value in self.args_dict.items()
+            if not key.startswith("_") and not _is_local_path_argument(key, value)
+        }
         context_dict["application_configuration"] = {
             "schema_version": "2.0.0",
             "application": self.args_dict.get("application_label") or self.args_dict.get("label"),
@@ -342,11 +390,7 @@ class MetadataCollector:
         cta["product"].update({"filename": str(metadata_file_name), "format": format_name})
         cta["product"]["data"].update({"category": "SIM", "type": "Event"})
         cta["instrument"].update(
-            {
-                "site": fields.get("site"),
-                "class": "array" if instrument_id else None,
-                "id": instrument_id,
-            }
+            _non_empty_fields(_instrument_fields(fields.get("site"), instrument_id))
         )
         cta["process"]["type"] = "simulation"
         software = {"name": fields["software_name"], "version": fields["software_version"]}
@@ -385,44 +429,55 @@ class MetadataCollector:
         return _input_metadata
 
     def _fill_product_meta(self, product_dict):
-        """Fill data product fields (product:data:model from the schema file, if given)."""
+        """
+        Fill data product fields.
+
+        Data model fields (name, version, url) come from the schema file if one is known;
+        otherwise they are left empty (no placeholder values). The product description is
+        the description of the application (if known), otherwise the schema description.
+        """
         self.schema_file = self.get_data_model_schema_file_name()
         self.schema_dict = self.get_data_model_schema_dict()
         model = product_dict["data"]["model"]
         product_dict["id"] = gen.get_uuid()
         product_dict["creation_time"] = gen.now_date_time_in_isoformat()
-        product_dict["description"] = self.schema_dict.get("description", None)
+        description = self.args_dict.get("_application_description") or self.schema_dict.get(
+            "description"
+        )
+        product_dict["description"] = " ".join(description.split()) if description else None
         product_dict["data"].update({"category": "SIM", "level": "R1", "type": "Service"})
         try:
             product_dict["data"]["association"] = self.schema_dict["instrument"]["class"]
         except KeyError:
             pass
-        model["name"] = (
-            self.schema_dict.get("name")
-            or self.args_dict.get("metadata_product_data_name")
-            or "undefined_model_name"
+        model["name"] = self.schema_dict.get("name") or self.args_dict.get(
+            "metadata_product_data_name"
         )
-        model["version"] = self.schema_dict.get("schema_version", "0.0.0")
+        model["version"] = self.schema_dict.get("schema_version")
         model["type"] = self.schema_dict.get("meta_schema", None)
         model["url"] = self.schema_file or self.args_dict.get("metadata_product_data_url")
-        product_dict["filename"] = str(self.args_dict.get("output_file", ""))
+        file_name = self.args_dict.get("output_file")
+        product_dict["filename"] = Path(file_name).name if file_name else None
         product_dict["format"] = (
             self.args_dict.get("output_file_format")
-            or Path(product_dict["filename"]).suffix.lstrip(".")
+            or (Path(file_name).suffix.lstrip(".") if file_name else None)
             or None
         )
 
     def _fill_instrument_meta(self, instrument_dict):
-        """Fill instrument fields ('ID' comes from 'instrument' or 'telescope')."""
-        instrument_dict["site"] = self.args_dict.get("site")
-        instrument_dict["ID"] = self.args_dict.get("instrument") or self.args_dict.get("telescope")
-        if instrument_dict["ID"]:
-            instrument_dict["class"] = names.get_collection_name_from_array_element_name(
-                instrument_dict["ID"], False
-            )
-            instrument_dict["type"] = instrument_dict.get("type") or (
-                names.get_array_element_type_from_name(instrument_dict["ID"])
-            )
+        """
+        Fill instrument fields (site, class, type, id).
+
+        The instrument is taken from 'instrument' or 'telescope'; without either, a site
+        is the instrument 'OBS-<site>'.
+        """
+        site = self.args_dict.get("site")
+        instrument_name = self.args_dict.get("instrument") or self.args_dict.get("telescope")
+        if instrument_name is None and site is not None:
+            instrument_name = f"OBS-{site}"
+        instrument_dict.update(
+            _non_empty_fields(_instrument_fields(site=site, instrument_name=instrument_name))
+        )
 
     def _fill_process_meta(self, process_dict):
         """Fill process fields in metadata."""
@@ -435,7 +490,7 @@ class MetadataCollector:
             {
                 "name": self.args_dict.get("label") or self.context.activity.activity_name,
                 "type": "software",
-                "id": self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID"),
+                "id": self.args_dict.get("activity_id") or self.context.activity.activity_id,
                 "start": start,
                 "end": self.args_dict.get("activity_end", start),
             }
@@ -499,6 +554,108 @@ class MetadataCollector:
             if not isinstance(value, (dict, list)) or value:
                 cleaned[key] = value
         return cleaned
+
+
+def write_sidecar_metadata(data_file, args_dict=None, context=None):
+    """
+    Write the metadata sidecar (``*.meta.yml``) and SHA-256 checksum of a data product.
+
+    Use for products that cannot embed their metadata (e.g., yml, json, png). The data
+    file must already be written.
+
+    Parameters
+    ----------
+    data_file: str or Path
+        Data product file.
+    args_dict: dict, optional
+        Application arguments (default: the arguments of the run context).
+    context: RunContext, optional
+        Run context.
+
+    Returns
+    -------
+    str or Path
+        Name of the sidecar metadata file.
+    """
+    data_file = Path(data_file)
+    context = context or RunContext.from_environment()
+    args = args_dict if args_dict is not None else context.args
+    metadata = MetadataCollector(
+        args_dict={
+            **args,
+            "output_file": data_file.name,
+            "output_file_format": data_file.suffix.lstrip("."),
+        },
+        context=context,
+    )
+    metadata.set_product_checksum(product_checksum.sha256_of_file(data_file))
+    return metadata.write(data_file)
+
+
+def _instrument_fields(site, instrument_name):
+    """
+    Return site, class, type and id of an instrument.
+
+    Array elements (e.g. LSTN-01) give class 'telescope' or 'calibration_device' and their
+    array element type (e.g. LSTN). Site names and 'OBS-<site>' give class 'site'. Other
+    names (e.g. array configurations) give class 'array'.
+    """
+    fields = {"site": site, "class": None, "type": None, "id": instrument_name or None}
+    if not instrument_name:
+        return fields
+    try:
+        collection = names.get_collection_name_from_array_element_name(instrument_name, False)
+    except ValueError:
+        return {**fields, "class": "array"}
+    if collection == "sites":
+        site_name = names.get_site_from_array_element_name(instrument_name)
+        return {
+            "site": site or site_name,
+            "class": "site",
+            "type": site_name,
+            "id": instrument_name,
+        }
+    if collection not in _INSTRUMENT_CLASSES:
+        return {**fields, "class": "array"}
+    derived_site = names.get_site_from_array_element_name(instrument_name)
+    return {
+        "site": site or (derived_site if isinstance(derived_site, str) else None),
+        "class": _INSTRUMENT_CLASSES[collection],
+        "type": names.get_array_element_type_from_name(instrument_name),
+        "id": instrument_name,
+    }
+
+
+def _non_empty_fields(fields):
+    """Return the entries of a dictionary whose values are not None."""
+    return {key: value for key, value in fields.items() if value is not None}
+
+
+def _data_model_url(schema_file):
+    """
+    Return the URL of a data model schema for the metadata (None for local files).
+
+    Packaged schema files map to their URL in the simtools schema repository; remote
+    URLs are returned unchanged. Other local paths are not written to the metadata.
+    """
+    if schema_file is None:
+        return None
+    text = str(schema_file)
+    if text.startswith(("http://", "https://")):
+        return text
+    try:
+        relative = Path(text).resolve().relative_to(Path(str(SCHEMA_PATH)).resolve())
+    except ValueError:
+        return None
+    return f"{SCHEMA_URL}/{relative.as_posix()}"
+
+
+def _is_local_path_argument(key, value):
+    """Return True for arguments that refer to a local file system location."""
+    if key in _LOCAL_PATH_ARGUMENTS:
+        return True
+    values = value if isinstance(value, (list, tuple)) else [value]
+    return any(isinstance(item, str) and Path(item).is_absolute() for item in values)
 
 
 def _redact_assignment(match):

@@ -1,9 +1,14 @@
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import yaml
 
 import simtools.applications.get_model_parameter as application
+from simtools.data_model import product_checksum
+from simtools.io.output_paths import OutputPaths
+from simtools.runtime.context import RunContext
 
 
 def _export_context(output_path, telescope, output_file):
@@ -142,3 +147,37 @@ def test_run_reads_parameter_from_configured_model_reader(capsys):
     application.run(context)
 
     assert "scalar_parameter" in capsys.readouterr().out
+
+
+def test_run_writes_parameter_file_with_sidecar_metadata(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    args = {
+        "parameter": "scalar_parameter",
+        "site": "North",
+        "telescope": "LSTN-01",
+        "model_version": "6.0.2",
+        "parameter_version": None,
+        "output_file": "scalar_parameter-1.0.0.json",
+        "export_model_file": False,
+        "export_model_file_as_table": False,
+    }
+    context = RunContext.from_arguments(
+        args,
+        model_reader=SimpleNamespace(
+            get_model_parameter=lambda **kwargs: {
+                "scalar_parameter": {"parameter": "scalar_parameter", "value": 42}
+            }
+        ),
+        paths=OutputPaths(output_path=output_path),
+    )
+
+    application.run(context)
+
+    parameter_file = output_path / "scalar_parameter-1.0.0.json"
+    assert json.loads(parameter_file.read_text(encoding="utf-8"))["value"] == 42
+    sidecar = yaml.safe_load(
+        (output_path / "scalar_parameter-1.0.0.meta.yml").read_text(encoding="utf-8")
+    )
+    assert product_checksum.verify_sha256(
+        parameter_file, expected=sidecar["cta"]["product"]["sha256"]
+    )

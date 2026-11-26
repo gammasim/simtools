@@ -13,8 +13,12 @@ from simtools.model.model_utils import export_model_files
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.runtime.context import RunContext
 from simtools.sim_events.formats.readers import get_reader
+from simtools.sim_events.simulation_parameters import CALIBRATION_RUN_MODES
 from simtools.simtel import simtel_seeds, table_serializers
-from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
+from simtools.simtel.sim_telarray_metadata import (
+    get_ctao_simtel_metadata,
+    get_software_versions,
+)
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
@@ -24,6 +28,35 @@ _PRIMARY = "primary"
 _ZENITH_ANGLE = "zenith_angle"
 _AZIMUTH_ANGLE = "azimuth_angle"
 SIMTEL_SOFTWARE = "sim_telarray"
+
+
+def get_calibration_simtel_metadata(args, site_model, context=None):
+    """
+    Return CTAO global metadata for a calibration (light source) sim_telarray run.
+
+    Parameters
+    ----------
+    args : Mapping
+        Application arguments of the run.
+    site_model : SiteModel
+        Site model of the run.
+    context : RunContext, optional
+        Run context providing the software installations.
+
+    Returns
+    -------
+    dict
+        CTAO sim_telarray metadata for calibration runs.
+    """
+    return get_ctao_simtel_metadata(
+        {
+            **dict(args),
+            "site": args.get("site") or site_model.site,
+            **get_software_versions(context),
+        },
+        site_model=site_model,
+        calibration=True,
+    )
 
 
 class SimtelModelWriter:
@@ -45,7 +78,9 @@ class SimtelModelWriter:
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
 
-    def write_sim_telarray_config_file(self, additional_models=None, label=None):
+    def write_sim_telarray_config_file(
+        self, additional_models=None, label=None, global_metadata=None
+    ):
         """
         Write the sim_telarray configuration file.
 
@@ -55,6 +90,8 @@ class SimtelModelWriter:
             Model object for additional parameter to be written to the config file.
         label: str or None
             Optional label override used for output file naming.
+        global_metadata: dict or None
+            Global sim_telarray metadata (``metaparam global set``) written to the file.
         """
         parameters = self.model.parameters.copy()
         software_parameters = self.model.get_simulation_software_parameters(SIMTEL_SOFTWARE) or {}
@@ -75,6 +112,7 @@ class SimtelModelWriter:
         self.config_writer.write_telescope_config_file(
             config_file_path=self.model.config_file_path,
             parameters=parameters,
+            global_metadata=global_metadata,
         )
         return self.model.config_file_path
 
@@ -287,7 +325,16 @@ class SimtelModelWriter:
                     value.to_value(u.deg) if hasattr(value, "to_value") else value
                 )
         if args.get(_PRIMARY) is not None:
-            metadata.update(get_ctao_simtel_metadata(args, site_model=self.model.site_model))
+            metadata.update(
+                get_ctao_simtel_metadata(
+                    {**args, **get_software_versions(self.context)},
+                    site_model=self.model.site_model,
+                )
+            )
+        elif args.get("run_mode") in CALIBRATION_RUN_MODES:
+            metadata.update(
+                get_calibration_simtel_metadata(args, self.model.site_model, self.context)
+            )
         return metadata
 
     def write_config_file(self, additional_models=None, label=None):

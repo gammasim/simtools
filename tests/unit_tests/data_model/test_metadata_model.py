@@ -94,3 +94,12 @@ def test_fill_defaults():
 
     with pytest.raises(KeyError, match=r"Missing 'properties' key in schema\."):
         metadata_model._fill_defaults(schema)
+
+
+def test_add_required_fields():
+    metadata = metadata_model.add_required_fields({"cta": {"product": {"format": "json"}}})
+
+    assert metadata["cta"]["product"]["format"] == "json"
+    assert metadata["cta"]["product"]["data"]["model"] == {"name": None, "version": None}
+    assert metadata["cta"]["instrument"] == {"class": None, "id": None, "site": None, "type": None}
+    assert metadata["cta"]["contact"] == {"name": None}

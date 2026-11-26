@@ -21,6 +21,7 @@ from simtools.model_repository.reader import resolve_model_reader
 from simtools.ray_tracing.backends.interface import LightSourceRequest, get_backend
 from simtools.runtime.context import RunContext
 from simtools.simtel import output_validation as simtel_output_validation
+from simtools.simtel.model_writer import get_calibration_simtel_metadata
 from simtools.simtel.photon_bunch_file import (
     bypass_optics_level,
     camera_bunches,
@@ -157,7 +158,16 @@ class SimulatorLightEmission(SimtelRunner):
         export_model_files(self.telescope_model)
         export_model_files(self.site_model)
         get_model_writer(self.telescope_model).write_sim_telarray_config_file(
-            additional_models=self.site_model
+            additional_models=self.site_model,
+            global_metadata=get_calibration_simtel_metadata(
+                {
+                    **dict(self.context.args),
+                    **light_emission_config,
+                    "telescope": self.telescope_model.name,
+                },
+                self.site_model,
+                self.context,
+            ),
         )
 
         self.light_emission_config = self._initialize_light_emission_configuration(

@@ -18,7 +18,7 @@ from simtools.visualization import visualize
 _logger = logging.getLogger(__name__)
 
 
-def plot(config, output_file, data_path=None, model_reader=None, *, context=None):
+def plot(config, output_file, data_path=None, model_reader=None, *, context=None, metadata=None):
     """
     Plot tabular data from data or from model parameter files.
 
@@ -30,16 +30,23 @@ def plot(config, output_file, data_path=None, model_reader=None, *, context=None
         Output file.
     data_path: Path or str, optional
         Path to the data files. All files are expected in the same directory.
+    metadata: dict, optional
+        Metadata embedded in the figure file (PNG text chunk or PDF subject), e.g. the
+        top-level metadata dictionary of a ``MetadataCollector``.
     """
     context = context or RunContext.from_environment()
     data = read_table_data(config, data_path, model_reader=model_reader, context=context)
-    return _plot_data(data, config, output_file, context=context)
+    return _plot_data(data, config, output_file, context=context, metadata=metadata)
 
 
-def _plot_data(data, config, output_file, *, context=None):
+def _plot_data(data, config, output_file, *, context=None, metadata=None):
     """Render pre-read table data with the configured table-plot renderer."""
     visualize.save_figure(
-        visualize.plot_1d(data, **config), output_file, close=True, context=context
+        visualize.plot_1d(data, **config),
+        output_file,
+        close=True,
+        context=context,
+        metadata=metadata,
     )
     return output_file
 

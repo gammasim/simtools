@@ -6,6 +6,7 @@ from pprint import pprint
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.data_model.metadata_collector import write_sidecar_metadata
 from simtools.io import ascii_handler
 from simtools.model_repository.asset_names import get_export_file_name
 
@@ -141,10 +142,10 @@ def run(app_context):
     parameter_data = parameters[app_context.args["parameter"]]
     if app_context.args["output_file"] is not None:
         data = dict(parameter_data)
-        ascii_handler.write_data_to_file(
-            data=data,
-            output_file=app_context.paths.get_output_file(app_context.args["output_file"]),
-        )
+        output_file = app_context.paths.get_output_file(app_context.args["output_file"])
+        ascii_handler.write_data_to_file(data=data, output_file=output_file)
+        # the parameter file keeps the model-repository format: metadata goes to a sidecar
+        write_sidecar_metadata(output_file, context=app_context)
     else:
         pprint(parameter_data)
 
