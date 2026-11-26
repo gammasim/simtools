@@ -1,13 +1,10 @@
 """Read and combine production-table files from a model repository."""
 
-import logging
 from pathlib import Path
 
 from packaging.version import InvalidVersion, Version
 
 from simtools.utils import names
-
-logger = logging.getLogger(__name__)
 
 
 def collect_production_descriptions(info_files, read_info):
