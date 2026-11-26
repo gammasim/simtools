@@ -113,7 +113,7 @@ applications:
       - 8.0.0
       validations:
       - type: simtel_config
-        reference: ${generated:sim_telarray_configurations/8.0.0/CTAO-North-alpha.cfg}
+        reference: ${generated:sim_telarray_configurations/8.0.0/CTAO-North-CTAO-North-Alpha.cfg}
         ignore_parameters:
         - nightsky_background
         - nsb_autoscale_airmass
