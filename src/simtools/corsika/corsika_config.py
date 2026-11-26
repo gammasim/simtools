@@ -11,14 +11,12 @@ from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.input_writer import format_parameter
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
-from simtools.sim_events.simulation_parameters import SimulationParameters
-from simtools.simulation.configuration import get_model_writer
+from simtools.sim_events.simulation_parameters import CALIBRATION_RUN_MODES, SimulationParameters
+from simtools.simtel.model_writer import get_model_writer
 from simtools.utils import value_conversion
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 from simtools.utils.primary_particle import PrimaryParticle
 from simtools.utils.random import seeds
-
-CALIBRATION_RUN_MODES = ["pedestals", "pedestals_dark", "pedestals_nsb_only", "direct_injection"]
 
 
 def _format_repository_entry(parameters_from_repository, name):

@@ -43,7 +43,7 @@ def _job_rows():
 def _metadata():
     return {
         "site": "North",
-        "simulation_software": "corsika_sim_telarray",
+        "simulation_software": ["corsika", "sim_telarray"],
         "coordinate_system": "ha_dec",
     }
 
@@ -441,3 +441,12 @@ def test_serialize_job_grid_links_schema_pinned_to_release(tmp_test_directory):
         "/src/simtools/schemas/job_grid_density.schema.yml"
     )
     assert "/main/" not in url
+
+
+def test_job_grid_requires_stage_list():
+    with pytest.raises(ValueError, match=r"simulation_software.*list"):
+        jobs_io.job_grid_row_to_simulate_prod_args(
+            _job_rows()[0], {"simulation_software": "corsika_sim_telarray"}
+        )
+    args = jobs_io.job_grid_row_to_simulate_prod_args(_job_rows()[0], _metadata())
+    assert args["simulation_software"] == ["corsika", "sim_telarray"]

@@ -88,14 +88,19 @@ def test_get_pixel_active_solid_angle_hexagonal(simple_camera_dict):
 
 def test_calc_neighbor_pixels_square():
     camera_dict = {
-        "pixel_size": np.array([0.5, 0.5, 0.5, 0.5]),
+        "pixel_size": np.array([1.0, 1.0, 1.0, 1.0]),
         "common_pixel_shape": 2,
         "pixel_x": np.array([0, 1, 0, 1]),
         "pixel_y": np.array([0, 0, 1, 1]),
     }
     camera = Camera("TestTel", None, 5.6, camera_config_dict=camera_dict)
     neighbors = camera._calc_neighbor_pixels(camera.pixels)
-    assert len(neighbors) == 4
+    assert [set(pixel_neighbors) for pixel_neighbors in neighbors] == [
+        {1, 2},
+        {0, 3},
+        {0, 3},
+        {1, 2},
+    ]
 
 
 def test_get_edge_pixels_cached(simple_camera_dict):

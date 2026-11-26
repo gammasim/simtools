@@ -17,6 +17,28 @@ the camera, but sets ``Bypass_Optics=1`` in sim_telarray, bypassing telescope op
 Both modes produce sim_telarray events for standard analysis or
 visualization with 'simtools-plot-simtel-events'.
 
+**Simulation chain**
+
+In full-simulation mode, ``--simulation_software`` lists the stages that simulate one telescope
+(default ``light_emission sim_telarray``: the sim_telarray LightEmission program, then
+sim_telarray). Each stage is ``STAGE`` or ``STAGE:KEY=VALUE,...``; the chain starts with a light
+source stage and has no ``corsika`` stage. The direct-injection run mode accepts only the default.
+
+.. code-block:: console
+
+    simtools-simulate-flasher --run_mode full_simulation --light_source_type flat_fielding \
+    --model_version 7.0.0 --site North --telescopes MSTN-04 \
+    --simulation_software obdeect_flasher sim_telarray:bypass_optics=camera_entrance
+
+See :doc:`/components/obdeect` for the stages.
+
+For multiple emitted-photon levels, ``--max_workers`` greater than one runs each level
+as a separate simulation, with successive run numbers and output directories such as
+``run000100/`` and ``run000101/`` below the output path. A single worker writes the
+full sequence to one file. Size the worker count for the CPU, memory and disk resources
+available; each level runs its own light-emission and sim_telarray chain.
+
+
 **Photon counts and matching run modes**
 
 The ``flasher_photons`` setting has a different meaning in each run mode:
@@ -194,3 +216,5 @@ run_number (int, optional)
 .. simtools-integration-example::
     :file: simulate_flasher_full_simulation_mst_nectarcam.yml
 ```
+
+Use `--disable_nsb_autoscaling` to disable the zenith-dependent NSB correction.

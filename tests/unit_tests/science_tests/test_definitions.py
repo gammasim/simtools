@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
+from simtools.data_model import schema
 from simtools.science_tests import definitions as defs
 
 EXPLICIT = "/explicit"
@@ -35,6 +36,16 @@ NORTH = "north"
 COMPARE = "compare"
 DERIVE = "derive"
 SITE_TEMPLATE = "sites/north.yml"
+
+
+def test_site_schema_preserves_version_02_and_adds_overrides_in_new_version():
+    old = schema.load_schema("science_tests/site.schema.yml", "0.2.0")
+    latest = schema.load_schema("science_tests/site.schema.yml", "latest")
+    old_fields = old["definitions"]["ScienceTestSite"]["properties"]
+    new_fields = latest["definitions"]["ScienceTestSite"]["properties"]
+    assert "telescope_configuration_overrides" not in old_fields
+    assert latest["schema_version"] == "0.3.0"
+    assert "telescope_configuration_overrides" in new_fields
 
 
 def write_yaml(path, data):
@@ -243,3 +254,11 @@ def test_load_yaml_requires_mapping(tmp_test_directory):
     path.write_text("- item\n", encoding=UTF_8)
     with pytest.raises(ValueError, match="Expected a mapping"):
         defs.load_yaml(path)
+
+
+def test_catalogue_schema_adds_flasher_expansion_in_new_version():
+    old = schema.load_schema("science_tests/catalogue.schema.yml", "0.3.0")
+    latest = schema.load_schema("science_tests/catalogue.schema.yml", "latest")
+    assert "expand_flasher_scan" not in old["definitions"]["TestDefinition"]["properties"]
+    assert latest["schema_version"] == "0.4.0"
+    assert "expand_flasher_scan" in latest["definitions"]["TestDefinition"]["properties"]

@@ -65,6 +65,7 @@ def mock_camera():
     camera.number_of_pixels = 100
     camera.pixel_x_pos = rng.uniform(-1, 1, 100)
     camera.pixel_y_pos = rng.uniform(-1, 1, 100)
+    camera.pixels = {"x": camera.pixel_x_pos, "y": camera.pixel_y_pos, "pix_on": np.ones(100)}
     camera.camera_name = "TestCamera"
     return camera
 
@@ -252,7 +253,84 @@ def test_plots_to_run_all(mock_plotter):
     plots = mock_plotter._plots_to_run(["all"])
     assert "pedestals" in plots
     assert SIGNALS in plots
-    assert len(plots) == 6
+    assert len(plots) == 8
+
+
+def test_flat_fielding_adds_normalized_plots_to_all(mock_plotter):
+    plots = mock_plotter._plots_to_run(["all"], flat_fielding=True)
+    assert "normalized_signal" in plots
+    assert "normalized_signal_vs_radius" in plots
+
+
+def test_normalized_signal_uses_median_and_excludes_disabled_and_nonfinite(mock_plotter):
+    event = mock_plotter.event_data[0]
+    event.image = np.full(100, 10.0)
+    event.image[:4] = [0.0, 1000.0, np.nan, 50.0]
+    mock_plotter.camera.pixels["pix_on"][3] = 0
+    values, pixel_ids = mock_plotter._normalized_signal(0)
+
+    np.testing.assert_array_equal(pixel_ids[:3], [0, 1, 4])
+    np.testing.assert_allclose(values[:2], [0.0, 100.0])
+    assert np.median(values) == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("charge", [0.0, -1.0, np.nan])
+def test_normalized_signal_rejects_invalid_median(mock_plotter, charge, caplog):
+    mock_plotter.event_data[0].image = np.full(100, charge)
+    assert mock_plotter.plot_normalized_signal_vs_radius(0) is None
+    assert "normaliz" in caplog.text
+
+
+def test_normalized_signal_vs_radius_keeps_outliers(mock_plotter):
+    mock_plotter.event_data[0].image = np.full(100, 10.0)
+    mock_plotter.event_data[0].image[2] = 1000.0
+    figure = mock_plotter.plot_normalized_signal_vs_radius(0)
+    points = figure.axes[0].collections[0].get_offsets()
+    assert points[2, 1] == pytest.approx(100.0)
+    plt.close(figure)
+
+
+def test_normalized_signal_camera_masks_disabled_pixels(mock_plotter):
+    mock_plotter.event_data[0].image = np.full(100, 10.0)
+    mock_plotter.camera.pixels["pix_on"][2] = 0
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"
+    ) as draw:
+        figure = mock_plotter.plot_normalized_signal(0)
+    image = draw.call_args.kwargs["image"]
+    assert image.mask[2]
+    assert image[0] == pytest.approx(1.0)
+    plt.close(figure)
+
+
+def test_signal_vs_radius_uses_camera_positions_and_integrated_signal(mock_plotter):
+    event = mock_plotter.event_data[0]
+    figure = mock_plotter.plot_signal_vs_radius(event_index=0)
+    points = figure.axes[0].collections[0].get_offsets()
+
+    np.testing.assert_allclose(
+        points[:, 0],
+        np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"]) / 100,
+    )
+    np.testing.assert_allclose(points[:, 1], event.image)
+    plt.close(figure)
+
+
+def test_peak_vs_radius_uses_selected_pixel_positions(mock_plotter):
+    event = mock_plotter.event_data[0]
+    threshold = np.median(event.adc_samples.sum(axis=1))
+    peaks, pixel_ids, _ = mock_plotter.trace_maxima(event.adc_samples, threshold)
+    figure = mock_plotter.plot_peak_vs_radius(event_index=0, sum_threshold=threshold)
+    points = figure.axes[0].collections[0].get_offsets()
+
+    radius = np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"])
+    np.testing.assert_allclose(points[:, 0], radius[pixel_ids] / 100)
+    np.testing.assert_allclose(points[:, 1], peaks)
+    plt.close(figure)
+
+
+def test_peak_vs_radius_no_pixels(mock_plotter):
+    assert mock_plotter.plot_peak_vs_radius(event_index=0, sum_threshold=1e12) is None
 
 
 def test_plots_to_run_specific(mock_plotter):
@@ -372,7 +450,8 @@ def test_plot_camera_image_and_histogram(mock_plotter):
             event_index=0,
         )
         assert fig is not None
-        assert len(fig.axes) == 2
+        assert len(fig.axes) == 3
+        assert fig.axes[2].get_xlabel() == "Distance from camera centre [m]"
         plt.close(fig)
 
 
@@ -536,8 +615,7 @@ def test_streamed_plot_closes_figure_on_pdf_error(mock_plotter, io_handler, tmp_
         def __exit__(self, *_args):
             return None
 
-        def add(self, figure):
-            plt.close(figure)
+        def add(self, _figure):
             raise RuntimeError(PDF_SAVE_FAILED)
 
     with (
@@ -567,3 +645,51 @@ def test_streamed_plots_skip_missing_figures(mock_plotter, io_handler, tmp_test_
     save_document.assert_not_called()
     dump.assert_not_called()
     assert "No figures produced" in caplog.text
+
+
+def test_timing_projection_keeps_selected_pixel_positions(mock_plotter):
+    event = mock_plotter.event_data[0]
+    event.adc_samples[:] = 0
+    event.adc_samples[2, 4] = 20
+    event.adc_samples[7, 8] = 30
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"
+    ) as camera_plot:
+        fig = mock_plotter.plot_peak_timing(0, sum_threshold=10)
+    image = camera_plot.call_args.kwargs["image"]
+    assert np.ma.is_masked(image[0])
+    np.testing.assert_array_equal(image[[2, 7]], [4, 8])
+    offsets = fig.axes[2].collections[0].get_offsets()
+    radii = np.hypot(mock_plotter.camera.pixels["x"], mock_plotter.camera.pixels["y"])
+    np.testing.assert_allclose(offsets[:, 0], radii[[2, 7]] / 100)
+    np.testing.assert_array_equal(offsets[:, 1], [4, 8])
+    plt.close(fig)
+
+
+def test_average_events_plots_each_pixel_mean(mock_plotter, tmp_test_directory):
+    first = mock_plotter.event_data[0]
+    first.adc_samples[:] = 0
+    first.adc_samples[:, 2] = 1
+    first.image = np.arange(first.number_of_pixels, dtype=float)
+    second_samples = np.zeros_like(first.adc_samples)
+    second_samples[:, 6] = 2
+    mock_plotter.event_data[1] = event_images.EventData(
+        event_id=1,
+        adc_samples=second_samples,
+        number_of_pixels=first.number_of_pixels,
+        n_samples=first.n_samples,
+        image=first.image + 10,
+    )
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"
+    ) as camera_plot:
+        figures = mock_plotter.stream_figures(
+            ["all"], {"average_events": True, "gain": "low"}, tmp_test_directory / "out.pdf"
+        )
+        fig = next(figures)
+        assert len(fig.axes) == 6
+        np.testing.assert_allclose(camera_plot.call_args_list[0].kwargs["image"], first.image + 5)
+        np.testing.assert_allclose(camera_plot.call_args_list[1].kwargs["image"], 4)
+        assert "low" in fig._suptitle.get_text()
+        assert list(figures) == []
+    assert fig.number not in plt.get_fignums()

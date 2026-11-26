@@ -38,9 +38,59 @@ def test_init_simulator_array(corsika_config_mock_array_model, run_context):
     assert simulator._log_file is None
 
 
-def test_make_run_command_calibration_simulation(simtel_runner, mocker):
+def test_make_run_command_without_bypass_option_is_unchanged(simtel_runner, mocker):
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.load_files.return_value = {}
+    simtel_runner.simulation_parameters.is_calibration_run = mocker.Mock(return_value=False)
+    mocker.patch.object(
+        simtel_runner, "_common_run_command", side_effect=lambda _run_number: ["common_command"]
+    )
+    mocker.patch.object(
+        simtel_runner,
+        "_make_run_command_for_shower_simulations",
+        return_value=["-C", "power_law=2.5"],
+    )
+
+    legacy = simtel_runner.make_run_command(run_number=1, input_file="-")
+
+    assert legacy == simtel_runner.make_run_command(
+        run_number=1, input_file="-", bypass_optics=None
+    )
+    assert legacy == ["common_command", "-C", "power_law=2.5", "-C", "show=all", "-"]
+
+
+def test_make_run_command_sets_bypass_optics_before_show_all(simtel_runner, mocker):
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.load_files.return_value = {}
+    simtel_runner.simulation_parameters.is_calibration_run = mocker.Mock(return_value=False)
+    mocker.patch.object(simtel_runner, "_common_run_command", return_value=["common_command"])
+    mocker.patch.object(
+        simtel_runner,
+        "_make_run_command_for_shower_simulations",
+        return_value=["-C", "power_law=2.5"],
+    )
+
+    command = simtel_runner.make_run_command(run_number=1, input_file="-", bypass_optics=1)
+
+    assert command == [
+        "common_command",
+        "-C",
+        "power_law=2.5",
+        "-C",
+        "Bypass_Optics=1",
+        "-C",
+        "show=all",
+        "-",
+    ]
+
+
+@pytest.mark.parametrize("write_hdata", [False, True])
+def test_make_run_command_calibration_simulation(simtel_runner, mocker, write_hdata):
+    simtel_runner.context = simtel_runner.context.replace(args={"write_hdata": write_hdata})
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.load_files.return_value = {
+        "sim_telarray_histogram": "unused.hdata"
+    }
     simtel_runner.simulation_parameters.is_calibration_run = mocker.Mock(return_value=True)
 
     # Mock the methods
@@ -58,6 +108,7 @@ def test_make_run_command_calibration_simulation(simtel_runner, mocker):
     assert "-C" in result
     assert "show=all" in result
     assert "test.corsika" in result
+    assert ("sim_telarray_histogram" in simtel_runner.file_list) is write_hdata
 
 
 def test_make_run_command_for_calibration_simulations_basic(simtel_runner, mocker):
@@ -149,15 +200,23 @@ def test_determine_pointing_option(simtel_runner):
     assert copy_simtel_runner._determine_pointing_option() is False
 
 
-def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker):
+@pytest.mark.parametrize("write_hdata", [False, True])
+def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker, write_hdata):
     _set_context_config(simtel_runner, mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
 
+    simtel_runner.context = simtel_runner.context.replace(args={"write_hdata": write_hdata})
     simtel_runner.label = "divergent"
     simtel_runner.array_model.get_config_directory.return_value = "/config/dir"
     simtel_runner.array_model.config_file_path = "/config/file.cfg"
     simtel_runner.array_model.export_config_files = mocker.Mock()
     simtel_runner.simulation_parameters.zenith_angle = 25.0
     simtel_runner.simulation_parameters.azimuth_angle = 180.0
+    mocker.patch(
+        "simtools.simtel.simulator_array.get_model_writer",
+        return_value=mocker.Mock(
+            telescope_model_files_exported=False, array_model_file_exported=False, nsb_settings=None
+        ),
+    )
 
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
@@ -169,6 +228,8 @@ def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker):
     result = simtel_runner._common_run_command(run_number=1)
 
     assert isinstance(result, list)
+    expected = "hist_1.hist" if write_hdata else "/dev/null"
+    assert f"histogram_file={expected}" in result
     assert "-W" in result
     assert any("telescope_theta=25.0" in str(item) for item in result)
 
@@ -250,7 +311,7 @@ def test_make_run_command_for_calibration_simulations_with_nsb_scaling(simtel_ru
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
     assert isinstance(result, list)
-    assert "nsb_scaling_factor=1.5" in result
+    assert "nsb_scaling_factor=1.5" not in result
 
 
 def test_make_run_command_for_calibration_simulations_with_stars(simtel_runner, mocker):
@@ -270,3 +331,85 @@ def test_make_run_command_for_calibration_simulations_with_stars(simtel_runner, 
 
     assert isinstance(result, list)
     assert "stars=0" in result
+
+
+def test_common_run_command_puts_include_directories_before_model_directory(simtel_runner, mocker):
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.get_file_name.return_value = "file"
+    simtel_runner.runner_service.load_files.return_value = {}
+    mocker.patch(
+        "simtools.simtel.simulator_array.get_model_writer",
+        return_value=mocker.Mock(
+            telescope_model_files_exported=False, array_model_file_exported=False, nsb_settings=None
+        ),
+    )
+    simtel_runner.include_directories = ("/scaled/qe-table",)
+    mocker.patch.object(simtel_runner, "_determine_pointing_option", return_value=False)
+
+    command = simtel_runner._common_run_command(run_number=1)
+
+    config_dir = str(simtel_runner.array_model.get_config_directory())
+    assert command.index("-I/scaled/qe-table") < command.index(f"-I{config_dir}")
+
+
+def test_include_directories_default_is_empty(simtel_runner):
+    assert simtel_runner.include_directories == ()
+
+
+def test_make_run_command_sets_min_photons_when_overridden(simtel_runner, mocker):
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.load_files.return_value = {}
+    mocker.patch.object(simtel_runner, "_common_run_command", return_value=["sim_telarray"])
+    mocker.patch.object(simtel_runner, "_make_run_command_for_shower_simulations", return_value=[])
+    mocker.patch.object(
+        simtel_runner.simulation_parameters, "is_calibration_run", return_value=False
+    )
+
+    simtel_runner.min_photons = 0
+    command = simtel_runner.make_run_command(run_number=1, input_file="in.dat", bypass_optics=3)
+    assert command[command.index("min_photons=0") - 1] == "-C"
+    assert command[-1] == "in.dat"
+
+    simtel_runner.min_photons = None
+    command = simtel_runner.make_run_command(run_number=1, input_file="in.dat")
+    assert not any("min_photons" in item for item in command)
+
+
+@pytest.mark.parametrize("bypass_optics", [None, 1, 3])
+def test_nsb_settings_use_pointing_zenith_with_bypassed_optics(
+    simtel_runner, mocker, bypass_optics
+):
+    """NSB scaling follows the pointing zenith angle, also when optics are bypassed."""
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.load_files.return_value = {}
+    writer = mocker.Mock(
+        telescope_model_files_exported=False, array_model_file_exported=False, nsb_settings=None
+    )
+    mocker.patch("simtools.simtel.simulator_array.get_model_writer", return_value=writer)
+    mocker.patch.object(simtel_runner, "_determine_pointing_option", return_value=False)
+    mocker.patch.object(simtel_runner, "_make_run_command_for_shower_simulations", return_value=[])
+    mocker.patch.object(
+        simtel_runner.simulation_parameters, "is_calibration_run", return_value=False
+    )
+
+    simtel_runner.make_run_command(run_number=1, input_file="in.dat", bypass_optics=bypass_optics)
+
+    assert writer.nsb_settings.zenith_angle == simtel_runner.simulation_parameters.zenith_angle
+
+
+def test_nsb_settings_rejected_after_telescope_config_export(simtel_runner, mocker):
+    """Changed NSB settings must not be applied after telescope configuration files exist."""
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.load_files.return_value = {}
+    writer = mocker.Mock(
+        telescope_model_files_exported=True, array_model_file_exported=False, nsb_settings=None
+    )
+    mocker.patch("simtools.simtel.simulator_array.get_model_writer", return_value=writer)
+    mocker.patch.object(simtel_runner, "_determine_pointing_option", return_value=False)
+    mocker.patch.object(simtel_runner, "_make_run_command_for_shower_simulations", return_value=[])
+    mocker.patch.object(
+        simtel_runner.simulation_parameters, "is_calibration_run", return_value=False
+    )
+
+    with pytest.raises(ValueError, match="NSB settings changed after configuration export"):
+        simtel_runner.make_run_command(run_number=1, input_file="in.dat")

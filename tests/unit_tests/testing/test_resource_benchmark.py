@@ -233,9 +233,16 @@ import pytest
 
 
 def test_child_cpu_is_retained():
+    child_code = (
+        "import time\\n"
+        "deadline = time.process_time() + 0.4\\n"
+        "while time.process_time() < deadline:\\n"
+        "    pass\\n"
+    )
     subprocess.run(
-        [sys.executable, "-c", "sum(value * value for value in range(30000000))"],
+        [sys.executable, "-c", child_code],
         check=True,
+        timeout=20,
     )
     time.sleep(0.05)
 
@@ -271,6 +278,7 @@ def test_excluded(config):
         cwd=simtools_root_path,
         env={**os.environ, "PYTHONPATH": str(simtools_root_path / "tests")},
         text=True,
+        timeout=30,
     )
 
     assert result.returncode == 0, result.stdout + result.stderr

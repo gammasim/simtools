@@ -23,9 +23,11 @@ from simtools.simtel import (
     simtel_file_writer,
     table_serializers,
 )
+from simtools.simulation.nsb import NsbSettings, scale_nsb_parameters
 from simtools.utils import names, value_conversion
 
 logger = logging.getLogger(__name__)
+INCOMPATIBLE_SIMTEL_MARKER = "SIMTOOLS_INCOMPATIBLE_SIMTEL:"
 
 _CAMERA_COMPONENT_PARAMETERS = (
     "camera_rotate",
@@ -44,6 +46,30 @@ _SKIPPED_PARAMETERS = (
     "camera_config_file",
     *_FLASHER_LEGACY_PARAMETERS,
 )
+# NSB settings without any scaling (factor 1.0, no airmass autoscaling)
+_NEUTRAL_NSB = NsbSettings(zenith_angle=0.0, manual_factor=1.0, autoscale=False)
+
+
+def get_simtel_site_parameters(site_model):
+    """
+    Merge sim_telarray software parameters with site model parameters.
+
+    Site model parameters take precedence over sim_telarray software parameters.
+
+    Parameters
+    ----------
+    site_model: SiteModel
+        Site model providing sim_telarray software parameters and model parameters.
+
+    Returns
+    -------
+    dict
+        Merged parameter dictionary.
+    """
+    return {
+        **(site_model.get_simulation_software_parameters("sim_telarray") or {}),
+        **site_model.parameters,
+    }
 
 
 def _write_numeric_columns(output_path, columns):
@@ -104,6 +130,9 @@ class SimtelConfigWriter:
         self._context = context or RunContext.from_environment()
         self._serialized_table_cache = {}
         self._camera_file_cache = {}
+        # write nsb_scaling_factor = 1.0 because simtools applied the NSB scaling
+        # to the telescope rates
+        self.neutral_nsb_scaling = False
 
     @property
     def label(self):
@@ -116,6 +145,7 @@ class SimtelConfigWriter:
         parameters,
         telescope_name=None,
         telescope_design_model=None,
+        additional_metadata=None,
         global_metadata=None,
     ):
         """
@@ -131,12 +161,15 @@ class SimtelConfigWriter:
             Name of the telescope (use self._telescope_model_name if None)
         telescope_design_model: str
             Telescope design model.
+        additional_metadata: dict
+            Additional telescope metadata to include.
         global_metadata: dict, optional
             Global sim_telarray metadata written as ``metaparam global set`` lines.
         """
         logger.debug(f"Writing telescope config file {config_file_path}")
 
         telescope_name = telescope_name or self._telescope_model_name
+        self._validate_config_text(telescope_name)
         _telescope_design_model = telescope_design_model or self._telescope_design_model
         simtel_par = self._get_parameters_for_sim_telarray(
             parameters, config_file_path, telescope_name=telescope_name
@@ -150,11 +183,13 @@ class SimtelConfigWriter:
                 "#endif\n\n"
             )
             for simtel_name, simtel_value in simtel_par.items():
+                self._validate_config_text(simtel_name)
                 file.write(f"{simtel_name} = {self._get_value_string_for_simtel(simtel_value)}\n")
             metadata = self._get_sim_telarray_metadata(
                 "telescope",
                 parameters,
                 telescope_name,
+                additional_metadata=additional_metadata,
                 telescope_design_model=_telescope_design_model,
                 additional_meta_parameters=[
                     parameter
@@ -226,6 +261,7 @@ class SimtelConfigWriter:
 
     def _write_fadc_templates(self, parameter_data, config_file_path):
         """Write unified reference and response rows to sim_telarray's three inputs."""
+        self._check_simtel_tag(parameter_data)
         table = self._read_parameter_table(parameter_data)
         destination = Path(config_file_path).parent
         suffix = Path(config_file_path).stem
@@ -242,6 +278,36 @@ class SimtelConfigWriter:
         ):
             self._write_fadc_gain_response(table, gain, destination / outputs[simtel_name])
         return outputs
+
+    def _check_simtel_tag(self, parameter_data):
+        """Reject known incompatible builds for this parameter schema."""
+        version = parameter_data.get("model_parameter_schema_version")
+        definition = schema.get_model_parameter_schema("fadc_pulse_shape", version)
+        incompatible = next(
+            (
+                item.get("incompatible_tags", [])
+                for item in definition.get("simulation_software", [])
+                if item.get("name") == "sim_telarray"
+            ),
+            [],
+        )
+        if not incompatible:
+            return
+        try:
+            tag = dependencies.get_build_options(
+                run_time=self._context.run_time, context=self._context
+            ).get("simtel_tag")
+        except FileNotFoundError:
+            logger.warning("Cannot check sim_telarray compatibility: build options unavailable")
+            return
+        if not tag:
+            logger.warning("Cannot check sim_telarray compatibility: build tag unavailable")
+            return
+        if tag in incompatible:
+            raise ValueError(
+                f"{INCOMPATIBLE_SIMTEL_MARKER} fadc_pulse_shape schema {version} "
+                f"is incompatible with sim_telarray {tag}; use a compatible build."
+            )
 
     @staticmethod
     def _write_fadc_reference_template(table, output_path):
@@ -439,7 +505,14 @@ class SimtelConfigWriter:
             value = 1 if value else 0
         elif isinstance(value, list | np.ndarray):
             value = value_conversion.convert_list_to_string(value, shorten_list=True)
+        self._validate_config_text(value)
         return value
+
+    @staticmethod
+    def _validate_config_text(value):
+        """Reject control characters in values written to configuration records."""
+        if any(ord(character) < 32 or ord(character) == 127 for character in str(value)):
+            raise ValueError("sim_telarray configuration values cannot contain control characters")
 
     def _config_type_meta_parameters(self, config_type, telescope_model_name, design_model):
         """Return the release/config header lines and metaparam prefix for a config type."""
@@ -516,6 +589,8 @@ class SimtelConfigWriter:
             if value is not None:
                 meta_parameters.append(f"{prefix} set {key}={value}")
 
+        for line in meta_parameters:
+            self._validate_config_text(line)
         sim_telarray_metadata.validate_metadata(meta_parameters)
         return meta_parameters
 
@@ -565,12 +640,14 @@ class SimtelConfigWriter:
 
             global_parameters = {
                 name: parameter
-                for name, parameter in {
-                    **site_model.get_simulation_software_parameters("sim_telarray"),
-                    **site_model.parameters,
-                }.items()
+                for name, parameter in get_simtel_site_parameters(site_model).items()
                 if not catalog.is_global_sim_telarray_parameter(name)
             }
+            if self.neutral_nsb_scaling and "nsb_scaling_factor" in global_parameters:
+                global_parameters["nsb_scaling_factor"] = {
+                    **global_parameters["nsb_scaling_factor"],
+                    "value": 1.0,
+                }
             self._write_site_parameters(
                 file,
                 global_parameters,
@@ -587,13 +664,18 @@ class SimtelConfigWriter:
             invalid_telescope_config = f"{invalid_telescope_name}.cfg"
             self._validate_include_file_name_length(invalid_telescope_config)
             file.write(f"# include <{invalid_telescope_config}>\n\n")
+            dummy_parameters = deepcopy(first_telescope.parameters)
+            if self.neutral_nsb_scaling:
+                # telescopes inherit the dummy (default) setup; it must not autoscale NSB
+                dummy_parameters = scale_nsb_parameters(dummy_parameters, _NEUTRAL_NSB, 1.0)
             self.write_dummy_telescope_configuration_file(
-                deepcopy(first_telescope.parameters),
+                dummy_parameters,
                 config_file_directory / f"{invalid_telescope_name}.cfg",
                 invalid_telescope_name,
             )
 
             for count, (tel_name, tel_model) in enumerate(telescope_model.items()):
+                self._validate_config_text(tel_name)
                 tel_config_file = tel_model.config_file_path.name
                 self._validate_include_file_name_length(tel_config_file)
                 file.write(f"% {tel_name}\n")
@@ -603,6 +685,9 @@ class SimtelConfigWriter:
 
     def _validate_include_file_name_length(self, file_name):
         """Validate include-file names against the sim_telarray parser word-length limit."""
+        self._validate_config_text(file_name)
+        if any(character in file_name for character in "<>"):
+            raise ValueError(f"Invalid sim_telarray include filename: {file_name!r}")
         if len(file_name) > SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH:
             raise ValueError(
                 "sim_telarray include filename exceeds parser limit "
@@ -663,6 +748,8 @@ class SimtelConfigWriter:
             sep,
             comment_char,
         ]
+        for line in lines:
+            self._validate_config_text(line)
         file.write("".join(f"{line}\n" for line in lines))
 
     def _write_simtools_parameters(self, file):
@@ -694,6 +781,8 @@ class SimtelConfigWriter:
             for key, value in meta_items.items()
             if not isinstance(value, list)
         ]
+        for line in meta_lines:
+            self._validate_config_text(line)
         sim_telarray_metadata.validate_metadata(meta_lines)
         file.write("".join(f"{self.TAB}{line}\n" for line in meta_lines))
 
@@ -712,6 +801,7 @@ class SimtelConfigWriter:
                 parameter_data=value,
             )
             if simtel_name is not None:
+                self._validate_config_text(simtel_value)
                 file.write(f"{self.TAB}{simtel_name} = {simtel_value}\n")
         for meta in self._get_sim_telarray_metadata(
             "site", site_parameters, None, additional_metadata

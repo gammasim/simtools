@@ -18,7 +18,8 @@ applications:
     instrument_seed: 1745
     simulation_seed:
     - 290
-    simulation_software: sim_telarray
+    simulation_software:
+    - sim_telarray
     site: South
   integration_tests:
   - test_outputs:
@@ -52,4 +53,4 @@ applications:
         reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTS-02.cfg}
   test_name: gamma_40_deg_south_sim_telarray_only
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.7.0

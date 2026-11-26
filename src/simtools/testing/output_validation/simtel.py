@@ -32,6 +32,12 @@ def _assignment_metadata_keys():
     }
 
 
+def _without_parameters(parts, ignore_parameters):
+    """Return the split configuration (parameters, control lines) without ignored parameters."""
+    parameters, control_lines = parts
+    return {k: v for k, v in parameters.items() if k not in ignore_parameters}, control_lines
+
+
 def _split_lines(lines, file_label):
     parameters = {}
     control_lines = []
@@ -55,14 +61,25 @@ def _split_lines(lines, file_label):
     return parameters, control_lines
 
 
-def compare_config_files(reference_file, output_file):
-    """Compare sim_telarray parameters and control lines."""
+def compare_config_files(reference_file, output_file, ignore_parameters=()):
+    """
+    Compare sim_telarray parameters and control lines.
+
+    Parameters
+    ----------
+    reference_file, output_file: Path
+        sim_telarray configuration files.
+    ignore_parameters: iterable of str
+        Parameter names that are not compared (e.g., values that depend on run settings).
+    """
     with (
         open(reference_file, encoding="utf-8") as reference,
         open(output_file, encoding="utf-8") as output,
     ):
-        reference_parts = _split_lines(reference, reference_file)
-        output_parts = _split_lines(output, output_file)
+        reference_parts = _without_parameters(
+            _split_lines(reference, reference_file), ignore_parameters
+        )
+        output_parts = _without_parameters(_split_lines(output, output_file), ignore_parameters)
     if reference_parts != output_parts:
         _logger.error(f"sim_telarray configuration differs: {reference_file} != {output_file}")
         return False

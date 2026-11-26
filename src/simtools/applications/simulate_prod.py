@@ -4,6 +4,7 @@
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
@@ -12,7 +13,13 @@ from simtools.configuration.argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
+from simtools.job_execution.backends.registry import get_backend
+from simtools.job_execution.execution import (
+    execute_jobs,
+    options_from_args,
+    submit_jobs,
+    wait_for_submission,
+)
 from simtools.production_configuration.compatibility import prepare_jobs
 from simtools.production_configuration.jobs_io import (
     build_simulate_prod_job_specs,
@@ -27,8 +34,16 @@ from simtools.production_configuration.production_metadata import build_producti
 from simtools.runners.simulator import Simulator
 
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
+_DEFAULT_SUBMISSION_BURST_SIZE = 250
+_DEFAULT_SUBMISSION_BURST_DELAY = 5.0
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "write_hdata",
+        help="Write sim_telarray hdata histogram files.",
+        action="store_true",
+        default=False,
+    ),
     cli.SIMULATION_FILE_FORMAT,
     cli.ArgumentDefinition(
         "list_available_corsika_models",
@@ -65,27 +80,10 @@ _ARGUMENTS = (
         "save_corsika_output",
         help=(
             "Save CORSIKA output when piping CORSIKA directly to sim_telarray "
-            "(only relevant for simulation software 'corsika_sim_telarray')."
+            "(only relevant for the simulation chain 'corsika sim_telarray')."
         ),
         action="store_true",
         default=False,
-    ),
-    cli.ArgumentDefinition(
-        "shower_route_mode",
-        help=(
-            "How air-shower photon bunches reach sim_telarray when the ray-tracing backend traces "
-            "them (only relevant for simulation software 'corsika_sim_telarray'): 'stream' pipes "
-            "them without an IACT file on disk; 'disk' keeps the CORSIKA IACT file and routes it "
-            "through a camera photon-bunch file."
-        ),
-        choices=("stream", "disk"),
-        default="stream",
-    ),
-    cli.ArgumentDefinition(
-        "shower_route_threads",
-        help="Threads per shower route process (default 1; 0 divides usable cores among routes).",
-        type=int,
-        default=1,
     ),
     cli.ArgumentDefinition(
         "reduced_event_lists",
@@ -138,6 +136,18 @@ _ARGUMENTS = (
         default=False,
         help="Wait for submitted backend jobs to finish before exiting.",
     ),
+    cli.ArgumentDefinition(
+        "submission_burst_size",
+        help="Maximum number of job-grid jobs submitted per burst.",
+        type=bounded_int(1, 1000000),
+        default=_DEFAULT_SUBMISSION_BURST_SIZE,
+    ),
+    cli.ArgumentDefinition(
+        "submission_burst_delay_seconds",
+        help="Delay between job-grid submission bursts in seconds (default 5).",
+        type=float,
+        default=_DEFAULT_SUBMISSION_BURST_DELAY,
+    ),
 )
 
 
@@ -182,10 +192,26 @@ def _execute_job_grid(args_dict):
         work_dir=Path(args_dict["output_path"]),
     )
     job_specs = prepare_jobs(job_specs, args_dict, options)
-    if args_dict.get("wait", False):
-        execute_jobs(job_specs, options)
-    else:
-        submit_jobs(job_specs, options)
+    burst_size = args_dict.get("submission_burst_size", _DEFAULT_SUBMISSION_BURST_SIZE)
+    delay = args_dict.get("submission_burst_delay_seconds", _DEFAULT_SUBMISSION_BURST_DELAY)
+    if burst_size < 1 or delay < 0:
+        raise ValueError("Submission burst size must be positive and delay must be non-negative.")
+    bursts = [
+        job_specs[index : index + burst_size] for index in range(0, len(job_specs), burst_size)
+    ]
+    wait = args_dict.get("wait", False)
+    scheduler = getattr(get_backend(options.backend), "supports_submit_only", False)
+    submissions = []
+    for index, burst in enumerate(bursts):
+        if wait and not scheduler:
+            execute_jobs(burst, options)
+        else:
+            submissions.append(submit_jobs(burst, options))
+        if index + 1 < len(bursts) and delay:
+            time.sleep(delay)
+    if wait and scheduler:
+        for submission in submissions:
+            wait_for_submission(submission, options=options)
 
 
 def _write_job_metadata(args_dict, simulator, output_directory):
@@ -217,7 +243,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SHOWER_ARGUMENTS,
         *cli.CORSIKA_INTERACTION_ARGUMENTS,
         *cli.SIM_TELARRAY_ARGUMENTS,
-        cli.RAY_TRACING_BACKEND,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         *cli.CORSIKA_PATH_ARGUMENTS,

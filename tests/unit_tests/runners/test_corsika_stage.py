@@ -1,6 +1,7 @@
 """Tests for the CORSIKA simulation stage."""
 
 import pathlib
+import shlex
 
 import astropy.units as u
 import pytest
@@ -87,9 +88,11 @@ def test_prepare_stream_saves_corsika_output(corsika_stage_mock_array_model):
 
 
 def test_corsika_executable(corsika_stage_mock_array_model):
-    assert corsika_stage_mock_array_model._corsika_executable() is not None
-    corsika_stage_mock_array_model.corsika_config.use_curved_atmosphere = True
-    assert corsika_stage_mock_array_model._corsika_executable() is not None
+    stage = corsika_stage_mock_array_model
+    stage.corsika_config.use_curved_atmosphere = False
+    assert stage._corsika_executable() == stage.context.software.corsika_path / "corsika"
+    stage.corsika_config.use_curved_atmosphere = True
+    assert stage._corsika_executable() == stage.context.software.corsika_path / "corsika_curved"
 
 
 @pytest.mark.parametrize("transition_energy", [None, 120 * u.GeV])
@@ -116,20 +119,24 @@ def test_resources(corsika_stage_mock_array_model):
     )
 
 
-def test_disk_routing_is_not_sequential(corsika_stage_mock_array_model):
+def test_output_paths_are_shell_quoted(corsika_stage_mock_array_model, tmp_test_directory):
     stage = corsika_stage_mock_array_model
-    stage.sequential = True
-    stage.disk_route = True
-    stage.prepare(run_number=1)
-    script = stage.stream_service.get_file_name("multi_pipe_script", run_number=1)
-    assert "--sequential" not in script.read_text(encoding="utf-8")
+    stage.runner_service.directory = pathlib.Path(tmp_test_directory) / "space ; $(touch marker)"
+    stage.runner_service.directory.mkdir(parents=True)
+    stage.save_output = True
 
+    lines = stage.prepare(run_number=1, output=StreamTo(("command",)))
 
-def test_disk_routing_saves_streamed_corsika_output(corsika_stage_mock_array_model):
-    stage = corsika_stage_mock_array_model
-    stage.disk_route = True
-    stage.prepare(run_number=1)
+    output = stage.output_file(1)
+    assert lines[0] == f"export CORSIKA_DATA={shlex.quote(str(output.parent))}"
     config = stage.stream_service.get_file_name("multi_pipe_config", run_number=1)
-    assert f"zstd > {stage.output_file(1)}" in config.read_text(encoding="utf-8")
-    card = stage.runner_service.get_file_name("corsika_input", run_number=1)
-    assert "TELFIL |" in card.read_text(encoding="utf-8")
+    assert config.read_text(encoding="utf-8").splitlines()[-1] == (
+        f"zstd > {shlex.quote(str(output))}"
+    )
+
+
+def test_output_directory_rejects_line_breaks(corsika_stage_mock_array_model, tmp_test_directory):
+    stage = corsika_stage_mock_array_model
+    stage.runner_service.directory = pathlib.Path(tmp_test_directory) / "invalid\npath"
+    with pytest.raises(ValueError, match="output directory cannot contain line breaks"):
+        stage.prepare(run_number=1)

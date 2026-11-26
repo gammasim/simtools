@@ -100,6 +100,17 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
+Job grids are submitted in bursts of 250 with a 5 second pause between bursts. Override these
+defaults with `submission_burst_size` and `submission_burst_delay_seconds` in the production
+workflow configuration. To recover a failed collection, rerun its collect test with
+`--recover_production`; this retries failed jobs only, up to three attempts, and preserves
+successful jobs and archived partial outputs.
+
+```console
+simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --test production.gamma.collect --recover_production
+```
+
 Use `--run_label non-linear` to isolate candidate products and reports under `variants/non-linear/`.
 Use the same label for dependent tests and collection; explicitly configured paths are not redirected.
 
@@ -113,6 +124,19 @@ the site's `camera_telescopes`:
 ```yaml
 camera_telescopes: [LSTN-01, LSTN-02]
 ```
+
+A catalogue entry with `expand_flasher_scan: true` derives flasher response inputs and event
+plots from the simulation's `flasher_photons` and `number_of_events`. The workflow contains one
+full-simulation template, one response-analysis template and one event-plot template, in that order.
+When telescope placeholders are used, each telescope gets its own matched set of steps.
+For this expansion, telescope-specific configuration overrides apply to the simulation template;
+the response and plot steps derive their intensity settings from it.
+Use `__FLASHER_RUN__` in the analysis template's simtel file path and
+`__FLASHER_PHOTONS__` in the plot output path. Omit `simtel_file` from the plot template;
+the runner supplies it. The runner expands one file and plot per level;
+multiple levels require `max_workers` of at least 2 to produce separate files. The file template
+must lie below the simulation output path and include
+`/run__FLASHER_RUN__/sim_telarray/run__FLASHER_RUN__/`.
 
 `configuration_overrides` in `release.yml` sets application configuration values for all
 applications of one test, for example:

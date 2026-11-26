@@ -2,6 +2,7 @@
 
 from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.simulation.configuration import get_model_writer
+from simtools.simulation.nsb import NsbSettings
 
 
 class SimulatorArray(SimtelRunner):
@@ -34,8 +35,15 @@ class SimulatorArray(SimtelRunner):
         self.array_model = array_model
         self.io_handler = self.context.paths
         self._log_file = None
+        # Directories searched before the model directory (e.g. scaled quantum-efficiency tables)
+        self.include_directories = ()
+        # min_photons override (e.g. 0 when an upstream stage thins photons); None: sim_telarray's
+        # default. A telescope event with fewer photons than min_photons is skipped.
+        self.min_photons = None
 
-    def make_run_command(self, run_number=None, input_file=None):
+    def make_run_command(
+        self, run_number=None, input_file=None, bypass_optics=None, atmospheric_transmission=None
+    ):
         """
         Build and return the command to run sim_telarray.
 
@@ -45,6 +53,12 @@ class SimulatorArray(SimtelRunner):
             Full path of the input CORSIKA file
         run_number: int (optional)
             run number
+        bypass_optics: int (optional)
+            Value of sim_telarray's Bypass_Optics for photons given at the camera entrance;
+            None (default) leaves the option out of the command.
+        atmospheric_transmission: str or Path (optional)
+            Transmission table that sim_telarray reads instead of the model's table (e.g. a
+            table with optical depth 0 when an upstream stage applies the extinction).
 
         Returns
         -------
@@ -52,6 +66,8 @@ class SimulatorArray(SimtelRunner):
             Command to run sim_telarray.
         """
         self.file_list = self.runner_service.load_files(run_number=run_number)
+        if not self.context.args.get("write_hdata"):
+            self.file_list.pop("sim_telarray_histogram", None)
         command = self._common_run_command(run_number)
 
         if self.simulation_parameters.is_calibration_run():
@@ -59,8 +75,16 @@ class SimulatorArray(SimtelRunner):
         else:
             command += self._make_run_command_for_shower_simulations()
 
+        bypass = [] if bypass_optics is None else ["-C", f"Bypass_Optics={bypass_optics}"]
+        if self.min_photons is not None:
+            bypass += ["-C", f"min_photons={self.min_photons}"]
+        transmission = (
+            []
+            if atmospheric_transmission is None
+            else ["-C", f"atmospheric_transmission={atmospheric_transmission}"]
+        )
         # "-C show=all" should be the last option
-        return [*command, "-C", "show=all", input_file]
+        return [*command, *bypass, *transmission, "-C", "show=all", input_file]
 
     def _make_run_command_for_shower_simulations(self):
         """
@@ -87,7 +111,7 @@ class SimulatorArray(SimtelRunner):
         ).to_value("m")
 
         options = {"Altitude": altitude}
-        for key in ("nsb_scaling_factor", "stars"):
+        for key in ("stars",):
             if key in cfg:
                 options[key] = cfg[key]
                 # stars cannot be 'None' (only 'none')
@@ -119,24 +143,39 @@ class SimulatorArray(SimtelRunner):
         self._log_file = self.runner_service.get_file_name(
             file_type="sim_telarray_log", run_number=run_number
         )
-        histogram_file = self.runner_service.get_file_name(
-            file_type="sim_telarray_histogram", run_number=run_number
-        )
         output_file = self.runner_service.get_file_name(
             file_type="sim_telarray_output", run_number=run_number
         )
-        get_model_writer(self.array_model, "sim_telarray").export_config_files()
+        writer = get_model_writer(self.array_model, "sim_telarray")
+        nsb_settings = NsbSettings(
+            zenith_angle=self.simulation_parameters.zenith_angle,
+            manual_factor=self.context.args.get("nsb_scaling_factor"),
+            autoscale=not self.context.args.get("disable_nsb_autoscaling", False),
+        )
+        written = writer.telescope_model_files_exported or writer.array_model_file_exported
+        if written and writer.nsb_settings != nsb_settings:
+            raise ValueError(
+                "NSB settings changed after configuration export; use a new array model."
+            )
+        writer.nsb_settings = nsb_settings
+        writer.export_config_files()
 
         cmd = [
             str(self.context.software.sim_telarray_exe),
             "-c",
             str(self.array_model.config_file_path),
+            *[f"-I{directory}" for directory in self.include_directories],
             f"-I{config_dir}",
         ]
         weak_options = {
             "telescope_theta": self.simulation_parameters.zenith_angle,
             "telescope_phi": self.simulation_parameters.azimuth_angle,
         }
+        histogram_file = "/dev/null"
+        if self.context.args.get("write_hdata"):
+            histogram_file = self.runner_service.get_file_name(
+                file_type="sim_telarray_histogram", run_number=run_number
+            )
         options = {
             "histogram_file": histogram_file,
             "random_state": "none",

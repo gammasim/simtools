@@ -1,6 +1,8 @@
 """Tests for the storage-neutral simulation-model source."""
 
 import json
+import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -188,6 +190,17 @@ def test_source_reads_ecsv_with_parameter_metadata_and_checks_asset_paths(tmp_te
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         source.get_parameter_table({**parameter_data, "value": "missing.ecsv"})
 
+    table["group_id"].description = None
+    table.write(output, format="ascii.ecsv", overwrite=True)
+    invalid_source = ModelSource(MemoryStorage({asset_path: Path(output).read_bytes()}))
+    with pytest.raises(ValueError, match="Table column 'group_id' has no description") as error:
+        invalid_source.get_parameter_table(parameter_data)
+    message = str(error.value)
+    assert "North" in message
+    assert "LSTN-01" in message
+    assert "camera_trigger_groups" in message
+    assert asset_path in message
+
 
 def test_source_exports_parameter_assets_without_overwriting(tmp_test_directory):
     """Assets are copied from memory and colliding different contents are qualified."""
@@ -252,3 +265,33 @@ def test_source_update_info_treats_non_mapping_metadata_as_empty(content):
         "model_update": None,
         "model_version_history": [],
     }
+
+
+def test_export_rejects_symlinks_and_parent_escape(tmp_test_directory):
+    root = Path(tmp_test_directory) / "export-security"
+    root.mkdir()
+    outside = root / "outside"
+    outside.mkdir()
+    destination = root / "destination"
+    destination.mkdir()
+    (destination / "linked").symlink_to(outside, target_is_directory=True)
+    (destination / "file").symlink_to(outside / "new-file")
+    for target in (destination / "linked" / "asset", destination / "file"):
+        with pytest.raises(OSError, match=r"Too many levels|Not a directory|File exists"):
+            ModelSource._open_export_file(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+    with pytest.raises(ValueError, match="Invalid model export path"):
+        ModelSource._export_target(destination, "../escape")
+    assert not (outside / "new-file").exists()
+    assert not (outside / "asset").exists()
+
+
+def test_export_directory_allows_concurrent_creation(tmp_test_directory):
+    directory = Path(tmp_test_directory) / "concurrent" / "nested"
+
+    def create_directory(_):
+        descriptor = ModelSource._open_export_directory(directory)
+        os.close(descriptor)
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(create_directory, range(32)))
+    assert directory.is_dir()

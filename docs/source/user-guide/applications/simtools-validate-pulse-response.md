@@ -9,7 +9,9 @@
 Measure configured high- and low-gain pulse tables versus illumination in p.e.
 The PDF contains peak ADC, full-window ADC sum, width, and waveform panels;
 ECSV files contain individual measurements and summary values. A clipped-linear
-control uses the same model gain and digitizer limit.
+control uses the same model gain and digitizer limit. If the model provides only
+single-photoelectron pulse shapes, the output contains clipped-linear curves only;
+intensity-dependent curves require response templates in the model.
 
 The calculation samples the input tables at the model FADC interval. Non-linear
 amplitudes already encode the complete response. Interpolation is linear in the

@@ -1,6 +1,7 @@
 """Tests for HTCondor backend validation and event handling."""
 
-import pickle
+import json
+import stat
 import sys
 import types
 from pathlib import Path
@@ -109,6 +110,11 @@ def test_htcondor_container_does_not_use_submitter_pythonpath(tmp_test_directory
     )
     assert "PYTHONPATH" not in _environment_entries(submit_values["environment"])
     assert submit_values["arguments"].startswith("python -P -m simtools.job_execution.worker")
+    assert "--scratch-directory" not in submit_values["arguments"]
+    assert (
+        _environment_entries(submit_values["environment"])["SIMTOOLS_WORKER_SCRATCH_DIRECTORY"]
+        == "/simtools-run"
+    )
     assert submit_values["container_target_dir"] == "/simtools-run"
 
 
@@ -147,8 +153,11 @@ def test_htcondor_non_container_uses_submission_python(tmp_test_directory):
         Path(tmp_test_directory) / "scheduler.log",
     )
 
-    assert submit_values["executable"] == sys.executable
-    assert submit_values["arguments"].startswith("-m simtools.job_execution.worker")
+    assert submit_values["executable"] == "/usr/bin/env"
+    assert submit_values["transfer_executable"] == "False"
+    assert submit_values["arguments"].startswith(
+        f"{sys.executable} -m simtools.job_execution.worker"
+    )
     assert "universe" not in submit_values
     entries = _environment_entries(submit_values["environment"])
     source_path = Path(__file__).resolve().parents[4] / "src"
@@ -176,7 +185,7 @@ def test_htcondor_rejects_job_ids_that_escape_the_run_directory(tmp_test_directo
 
     with pytest.raises(BackendSubmissionError, match="Invalid job ID"):
         HTCondorBackend._serialize_jobs([job], work_dir)
-    assert not (work_dir.parent / "target.pkl").exists()
+    assert not (work_dir.parent / "target.json").exists()
 
 
 def test_htcondor_build_config_uses_the_single_backend_configuration_source():
@@ -198,6 +207,17 @@ def test_htcondor_build_config_uses_the_single_backend_configuration_source():
     assert config["extra_submit_attributes"] == {}
     with pytest.raises(BackendConfigurationError, match="request_cpus"):
         HTCondorBackend._validate_config(config)
+
+
+def test_htcondor_keeps_scheduler_streams_in_shared_work_directory(tmp_test_directory):
+    work_dir = Path(tmp_test_directory)
+
+    submit_values = HTCondorBackend._build_worker_submit_values(
+        {}, work_dir, work_dir / "scheduler.log", work_dir, False
+    )
+
+    assert submit_values["output"] == str(work_dir / "stdout" / "$(job_id).out")
+    assert submit_values["error"] == str(work_dir / "stderr" / "$(job_id).err")
 
 
 @pytest.mark.parametrize("attribute", ["output", "environment", "universe", "request_cpus"])
@@ -330,12 +350,19 @@ def test_htcondor_submit_success_builds_handle(monkeypatch, tmp_test_directory):
     monkeypatch.setattr(backend, "_serialize_jobs", lambda *_args: None)
     monkeypatch.setattr(backend, "_resolve_event_log", lambda _config, _work: work_dir / "events")
 
-    jobs = [JobSpec("job-000000", 3, command=("echo", "ok"))]
-    handle = backend.submit(jobs, ExecutionOptions(work_dir=work_dir))
+    image = work_dir / "image.sif"
+    image.touch()
+    output = work_dir / "nsb-grid" / "job-000000"
+    jobs = [JobSpec("job-000000", 3, command=("echo", "ok"), output_paths=(output,))]
+    handle = backend.submit(
+        jobs, ExecutionOptions(work_dir=work_dir, backend_config={"container_image": image})
+    )
 
     assert handle.scheduler_id == 17
     assert handle.process_ids == {"job-000000": 4}
     assert handle.metadata["indices"] == {"job-000000": 3}
+    assert output.parent.is_dir()
+    assert not output.exists()
 
 
 def test_htcondor_resource_overrides_build_itemdata(tmp_test_directory):
@@ -399,7 +426,12 @@ def test_htcondor_creates_work_directory_and_serializes_jobs(tmp_test_directory)
     assert all(
         (work_dir / name).is_dir() for name in ("inputs", "results", "stdout", "stderr", "logs")
     )
-    assert (work_dir / "inputs" / "job-000000.pkl").is_file()
+    assert stat.S_IMODE(work_dir.stat().st_mode) & 0o070 == 0o050
+    assert stat.S_IMODE((work_dir / "inputs").stat().st_mode) & 0o070 == 0o050
+    assert stat.S_IMODE(work_dir.stat().st_mode) & stat.S_ISGID
+    for name in ("results", "logs"):
+        assert stat.S_IMODE((work_dir / name).stat().st_mode) & 0o070 == 0o070
+    assert (work_dir / "inputs" / "job-000000.json").is_file()
 
 
 def test_htcondor_resolves_relative_event_log(tmp_test_directory):
@@ -407,6 +439,14 @@ def test_htcondor_resolves_relative_event_log(tmp_test_directory):
     event_log = HTCondorBackend._resolve_event_log({"log_path": "events/scheduler.log"}, work_dir)
     assert event_log == work_dir / "events" / "scheduler.log"
     assert event_log.parent.is_dir()
+
+
+def test_htcondor_rejects_group_writable_work_root(tmp_test_directory):
+    root = Path(tmp_test_directory) / "shared"
+    root.mkdir(mode=0o777)
+    root.chmod(0o777)
+    with pytest.raises(BackendConfigurationError, match="writable by others"):
+        HTCondorBackend._create_work_dir(ExecutionOptions(work_dir=root))
 
 
 def test_htcondor_serialization_errors_are_wrapped(monkeypatch, tmp_test_directory):
@@ -583,13 +623,13 @@ def test_htcondor_load_results_reports_invalid_payloads(tmp_test_directory):
     work_dir = Path(tmp_test_directory)
     result_dir = work_dir / "results"
     result_dir.mkdir()
-    with (result_dir / "job-000000.pkl").open("wb") as handle:
-        pickle.dump({"ok": True, "value": 1}, handle)
-    (result_dir / "unreadable.pkl").write_bytes(b"not a pickle")
-    with (result_dir / "invalid.pkl").open("wb") as handle:
-        pickle.dump(["not", "a mapping"], handle)
-    with (result_dir / "failed.pkl").open("wb") as handle:
-        pickle.dump({"ok": False, "message": "worker failed"}, handle)
+    with (result_dir / "job-000000.json").open("w", encoding="utf-8") as handle:
+        json.dump({"version": 1, "ok": True, "value": 1}, handle)
+    (result_dir / "unreadable.json").write_bytes(b"not a pickle")
+    with (result_dir / "invalid.json").open("w", encoding="utf-8") as handle:
+        json.dump(["not", "a mapping"], handle)
+    with (result_dir / "failed.json").open("w", encoding="utf-8") as handle:
+        json.dump({"version": 1, "ok": False, "message": "worker failed"}, handle)
     submission = SubmissionHandle(
         backend="htcondor",
         work_dir=work_dir,
@@ -604,9 +644,45 @@ def test_htcondor_load_results_reports_invalid_payloads(tmp_test_directory):
     assert len(failures) == 5
     assert "missing job index" in failures[0]
     assert "missing result" in failures[1]
+    assert "worker log" in failures[1]
     assert "unreadable result" in failures[2]
     assert "invalid result payload" in failures[3]
     assert "worker failed" in failures[4]
+
+
+def test_htcondor_failed_job_ids_includes_worker_and_output_failures(tmp_test_directory):
+    work_dir = Path(tmp_test_directory)
+    results = work_dir / "results"
+    results.mkdir()
+    for job_id, payload in (
+        ("succeeded", {"version": 1, "ok": True, "value": None}),
+        ("failed", {"version": 1, "ok": False, "message": "worker failed"}),
+        ("missing-output", {"version": 1, "ok": True, "value": None}),
+    ):
+        with (results / f"{job_id}.json").open("w", encoding="utf-8") as handle:
+            json.dump(payload, handle)
+    expected = work_dir / "expected.dat"
+    expected.touch()
+    submission = SubmissionHandle(
+        backend="htcondor",
+        work_dir=work_dir,
+        job_ids=("succeeded", "failed", "missing-output"),
+        process_ids={
+            job_id: index for index, job_id in enumerate(("succeeded", "failed", "missing-output"))
+        },
+        metadata={
+            "indices": {
+                job_id: index
+                for index, job_id in enumerate(("succeeded", "failed", "missing-output"))
+            },
+            "expected_outputs": {
+                "succeeded": [str(expected)],
+                "missing-output": [str(work_dir / "absent.dat")],
+            },
+        },
+    )
+
+    assert HTCondorBackend.failed_job_ids(submission) == {"failed", "missing-output"}
 
 
 @pytest.mark.parametrize("method", ["wait", "collect"])
@@ -616,8 +692,8 @@ def test_htcondor_wait_cleans_transient_artifacts_after_success(
     work_dir = Path(tmp_test_directory)
     for directory in ("inputs", "results", "stdout", "stderr"):
         (work_dir / directory).mkdir()
-    with (work_dir / "results" / "job-000000.pkl").open("wb") as handle:
-        pickle.dump({"ok": True, "value": 4}, handle)
+    with (work_dir / "results" / "job-000000.json").open("w", encoding="utf-8") as handle:
+        json.dump({"version": 1, "ok": True, "value": 4}, handle)
     submission = SubmissionHandle(
         backend="htcondor",
         work_dir=work_dir,
@@ -631,6 +707,8 @@ def test_htcondor_wait_cleans_transient_artifacts_after_success(
 
     assert [result.value for result in getattr(backend, method)(submission)] == [4]
     assert not (work_dir / "results").exists()
+    assert (work_dir / "stdout").is_dir()
+    assert (work_dir / "stderr").is_dir()
 
 
 def test_htcondor_submission_failure_is_wrapped(monkeypatch, tmp_test_directory):

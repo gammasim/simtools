@@ -12,6 +12,7 @@ import simtools.configuration.argument_helpers as helpers
 import simtools.version
 from simtools import constants
 from simtools.configuration import defaults
+from simtools.runtime import software_catalog
 from simtools.utils.primary_particle import PrimaryParticle
 
 
@@ -86,6 +87,7 @@ _SIMULATION_CONFIGURATION_GROUP = "simulation configuration"
 _SHOWER_PARAMETERS_GROUP = "shower parameters"
 _SIM_TELARRAY_CONFIGURATION_GROUP = "sim_telarray configuration"
 _CORSIKA_CONFIGURATION_GROUP = "corsika configuration"
+_RAY_TRACING_CONFIGURATION_GROUP = "ray tracing configuration"
 
 
 CONFIG = _argument(
@@ -180,14 +182,6 @@ MAX_WORKERS = _argument(
 
 SIM_TELARRAY_PATH_ARGUMENTS = (SIM_TELARRAY_PATH,)
 
-RAY_TRACING_BACKEND = _argument(
-    "ray_tracing_backend",
-    "ray tracing configuration",
-    help=f"Optical ray-tracing backend (default: {constants.RAY_TRACING_BACKENDS[0]}).",
-    choices=constants.RAY_TRACING_BACKENDS,
-    default=None,
-)
-
 # Seeds of every simulation backend alike: the instrument seed randomises the instrument
 # (mirror deviations, gains, ...) of each random instrument instance, the simulation seed the
 # simulated events and photons.
@@ -224,16 +218,6 @@ SIMULATION_SEED = _argument(
 )
 
 SEED_ARGUMENTS = (INSTRUMENT_SEED, RANDOM_INSTRUMENT_INSTANCES, SIMULATION_SEED)
-
-RAY_TRACING_ARGUMENTS = (
-    RAY_TRACING_BACKEND,
-    INSTRUMENT_SEED,
-    RANDOM_INSTRUMENT_INSTANCES(
-        default=constants.RAY_TRACING_INSTRUMENT_INSTANCES,
-        help="Number of random instrument instances (random mirror realisations) per image.",
-    ),
-    SIMULATION_SEED,
-)
 
 CORSIKA_PATH_ARGUMENTS = (CORSIKA_PATH, CORSIKA_INTERACTION_TABLE_PATH)
 
@@ -624,10 +608,32 @@ IGNORE_MISSING_DESIGN_MODEL = _argument(
 SIMULATION_SOFTWARE = _argument(
     "simulation_software",
     "simulation software",
-    help="Simulation software workflow.",
+    help=(
+        "Stages of the simulation chain in order, each as STAGE or STAGE:KEY=VALUE,... "
+        "(e.g. corsika sim_telarray)."
+    ),
     type=str,
-    choices=list(defaults.SIMULATION_SOFTWARE_CHOICES),
-    default=defaults.SIMULATION_SOFTWARE_DEFAULT,
+    nargs="+",
+    default=list(defaults.SIMULATION_SOFTWARE_DEFAULT),
+)
+
+RAY_TRACING_BACKEND = _argument(
+    "ray_tracing_backend",
+    _RAY_TRACING_CONFIGURATION_GROUP,
+    help="Optical ray-tracing backend (environment: SIMTOOLS_RAY_TRACING_BACKEND).",
+    type=str,
+    choices=tuple(software_catalog.ray_tracing_backends()),
+    default=None,
+)
+
+RAY_TRACING_ARGUMENTS = (
+    RAY_TRACING_BACKEND,
+    INSTRUMENT_SEED,
+    RANDOM_INSTRUMENT_INSTANCES(
+        default=constants.RAY_TRACING_INSTRUMENT_INSTANCES,
+        help="Number of random instrument instances (random mirror realisations) per image.",
+    ),
+    SIMULATION_SEED,
 )
 
 SIMULATION_FILE_FORMAT = _argument(
@@ -845,7 +851,15 @@ SIM_TELARRAY_SEED_FILE = _argument(
     default="sim_telarray_instrument_seeds.txt",
 )
 
-SIM_TELARRAY_ARGUMENTS = (*SEED_ARGUMENTS, SIM_TELARRAY_SEED_FILE)
+DISABLE_NSB_AUTOSCALING = _argument(
+    "disable_nsb_autoscaling",
+    _SIM_TELARRAY_CONFIGURATION_GROUP,
+    help="Disable zenith-dependent NSB autoscaling; a manual NSB factor still applies.",
+    action="store_true",
+    default=False,
+)
+
+SIM_TELARRAY_ARGUMENTS = (*SEED_ARGUMENTS, SIM_TELARRAY_SEED_FILE, DISABLE_NSB_AUTOSCALING)
 
 SOURCE_DISTANCE = _argument(
     "source_distance",

@@ -9,7 +9,6 @@ from types import MappingProxyType
 
 import numpy as np
 
-from simtools import constants
 from simtools.corsika import output_validation as corsika_output_validation
 from simtools.io import table_handler
 from simtools.io.file_type import product_value
@@ -18,8 +17,12 @@ from simtools.job_execution.execution import execute_jobs, options_from_args, su
 from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
 from simtools.model_repository.reader import with_resolved_model_reader
+from simtools.runners import chain_spec
 from simtools.runners.chain_runner import ChainRunner
-from simtools.runners.stages import SimulationChain, StageInputs
+from simtools.runners.corsika_stage import CorsikaStage
+from simtools.runners.sim_telarray_stage import SimTelArrayStage
+from simtools.runners.stages import StageInputs
+from simtools.runtime import software_catalog
 from simtools.runtime.context import RunContext
 from simtools.sim_events import file_info, writer
 from simtools.sim_events.hdf5_output_validation import validate_sim_events
@@ -143,10 +146,9 @@ class Simulator:
 
         self.site = self.context.args.get("site", None)
         self.model_version = self.context.args.get("model_version", None)
-        self.simulation_software = self.context.args.get(
-            "simulation_software", constants.SIMULATION_SOFTWARE_DEFAULT
-        )
         self.run_mode = self.context.args.get("run_mode", None)
+        self.chain = chain_spec.parse_chain(self._chain_software())
+        self.logger.info("Simulation software: %s", " -> ".join(self.chain.stages))
         self.io_handler = self.context.paths
 
         self._extra_commands = extra_commands
@@ -165,23 +167,12 @@ class Simulator:
         )
         self.file_list = self.runner_service.load_files(self.run_number)
 
-    @property
-    def simulation_software(self):
-        """The attribute simulation_software."""
-        return self._simulation_software
-
-    @simulation_software.setter
-    def simulation_software(self, simulation_software):
-        """
-        Set the simulation software.
-
-        Must be one of ``"sim_telarray"``, ``"corsika"`` or ``"corsika_sim_telarray"``
-        (CORSIKA piped directly to sim_telarray). Raises ValueError otherwise.
-        """
-        if simulation_software not in constants.SIMULATION_SOFTWARE_CHOICES:
-            raise ValueError(f"Invalid simulation software: {simulation_software}")
-        self._simulation_software = simulation_software.lower()
-        self.chain = SimulationChain.from_software(self._simulation_software)
+    def _chain_software(self):
+        """Return the simulation chain; direct injection runs its own air-shower chain."""
+        default_chain = software_catalog.default_chain(software_catalog.AIR_SHOWER_SOURCE)
+        if self.run_mode == "direct_injection":
+            return default_chain
+        return self.context.args.get("simulation_software", default_chain)
 
     def _initialize_from_tool_configuration(self):
         """Initialize run number from the tool configuration."""
@@ -218,7 +209,7 @@ class Simulator:
                 model_reader=self.model_reader,
                 context=self.context,
             )
-            if self.chain.starts_with_showers:
+            if self.chain.generates_air_showers:
                 cfg = get_shower_configuration(
                     array_model=model,
                     label=self.label,
@@ -254,6 +245,7 @@ class Simulator:
             shower_configurations=tuple(value_conversion.ensure_list(self.corsika_configurations)),
             args=dict(self.context.args),
             context=self.context,
+            chain=self.chain,
         )
         return ChainRunner(self.chain, inputs, label=self.label)
 
@@ -382,7 +374,8 @@ class Simulator:
             f"at {self.site} site, using {self.model_version} model."
         )
         self.logger.info(
-            f"Computing for {self.simulation_software} Simulations: {self._make_resources_report()}"
+            f"Computing for {'+'.join(self.chain.stages)} simulations: "
+            f"{self._make_resources_report()}"
         )
 
     def save_file_lists(self):
@@ -406,7 +399,7 @@ class Simulator:
 
         The files are saved using the configured simulation file list entries.
         """
-        if not self.chain.has("sim_telarray"):
+        if not self.chain.runs(SimTelArrayStage):
             self.logger.warning(
                 "Reduced event lists can only be saved for sim_telarray simulations."
             )
@@ -645,16 +638,15 @@ class Simulator:
         simtools_log_file = _simtools_log_file_path()
         files_to_copy = self._files(
             "sim_telarray_log",
-            "sim_telarray_histogram",
             "corsika_log",
             "corsika_resources",
             "sim_telarray_resources",
             "multi_pipe_resources",
-            "shower_route_resources",
-            "shower_route_log",
             "sim_telarray_err",
             "corsika_err",
         )
+        if self.context.args.get("write_hdata"):
+            files_to_copy += self._files("sim_telarray_histogram")
         for model in self.array_models:
             files_to_copy += value_conversion.ensure_list(model.pack_model_files())
 
@@ -714,6 +706,14 @@ class Simulator:
                         "flasher_photons_at_pixel", flasher_photons
                     )
 
+    def _allowed_metadata_changes(self):
+        """Model parameters that sim_telarray may read differently from the model (-C options)."""
+        allowed = ["stars"]
+        if any(self.chain.skipped_factors(name) for name in self.chain.stages):
+            # the zero-depth table replaces the atmospheric transmission of the model
+            allowed.append("atmospheric_transmission")
+        return allowed
+
     def validate_simulations(self):
         """Validate data, log and metadata of CORSIKA, sim_telarray and reduced event lists."""
         parameters = self.simulation_parameters[0]
@@ -724,7 +724,7 @@ class Simulator:
             f"with {expected_mc_events} MC events and {expected_shower_events} shower events."
         )
 
-        if self.chain.has("sim_telarray"):
+        if self.chain.runs(SimTelArrayStage):
             simtel_output_validation.validate_sim_telarray(
                 data_files=self.get_files(file_type="sim_telarray_output"),
                 log_files=self.get_files(file_type="sim_telarray_log"),
@@ -732,12 +732,12 @@ class Simulator:
                 expected_mc_events=expected_mc_events,
                 expected_shower_events=expected_shower_events,
                 curved_atmo=parameters.use_curved_atmosphere,
-                allow_for_changes=["nsb_scaling_factor", "stars"],
+                allow_for_changes=self._allowed_metadata_changes(),
             )
-        if self.chain.has("corsika"):
+        if self.chain.runs(CorsikaStage):
             corsika_output_validation.validate_corsika_output(
                 data_files=self.get_files(file_type="corsika_output")
-                if self.chain.stages == ("corsika",) or self.context.args.get("save_corsika_output")
+                if len(self.chain.stages) == 1 or self.context.args.get("save_corsika_output")
                 else None,
                 log_files=self.get_files(file_type="corsika_log"),
                 expected_shower_events=expected_shower_events,
@@ -751,7 +751,7 @@ class Simulator:
             )
 
     def update_file_lists(self):
-        """Update file lists with the data, log, histogram and submission files."""
+        """Update file lists with the data, log and submission files."""
         if self.file_list is None:
             self.file_list = self._simulation_runner.file_list
         else:

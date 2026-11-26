@@ -14,6 +14,8 @@ from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.io.file_type import product_suffixes
+from simtools.runners.chain_spec import parse_chain
+from simtools.runners.stages import get_stage_class, stage_role
 from simtools.sim_events.simtel_io_metadata import read_sim_telarray_metadata
 
 SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
@@ -271,8 +273,17 @@ def inventory_production_files(job_directory):
 
 
 def validate_required_production_outputs(file_inventory, simulation_software, job_directory):
-    """Require the principal simulation output before marking a job complete."""
-    required_type = "corsika" if simulation_software == "corsika" else "sim_telarray"
+    """Require the principal output of the last stage of the chain before marking a job complete."""
+    last_stage = parse_chain(simulation_software).stages[-1]
+    result = stage_role(get_stage_class(last_stage), "production_result")
+    required_type = next(
+        (file_type for file_type, product in _FILE_TYPE_PRODUCTS.items() if product == result),
+        None,
+    )
+    if required_type is None:
+        raise ValueError(
+            f"Cannot check the output of stage '{last_stage}': it does not end a production chain."
+        )
     if not file_inventory.get(required_type):
         raise ValueError(
             f"Incomplete production job {job_directory}: no '{required_type}' output file found."
@@ -348,7 +359,7 @@ def _validate_manifest_structure(data, manifest_path):
             raise malformed(f"missing '{key}'.")
     product_type = data["product_type"]
     if product_type in _MANIFEST_SCHEMAS:
-        supported = {get_manifest_schema_metadata(product_type)["schema_version"]}
+        supported = _supported_manifest_versions(product_type)
     else:
         supported = {get_manifest_schema_metadata(t)["schema_version"] for t in _MANIFEST_SCHEMAS}
     if str(data["schema_version"]) not in supported:
@@ -368,6 +379,16 @@ def _validate_manifest_structure(data, manifest_path):
         schema.validate_dict_using_schema(
             ascii_handler.to_builtin(data), schema_file=SCHEMA_PATH / schema_file, offline=True
         )
+
+
+def _supported_manifest_versions(product_type):
+    """Return schema versions supported by the manifest product."""
+    schema_documents = ascii_handler.collect_data_from_file(
+        SCHEMA_PATH / _MANIFEST_SCHEMAS[product_type]
+    )
+    if isinstance(schema_documents, dict):
+        schema_documents = [schema_documents]
+    return {str(document["schema_version"]) for document in schema_documents}
 
 
 def _parse_selection(selection):

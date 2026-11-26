@@ -9,6 +9,8 @@ import os
 import re
 import shutil
 import subprocess
+import sys
+from contextlib import nullcontext
 from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
@@ -101,10 +103,31 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
         **_runtime_model_source_options(effective_runtime, explicit_source_options),
         **explicit_source_options,
     }
+    provenance_configurations = deepcopy(configurations)
+    apply_execution_overrides(provenance_configurations, args_dict, source_options, None)
+    model_provenance = _model_provenance(provenance_configurations, source_options)
 
-    apply_execution_overrides(
-        configurations, args_dict, source_options, get_explicit_env_file(args_dict)
-    )
+    if args_dict["ignore_runtime_environment"]:
+        run_time = []
+    elif run_time is None:
+        run_time = read_runtime_environment(runtime_environment)
+    container_env = {}
+    if effective_runtime and run_time:
+        mount_args = {
+            **args_dict,
+            "_metadata_configuration_sources": {
+                key: value
+                for key, value in args_dict.get("_metadata_configuration_sources", {}).items()
+                if key in explicit_source_options
+            },
+        }
+        source_options, run_time = _mount_environment_model_source(
+            mount_args, source_options, run_time
+        )
+        run_time, container_env = _container_simtools_environment(run_time)
+
+    env_file = None if effective_runtime else get_explicit_env_file(args_dict)
+    apply_execution_overrides(configurations, args_dict, source_options, env_file)
     _write_resolved_workflow(
         args_dict["config_file"],
         configurations,
@@ -112,33 +135,17 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
         collection_config,
         provenance_path=args_dict.get("provenance_path"),
     )
-    if args_dict["ignore_runtime_environment"]:
-        run_time = []
-    elif run_time is None:
-        run_time = read_runtime_environment(runtime_environment)
-
-    log_file = Path(log_file)
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    with log_file.open("w", encoding="utf-8") as file:
+    if args_dict.get("disable_log_file"):
+        log_stream = nullcontext(sys.stdout)
+    else:
+        log_file = Path(log_file)
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_stream = log_file.open("w", encoding="utf-8")
+    with log_stream as file:
         file.write("Running simtools applications\n")
         file.write(_runtime_environment_header(effective_runtime, source_options))
-        file.write(_model_provenance(configurations, source_options))
-        try:
-            versions = dependencies.get_version_string(
-                run_time, include_software_versions=True, context=context
-            )
-        except FileNotFoundError as exc:
-            logger.info("Host simulation versions unavailable; using runtime identity: %s", exc)
-            versions = dependencies.get_version_string(
-                run_time, include_software_versions=False, context=context
-            )
-        file.write(versions)
-        try:
-            manifest = dependencies.get_dependency_manifest(run_time or None, context=context)
-            file.write(f"Runtime simtools: {manifest.get('simtools', {})}\n")
-            file.write(f"Runtime build options: {manifest.get('build_options', {})}\n")
-        except (OSError, ValueError, subprocess.SubprocessError) as exc:
-            file.write(f"Runtime identity unavailable: {exc}\n")
+        file.write(model_provenance)
+        _write_runtime_identity(file, run_time, context)
         try:
             for config in configurations:
                 app = config.get("application")
@@ -159,6 +166,7 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
                     app_configuration=app_configuration,
                     runtime_environment=run_time,
                     model_parameter_metadata_files=model_parameter_metadata_files,
+                    container_env=container_env,
                 )
 
                 file.write("=" * 80 + "\n")
@@ -183,6 +191,26 @@ def run_applications(args_dict, run_time=None, replacements=None, context=None):
                 associated_activities=associated_activities,
                 context=context,
             )
+
+
+def _write_runtime_identity(file, run_time, context):
+    """Write available software versions and runtime identity to the workflow log."""
+    try:
+        versions = dependencies.get_version_string(
+            run_time, include_software_versions=True, context=context
+        )
+    except FileNotFoundError as exc:
+        logger.info("Host simulation versions unavailable; using runtime identity: %s", exc)
+        versions = dependencies.get_version_string(
+            run_time, include_software_versions=False, context=context
+        )
+    file.write(versions)
+    try:
+        manifest = dependencies.get_dependency_manifest(run_time or None, context=context)
+        file.write(f"Runtime simtools: {manifest.get('simtools', {})}\n")
+        file.write(f"Runtime build options: {manifest.get('build_options', {})}\n")
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+        file.write(f"Runtime identity unavailable: {exc}\n")
 
 
 def get_explicit_env_file(args_dict):
@@ -396,6 +424,36 @@ def _runtime_model_source_options(runtime_environment, explicit_options):
     return options
 
 
+def _mount_environment_model_source(args, source_options, runtime):
+    """Bind a host model source from the environment into a container."""
+    sources = args.get("_metadata_configuration_sources", {})
+    for key in (_SIMULATION_MODELS_PATH, _SIMULATION_MODELS_GIT_PATH):
+        if sources.get(key) == "environment" and source_options.get(key):
+            host = Path(source_options[key]).expanduser().resolve()
+            if not host.exists():
+                raise FileNotFoundError(f"Simulation models host path does not exist: {host}")
+            target = "/workdir/external/simulation-models"
+            logger.info("Mounting simulation models: %s -> %s (read-only)", host, target)
+            flag = "--bind" if Path(runtime[0]).name == "apptainer" else "--volume"
+            runtime = [*runtime[:-1], flag, f"{host}:{target}:ro", runtime[-1]]
+            return {**source_options, key: target}, runtime
+    return source_options, runtime
+
+
+def _container_simtools_environment(runtime):
+    """Forward host simtools settings without exposing values in command arguments."""
+    excluded = {"SIMTOOLS_SIMULATION_MODELS_PATH", "SIMTOOLS_SIMULATION_MODELS_GIT_PATH"}
+    values = {
+        key: value
+        for key, value in os.environ.items()
+        if key.startswith("SIMTOOLS_") and key not in excluded
+    }
+    if Path(runtime[0]).name == "apptainer":
+        return runtime, {f"APPTAINERENV_{key}": value for key, value in values.items()}
+    options = [item for key in sorted(values) for item in ("--env", key)]
+    return [*runtime[:-1], *options, runtime[-1]], {}
+
+
 def _runtime_environment_header(runtime_environment, source_options):
     """Describe the selected runtime and model source without implying a resolved revision."""
     runtime = runtime_environment or {}
@@ -495,6 +553,7 @@ def _submit_application_and_collect_metadata(
     app_configuration,
     runtime_environment,
     model_parameter_metadata_files,
+    container_env,
 ):
     """Submit one application and collect metadata file before/after submission."""
     metadata_file = _get_model_parameter_metadata_file(app_configuration)
@@ -508,6 +567,7 @@ def _submit_application_and_collect_metadata(
         stderr=None,
         configuration=app_configuration,
         runtime_environment=runtime_environment,
+        env=container_env,
         capture_output=True,
     )
 
@@ -763,7 +823,7 @@ def read_runtime_environment(runtime_environment):
     if runtime_environment is None:
         return []
 
-    engine = runtime_environment.get("container_engine", "docker")
+    engine = runtime_environment.get("container_engine", "podman")
     if shutil.which(engine) is None:
         raise RuntimeError(f"Container engine '{engine}' not found.")
     if Path(engine).name == "apptainer":

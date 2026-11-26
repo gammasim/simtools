@@ -1,10 +1,11 @@
 """HTCondor execution backend using the Python bindings."""
 
+import json
 import logging
 import os
-import pickle
 import shlex
 import shutil
+import stat
 import sys
 import time
 import uuid
@@ -20,7 +21,7 @@ from simtools.job_execution.backends.base import (
     BackendSubmissionError,
 )
 from simtools.job_execution.job import JobResult, SubmissionHandle
-from simtools.job_execution.worker import validate_job_id, write_job_payload
+from simtools.job_execution.worker import decode_worker_value, validate_job_id, write_job_payload
 
 logger = logging.getLogger(__name__)
 
@@ -348,9 +349,9 @@ class HTCondorBackend:
     def submit(self, job_specs, options):
         """Create and submit a shared-filesystem HTCondor cluster."""
         config = self._build_config(options)
+        working_directory = Path(config.pop("working_directory", Path.cwd())).resolve()
         self._validate_config(config)
         jobs = self._prepare_jobs(job_specs, options, config)
-        working_directory = Path.cwd().resolve()
         if not jobs:
             return SubmissionHandle(
                 backend="htcondor",
@@ -359,6 +360,10 @@ class HTCondorBackend:
             )
         htcondor = self._load_htcondor()
         self._validate_job_resources(jobs, config)
+        for job in jobs:
+            if config.get("container_image") or job.resources.get("container_image"):
+                for output in job.output_paths:
+                    Path(output).expanduser().resolve().parent.mkdir(parents=True, exist_ok=True)
         work_dir = self._create_work_dir(options)
         self._serialize_jobs(jobs, work_dir)
         event_log = self._resolve_event_log(config, work_dir)
@@ -451,11 +456,12 @@ class HTCondorBackend:
 
     @staticmethod
     def _create_work_dir(options):
-        """Create the shared, private run directory."""
+        """Create shared work directories traversable by the submit and execute users."""
         root = Path(options.work_dir or Path.cwd() / "simtools-jobs").expanduser().resolve()
         root.mkdir(parents=True, exist_ok=True)
+        HTCondorBackend._validate_work_root(root)
         work_dir = root / f"htcondor-{uuid.uuid4().hex}"
-        work_dir.mkdir(mode=0o700)
+        HTCondorBackend._create_shared_directory(work_dir, mode=0o2750)
         for directory in (
             work_dir / "inputs",
             work_dir / "results",
@@ -463,8 +469,28 @@ class HTCondorBackend:
             work_dir / "stderr",
             work_dir / "logs",
         ):
-            directory.mkdir(parents=True, exist_ok=True)
+            mode = 0o2750 if directory.name == "inputs" else 0o2770
+            HTCondorBackend._create_shared_directory(directory, mode=mode)
         return work_dir
+
+    @staticmethod
+    def _validate_work_root(root):
+        """Reject parent directories that another user can replace or modify."""
+        for directory in (root, *root.parents):
+            attributes = directory.stat()
+            if attributes.st_uid not in (0, os.geteuid()):
+                raise BackendConfigurationError(f"Untrusted work directory owner: {directory}")
+            writable = attributes.st_mode & (stat.S_IWGRP | stat.S_IWOTH)
+            if writable and not attributes.st_mode & stat.S_ISVTX:
+                raise BackendConfigurationError(
+                    f"Work directory is writable by others: {directory}"
+                )
+
+    @staticmethod
+    def _create_shared_directory(path, mode=0o2770):
+        """Create a setgid directory accessible to members of its inherited group."""
+        path.mkdir(mode=mode, parents=True, exist_ok=True)
+        path.chmod(mode)
 
     @staticmethod
     def _serialize_jobs(jobs, work_dir):
@@ -472,8 +498,8 @@ class HTCondorBackend:
         for job in jobs:
             try:
                 validate_job_id(job.job_id)
-                write_job_payload(job, work_dir / "inputs" / f"{job.job_id}.pkl")
-            except (OSError, pickle.PickleError, TypeError, AttributeError, ValueError) as exc:
+                write_job_payload(job, work_dir / "inputs" / f"{job.job_id}.json")
+            except (OSError, TypeError, AttributeError, ValueError) as exc:
                 raise BackendSubmissionError(
                     f"Cannot serialize HTCondor job {job.job_id}: {exc}"
                 ) from exc
@@ -507,6 +533,11 @@ class HTCondorBackend:
             python_path=source_path,
             implicit_bind_path=working_directory if uses_container else None,
         )
+        if uses_container:
+            scratch = config.get("container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR)
+            environment = ";".join(
+                filter(None, (environment, f"SIMTOOLS_WORKER_SCRATCH_DIRECTORY={scratch}"))
+            )
         if environment:
             submit_values["environment"] = environment
         self._add_extra_submit_attributes(submit_values, self._validate_extra_attributes(config))
@@ -532,7 +563,11 @@ class HTCondorBackend:
         """Build the fixed HTCondor submit attributes for the worker process."""
         python_executable = config.get("python_executable", _DEFAULT_CONTAINER_PYTHON)
         worker_arguments = [
-            *([shlex.quote(python_executable), "-P"] if uses_container else []),
+            *(
+                [shlex.quote(python_executable), "-P"]
+                if uses_container
+                else [shlex.quote(sys.executable)]
+            ),
             shlex.quote("-m"),
             shlex.quote("simtools.job_execution.worker"),
             shlex.quote("--run-directory"),
@@ -543,13 +578,14 @@ class HTCondorBackend:
             str(work_dir / "logs" / "$(job_id).log"),
         ]
         return {
-            "executable": _CONTAINER_LAUNCHER if uses_container else sys.executable,
+            "executable": _CONTAINER_LAUNCHER,
             "arguments": " ".join(worker_arguments),
             "initialdir": str(working_directory),
             "output": str(work_dir / "stdout" / "$(job_id).out"),
             "error": str(work_dir / "stderr" / "$(job_id).err"),
             "log": str(event_log),
             "should_transfer_files": "NO",
+            "transfer_executable": "False",
             "request_cpus": str(config.get("request_cpus", 1)),
         }
 
@@ -637,6 +673,9 @@ class HTCondorBackend:
                 "request_disk": config.get("request_disk"),
                 "priority": config.get("priority"),
                 "container_image": config.get("container_image"),
+                "container_target_dir": config.get("container_target_dir"),
+                "python_executable": config.get("python_executable"),
+                "extra_submit_attributes": config.get("extra_submit_attributes", {}),
                 "environment_file": str(config["environment_file"])
                 if config.get("environment_file")
                 else None,
@@ -677,10 +716,10 @@ class HTCondorBackend:
 
     @staticmethod
     def _cleanup_successful_artifacts(submission):
-        """Remove transient payload and stream files after successful execution."""
+        """Remove transient payload files after successful execution."""
         if submission.metadata.get("keep_successful_artifacts"):
             return
-        for directory in ("inputs", "results", "stdout", "stderr"):
+        for directory in ("inputs", "results"):
             shutil.rmtree(submission.work_dir / directory, ignore_errors=True)
 
     def _wait_for_processes(self, submission):
@@ -767,20 +806,23 @@ class HTCondorBackend:
         results = []
         failures = []
         for job_id, process_id in submission.process_ids.items():
-            result_path = submission.work_dir / "results" / f"{job_id}.pkl"
+            result_path = submission.work_dir / "results" / f"{job_id}.json"
             if not result_path.exists():
+                worker_log = submission.work_dir / "logs" / f"{job_id}.log"
+                stdout_path = submission.work_dir / "stdout" / f"{job_id}.out"
                 stderr_path = submission.work_dir / "stderr" / f"{job_id}.err"
                 failures.append(
-                    f"process {process_id}: missing result {result_path}; stderr {stderr_path}"
+                    f"process {process_id}: missing result {result_path}; "
+                    f"stdout {stdout_path}; stderr {stderr_path}; worker log {worker_log}"
                 )
                 continue
             try:
-                with result_path.open("rb") as handle:
-                    payload = pickle.load(handle)
-            except (OSError, pickle.PickleError, EOFError, ValueError) as exc:
+                with result_path.open(encoding="utf-8") as handle:
+                    payload = json.load(handle)
+            except (OSError, ValueError) as exc:
                 failures.append(f"process {process_id}: unreadable result {result_path}: {exc}")
                 continue
-            if not isinstance(payload, dict):
+            if not HTCondorBackend._valid_result(payload):
                 failures.append(f"process {process_id}: invalid result payload {result_path}")
                 continue
             if not payload.get("ok"):
@@ -790,8 +832,24 @@ class HTCondorBackend:
             if index is None:
                 failures.append(f"process {process_id}: missing job index for {job_id}")
                 continue
-            results.append(JobResult(job_id, index, payload.get("value")))
+            try:
+                value = decode_worker_value(payload["value"])
+            except (TypeError, ValueError, KeyError) as exc:
+                failures.append(f"process {process_id}: invalid result value: {exc}")
+                continue
+            results.append(JobResult(job_id, index, value))
         return results, failures
+
+    @staticmethod
+    def _valid_result(payload):
+        """Validate the worker result envelope before accessing its fields."""
+        if not isinstance(payload, dict) or payload.get("version") != 1:
+            return False
+        if not isinstance(payload.get("ok"), bool):
+            return False
+        if payload["ok"]:
+            return "value" in payload
+        return isinstance(payload.get("message"), str)
 
     def collect(self, submission):
         """Read terminal job results without polling or waiting.
@@ -817,6 +875,19 @@ class HTCondorBackend:
             raise BackendExecutionError("HTCondor job failure(s): " + "; ".join(failures))
         self._cleanup_successful_artifacts(submission)
         return sorted(results, key=lambda result: result.index)
+
+    @staticmethod
+    def failed_job_ids(submission):
+        """Return job IDs without a successful result and all declared outputs."""
+        results, _ = HTCondorBackend._load_results(submission)
+        successful = {result.job_id for result in results}
+        outputs = submission.metadata.get("expected_outputs", {})
+        return {
+            job_id
+            for job_id in submission.job_ids
+            if job_id not in successful
+            or any(not Path(path).exists() for path in outputs.get(job_id, ()))
+        }
 
     def is_finished(self, submission):
         """Confirm every submitted process has left the queue and reached a terminal state.

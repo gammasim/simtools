@@ -12,8 +12,10 @@ TEMPLATE_DIR = "template_dir"
 BASELINE_VERSION = "baseline_version"
 
 
-def _post_parse(args_dict, _config_sources, _parser):
+def _post_parse(args_dict, _config_sources, parser):
     """Keep validation-only commands free of log-file writes."""
+    if args_dict.get("max_workers") is not None and args_dict["max_workers"] < 2:
+        parser.error("--max_workers must be at least 2 for separate flasher intensity runs.")
     if args_dict.get("dry_run"):
         args_dict["disable_log_file"] = True
 
@@ -61,6 +63,11 @@ APPLICATION = ApplicationDefinition.for_module(
             ),
         ),
         cli.ArgumentDefinition(
+            "max_workers",
+            type=int,
+            help="Override parallel flasher intensity workers (minimum: 2).",
+        ),
+        cli.ArgumentDefinition(
             "run_label",
             type=str,
             help="Isolate an experimental run's data and reports under this label.",
@@ -69,6 +76,14 @@ APPLICATION = ApplicationDefinition.for_module(
             "overwrite",
             action="store_true",
             help="Rebuild derived products, or archive and retry failed production after jobs end.",
+        ),
+        cli.ArgumentDefinition(
+            "recover_production",
+            action="store_true",
+            help=(
+                "Retry failed jobs of finished HTCondor productions during collection; "
+                "successful jobs are retained."
+            ),
         ),
         cli.ArgumentDefinition("dry_run", action="store_true", help="Validate without writes."),
         cli.ArgumentDefinition(
@@ -115,6 +130,7 @@ def main():
         allow_production=args.get("allow_production", False),
         preflight=args.get("preflight", False),
         overwrite=args.get("overwrite", False),
+        recover_production=args.get("recover_production", False),
         application_args=args,
     )
 

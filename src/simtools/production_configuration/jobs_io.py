@@ -15,6 +15,8 @@ from simtools.data_model import product_checksum, validate_data
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.job_execution.job import JobSpec
 from simtools.layout.array_layout_utils import resolve_array_layout_name
+from simtools.runners.chain_spec import parse_chain
+from simtools.runners.stages import get_stage_class, stage_role
 from simtools.utils.value_conversion import get_value_as_quantity, get_value_in_unit
 
 logger = logging.getLogger(__name__)
@@ -44,7 +46,8 @@ _SIMULATE_PROD_PATH_FIELDS = (
 ).split()
 _SIMULATE_PROD_CONTROLLER_FIELDS = frozenset(
     """activity_id application_label backend backend_config config data_search_path env_file
-    job_grid_file job_grid_row list_available_corsika_models""".split()
+    job_grid_file job_grid_row list_available_corsika_models wait submission_burst_size
+    submission_burst_delay_seconds""".split()
 )
 
 
@@ -280,6 +283,10 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     args.update({key: job_row[key] for key in ("ha", "dec") if job_row.get(key) is not None})
 
     metadata = metadata or {}
+    if metadata.get("simulation_software") and not isinstance(
+        metadata["simulation_software"], list
+    ):
+        raise ValueError("Job grid simulation_software must be a list of stage names.")
     args.update(
         {key: metadata[key] for key in ("site", "simulation_software") if metadata.get(key)}
     )
@@ -493,9 +500,11 @@ def _select_rows(args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, p
 
 
 def _validate_simulation_arguments(args_dict, parser):
-    """Validate requirements that depend on the selected simulation software."""
-    if "corsika" in args_dict["simulation_software"] and not args_dict.get("primary"):
-        parser.error("the following argument is required for CORSIKA: --primary")
+    """Validate requirements that depend on the stages of the simulation chain."""
+    for name in parse_chain(args_dict["simulation_software"]).stages:
+        for argument in stage_role(get_stage_class(name), "required_arguments", ()):
+            if not args_dict.get(argument):
+                parser.error(f"the following argument is required for stage {name}: --{argument}")
 
 
 def format_quantity_field(rows, key, summary_unit=None, *, log_wording=False):

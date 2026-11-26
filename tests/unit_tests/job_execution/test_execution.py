@@ -1,7 +1,6 @@
 """Tests for the generic execution facade."""
 
-import logging
-import pickle
+import json
 import sys
 import types
 from pathlib import Path
@@ -19,6 +18,7 @@ from simtools.job_execution.execution import (
     load_submission,
     map_ordered,
     options_from_args,
+    recover_submission,
     submit_jobs,
     wait_for_submission,
 )
@@ -29,11 +29,6 @@ from simtools.runtime.context import RunContext
 
 
 def _square(value):
-    return value * value
-
-
-def _log_square(value):
-    logging.getLogger(__name__).info("processing value %s", value)
     return value * value
 
 
@@ -71,6 +66,118 @@ def test_run_command_returns_captured_output_and_runtime():
     assert result.runtime >= 0
 
 
+def test_recover_submission_retries_only_failed_jobs_and_persists_handle(
+    tmp_test_directory, mocker
+):
+    work_dir = Path(tmp_test_directory) / "original"
+    work_dir.mkdir()
+    submission = SubmissionHandle(
+        "htcondor",
+        work_dir,
+        ("job-1", "job-2"),
+        metadata={
+            "expected_outputs": {},
+            "container_target_dir": None,
+            "python_executable": None,
+            "priority": 0,
+            "working_directory": str(work_dir),
+        },
+    )
+    backend = mocker.Mock()
+    backend.is_finished.return_value = True
+    backend.failed_job_ids.return_value = {"job-2"}
+    mocker.patch("simtools.job_execution.execution.get_backend", return_value=backend)
+    (work_dir / "partial.dat").write_text("partial", encoding="utf-8")
+    job = JobSpec("job-2", 1, command=("true",), output_paths=(Path("partial.dat"),))
+    mocker.patch("simtools.job_execution.execution.load_job_payload", return_value=job)
+    retry = SubmissionHandle("htcondor", Path(tmp_test_directory) / "retry", ("job-2",))
+    submit = mocker.patch("simtools.job_execution.execution.submit_jobs", return_value=retry)
+
+    finished = recover_submission(submission, Path(tmp_test_directory) / "recovery")
+
+    assert not finished
+    assert [item.job_id for item in submit.call_args.args[0]] == ["job-2"]
+    assert submit.call_args.args[0][0].output_paths == (work_dir / "partial.dat",)
+    assert not (work_dir / "partial.dat").exists()
+    assert submit.call_args.args[1].backend_config == {
+        "priority": 0,
+        "working_directory": str(work_dir),
+    }
+    assert submission.metadata["recovery"]["attempt"] == 1
+    assert submission.metadata["recovery"]["handle"]["job_ids"] == ["job-2"]
+
+
+def test_recover_submission_does_not_resubmit_active_retry(tmp_test_directory, mocker):
+    retry = SubmissionHandle("htcondor", Path(tmp_test_directory) / "retry", ("job-2",))
+    submission = SubmissionHandle(
+        "htcondor",
+        Path(tmp_test_directory) / "original",
+        ("job-2",),
+        metadata={"recovery": {"attempt": 1, "handle": retry.as_dict()}},
+    )
+    backend = mocker.Mock()
+    backend.is_finished.side_effect = [True, False]
+    mocker.patch("simtools.job_execution.execution.get_backend", return_value=backend)
+    submit = mocker.patch("simtools.job_execution.execution.submit_jobs")
+
+    assert not recover_submission(submission, Path(tmp_test_directory) / "recovery")
+    submit.assert_not_called()
+
+
+@pytest.mark.parametrize("failed", [False, True])
+def test_recover_submission_finished_retry_promotes_results_and_exhausts(
+    tmp_test_directory, mocker, failed
+):
+    root = Path(tmp_test_directory)
+    retry = SubmissionHandle("htcondor", root / "retry", ("job",))
+    submission = SubmissionHandle(
+        "htcondor",
+        root / "original",
+        ("job",),
+        metadata={"recovery": {"attempt": 1, "handle": retry.as_dict()}},
+    )
+    result_dir = retry.work_dir / "results"
+    result_dir.mkdir(parents=True)
+    (result_dir / "job.json").write_bytes(b"result")
+    backend = mocker.Mock()
+    backend.is_finished.return_value = True
+    backend.failed_job_ids.return_value = {"job"} if failed else set()
+    if failed:
+        backend.collect.side_effect = RuntimeError("failed retry")
+    mocker.patch("simtools.job_execution.execution.get_backend", return_value=backend)
+    submit = mocker.patch("simtools.job_execution.execution.submit_jobs")
+    if failed:
+        with pytest.raises(RuntimeError, match="Recovery exhausted"):
+            recover_submission(submission, root / "recovery", max_attempts=1)
+    else:
+        assert recover_submission(submission, root / "recovery", max_attempts=1)
+        assert (submission.work_dir / "results" / "job.json").read_bytes() == b"result"
+    submit.assert_not_called()
+    backend.collect.assert_called_once()
+
+
+def test_retry_result_replaces_read_only_original(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    original = SubmissionHandle("htcondor", root / "original", ("job",))
+    retry = SubmissionHandle("htcondor", root / "retry", ("job",))
+    original_results = original.work_dir / "results"
+    retry_results = retry.work_dir / "results"
+    original_results.mkdir(parents=True)
+    retry_results.mkdir(parents=True)
+    old = original_results / "job.json"
+    old.write_bytes(b"failed")
+    old.chmod(0o444)
+    successful = retry_results / "job.json"
+    successful.write_bytes(b"success")
+    successful.chmod(0o644)
+
+    execution._copy_successful_retry_results(original, retry, set())
+
+    assert old.read_bytes() == b"success"
+    assert old.stat().st_mode & 0o777 == 0o644
+    assert list(original_results.iterdir()) == [old]
+
+
 def test_run_command_errors_include_return_code_and_log_excerpt(tmp_test_directory):
     stderr = Path(tmp_test_directory) / "error.log"
     with pytest.raises(JobExecutionError, match="Error log excerpt"):
@@ -99,7 +206,7 @@ def test_run_command_captures_error_output_and_reads_stdin_path(tmp_test_directo
 
 
 def test_map_ordered_returns_input_order():
-    assert map_ordered(_square, [3, 1, 2], max_workers=2) == [9, 1, 4]
+    assert map_ordered(abs, [-9, -1, -4], max_workers=2, mp_start_method="spawn") == [9, 1, 4]
 
 
 def test_map_ordered_serializes_runtime_for_remote_jobs(mocker, run_context):
@@ -273,18 +380,20 @@ def test_worker_writes_result_and_info_log(tmp_test_directory):
     result_directory = run_directory / "results"
     result_directory.mkdir()
     write_job_payload(
-        JobSpec("job-000000", 0, function=_square, item=4), input_directory / "job-000000.pkl"
+        JobSpec("job-000000", 0, command=(sys.executable, "-c", "pass")),
+        input_directory / "job-000000.json",
     )
     assert run_worker(run_directory, "job-000000") == 0
-    with (result_directory / "job-000000.pkl").open("rb") as handle:
-        assert pickle.load(handle) == {"ok": True, "value": 16}
+    with (result_directory / "job-000000.json").open(encoding="utf-8") as handle:
+        assert json.load(handle) == {"version": 1, "ok": True, "value": 0}
 
     write_job_payload(
-        JobSpec("job-000001", 1, function=_log_square, item=4), input_directory / "job-000001.pkl"
+        JobSpec("job-000001", 1, command=(sys.executable, "-c", "raise ValueError('failure')")),
+        input_directory / "job-000001.json",
     )
     log_file = run_directory / "logs" / "job-000001.log"
-    assert run_worker(run_directory, "job-000001", log_file) == 0
-    assert "processing value 4" in log_file.read_text(encoding="utf-8")
+    assert run_worker(run_directory, "job-000001", log_file) == 1
+    assert "Job job-000001 failed" in log_file.read_text(encoding="utf-8")
 
 
 def test_worker_rejects_path_traversal_job_id(tmp_test_directory):
@@ -321,8 +430,8 @@ def test_htcondor_submit_creates_one_process_per_job(monkeypatch, tmp_test_direc
         sys.modules, "htcondor2", types.SimpleNamespace(Submit=_Submit, Schedd=lambda: _Schedd())
     )
     jobs = [
-        JobSpec("job-000000", 0, function=_square, item=1),
-        JobSpec("job-000001", 1, function=_square, item=2),
+        JobSpec("job-000000", 0, command=(sys.executable, "-c", "pass")),
+        JobSpec("job-000001", 1, command=(sys.executable, "-c", "pass")),
     ]
     options = ExecutionOptions(
         backend="htcondor",
@@ -376,9 +485,9 @@ def test_htcondor_preserves_artifacts_when_expected_output_is_missing(
     result_dir = work_dir / "results"
     input_dir.mkdir()
     result_dir.mkdir()
-    (input_dir / "job-000000.pkl").touch()
-    with (result_dir / "job-000000.pkl").open("wb") as handle:
-        pickle.dump({"ok": True, "value": 1}, handle)
+    (input_dir / "job-000000.json").touch()
+    with (result_dir / "job-000000.json").open("w", encoding="utf-8") as handle:
+        json.dump({"version": 1, "ok": True, "value": 1}, handle)
     submission = SubmissionHandle(
         backend="htcondor",
         work_dir=work_dir,

@@ -1,5 +1,5 @@
 ---
-schema_version: 0.9.0
+schema_version: 0.10.0
 python: '3.14'
 apptainer: 1.5.0
 cpu-variants:
@@ -28,11 +28,11 @@ simtools-tests:
   resource-version: v0.40.0
 production-combinations:
 - corsika: v7.8010
-  sim-telarray: v2025-11-30-rc
+  sim_telarray: v2025-11-30-rc
 - corsika: v7.8050
-  sim-telarray: v2025-11-30-rc
+  sim_telarray: v2025-11-30-rc
 corsika:
 - source-ref: v7.8010
 - source-ref: v7.8050
-sim-telarray:
+sim_telarray:
 - source-ref: v2025-11-30-rc

@@ -204,7 +204,6 @@ def test_convert_all(crs_wgs84, crs_local, crs_utm):
     assert tel.crs["mercator"]["yy"]["value"] == pytest.approx(-17.8920302, 1.0e-7)
     assert tel.crs["utm"]["yy"]["value"] == pytest.approx(3185067.2783240844, 1.0e-9)
     assert tel.crs["utm"]["xx"]["value"] == pytest.approx(217609.2270142641, 1.0e-9)
-    assert tel.crs["utm"]["yy"]["value"] == pytest.approx(3185067.2783240844, 1.0e-9)
     assert tel.crs["utm"]["zz"]["value"] == pytest.approx(2158.0, 1.0e-9)
 
     tel_nan = TelescopePosition(name="LSTN-02")
@@ -254,11 +253,6 @@ def test_print_compact_format(capsys):
     telescope.print_compact_format("mercator")
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
-    # corsika_sphere should have no impact on output
-    telescope.print_compact_format("mercator")
-    _output = capsys.readouterr().out
-    assert "".join(expected_output.split()) == "".join(_output.split())
-
     telescope.set_coordinates("utm", xx=217611.227, yy=3185066.278, zz=2100.0)
     expected_output = "LSTS-01 217611.23 3185066.28    2100.00"
     telescope.print_compact_format("utm")

@@ -33,11 +33,14 @@ applications:
     primary_id_type: corsika7_id
     run_number: 1
     save_corsika_output: true
+    write_hdata: true
     reduced_event_lists: true
     simulation_seed:
     - 1745
     - 290
-    simulation_software: corsika_sim_telarray
+    simulation_software:
+    - corsika
+    - sim_telarray
     site: South
     zenith_angle: 20
   integration_tests:

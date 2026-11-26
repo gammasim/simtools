@@ -34,6 +34,7 @@ from simtools.runners.simtools_runner import (
 )
 from simtools.science_tests import definitions as defs
 from simtools.science_tests.acceptance import AcceptanceError, evaluate_products
+from simtools.science_tests.flasher_scan import expand as expand_flasher_scan
 from simtools.science_tests.production import (
     archive_failed_production,
     check_inputs,
@@ -126,7 +127,7 @@ def prepare_test(bundle, site, test_id, application_args, run_id):
         _LOG_FILE: str(work / EXECUTION_LOG),
         _PROVENANCE_PATH: str(work / WORKFLOW_RECORD),
     }
-    workflow = _resolve_workflow(bundle, site, definition, replacements, args)
+    workflow = _resolve_workflow(bundle, site, test_id, definition, replacements, args)
     runtime = None if args[_IGNORE_RUNTIME] else workflow.get(_RUNTIME_ENVIRONMENT)
     output_paths = [app[_CONFIGURATION].get("output_path") for app in workflow[_APPLICATIONS]]
     result = {
@@ -166,7 +167,7 @@ def prepare_test(bundle, site, test_id, application_args, run_id):
     )
 
 
-def execute_tests(tests, catalogue, release_dir, run_id, overwrite=False):
+def execute_tests(tests, catalogue, release_dir, run_id, overwrite=False, recover_production=False):
     """Execute prepared tests in order, blocking tests whose selected dependencies failed.
 
     Parameters
@@ -206,12 +207,12 @@ def execute_tests(tests, catalogue, release_dir, run_id, overwrite=False):
             )
             continue
         _log_test(result, "Running")
-        run_test(test, release_dir, run_id, overwrite)
+        run_test(test, release_dir, run_id, overwrite, recover_production)
         results.append(result)
     return results
 
 
-def run_test(test, release_dir, run_id, overwrite=False):
+def run_test(test, release_dir, run_id, overwrite=False, recover_production=False):
     """Execute one prepared test, evaluate its products, and publish its report.
 
     Parameters
@@ -237,7 +238,7 @@ def run_test(test, release_dir, run_id, overwrite=False):
             test.workflow[_APPLICATIONS],
             [replacements[defs.CANDIDATE_SITE_PATH], replacements[defs.BASELINE_SITE_PATH]],
         )
-        result.update(_execute(test, overwrite))
+        result.update(_execute(test, overwrite, recover_production))
     except AcceptanceError as exc:
         result.update(status="warn", reason=f"Acceptance warning: {exc}")
     except (
@@ -268,11 +269,11 @@ def _log_test(result, action):
     logger.info("  Output: %s", ", ".join(result[_OUTPUT_PATHS]))
 
 
-def _execute(test, overwrite):
+def _execute(test, overwrite, recover_production=False):
     """Collect, reuse, or execute the workflow and return its evaluated status."""
     definition, replacements, args = test.definition, test.replacements, test.args
     if definition.get(_COLLECT_PRODUCTION):
-        collected = collect_production(definition, replacements)
+        collected = collect_production(definition, replacements, recover=recover_production)
         if collected.get(STATUS) == _PENDING:
             return collected
         return evaluate_products(definition, replacements) | collected
@@ -304,23 +305,37 @@ def _execute(test, overwrite):
     return evaluated
 
 
-def _resolve_workflow(bundle, site, definition, replacements, args):
+def _resolve_workflow(bundle, site, test_id, definition, replacements, args):
     """Expand, resolve, override, and validate one test workflow."""
     workflow = defs.load_yaml(definition[_WORKFLOW_PATH])
     telescopes = bundle.suites[site].get(_TELESCOPES_KEY, [])
+    overrides = bundle.suites[site].get("telescope_configuration_overrides", {}).get(test_id, {})
     workflow[_APPLICATIONS] = [
         expanded
         for application in workflow.get(_APPLICATIONS, [])
-        for expanded in _expand_telescopes(application, telescopes)
+        for expanded in _expand_telescopes(
+            application,
+            telescopes,
+            overrides
+            if not definition.get("expand_flasher_scan")
+            or application.get("application") == "simtools-simulate-flasher"
+            else {},
+        )
     ]
     workflow = replace_placeholders_recursively(workflow, replacements)
     allowed_changes = set(bundle.release.get("expected_changes", []))
     for application in workflow[_APPLICATIONS]:
         configuration = application.setdefault(_CONFIGURATION, {})
         configuration.update(definition["configuration_overrides"])
+        if application.get("application") == "simtools-simulate-flasher" and args.get(
+            "max_workers"
+        ):
+            configuration["max_workers"] = args["max_workers"]
         undeclared = set(configuration.get("compare_by", [])) - allowed_changes
         if undeclared:
             raise ValueError(f"Comparison by {sorted(undeclared)} is not in expected_changes.")
+    if definition.get("expand_flasher_scan"):
+        workflow[_APPLICATIONS] = expand_flasher_scan(workflow[_APPLICATIONS])
     apply_execution_overrides(
         workflow[_APPLICATIONS], args, model_source_options(args), get_explicit_env_file(args)
     )
@@ -337,18 +352,22 @@ def _resolve_workflow(bundle, site, definition, replacements, args):
     return workflow
 
 
-def _expand_telescopes(application, telescopes):
+def _expand_telescopes(application, telescopes, overrides):
     """Repeat an application for each telescope if it references the telescope placeholder."""
     if defs.TELESCOPE not in json.dumps(application):
         return [application]
     if not telescopes:
         raise ValueError(f"Workflow uses {defs.TELESCOPE}; set {_TELESCOPES_KEY} for the site.")
-    return [
-        replace_placeholders_recursively(
+    expanded = []
+    for telescope in telescopes:
+        if overrides and telescope not in overrides:
+            raise ValueError(f"Missing telescope configuration override for {telescope}.")
+        item = replace_placeholders_recursively(
             application, {defs.TELESCOPE: names.validate_array_element_name(telescope)}
         )
-        for telescope in telescopes
-    ]
+        item.setdefault(_CONFIGURATION, {}).update(overrides.get(telescope, {}))
+        expanded.append(item)
+    return expanded
 
 
 def _runtime_description(runtime):
@@ -383,6 +402,8 @@ def _reusable_derived_product(test):
         previous = defs.load_yaml(Path(test.args[_PROVENANCE_PATH]))
         if _settings(previous) != _settings(test.workflow):
             raise ValueError("derivation settings changed")
+        if previous.get("collection") != test.workflow.get("collection"):
+            raise ValueError("collection settings changed")
         validate_derived_workflow(test.workflow[_APPLICATIONS])
     except (OSError, ValueError, KeyError) as exc:
         raise ValueError(

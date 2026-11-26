@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from unittest.mock import patch
 
 import astropy.units as u
@@ -137,13 +138,20 @@ def test_telescope_filtering_rejects_zero_minimum(mock_hdf5_file):
         )
 
 
-def test_shower_coordinate_transformation(mock_hdf5_file):
-    reader = EventDataReader(mock_hdf5_file)
-    _, _, triggered_shower, _ = reader.read_event_data(mock_hdf5_file)
+def test_shower_coordinate_transformation(mock_tables, tmp_test_directory):
+    shower, triggers, file_info = mock_tables
+    shower["shower_azimuth"] = [0.0, 0.0]
+    shower["shower_altitude"] = [30.0, 30.0]
+    path = Path(tmp_test_directory) / "coordinates.hdf5"
+    write_tables([shower, triggers, file_info], path, file_type="HDF5")
+    reader = EventDataReader(path)
+    _, _, triggered_shower, _ = reader.read_event_data(path)
 
-    assert hasattr(triggered_shower, "x_core_shower")
-    assert hasattr(triggered_shower, "y_core_shower")
-    assert hasattr(triggered_shower, "core_distance_shower")
+    np.testing.assert_allclose(triggered_shower.x_core_shower, [50.0, 100.0])
+    np.testing.assert_allclose(triggered_shower.y_core_shower, [150.0, 250.0])
+    np.testing.assert_allclose(
+        triggered_shower.core_distance_shower, np.hypot([50, 100], [150, 250])
+    )
 
 
 def test_get_reduced_simulation_info(mock_hdf5_file):
@@ -156,6 +164,33 @@ def test_get_reduced_simulation_info(mock_hdf5_file):
     assert_quantity_allclose(info["zenith"], 20.0 * u.deg)
     assert_quantity_allclose(info["azimuth"], 0.0 * u.deg)
     assert info["nsb_level"] == pytest.approx(1.0)
+
+
+def test_energy_only_histograms_match_full_results(mock_hdf5_file):
+    from simtools.sim_events.histograms import EventDataHistograms
+
+    full = EventDataHistograms(mock_hdf5_file)
+    full.fill()
+    energy_only = EventDataHistograms(mock_hdf5_file)
+    energy_only.energy_only = True
+    energy_only.fill()
+    for name in ("energy", "energy_mc", "energy_eff"):
+        np.testing.assert_array_equal(
+            energy_only.histograms[name].values, full.histograms[name].values
+        )
+    assert "core_distance" not in energy_only.histograms
+
+
+def test_get_reduced_simulation_info_preserves_energy_bounds(mock_hdf5_file):
+    reader = EventDataReader(mock_hdf5_file)
+    file_info, _, _, _ = reader.read_event_data(mock_hdf5_file)
+    file_info["energy_min"] = [0.00002] * u.TeV
+    file_info["energy_max"] = [0.000025] * u.TeV
+
+    info = reader.get_reduced_simulation_file_info(file_info)
+
+    assert_quantity_allclose(info["energy_min"], 0.00002 * u.TeV)
+    assert_quantity_allclose(info["energy_max"], 0.000025 * u.TeV)
 
 
 @patch("simtools.sim_events.reader.PrimaryParticle")

@@ -95,7 +95,7 @@ def test_plot_1d_with_labels(mocker, hist_1d_factory):
     labels = ["First", "Second"]
     figs = plot_corsika_histograms._plot_1d([hist_dict1, hist_dict2], labels=labels)
     assert len(figs) == 1
-    assert hasattr(figs[0], "savefig")
+    assert [item.get_text() for item in figs[0].axes[0].get_legend().get_texts()] == labels
 
 
 def test_plot_1d_log_scale(hist_1d_factory):
@@ -108,7 +108,8 @@ def test_plot_1d_log_scale(hist_1d_factory):
     )
     figs = plot_corsika_histograms._plot_1d([hist_dict])
     assert len(figs) == 1
-    assert hasattr(figs[0], "savefig")
+    assert figs[0].axes[0].get_xscale() == "log"
+    assert figs[0].axes[0].get_yscale() == "log"
 
 
 def test_plot_1d_empty_list():
@@ -137,7 +138,9 @@ def test_plot_2d_log_scale(mocker, hist_2d_factory):
     )
     figs = plot_corsika_histograms._plot_2d([hist_dict])
     assert len(figs) == 1
-    assert hasattr(figs[0], "savefig")
+    from matplotlib.colors import LogNorm
+
+    assert isinstance(figs[0].axes[0].collections[0].norm, LogNorm)
 
 
 def test_plot_2d_empty_list():

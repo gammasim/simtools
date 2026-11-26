@@ -23,6 +23,30 @@ _ARGUMENTS = (
     cli.CORSIKA_HE_INTERACTION(action="store", nargs=None, default=defaults.CORSIKA_HE_INTERACTION),
     cli.CORSIKA_HADRONIC_TRANSITION_ENERGY,
     cli.ArgumentDefinition(
+        "nsb_showers_per_run",
+        help="Showers per NSB job; defaults to showers_per_run.",
+        type=int,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "nsb_number_of_runs",
+        help="Runs per NSB threshold; defaults to number_of_runs.",
+        type=int,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "proton_showers_per_run",
+        help="Showers per proton job; defaults to showers_per_run.",
+        type=int,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "proton_number_of_runs",
+        help="Runs per proton threshold; defaults to number_of_runs.",
+        type=int,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
         "nsb_energy_range",
         help="Energy range for the NSB gamma curve.",
         type=parse_quantity_pair,
@@ -49,7 +73,7 @@ _ARGUMENTS = (
         type=float,
         nargs=3,
         metavar=("MIN_THRESHOLD", "NUMBER_OF_THRESHOLDS", "STEP_SIZE"),
-        default=None,
+        required=True,
     ),
 )
 

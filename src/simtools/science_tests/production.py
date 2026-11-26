@@ -5,6 +5,7 @@ directory. Collection waits for those jobs and reconciles their outputs with the
 job grid before downstream tests use them.
 """
 
+import hashlib
 import json
 import logging
 from collections import Counter
@@ -12,7 +13,7 @@ from pathlib import Path
 
 from simtools.io.file_type import product_filename
 from simtools.job_execution.backends.registry import get_backend
-from simtools.job_execution.execution import collect_submission, load_submission
+from simtools.job_execution.execution import collect_submission, load_submission, recover_submission
 from simtools.production_configuration.jobs_io import read_job_grid
 from simtools.production_configuration.production_file_selection import (
     discover_manifests,
@@ -80,7 +81,7 @@ def check_inputs(definition, replacements):
             _check_completed_submission(path)
 
 
-def collect_production(definition, replacements):
+def collect_production(definition, replacements, *, recover=False):
     """Collect finished jobs of all submissions and validate completed productions.
 
     Parameters
@@ -101,7 +102,14 @@ def collect_production(definition, replacements):
         submission = load_submission(manifest)
         if submission.backend != _HTCONDOR:
             raise ValueError(f"Collection is not supported for backend {submission.backend}.")
-        if submission.metadata.get(_STATE) != _COMPLETED:
+        if submission.metadata.get(_STATE) != _COMPLETED and recover:
+            recovery_id = hashlib.sha256(str(manifest.resolve()).encode(_ENCODING)).hexdigest()[:16]
+            recovery_root = site_path.parent / ".science-test-recovery" / recovery_id
+            if not recover_submission(submission, recovery_root):
+                pending = True
+            else:
+                collect_submission(submission)
+        elif submission.metadata.get(_STATE) != _COMPLETED:
             pending = collect_submission(submission) is None or pending
     if pending:
         return {

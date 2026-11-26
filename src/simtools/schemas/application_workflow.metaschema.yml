@@ -472,6 +472,12 @@ definitions:
       reference:
         type: string
         minLength: 1
+      ignore_parameters:
+        description: sim_telarray parameters not compared with the reference configuration.
+        type: array
+        items:
+          type: string
+          minLength: 1
     required: [type, reference]
   model_parameter_validator:
     type: object

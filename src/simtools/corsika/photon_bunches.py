@@ -9,9 +9,9 @@ import gzip
 import io
 import logging
 import os
+from compression import zstd
 
 import numpy as np
-import zstandard
 from eventio.base import KNOWN_OBJECTS, EventIOObject, read_header, read_sync_marker
 from eventio.iact import EventHeader, Photons, TelescopeData
 
@@ -22,6 +22,8 @@ _EVENT_ID_SHIFT = 32
 _SKIPPED_WAVELENGTHS_NM = (1.0,)
 _WAVELENGTH_LIMIT_NM = 9000.0
 _STREAM_CHUNK_BYTES = 1 << 20
+# Largest input buffer configured in sim_telarray generic_run.sh.
+_MAX_OBJECT_BYTES = 2_000_000_000
 _FLOAT_COLUMNS = {
     "x": "x",
     "y": "y",
@@ -105,8 +107,17 @@ def _iter_stream_objects(stream):
         except StopIteration:
             return
         header = read_header(recording, offset=start, toplevel=True)
+        if header.total_size > _MAX_OBJECT_BYTES:
+            raise ValueError(
+                f"EventIO object size {header.total_size} exceeds limit {_MAX_OBJECT_BYTES} bytes"
+            )
         remaining = header.total_size - len(captured)
-        captured.extend(handle.read(remaining))
+        while remaining > 0:
+            chunk = handle.read(min(remaining, _STREAM_CHUNK_BYTES))
+            if not chunk:
+                break
+            captured.extend(chunk)
+            remaining -= len(chunk)
         if len(captured) != header.total_size:
             raise EOFError("Truncated EventIO object")
         raw = bytes(captured)
@@ -126,7 +137,7 @@ def _iter_path_objects(path):
             with gzip.GzipFile(fileobj=source) as stream:
                 yield from _iter_stream_objects(stream)
         elif magic == b"\x28\xb5\x2f\xfd":
-            with zstandard.ZstdDecompressor().stream_reader(source) as stream:
+            with zstd.ZstdFile(source) as stream:
                 yield from _iter_stream_objects(stream)
         else:
             yield from _iter_stream_objects(source)

@@ -12,6 +12,7 @@ from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     OUTPUT_ARGUMENTS,
     OUTPUT_PATH_ARGUMENTS,
+    SIMULATION_MODELS_GIT_REVISION,
     SITE,
     STANDARD_ARGUMENTS,
     TELESCOPE,
@@ -341,13 +342,21 @@ def test_set_model_versions(configurator):
     assert configurator.config["model_version"] == model_version_1
 
 
-def test_configure_can_disable_dependency_defaults(configurator):
-    """Test applications can disable catalog defaults."""
-    configurator.use_dependency_defaults = False
-    configurator._get_cli_arglist = MagicMock(return_value=[])
-    configurator._config_from_env = MagicMock(return_value={})
-    configurator._config_from_file = MagicMock(return_value={})
-    configurator._initialize_model_versions = MagicMock()
+def test_configure_can_disable_dependency_defaults(monkeypatch, tmp_test_directory):
+    """Disabling catalog defaults leaves the model revision unset."""
+    env_file = tmp_test_directory / "empty.env"
+    env_file.write_text("", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["test", "--label", "example", "--env_file", str(env_file)])
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", raising=False)
+    config = Configurator(use_dependency_defaults=False)
+    config.parser.add_argument_definitions((*STANDARD_ARGUMENTS, SIMULATION_MODELS_GIT_REVISION))
+
+    result = config.configure()
+
+    assert result.get("simulation_models_git_revision") is None
+    enabled = Configurator(use_dependency_defaults=True)
+    enabled.parser.add_argument_definitions((*STANDARD_ARGUMENTS, SIMULATION_MODELS_GIT_REVISION))
+    assert enabled.configure()["simulation_models_git_revision"]
 
 
 @pytest.mark.parametrize(

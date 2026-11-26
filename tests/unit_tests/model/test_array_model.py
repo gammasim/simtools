@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import QTable
+from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.model.array_model import ArrayModel
 
@@ -27,13 +28,10 @@ def array_model_north_from_list(model_version, run_context):
 
 def test_array_model_north_from_file(model_version, tmp_test_directory, run_context):
     position_table = QTable()
-    position_table["telescope_name"] = [
-        "LSTN-01",
-        *[f"MSTN-{index:02d}" for index in range(1, 13)],
-    ]
-    position_table["position_x"] = np.arange(13) * u.m
-    position_table["position_y"] = np.arange(13) * u.m
-    position_table["position_z"] = np.zeros(13) * u.m
+    position_table["telescope_name"] = ["LSTN-01", "MSTN-01"]
+    position_table["position_x"] = [0, 2500] * u.cm
+    position_table["position_y"] = [2, 4] * u.m
+    position_table["position_z"] = [100, 300] * u.cm
     position_file = tmp_test_directory / "north-positions.ecsv"
     position_table.write(position_file, format="ascii.ecsv", overwrite=True)
 
@@ -44,7 +42,16 @@ def test_array_model_north_from_file(model_version, tmp_test_directory, run_cont
         model_version=model_version,
         array_elements=Path(position_file),
     )
-    assert am.number_of_telescopes == 13
+    assert am.number_of_telescopes == 2
+    assert list(am.telescope_models) == ["LSTN-01", "MSTN-01"]
+    for name, expected in {
+        "LSTN-01": [0, 2, 1],
+        "MSTN-01": [25, 4, 3],
+    }.items():
+        position = am.array_elements[name]
+        assert position["site"] == "North"
+        assert position["instrument"] == name
+        assert_quantity_allclose(position["value"] * u.Unit(position["unit"]), expected * u.m)
 
 
 def test_array_model_run_specific_config_directory(model_version, io_handler, run_context):

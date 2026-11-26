@@ -19,10 +19,24 @@ their reports.
    :members:
 ```
 
+## bias_curve_comparison
+
+```{eval-rst}
+.. automodule:: science_tests.bias_curve_comparison
+   :members:
+```
+
 ## definitions
 
 ```{eval-rst}
 .. automodule:: science_tests.definitions
+   :members:
+```
+
+## flasher_scan
+
+```{eval-rst}
+.. automodule:: science_tests.flasher_scan
    :members:
 ```
 

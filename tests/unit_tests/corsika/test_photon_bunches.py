@@ -1,6 +1,8 @@
+import gzip
 import io
 import struct
 import subprocess
+from compression import zstd
 from pathlib import Path
 
 import astropy.units as u
@@ -249,12 +251,33 @@ def test_iter_photon_objects_preserves_bytes_and_callback_timing(atmospheric_pro
 
 
 def test_zstd_compressed_input(tmp_test_directory, atmospheric_profile):
-    zstandard = pytest.importorskip("zstandard")
     plain = tmp_test_directory / "photons.iact"
     compressed = tmp_test_directory / "photons.iact.zst"
     _write(plain, [_bunches(2)], atmospheric_profile)
-    Path(compressed).write_bytes(zstandard.ZstdCompressor().compress(Path(plain).read_bytes()))
+    Path(compressed).write_bytes(zstd.compress(Path(plain).read_bytes()))
 
     (telescope,) = read_photon_bunches(compressed)
 
     np.testing.assert_array_equal(telescope["x"], _bunches(2)["x"])
+
+
+def test_oversized_object_is_rejected_before_payload_read():
+    # Extended EventIO length: 2 * 2**30 bytes, with no payload following.
+    header = b"\x37\x8a\x1f\xd4" + struct.pack("<IIII", 1 << 17, 0, 0, 2)
+    with pytest.raises(ValueError, match=r"EventIO object size .* exceeds limit"):
+        list(read_photon_bunches(io.BytesIO(header)))
+
+
+@pytest.mark.parametrize("compress", [gzip.compress, zstd.compress])
+def test_compressed_oversized_object_is_rejected(tmp_test_directory, compress):
+    header = b"\x37\x8a\x1f\xd4" + struct.pack("<IIII", 1 << 17, 0, 0, 2)
+    path = Path(tmp_test_directory) / "oversized.iact"
+    path.write_bytes(compress(header))
+    with pytest.raises(ValueError, match=r"EventIO object size .* exceeds limit"):
+        list(read_photon_bunches(path))
+
+
+def test_truncated_object_is_rejected():
+    header = b"\x37\x8a\x1f\xd4" + struct.pack("<III", 1, 0, 8)
+    with pytest.raises(EOFError, match="Truncated EventIO object"):
+        list(read_photon_bunches(io.BytesIO(header + b"x")))

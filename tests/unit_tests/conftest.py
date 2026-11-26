@@ -112,6 +112,24 @@ def restore_environment():
 
 
 @pytest.fixture(autouse=True)
+def block_container_engines(monkeypatch):
+    """Block direct container-engine subprocesses in the test process."""
+    original_popen = subprocess.Popen
+
+    def checked_popen(args, *popen_args, **popen_kwargs):
+        executable = popen_kwargs.get("executable") or (
+            args[0] if isinstance(args, list | tuple) and args else args
+        )
+        if isinstance(executable, str | bytes | os.PathLike):
+            name = Path(os.fsdecode(executable)).name
+            if name in {"podman", "docker", "apptainer", "singularity"}:
+                raise RuntimeError(f"Unit tests must mock container engine: {name}")
+        return original_popen(args, *popen_args, **popen_kwargs)
+
+    monkeypatch.setattr(subprocess, "Popen", checked_popen)
+
+
+@pytest.fixture(autouse=True)
 def mock_simulator_paths(request, tmp_test_directory):
     """Mock sim_telarray and corsika paths for unit tests.
 
@@ -677,6 +695,14 @@ def corsika_config_mock_array_model(corsika_config_data, model_version, run_cont
     site_model_writer = mock.MagicMock()
     site_model_writer.get_atmospheric_profile_file_name.return_value = "atmprof_south.dat"
     array_model.site_model.configuration_writers = {"sim_telarray": site_model_writer}
+    # Array model writer: nothing exported yet (NSB settings may be set on first export)
+    array_model.configuration_writers = {
+        "sim_telarray": mock.MagicMock(
+            telescope_model_files_exported=False,
+            array_model_file_exported=False,
+            nsb_settings=None,
+        )
+    }
 
     corsika_params_from_repository = {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},

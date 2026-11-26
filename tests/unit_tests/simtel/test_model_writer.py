@@ -1,6 +1,7 @@
 """Test native configuration writing without modifying resolved models."""
 
 import copy
+import re
 from unittest.mock import Mock
 
 import astropy.units as u
@@ -9,6 +10,7 @@ import pytest
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.model_writer import SimtelModelWriter
 from simtools.simulation.configuration import get_model_writer
+from simtools.simulation.nsb import NsbSettings
 from simtools.utils.primary_particle import PrimaryParticle
 
 _NORTH = "North"
@@ -211,6 +213,7 @@ def test_get_additional_simtel_metadata(array_model_north, mocker, run_context):
     assert metadata[_ZENITH_ANGLE] == pytest.approx(20.0)
     assert metadata["ha_angle"] == pytest.approx(0.0)
     assert metadata["dec_angle"] == pytest.approx(30.0)
+    assert "nsb_autoscaling" not in metadata
     assert metadata["INSTRUME"] == "CTAO-North"
     assert metadata[_PDGID] == 22
 
@@ -267,6 +270,15 @@ def test_get_additional_simtel_metadata_calibration_run(array_model_north, mocke
     assert _PDGID not in metadata
 
 
+def test_get_additional_simtel_metadata_records_nsb_autoscaling(array_model_north, mocker):
+    array_model = copy.deepcopy(array_model_north)
+    mocker.patch.object(array_model.site_model, _NSB_FLUX, return_value=42.0)
+    writer = get_model_writer(array_model)
+    writer.nsb_settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=False)
+
+    assert writer._get_additional_simtel_metadata()["nsb_autoscaling"] == 0
+
+
 def test_metadata_from_corsika_input_uses_shower_parameters(array_model_north, mocker, run_context):
     model = copy.deepcopy(array_model_north)
     mocker.patch.object(model.site_model, _NSB_FLUX, return_value=42.0)
@@ -305,8 +317,8 @@ def test_export_all_simtel_config_files(mocker):
     array.assert_called_once()
     telescopes.reset_mock()
     array.reset_mock()
-    exporter._telescope_model_files_exported = True
-    exporter._array_model_file_exported = True
+    exporter.telescope_model_files_exported = True
+    exporter.array_model_file_exported = True
     exporter.export_config_files()
     telescopes.assert_not_called()
     array.assert_not_called()
@@ -325,7 +337,32 @@ def test_export_simtel_telescope_config_files(array_model_north):
             "sim_telarray"
         ].write_sim_telarray_config_file.assert_called_once()
 
-    assert get_model_writer(am)._telescope_model_files_exported is True
+    assert get_model_writer(am).telescope_model_files_exported is True
+
+
+@pytest.mark.parametrize(("model_factor", "expected_rate"), [(None, 0.4), ("3.0", 0.6)])
+def test_export_simtel_telescope_configs_apply_resolved_site_nsb_factor(
+    array_model_north, model_factor, expected_rate
+):
+    array = array_model_north
+    site = array.site_model
+    site.get_simulation_software_parameters("sim_telarray")["nsb_scaling_factor"] = {"value": "2.0"}
+    if model_factor is None:
+        site.parameters.pop("nsb_scaling_factor", None)
+    else:
+        site.parameters["nsb_scaling_factor"] = {"value": model_factor}
+    for telescope in array.telescope_models.values():
+        telescope.parameters["nsb_pixel_rate"] = {"value": 0.2}
+        telescope.parameters["nsb_autoscale_airmass"] = {"value": [0.84, 0.29]}
+
+    writer = get_model_writer(array)
+    writer.nsb_settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
+    writer.export_simtel_telescope_config_files()
+
+    for telescope in array.telescope_models.values():
+        config = telescope.config_file_path.read_text(encoding="utf-8")
+        rates = re.findall(r"^nightsky_background = (.+)$", config, flags=re.MULTILINE)
+        assert [float(rate) for rate in rates] == pytest.approx([expected_rate])
 
 
 def test_export_simtel_telescope_config_files_skips_duplicates(mocker, run_context):
@@ -359,7 +396,7 @@ def test_export_simtel_telescope_config_files_skips_duplicates(mocker, run_conte
     # Verify the logger was called for the second telescope
     # Both telescope entries share one configuration file.
 
-    assert get_model_writer(am)._telescope_model_files_exported is True
+    assert get_model_writer(am).telescope_model_files_exported is True
 
 
 def test_export_sim_telarray_config_file(array_model_north, mocker):
@@ -391,4 +428,30 @@ def test_export_sim_telarray_config_file(array_model_north, mocker):
     assert call_args[1]["additional_metadata"] == mock_metadata
 
     # Verify the flag is set
-    assert get_model_writer(am)._array_model_file_exported is True
+    assert get_model_writer(am).array_model_file_exported is True
+
+
+def test_telescope_config_writes_scaled_nsb_without_mutating_model(telescope_model_lst, mocker):
+    telescope = copy.deepcopy(telescope_model_lst)
+    telescope.parameters["nsb_pixel_rate"] = {"value": [0.2, 0.4]}
+    telescope.parameters["nsb_autoscale_airmass"] = {"value": [0.84, 0.29]}
+    writer = get_model_writer(telescope)
+    writer.nsb_settings = NsbSettings(zenith_angle=20.0, manual_factor=None, autoscale=True)
+    writer.nsb_site_manual = 1.0
+    mocker.patch.object(telescope.model_reader, "export_model_files")
+    output = mocker.Mock()
+    mocker.patch.object(
+        writer,
+        "_load_simtel_config_writer",
+        side_effect=lambda **_: setattr(writer, "config_writer", output),
+    )
+
+    writer.write_sim_telarray_config_file()
+
+    parameters = output.write_telescope_config_file.call_args.kwargs["parameters"]
+    assert parameters["nsb_pixel_rate"]["value"] == pytest.approx([0.20660017, 0.41320034])
+    assert parameters["nsb_autoscale_airmass"]["value"] == [0.0, 0.29]
+    assert telescope.parameters["nsb_pixel_rate"]["value"] == [0.2, 0.4]
+    assert writer.written_nsb_parameters["nsb_pixel_rate"] == parameters["nsb_pixel_rate"]
+    metadata = output.write_telescope_config_file.call_args.kwargs["additional_metadata"]
+    assert metadata["nsb_applied_scaling_factor"] == pytest.approx(1.0330008543)
