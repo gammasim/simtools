@@ -1,13 +1,10 @@
 """Read and combine production-table files from a model repository."""
 
-import logging
 from pathlib import Path
 
 from packaging.version import InvalidVersion, Version
 
 from simtools.utils import names
-
-logger = logging.getLogger(__name__)
 
 
 def collect_production_descriptions(info_files, read_info):
@@ -84,5 +81,4 @@ def _remove_deprecated_model_parameters(model_dict):
         for params in table.get("parameters", {}).values():
             for parameter in table.get("deprecated_parameters", []):
                 if parameter in params:
-                    logger.info("Removing deprecated parameter %s", parameter)
                     params.pop(parameter)
