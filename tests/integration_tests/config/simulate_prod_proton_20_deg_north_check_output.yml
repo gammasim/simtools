@@ -41,13 +41,13 @@ applications:
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path
-      output_sub_path: model/run000001/5.0.0
+      output_sub_path: model/run000001/8.0.0
       file: CTAO-LSTN-01.cfg
       model_versions:
-      - 5.0.0
+      - 8.0.0
       validations:
       - type: simtel_config
-        reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-01.cfg}
+        reference: ${generated:sim_telarray_configurations/8.0.0/CTAO-LSTN-01.cfg}
         ignore_parameters:
         - nightsky_background
         - nsb_autoscale_airmass
@@ -63,13 +63,13 @@ applications:
         - nightsky_background
         - nsb_autoscale_airmass
     - path_descriptor: output_path
-      output_sub_path: model/run000001/5.0.0
+      output_sub_path: model/run000001/8.0.0
       file: CTAO-LSTN-02.cfg
       model_versions:
-      - 5.0.0
+      - 8.0.0
       validations:
       - type: simtel_config
-        reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-02.cfg}
+        reference: ${generated:sim_telarray_configurations/8.0.0/CTAO-LSTN-02.cfg}
         ignore_parameters:
         - nightsky_background
         - nsb_autoscale_airmass
@@ -85,13 +85,13 @@ applications:
         - nightsky_background
         - nsb_autoscale_airmass
     - path_descriptor: output_path
-      output_sub_path: model/run000001/5.0.0
+      output_sub_path: model/run000001/8.0.0
       file: CTAO-MSTN-01.cfg
       model_versions:
-      - 5.0.0
+      - 8.0.0
       validations:
       - type: simtel_config
-        reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-MSTN-01.cfg}
+        reference: ${generated:sim_telarray_configurations/8.0.0/CTAO-MSTN-01.cfg}
         ignore_parameters:
         - nightsky_background
         - nsb_autoscale_airmass
@@ -107,13 +107,13 @@ applications:
         - nightsky_background
         - nsb_autoscale_airmass
     - path_descriptor: output_path
-      output_sub_path: model/run000001/5.0.0
+      output_sub_path: model/run000001/8.0.0
       file: CTAO-North-alpha.cfg
       model_versions:
-      - 5.0.0
+      - 8.0.0
       validations:
       - type: simtel_config
-        reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-North-alpha.cfg}
+        reference: ${generated:sim_telarray_configurations/8.0.0/CTAO-North-CTAO-North-Alpha.cfg}
         ignore_parameters:
         - nightsky_background
         - nsb_autoscale_airmass
