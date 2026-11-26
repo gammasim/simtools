@@ -303,19 +303,17 @@ jobs:
       - name: Determine simulation model branch
         id: simulation_model_branch
         env:
-          BRANCH: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
-          FLAVOR: ${{ steps.simulation_model_repository.outputs.flavor }}
+          BRANCH: ${{ inputs.simulation_model_branch || '' }}
           EVENT_NAME: ${{ github.event_name }}
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          if [[ "$EVENT_NAME" == pull_request && "$PR_TITLE" == v*-rc* ]]; then
+          if [[ "$EVENT_NAME" == release ||
+                ( "$EVENT_NAME" == pull_request && "$PR_TITLE" == v*-rc* ) ]]; then
             BRANCH="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
           elif [[ "$EVENT_NAME" == pull_request ]]; then
             BRANCH=main
-          elif [[ -z "$BRANCH" && "$FLAVOR" == development ]]; then
-            BRANCH=main
           fi
-          BRANCH="${BRANCH:-$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION}"
+          BRANCH="${BRANCH:-main}"
           git check-ref-format --branch "$BRANCH"
           echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$BRANCH" >> "$GITHUB_ENV"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
