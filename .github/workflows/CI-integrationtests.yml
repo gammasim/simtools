@@ -478,6 +478,10 @@ jobs:
       IT_NAME: "corsika7-interaction-tables"
       SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
       SIMULATION_MODELS_GIT_PATH: ${{ github.workspace }}/simulation-models.git
+      MATRIX_MODEL_VERSION: ${{ matrix.model_version }}
+      # Model-version independent tests run only for the first matrix model version.
+      # Keep this default list identical to strategy.matrix.model_version.
+      REFERENCE_MODEL_VERSION: ${{ fromJSON(inputs.model_versions || '["8.0.0","7.0.0","6.0.2","6.0.2,6.1.1"]')[0] }}
 
     strategy:
       fail-fast: false
@@ -594,8 +598,12 @@ jobs:
               --resource-benchmark-min-wall-time=${{ inputs.benchmark_min_wall_time }} \
               tests/integration_tests/
           else
+            SELECTION_ARGS=()
+            if [[ "$MATRIX_MODEL_VERSION" != "$REFERENCE_MODEL_VERSION" ]]; then
+              SELECTION_ARGS+=(--skip_model_version_independent)
+            fi
             pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
-              "${MODEL_SOURCE_ARGS[@]}" \
+              "${MODEL_SOURCE_ARGS[@]}" "${SELECTION_ARGS[@]}" \
               -n 4 --dist worksteal --retries 2 --retry-delay 5 --maxfail=1 --no-cov tests/integration_tests/
           fi
 

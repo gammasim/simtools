@@ -13,6 +13,7 @@ from simtools.io import ascii_handler
 from simtools.testing import options
 
 
+@pytest.mark.model_version_independent
 @pytest.mark.parametrize(
     ("parameter", "value", "expected", "unit"),
     [("min_photons", "121", 121, None), ("asum_threshold", "0.2 V", 200, "mV")],

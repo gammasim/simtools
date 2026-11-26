@@ -330,6 +330,7 @@ ini_options.addopts = [
   "-rsxXf",
 ]
 ini_options.markers = [
+  "model_version_independent: integration test whose commands do not depend on --model_version.",
   "uses_model_repository: test reads simulation-model repository data.",
   "verifies_requirement(name): integration test verifies a requirement.",
   "verifies_usecase(name): integration test verifies a use case."

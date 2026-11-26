@@ -90,6 +90,9 @@ Optional application-level keys beside `application` and `configuration`:
 
 - `model_version_use_current: true`: run only when the CLI `--model_version`
   matches the config model version.
+- `run_for_all_model_versions: true`: run in every model-version CI job even
+  without a `model_version` entry; otherwise such workflows are marked
+  `model_version_independent` and run only for the first CI model version.
 - `skip_integration_test: <reason>`: temporary explicit skip with reason.
 - `test_use_case: UC-...`: add use-case pytest marker.
 - `test_requirement: REQ-...`: add requirement pytest marker.
