@@ -3,39 +3,34 @@ import pytest
 from simtools.data_model import metadata_keys
 
 _BLOCK = {"product": {"id": "abc"}}
+_OLD = {"product": {"id": "old"}}
 
 
-@pytest.mark.parametrize("key", ["ctao", "CTAO", "cta", "CTA"])
-def test_get_observatory_metadata_reads_ctao_and_legacy_cta(key):
-    assert metadata_keys.get_observatory_metadata({key: _BLOCK}) == _BLOCK
+@pytest.mark.parametrize(
+    ("metadata", "expected"),
+    [
+        ({"ctao": _BLOCK}, _BLOCK),
+        ({"CTAO": _BLOCK}, _BLOCK),
+        ({"cta": _BLOCK}, _BLOCK),
+        ({"CTA": _BLOCK}, _BLOCK),
+        ({"cta": _OLD, "ctao": _BLOCK}, _BLOCK),
+        ({"site": "North"}, {}),
+    ],
+)
+def test_get_observatory_metadata(metadata, expected):
+    assert metadata_keys.get_observatory_metadata(metadata) == expected
 
 
-def test_get_observatory_metadata_prefers_ctao():
-    metadata = {"cta": {"product": {"id": "old"}}, "ctao": _BLOCK}
+@pytest.mark.parametrize(
+    ("metadata", "expected"),
+    [
+        ({"cta": _BLOCK, "site": "North"}, {"ctao": _BLOCK, "site": "North"}),
+        ({"ctao": _BLOCK, "cta": _OLD}, {"ctao": _BLOCK, "cta": _OLD}),
+        ({"site": "North"}, {"site": "North"}),
+    ],
+)
+def test_normalize_observatory_key(metadata, expected):
+    original = dict(metadata)
 
-    assert metadata_keys.get_observatory_metadata(metadata) == _BLOCK
-
-
-def test_get_observatory_metadata_without_block():
-    assert metadata_keys.get_observatory_metadata({"site": "North"}) == {}
-
-
-@pytest.mark.parametrize(("key", "expected"), [("cta", "ctao"), ("CTA", "CTAO")])
-def test_normalize_observatory_key_renames_legacy_key(key, expected):
-    normalized = metadata_keys.normalize_observatory_key({key: _BLOCK, "site": "North"})
-
-    assert normalized == {expected: _BLOCK, "site": "North"}
-
-
-def test_normalize_observatory_key_keeps_existing_ctao_block():
-    metadata = {"ctao": _BLOCK, "cta": {"product": {"id": "old"}}}
-
-    assert metadata_keys.normalize_observatory_key(metadata) == metadata
-
-
-def test_normalize_observatory_key_does_not_modify_input():
-    metadata = {"cta": _BLOCK}
-
-    metadata_keys.normalize_observatory_key(metadata)
-
-    assert metadata == {"cta": _BLOCK}
+    assert metadata_keys.normalize_observatory_key(metadata) == expected
+    assert metadata == original

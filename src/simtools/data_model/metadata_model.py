@@ -48,25 +48,10 @@ def get_default_metadata_dict(
 
 def add_required_fields(metadata, observatory=OBSERVATORY_KEY, schema_version="latest"):
     """
-    Add the fields required by the metadata schema that are missing from the metadata.
+    Add missing schema-required fields to the metadata (in place) and return it.
 
     Missing required objects are added as empty objects and missing required values as
-    None (not applicable). Cleaning removes None values, so this is applied after cleaning
-    to keep the output valid against the schema.
-
-    Parameters
-    ----------
-    metadata: dict
-        Metadata dictionary (modified in place).
-    observatory: str
-        Observatory name (top-level key of the metadata).
-    schema_version: str, optional
-        Version of the schema to use.
-
-    Returns
-    -------
-    dict
-        Metadata dictionary with required fields.
+    None (not applicable), so that cleaned metadata stays valid against the schema.
     """
     schema = simtools.data_model.schema.load_schema(schema_version=schema_version)
     _add_required_fields(metadata[observatory], schema["definitions"][observatory.lower()])

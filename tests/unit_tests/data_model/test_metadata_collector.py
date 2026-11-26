@@ -513,6 +513,12 @@ def test_read_input_metadata_from_yml_or_json_no_file():
             {"site": "South", "instrument": "CTAO-South-Alpha"},
             {"site": "South", "class": "array", "id": "CTAO-South-Alpha"},
         ),
+        ({"site": "North"}, {"site": "North", "class": "site", "type": "North", "id": "OBS-North"}),
+        ({"instrument": "Dummy-Telescope"}, {"class": "array", "id": "Dummy-Telescope"}),
+        (
+            {"instrument": "configuration_corsika"},
+            {"class": "array", "id": "configuration_corsika"},
+        ),
     ],
 )
 def test_fill_instrument_meta(args, expected):
@@ -520,13 +526,6 @@ def test_fill_instrument_meta(args, expected):
     instrument = collector.top_level_meta["ctao"]["instrument"]
     assert {key: value for key, value in instrument.items() if value is not None} == expected
     assert instrument.keys() == {"class", "id", "site", "type"}
-
-
-def test_fill_instrument_meta_is_complete_for_site_only():
-    collector = metadata_collector.MetadataCollector(args_dict={"label": "test", "site": "North"})
-    instrument = collector.top_level_meta["ctao"]["instrument"]
-    assert {"class", "type", "id", "site"} <= instrument.keys()
-    assert "ID" not in instrument
 
 
 def test_fill_product_meta_without_data_model_has_no_placeholders():
@@ -538,6 +537,11 @@ def test_fill_product_meta_without_data_model_has_no_placeholders():
     assert product["format"] is None
     assert product["data"]["model"] == {"name": None, "version": None}
     assert "undefined_model_name" not in str(collector.top_level_meta)
+    collector = metadata_collector.MetadataCollector(
+        args_dict={"label": "test", "output_file": "/abs/output/table.ecsv"}
+    )
+    product = collector.top_level_meta["ctao"]["product"]
+    assert (product["filename"], product["format"]) == ("table.ecsv", "ecsv")
 
 
 def test_fill_product_meta_from_model_parameter_schema():
@@ -550,18 +554,8 @@ def test_fill_product_meta_from_model_parameter_schema():
     assert product["data"]["model"]["version"] == "0.1.0"
     assert product["data"]["model"]["url"].startswith("https://")
     assert product["data"]["model"]["url"].endswith("/model_parameters/altitude.schema.yml")
-    assert product["description"].startswith("Altitude above sea level of site centre. Telescope")
     assert product["filename"] == "altitude-1.0.0.json"
     assert product["format"] == "json"
-
-
-def test_fill_product_meta_writes_file_name_without_directory():
-    collector = metadata_collector.MetadataCollector(
-        args_dict={"label": "test", "output_file": "/abs/output/table.ecsv"}
-    )
-    product = collector.top_level_meta["ctao"]["product"]
-    assert product["filename"] == "table.ecsv"
-    assert product["format"] == "ecsv"
 
 
 def test_output_metadata_has_no_local_schema_path(tmp_test_directory):
@@ -605,18 +599,6 @@ def test_get_data_model_schema_file_name_unknown_model_parameter():
     assert collector.get_data_model_schema_file_name() is None
 
 
-@pytest.mark.parametrize(
-    ("instrument", "expected_class"),
-    [("Dummy-Telescope", "array"), ("configuration_corsika", "array")],
-)
-def test_fill_instrument_meta_for_special_names(instrument, expected_class):
-    collector = metadata_collector.MetadataCollector(
-        args_dict={"label": "test", "instrument": instrument}
-    )
-    assert collector.top_level_meta["ctao"]["instrument"]["class"] == expected_class
-    assert collector.top_level_meta["ctao"]["instrument"]["id"] == instrument
-
-
 def test_data_model_url_for_remote_and_packaged_schema():
     assert metadata_collector._data_model_url("https://example.org/a.schema.yml") == (
         "https://example.org/a.schema.yml"
@@ -638,32 +620,22 @@ def test_written_metadata_without_site_is_valid_input(tmp_test_directory):
     assert reread.input_metadata[0]["ctao"]["instrument"]["site"] is None
 
 
-def test_fill_product_meta_description_prefers_application_description():
+@pytest.mark.parametrize(
+    ("args", "parameter", "expected"),
+    [
+        ({"_application_description": "Submit a model parameter."}, "altitude", "Submit a model"),
+        ({}, "altitude", "Altitude above sea level of site centre. Telescope"),
+        ({}, None, None),
+    ],
+)
+def test_fill_product_meta_description(args, parameter, expected):
+    """The application description is preferred over the schema description."""
     collector = metadata_collector.MetadataCollector(
-        args_dict={
-            "label": "test",
-            "output_file": "altitude-1.0.0.json",
-            "_application_description": "Submit a model parameter.",
-        },
-        model_parameter_name="altitude",
+        args_dict={"label": "test", "output_file": "altitude-1.0.0.json", **args},
+        model_parameter_name=parameter,
     )
-    assert collector.top_level_meta["ctao"]["product"]["description"] == (
-        "Submit a model parameter."
-    )
-
-
-def test_fill_product_meta_description_falls_back_to_schema_description():
-    collector = metadata_collector.MetadataCollector(
-        args_dict={"label": "test", "output_file": "altitude-1.0.0.json"},
-        model_parameter_name="altitude",
-    )
-    description = collector.top_level_meta["ctao"]["product"]["description"]
-    assert description.startswith("Altitude above sea level of site centre. Telescope")
-
-
-def test_fill_product_meta_description_is_none_without_any_source():
-    collector = metadata_collector.MetadataCollector(args_dict={"label": "test"})
-    assert "description" not in collector.top_level_meta["ctao"]["product"]
+    description = collector.top_level_meta["ctao"]["product"].get("description")
+    assert description.startswith(expected) if expected else description is None
 
 
 def test_write_sidecar_metadata_writes_checksum_and_cta_block(tmp_test_directory):

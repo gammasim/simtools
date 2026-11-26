@@ -49,19 +49,9 @@ _FORMAT_READERS = {
 }
 # application arguments that point to the local file system (never written to metadata)
 _LOCAL_PATH_ARGUMENTS = frozenset(
-    {
-        "data_path",
-        "data_search_path",
-        "env_file",
-        "grid_output_path",
-        "log_file",
-        "log_file_path",
-        "output_path",
-        "runtime_environment_file",
-        "simulation_models_git_path",
-        "simulation_models_path",
-        "value_data_path",
-    }
+    """data_path data_search_path env_file grid_output_path log_file log_file_path output_path
+    runtime_environment_file simulation_models_git_path simulation_models_path value_data_path
+    """.split()
 )
 # instrument classes of array element collections (see array_elements.yml)
 _INSTRUMENT_CLASSES = {"telescopes": "telescope", "calibration_devices": "calibration_device"}
@@ -397,41 +387,33 @@ class MetadataCollector:
         instrument_id = fields.get("instrument_id")
         format_name = fields["format_name"]
         metadata = metadata_model.get_default_metadata_dict(observatory=self.observatory)
-        block = metadata[self.observatory]
-        block["product"].update({"filename": str(metadata_file_name), "format": format_name})
-        block["product"]["data"].update({"category": "SIM", "type": "Event"})
-        block["instrument"].update(
-            _non_empty_fields(_instrument_fields(fields.get("site"), instrument_id))
-        )
-        block["process"]["type"] = "simulation"
+        cta = metadata[self.observatory]
+        cta["product"].update({"filename": str(metadata_file_name), "format": format_name})
+        cta["product"]["data"].update({"category": "SIM", "type": "Event"})
+        cta["instrument"].update(_instrument_fields(fields.get("site"), instrument_id))
+        cta["process"]["type"] = "simulation"
         software = {"name": fields["software_name"], "version": fields["software_version"]}
-        block["activity"].update({"type": "software", "software": software})
+        cta["activity"].update({"type": "software", "software": software})
         raw = json.dumps(ascii_handler.to_builtin(fields["raw_metadata"]), sort_keys=True)
-        block["context"]["notes"] = [{"title": f"{format_name} metadata", "text": raw}]
+        cta["context"]["notes"] = [{"title": f"{format_name} metadata", "text": raw}]
         if fields.get("associated_elements"):
-            block["context"]["associated_elements"] = fields["associated_elements"]
+            cta["context"]["associated_elements"] = fields["associated_elements"]
         return metadata
 
     def _read_input_metadata_from_ecsv(self, metadata_file_name):
         """Read input metadata from ecsv file."""
         try:
             table_meta = Table.read(metadata_file_name).meta
-            key = next(
-                key
-                for name in (self.observatory, LEGACY_OBSERVATORY_KEY)
-                for key in (name.upper(), name)
-                if key in table_meta
-            )
-        except StopIteration:
-            raise KeyError(
-                f"No {self.observatory} metadata block in {metadata_file_name}"
-            ) from None
         except FileNotFoundError, AttributeError:
             self._logger.error(
                 "Failed reading metadata for %s from %s", self.observatory, metadata_file_name
             )
             raise
-        return {key: table_meta[key]}
+        for name in (self.observatory, LEGACY_OBSERVATORY_KEY):
+            for key in (name.upper(), name):
+                if key in table_meta:
+                    return {key: table_meta[key]}
+        raise KeyError(f"No {self.observatory} metadata block in {metadata_file_name}")
 
     def _read_input_metadata_from_yml_or_json(self, metadata_file_name):
         """Read input metadata from yml or json file."""
@@ -493,9 +475,7 @@ class MetadataCollector:
         instrument_name = self.args_dict.get("instrument") or self.args_dict.get("telescope")
         if instrument_name is None and site is not None:
             instrument_name = f"OBS-{site}"
-        instrument_dict.update(
-            _non_empty_fields(_instrument_fields(site=site, instrument_name=instrument_name))
-        )
+        instrument_dict.update(_instrument_fields(site, instrument_name))
 
     def _fill_process_meta(self, process_dict):
         """Fill process fields in metadata."""
@@ -576,24 +556,10 @@ class MetadataCollector:
 
 def write_sidecar_metadata(data_file, args_dict=None, context=None):
     """
-    Write the metadata sidecar (``*.meta.yml``) and SHA-256 checksum of a data product.
+    Write the metadata sidecar (``*.meta.yml``) with the SHA-256 checksum of a data product.
 
-    Use for products that cannot embed their metadata (e.g., yml, json, png). The data
-    file must already be written.
-
-    Parameters
-    ----------
-    data_file: str or Path
-        Data product file.
-    args_dict: dict, optional
-        Application arguments (default: the arguments of the run context).
-    context: RunContext, optional
-        Run context.
-
-    Returns
-    -------
-    str or Path
-        Name of the sidecar metadata file.
+    Use for written products that cannot embed their metadata (e.g., yml, json). The
+    arguments default to those of the run context. Returns the sidecar file name.
     """
     data_file = Path(data_file)
     context = context or RunContext.from_environment()
@@ -612,40 +578,31 @@ def write_sidecar_metadata(data_file, args_dict=None, context=None):
 
 def _instrument_fields(site, instrument_name):
     """
-    Return site, class, type and id of an instrument.
+    Return the known site, class, type and id of an instrument.
 
     Array elements (e.g. LSTN-01) give class 'telescope' or 'calibration_device' and their
     array element type (e.g. LSTN). Site names and 'OBS-<site>' give class 'site'. Other
     names (e.g. array configurations) give class 'array'.
     """
-    fields = {"site": site, "class": None, "type": None, "id": instrument_name or None}
-    if not instrument_name:
-        return fields
-    try:
-        collection = names.get_collection_name_from_array_element_name(instrument_name, False)
-    except ValueError:
-        return {**fields, "class": "array"}
-    if collection == "sites":
-        site_name = names.get_site_from_array_element_name(instrument_name)
-        return {
-            "site": site or site_name,
-            "class": "site",
-            "type": site_name,
-            "id": instrument_name,
-        }
-    if collection not in _INSTRUMENT_CLASSES:
-        return {**fields, "class": "array"}
-    derived_site = names.get_site_from_array_element_name(instrument_name)
-    return {
-        "site": site or (derived_site if isinstance(derived_site, str) else None),
-        "class": _INSTRUMENT_CLASSES[collection],
-        "type": names.get_array_element_type_from_name(instrument_name),
-        "id": instrument_name,
-    }
-
-
-def _non_empty_fields(fields):
-    """Return the entries of a dictionary whose values are not None."""
+    instrument_class = instrument_type = None
+    if instrument_name:
+        try:
+            collection = names.get_collection_name_from_array_element_name(instrument_name, False)
+        except ValueError:
+            collection = None
+        if collection == "sites":
+            instrument_class = "site"
+            instrument_type = names.get_site_from_array_element_name(instrument_name)
+            site = site or instrument_type
+        elif collection in _INSTRUMENT_CLASSES:
+            instrument_class = _INSTRUMENT_CLASSES[collection]
+            instrument_type = names.get_array_element_type_from_name(instrument_name)
+            derived_site = names.get_site_from_array_element_name(instrument_name)
+            site = site or (derived_site if isinstance(derived_site, str) else None)
+        else:
+            instrument_class = "array"
+    fields = {"site": site, "class": instrument_class, "type": instrument_type}
+    fields["id"] = instrument_name or None
     return {key: value for key, value in fields.items() if value is not None}
 
 

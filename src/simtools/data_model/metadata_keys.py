@@ -6,22 +6,7 @@ LEGACY_OBSERVATORY_KEY = "cta"
 
 
 def get_observatory_metadata(metadata):
-    """
-    Return the observatory metadata block of a metadata dictionary.
-
-    Reads the ``ctao`` block and falls back to the ``cta`` block of older products.
-    Upper-case keys are accepted.
-
-    Parameters
-    ----------
-    metadata: dict
-        Metadata dictionary.
-
-    Returns
-    -------
-    dict
-        Observatory metadata block (empty if not present).
-    """
+    """Return the ``ctao`` (or legacy ``cta``, any case) metadata block; empty if absent."""
     for key in (OBSERVATORY_KEY, LEGACY_OBSERVATORY_KEY):
         for spelling in (key, key.upper()):
             if spelling in metadata:
@@ -30,26 +15,10 @@ def get_observatory_metadata(metadata):
 
 
 def normalize_observatory_key(metadata):
-    """
-    Return metadata with the ``cta`` block of older products renamed to ``ctao``.
-
-    The case of the key is preserved (``CTA`` becomes ``CTAO``).
-
-    Parameters
-    ----------
-    metadata: dict
-        Metadata dictionary.
-
-    Returns
-    -------
-    dict
-        Metadata dictionary using the ``ctao`` key.
-    """
-    renamed = {}
-    for key, value in metadata.items():
-        if key == LEGACY_OBSERVATORY_KEY and OBSERVATORY_KEY not in metadata:
-            key = OBSERVATORY_KEY
-        elif key == LEGACY_OBSERVATORY_KEY.upper() and OBSERVATORY_KEY.upper() not in metadata:
-            key = OBSERVATORY_KEY.upper()
-        renamed[key] = value
-    return renamed
+    """Return metadata with the legacy ``cta`` block renamed to ``ctao``."""
+    if LEGACY_OBSERVATORY_KEY not in metadata or OBSERVATORY_KEY in metadata:
+        return metadata
+    return {
+        OBSERVATORY_KEY if key == LEGACY_OBSERVATORY_KEY else key: value
+        for key, value in metadata.items()
+    }

@@ -1,6 +1,7 @@
 """Tests for the CTAO metadata bridge."""
 
 import math
+from unittest.mock import Mock
 
 import astropy.units as u
 import pytest
@@ -111,16 +112,6 @@ def test_get_ctao_simtel_metadata_calibration_run():
     assert math.isclose(metadata["SIMNSB"], 1.0)
 
 
-def test_get_ctao_simtel_metadata_calibration_array_association():
-    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(
-        {"site": "South", "label": "flasher"}, calibration=True
-    )
-
-    assert metadata["DATAASSO"] == "Array"
-    assert metadata["INSTRUME"] == "CTAO-South"
-    assert metadata["ACTIVITY"] == "simulate_prod"
-
-
 def test_get_ctao_simtel_metadata_air_shower_activity_from_application():
     metadata = sim_telarray_metadata.get_ctao_simtel_metadata(
         {**_BASE_ARGS, "application_label": "simulate_prod"}
@@ -141,6 +132,15 @@ def test_get_software_versions_from_build_options(mocker):
         "simtel_version": "v2025-11-30-rc",
         "corsika_version": "78010",
     }
+    # calibration run without telescope: array association; site and versions from the run
+    site_model = Mock(site="South", **{"get_parameter_value.return_value": None})
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(
+        {"label": "flasher"}, site_model, calibration=True, context=Mock()
+    )
+    assert metadata["DATAASSO"] == "Array"
+    assert metadata["INSTRUME"] == "CTAO-South"
+    assert metadata["ACTIVITY"] == "simulate_prod"
+    assert metadata["SIMTELVER"] == "v2025-11-30-rc"
 
 
 def test_get_software_versions_without_build_options(mocker):

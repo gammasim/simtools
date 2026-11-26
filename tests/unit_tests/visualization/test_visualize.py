@@ -562,7 +562,8 @@ def test_figure_metadata_is_none_without_metadata():
     assert visualize.figure_metadata({}, "pdf") is None
 
 
-def test_save_figure_passes_metadata_to_savefig(tmp_test_directory, mocker):
+@pytest.mark.parametrize("metadata", [_EMBEDDED_METADATA, None])
+def test_save_figure_passes_metadata_to_savefig(tmp_test_directory, mocker, metadata):
     # savefig is stubbed for file paths in unit tests; assert the metadata handed to matplotlib.
     figure, _ = plt.subplots()
     savefig = mocker.patch.object(figure, "savefig")
@@ -571,22 +572,16 @@ def test_save_figure_passes_metadata_to_savefig(tmp_test_directory, mocker):
         figure,
         Path(tmp_test_directory) / "figure_with_metadata",
         figure_format=["png", "pdf", "svg"],
-        metadata=_EMBEDDED_METADATA,
+        metadata=metadata,
     )
 
     calls = {call.kwargs["format"]: call.kwargs for call in savefig.call_args_list}
+    assert "metadata" not in calls["svg"]
+    if metadata is None:
+        assert "metadata" not in calls["png"]
+        return
     assert json.loads(calls["png"]["metadata"]["ctao"]) == _EMBEDDED_METADATA
     assert json.loads(calls["pdf"]["metadata"]["Subject"]) == _EMBEDDED_METADATA
-    assert "metadata" not in calls["svg"]
-
-
-def test_save_figure_without_metadata_does_not_pass_metadata(tmp_test_directory, mocker):
-    figure, _ = plt.subplots()
-    savefig = mocker.patch.object(figure, "savefig")
-
-    visualize.save_figure(figure, Path(tmp_test_directory) / "figure", figure_format=["png"])
-
-    assert "metadata" not in savefig.call_args.kwargs
 
 
 def test_pdf_report_embeds_metadata_as_subject(tmp_test_directory):

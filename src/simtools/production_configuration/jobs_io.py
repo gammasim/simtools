@@ -539,19 +539,10 @@ def _summary_integer_text(values):
 
 
 def build_job_grid_summary(rows, lookup_configured=False):
-    """Build a user-facing summary of generated job-grid values.
+    """Build a user-facing summary of generated job-grid values (fixed GeV, m, deg units).
 
-    Energies are always reported in GeV, core scatter in m and view cones in deg, so the
-    summary does not depend on the units of the input rows. A field without any value is
-    ``None`` (not applicable), except lookup-table limits: when a lookup table is configured,
-    a missing lookup limit is reported as ``"not available"`` (lookup failed).
-
-    Parameters
-    ----------
-    rows : list[dict]
-        Job rows in the in-memory schema.
-    lookup_configured : bool, optional
-        True if the job grid was generated with a lookup table (``corsika_limits``).
+    Fields without values are None; with ``lookup_configured`` (job grid generated with a
+    lookup table), missing lookup limits are ``"not available"``.
     """
     if not rows:
         return {"simulation_rows": 0, "total_showers": 0}

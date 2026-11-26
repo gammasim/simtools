@@ -17,9 +17,7 @@ from simtools.simtel.simulator_light_emission import LIGHT_SOURCE_POSITION, Simu
 from simtools.simulation.configuration import get_light_source_writer
 from simtools.simulation.nsb import NsbSettings
 
-_CALIBRATION_METADATA_PATH = (
-    "simtools.simtel.simulator_light_emission.get_calibration_simtel_metadata"
-)
+_CALIBRATION_METADATA_PATH = "simtools.simtel.simulator_light_emission.get_ctao_simtel_metadata"
 
 MAKE_COMMAND_METHOD = "make_command"
 

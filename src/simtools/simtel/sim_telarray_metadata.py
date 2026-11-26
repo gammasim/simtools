@@ -43,7 +43,7 @@ _REGISTRY_SAMPLE_ARGS = {
 }
 
 
-def get_ctao_simtel_metadata(args, site_model=None, created=None, calibration=False):
+def get_ctao_simtel_metadata(args, site_model=None, created=None, calibration=False, context=None):
     """
     Build CTAO metadata for a sim_telarray configuration.
 
@@ -57,7 +57,9 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None, calibration=Fa
         Timestamp used for the product creation and activity start fields.
     calibration : bool, optional
         Build metadata for calibration (light source) runs without a primary particle.
-        Air-shower specific keywords are then omitted.
+        Air-shower specific keywords are then omitted and the site defaults to the site model.
+    context : RunContext, optional
+        Run context; if given, its sim_telarray and CORSIKA versions are added.
 
     Returns
     -------
@@ -65,7 +67,9 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None, calibration=Fa
         FITS keywords and serialized values ready for sim_telarray ``metaparam`` lines.
         Keywords without a known value (e.g. contact information not provided) are omitted.
     """
-    site = args.get("site")
+    if context is not None:
+        args = {**args, **get_software_versions(context)}
+    site = args.get("site") or (site_model.site if calibration and site_model else None)
     if site not in ("North", "South"):
         raise ValueError(f"Unsupported CTAO site for sim_telarray metadata: {site!r}")
     if not calibration and not args.get("primary"):
@@ -127,19 +131,7 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None, calibration=Fa
 
 
 def get_software_versions(context=None):
-    """
-    Return sim_telarray and CORSIKA versions from the build options for CTAO metadata.
-
-    Parameters
-    ----------
-    context : RunContext, optional
-        Run context providing the software installation paths.
-
-    Returns
-    -------
-    dict
-        Keys ``simtel_version`` and ``corsika_version`` (only versions that are known).
-    """
+    """Return the known sim_telarray and CORSIKA versions (``simtel_version``, ...)."""
     try:
         build_options = dependencies.get_build_options(context=context)
     except FileNotFoundError, TypeError:

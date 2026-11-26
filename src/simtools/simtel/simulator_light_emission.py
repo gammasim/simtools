@@ -20,8 +20,8 @@ from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.model_repository.reader import resolve_model_reader
 from simtools.runtime.context import RunContext
 from simtools.simtel import output_validation as simtel_output_validation
-from simtools.simtel.model_writer import get_calibration_simtel_metadata
 from simtools.simtel.photon_bunch_file import bypass_optics_level
+from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import get_simtel_site_parameters
 from simtools.simtel.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_seeds import instance_seed_pairs
@@ -151,14 +151,15 @@ class SimulatorLightEmission(SimtelRunner):
         export_model_files(self.site_model)
         get_model_writer(self.telescope_model).write_sim_telarray_config_file(
             additional_models=self.site_model,
-            global_metadata=get_calibration_simtel_metadata(
+            global_metadata=get_ctao_simtel_metadata(
                 {
-                    **dict(self.context.args),
+                    **self.context.args,
                     **light_emission_config,
                     "telescope": self.telescope_model.name,
                 },
                 self.site_model,
-                self.context,
+                calibration=True,
+                context=self.context,
             ),
         )
 

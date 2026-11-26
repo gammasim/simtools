@@ -444,7 +444,8 @@ def test_write_data_json_without_metadata_writes_sidecar_with_checksum(tmp_test_
     assert verify_sha256(model_writer.output_file, expected=product["sha256"])
 
 
-def test_write_model_parameter_without_metadata_writes_cta_sidecar(tmp_test_directory):
+def test_write_model_parameter_without_metadata_writes_cta_sidecar(tmp_test_directory, run_context):
+    run_args = {"user_name": "run user", "user_email": "user@example.org", "user_orcid": None}
     writer.ModelDataWriter.write_model_parameter(
         parameter_name="num_gains",
         value=1,
@@ -452,28 +453,15 @@ def test_write_model_parameter_without_metadata_writes_cta_sidecar(tmp_test_dire
         parameter_version="1.1.0",
         output_file="num_gains.json",
         output_path=tmp_test_directory,
+        metadata_input_dict={"user_name": "given"},
         check_for_existing_parameter=False,
+        context=run_context.replace(args=run_args),
     )
     sidecar = next(Path(tmp_test_directory).glob("num_gains*.meta.yml"))
     cta = ascii_handler.collect_data_from_file(sidecar)["ctao"]
     assert cta["product"]["id"] is not None
     assert cta["product"]["sha256"] == sha256_of_file(Path(tmp_test_directory) / "num_gains.json")
     assert cta["instrument"]["id"] == "LSTN-01"
-
-
-def test_with_run_context_metadata_fills_only_missing_contact_and_application_entries():
-    run_args = {
-        "user_name": "run user",
-        "user_email": "user@example.org",
-        "user_orcid": None,
-        "_application_description": "Submit a model parameter.",
-        "output_path": "/local/output",
-    }
-
-    filled = writer._with_run_context_metadata({"user_name": "given"}, run_args)
-
-    assert filled == {
-        "user_name": "given",
-        "user_email": "user@example.org",
-        "_application_description": "Submit a model parameter.",
-    }
+    # contact entries missing in the metadata input are taken from the run context
+    assert cta["contact"]["name"] == "given"
+    assert cta["contact"]["email"] == "user@example.org"

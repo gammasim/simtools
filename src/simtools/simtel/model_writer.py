@@ -15,10 +15,7 @@ from simtools.runtime.context import RunContext
 from simtools.sim_events.formats.readers import get_reader
 from simtools.sim_events.simulation_parameters import CALIBRATION_RUN_MODES
 from simtools.simtel import simtel_seeds, table_serializers
-from simtools.simtel.sim_telarray_metadata import (
-    get_ctao_simtel_metadata,
-    get_software_versions,
-)
+from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter, get_simtel_site_parameters
 from simtools.simulation.nsb import (
     NSB_PARAMETERS,
@@ -33,35 +30,6 @@ _PRIMARY = "primary"
 _ZENITH_ANGLE = "zenith_angle"
 _AZIMUTH_ANGLE = "azimuth_angle"
 SIMTEL_SOFTWARE = "sim_telarray"
-
-
-def get_calibration_simtel_metadata(args, site_model, context=None):
-    """
-    Return CTAO global metadata for a calibration (light source) sim_telarray run.
-
-    Parameters
-    ----------
-    args : Mapping
-        Application arguments of the run.
-    site_model : SiteModel
-        Site model of the run.
-    context : RunContext, optional
-        Run context providing the software installations.
-
-    Returns
-    -------
-    dict
-        CTAO sim_telarray metadata for calibration runs.
-    """
-    return get_ctao_simtel_metadata(
-        {
-            **dict(args),
-            "site": args.get("site") or site_model.site,
-            **get_software_versions(context),
-        },
-        site_model=site_model,
-        calibration=True,
-    )
 
 
 def get_model_writer(model, simulation_software="sim_telarray", context=None):
@@ -388,16 +356,12 @@ class SimtelModelWriter:
                 metadata[metadata_key] = (
                     value.to_value(u.deg) if hasattr(value, "to_value") else value
                 )
-        if args.get(_PRIMARY) is not None:
+        calibration = args.get(_PRIMARY) is None
+        if not calibration or args.get("run_mode") in CALIBRATION_RUN_MODES:
             metadata.update(
                 get_ctao_simtel_metadata(
-                    {**args, **get_software_versions(self.context)},
-                    site_model=self.model.site_model,
+                    args, self.model.site_model, calibration=calibration, context=self.context
                 )
-            )
-        elif args.get("run_mode") in CALIBRATION_RUN_MODES:
-            metadata.update(
-                get_calibration_simtel_metadata(args, self.model.site_model, self.context)
             )
         return metadata
 

@@ -218,56 +218,40 @@ def test_get_additional_simtel_metadata(array_model_north, mocker, run_context):
     assert metadata[_PDGID] == 22
 
 
-def test_get_additional_simtel_metadata_air_shower_has_software_versions(
-    array_model_north, mocker, run_context
+@pytest.mark.parametrize(
+    ("run_args", "expected"),
+    [
+        (
+            {_PRIMARY: "gamma", _ZENITH_ANGLE: 20.0 * u.deg, _AZIMUTH_ANGLE: 0.0 * u.deg},
+            {"DATATYPE": "AirShowerSim", "CORSIKAVER": "78010"},
+        ),
+        (
+            {"run_mode": "direct_injection", "application_label": "simulate_flasher"},
+            {
+                "DATATYPE": "CalibrationSim",
+                "ACTIVITY": "simulate_flasher",
+                "INSTRUME": "CTAO-North",
+            },
+        ),
+    ],
+)
+def test_get_additional_simtel_metadata_ctao_block(
+    array_model_north, mocker, run_context, run_args, expected
 ):
-    """Air-shower (simulate_prod) runs record the sim_telarray and CORSIKA versions."""
+    """Air-shower and calibration runs carry CTAO metadata with the software versions."""
     model = copy.deepcopy(array_model_north)
     mocker.patch.object(model.site_model, _NSB_FLUX, return_value=42.0)
-    model.context = run_context.replace(
-        args={
-            "site": _NORTH,
-            _PRIMARY: "gamma",
-            _ZENITH_ANGLE: 20.0 * u.deg,
-            _AZIMUTH_ANGLE: 0.0 * u.deg,
-        }
-    )
+    model.context = run_context.replace(args={"site": _NORTH, **run_args})
     mocker.patch(
-        "simtools.simtel.model_writer.get_software_versions",
+        "simtools.simtel.sim_telarray_metadata.get_software_versions",
         return_value={"simtel_version": "v2025-11-30-rc", "corsika_version": "78010"},
     )
 
     metadata = get_model_writer(model)._get_additional_simtel_metadata()
 
+    assert {key: metadata[key] for key in expected} == expected
     assert metadata["SIMTELVER"] == "v2025-11-30-rc"
-    assert metadata["CORSIKAVER"] == "78010"
-    assert metadata["DATATYPE"] == "AirShowerSim"
-
-
-def test_get_additional_simtel_metadata_calibration_run(array_model_north, mocker, run_context):
-    """Direct-injection (calibration) runs carry CTAO calibration metadata without a primary."""
-    model = copy.deepcopy(array_model_north)
-    mocker.patch.object(model.site_model, _NSB_FLUX, return_value=42.0)
-    model.context = run_context.replace(
-        args={
-            "site": _NORTH,
-            "run_mode": "direct_injection",
-            "application_label": "simulate_flasher",
-            "activity_id": "12345678-1234-5678-1234-567812345678",
-        }
-    )
-    mocker.patch(
-        "simtools.simtel.model_writer.get_software_versions",
-        return_value={"simtel_version": "v2025-11-30-rc"},
-    )
-
-    metadata = get_model_writer(model)._get_additional_simtel_metadata()
-
-    assert metadata["DATATYPE"] == "CalibrationSim"
-    assert metadata["ACTIVITY"] == "simulate_flasher"
-    assert metadata["SIMTELVER"] == "v2025-11-30-rc"
-    assert metadata["INSTRUME"] == "CTAO-North"
-    assert _PDGID not in metadata
+    assert (_PDGID in metadata) == (_PRIMARY in run_args)
 
 
 def test_get_additional_simtel_metadata_records_nsb_autoscaling(array_model_north, mocker):

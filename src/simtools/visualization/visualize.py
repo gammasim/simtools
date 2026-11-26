@@ -28,9 +28,6 @@ gridspec = lazy_module("matplotlib.gridspec")
 pdf_backend = lazy_module("matplotlib.backends.backend_pdf")
 
 _FIGURE_SUFFIXES = {".eps", ".jpeg", ".jpg", ".pdf", ".png", ".ps", ".svg"}
-# Keys under which a metadata dictionary is embedded as JSON (PNG text chunk, PDF Subject).
-_PNG_METADATA_KEY = OBSERVATORY_KEY
-_PDF_METADATA_KEY = "Subject"
 _PLOT_KWARGS = set(
     "color linestyle linewidth marker markersize markerfacecolor markeredgecolor "
     "markeredgewidth alpha label zorder dashes gapcolor solid_capstyle solid_joinstyle "
@@ -514,30 +511,18 @@ def _canonicalize(value):
 
 def figure_metadata(metadata, figure_format):
     """
-    Return ``savefig`` metadata embedding a metadata dictionary as JSON.
+    Return ``savefig`` metadata embedding a metadata dictionary as JSON (None if nothing).
 
     PNG files store the JSON in a text chunk and PDF files in the Subject field, because
     matplotlib drops unknown PDF Info keys. Other formats carry no embedded metadata.
-
-    Parameters
-    ----------
-    metadata : dict or None
-        Metadata to embed, for example a ``ctao`` metadata block.
-    figure_format : str
-        Figure format (``png``, ``pdf``, ...).
-
-    Returns
-    -------
-    dict or None
-        Keyword values for ``fig.savefig(metadata=...)``, or None if nothing is embedded.
     """
     if not metadata:
         return None
     payload = json.dumps(metadata, sort_keys=True, default=str, ensure_ascii=True)
     if figure_format == "png":
-        return {_PNG_METADATA_KEY: payload}
+        return {OBSERVATORY_KEY: payload}
     if figure_format == "pdf":
-        return {_PDF_METADATA_KEY: payload}
+        return {"Subject": payload}
     return None
 
 

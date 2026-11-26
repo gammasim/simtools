@@ -18,20 +18,8 @@ from simtools.utils import names, value_conversion
 
 # run-context arguments that identify the producer and the application of a data product
 _RUN_CONTEXT_METADATA_KEYS = (
-    "user_name",
-    "user_email",
-    "user_orcid",
-    "user_organization",
-    "_application_description",
+    "user_name user_email user_orcid user_organization _application_description".split()
 )
-
-
-def _with_run_context_metadata(metadata_input_dict, run_args):
-    """Fill missing contact and application entries from the run-context arguments."""
-    for key in _RUN_CONTEXT_METADATA_KEYS:
-        if metadata_input_dict.get(key) is None and run_args.get(key) is not None:
-            metadata_input_dict[key] = run_args[key]
-    return metadata_input_dict
 
 
 class ModelDataWriter:
@@ -193,9 +181,10 @@ class ModelDataWriter:
             output_file, output_path_label=writer.output_label
         )
 
-        metadata_input_dict = _with_run_context_metadata(
-            dict(metadata_input_dict or {}), writer.context.args
-        )
+        metadata_input_dict = dict(metadata_input_dict or {})
+        for key in _RUN_CONTEXT_METADATA_KEYS:
+            if metadata_input_dict.get(key) is None and writer.context.args.get(key) is not None:
+                metadata_input_dict[key] = writer.context.args[key]
         metadata_input_dict.setdefault("instrument", instrument)
         metadata_input_dict["output_file"] = Path(output_file).name
         metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
@@ -217,7 +206,7 @@ class ModelDataWriter:
             value,
             instrument,
             parameter_version,
-            unique_id or gen.get_uuid(),
+            unique_id,
             model_parameter_schema_version=model_parameter_schema_version,
             unit=unit,
         )
@@ -509,16 +498,29 @@ class ModelDataWriter:
             return
 
         explicit_metadata = metadata is not None
+        is_table = not isinstance(product_data, dict)
+        is_ecsv = is_table and Path(self.output_file).suffix == ".ecsv"
         if metadata is None:
-            metadata = self._default_metadata()
-        is_ecsv = Path(self.output_file).suffix == ".ecsv" and not isinstance(product_data, dict)
+            metadata = MetadataCollector(
+                args_dict={
+                    **self.context.args,
+                    "output_file": Path(self.output_file).name,
+                    "output_file_format": Path(self.output_file).suffix.lstrip("."),
+                },
+                context=self.context,
+            )
         if is_ecsv:
             metadata.set_product_checksum(product_checksum.CHECKSUM_PLACEHOLDER)
-        if explicit_metadata or is_ecsv:
-            self._embed_metadata(product_data, metadata)
+        if is_table and (explicit_metadata or is_ecsv):
+            product_data.meta.update(
+                value_conversion.change_dict_keys_case(metadata.get_top_level_metadata(), True)
+            )
 
         self._write_product_data(product_data)
-        self._store_checksum(metadata, is_ecsv)
+        if is_ecsv:
+            metadata.set_product_checksum(product_checksum.write_embedded_sha256(self.output_file))
+        else:
+            metadata.set_product_checksum(product_checksum.sha256_of_file(self.output_file))
         # embedded metadata (ecsv) is written with the data; sidecars otherwise
         if explicit_metadata or not is_ecsv:
             metadata.write(
@@ -537,34 +539,6 @@ class ModelDataWriter:
         except IORegistryError:
             self._logger.error(f"Error writing model data to {self.output_file}.")
             raise
-
-    def _store_checksum(self, metadata, is_ecsv):
-        """Compute the checksum of the written file and store it in the metadata."""
-        if is_ecsv:
-            metadata.set_product_checksum(product_checksum.write_embedded_sha256(self.output_file))
-        else:
-            metadata.set_product_checksum(product_checksum.sha256_of_file(self.output_file))
-
-    def _default_metadata(self):
-        """Return metadata collected from the run context for the output file."""
-        output_file = Path(self.output_file)
-        return MetadataCollector(
-            args_dict={
-                **self.context.args,
-                "output_file": output_file.name,
-                "output_file_format": output_file.suffix.lstrip("."),
-            },
-            context=self.context,
-        )
-
-    @staticmethod
-    def _embed_metadata(product_data, metadata):
-        """Embed the top-level metadata in the table meta (dictionaries carry no meta)."""
-        if isinstance(product_data, dict):
-            return
-        product_data.meta.update(
-            value_conversion.change_dict_keys_case(metadata.get_top_level_metadata(), True)
-        )
 
     def write_model_parameter_dict_json(self, file_name, data_dict):
         """

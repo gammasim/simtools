@@ -393,39 +393,38 @@ def test_serialize_job_grid_omits_not_applicable_metadata(tmp_test_directory):
     } & set(output_meta)
 
 
-def test_build_job_grid_summary_reports_energies_in_gev():
-    rows = [
-        {**_job_rows()[0], "energy_max": 10 * u.TeV},
-        {**_job_rows()[0], "energy_max": 5 * u.GeV},
-    ]
-
-    summary = jobs_io.build_job_grid_summary(rows)
-
-    assert summary["energy_max_used"] == "[5, 10000] GeV"
-    assert summary["energy_min_used"] == "30 GeV"
+_LOOKUP_LIMITS = (
+    "energy_min_lookup_limit",
+    "core_scatter_max_lookup_limit",
+    "view_cone_max_lookup_limit",
+)
 
 
-def test_build_job_grid_summary_lookup_fields_none_or_not_available():
-    rows = _job_rows()
+@pytest.mark.parametrize(
+    ("row_update", "lookup_configured", "expected"),
+    [
+        ({"energy_max": 10 * u.TeV}, False, {"energy_min_used": "30 GeV"}),
+        ({}, False, dict.fromkeys(_LOOKUP_LIMITS)),
+        ({}, True, dict.fromkeys(_LOOKUP_LIMITS, "not available")),
+        (
+            {"lookup_core_scatter_max": 1000 * u.m},
+            True,
+            {
+                "core_scatter_max_lookup_limit": "1000 m",
+                "view_cone_max_lookup_limit": "not available",
+            },
+        ),
+    ],
+)
+def test_build_job_grid_summary(row_update, lookup_configured, expected):
+    """Energies are reported in GeV; lookup limits are None or "not available" when missing."""
+    rows = [{**_job_rows()[0], **row_update}, {**_job_rows()[0], "energy_max": 5 * u.GeV}]
 
-    without_lookup = jobs_io.build_job_grid_summary(rows, lookup_configured=False)
-    with_lookup = jobs_io.build_job_grid_summary(rows, lookup_configured=True)
+    summary = jobs_io.build_job_grid_summary(rows, lookup_configured=lookup_configured)
 
-    assert without_lookup["energy_min_lookup_limit"] is None
-    assert without_lookup["core_scatter_max_lookup_limit"] is None
-    assert without_lookup["view_cone_max_lookup_limit"] is None
-    assert with_lookup["energy_min_lookup_limit"] == "not available"
-    assert with_lookup["core_scatter_max_lookup_limit"] == "not available"
-    assert with_lookup["view_cone_max_lookup_limit"] == "not available"
-
-
-def test_build_job_grid_summary_reports_found_lookup_limits():
-    rows = [{**_job_rows()[0], "lookup_core_scatter_max": 1000 * u.m}]
-
-    summary = jobs_io.build_job_grid_summary(rows, lookup_configured=True)
-
-    assert summary["core_scatter_max_lookup_limit"] == "1000 m"
-    assert summary["view_cone_max_lookup_limit"] == "not available"
+    assert {key: summary[key] for key in expected} == expected
+    if "energy_max" in row_update:
+        assert summary["energy_max_used"] == "[5, 10000] GeV"
 
 
 def test_serialize_job_grid_links_schema_pinned_to_release(tmp_test_directory):
