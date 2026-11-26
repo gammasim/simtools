@@ -437,7 +437,7 @@ jobs:
         id: test_resources
         env:
           BRANCH: >-
-            ${{ (github.event_name == 'pull_request' && 'replace-5-by-8') || inputs.simtools_tests_branch ||
+            ${{ inputs.simtools_tests_branch ||
             'main' }}
         run: |
           git check-ref-format --branch "$BRANCH"
