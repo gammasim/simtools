@@ -545,7 +545,7 @@ _EMBEDDED_METADATA = {"product": {"description": "metadata-marker-7f3a"}, "conta
 
 @pytest.mark.parametrize(
     ("figure_format", "expected_key"),
-    [("png", "cta"), ("pdf", "Subject"), ("svg", None)],
+    [("png", "ctao"), ("pdf", "Subject"), ("svg", None)],
 )
 def test_figure_metadata_embeds_json_by_format(figure_format, expected_key):
     embedded = visualize.figure_metadata(_EMBEDDED_METADATA, figure_format)
@@ -575,7 +575,7 @@ def test_save_figure_passes_metadata_to_savefig(tmp_test_directory, mocker):
     )
 
     calls = {call.kwargs["format"]: call.kwargs for call in savefig.call_args_list}
-    assert json.loads(calls["png"]["metadata"]["cta"]) == _EMBEDDED_METADATA
+    assert json.loads(calls["png"]["metadata"]["ctao"]) == _EMBEDDED_METADATA
     assert json.loads(calls["pdf"]["metadata"]["Subject"]) == _EMBEDDED_METADATA
     assert "metadata" not in calls["svg"]
 
@@ -606,11 +606,11 @@ def test_convert_png_to_palette_keeps_embedded_metadata(tmp_test_directory):
     gradient = np.linspace(0, 255, 200 * 200).reshape(200, 200)
     pixels = np.stack([gradient, gradient.T, rng.integers(0, 4, (200, 200)) * 60], axis=-1)
     pnginfo = PngImagePlugin.PngInfo()
-    pnginfo.add_text("cta", json.dumps(_EMBEDDED_METADATA))
+    pnginfo.add_text("ctao", json.dumps(_EMBEDDED_METADATA))
     Image.fromarray(pixels.astype(np.uint8)).save(png_file, pnginfo=pnginfo)
 
     visualize.convert_png_to_palette(png_file)
 
     with Image.open(png_file) as image:
         assert image.mode == "P"
-        assert json.loads(image.info["cta"]) == _EMBEDDED_METADATA
+        assert json.loads(image.info["ctao"]) == _EMBEDDED_METADATA

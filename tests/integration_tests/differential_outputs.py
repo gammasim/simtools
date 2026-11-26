@@ -47,7 +47,7 @@ def normalize_value(value, path=()):
         value = value.replace(
             "/base-simtools-tests/simtools-tests/", "/simtools-tests/simtools-tests/"
         )
-        if path[:1] == ("cta",):
+        if path[:1] == ("ctao",):
             value = _normalize_test_path(value)
         return normalize_text(value)
     if isinstance(value, list):
@@ -61,17 +61,20 @@ def _normalize_mapping(value, path):
     """Normalize generated metadata fields in a mapping."""
     normalized = {}
     for key, item in value.items():
+        if not path and key == "cta":
+            # metadata of products written before the ctao block key (metaschema 3.0.0)
+            key = "ctao"
         field = (*path, key)
         if (
             field
             in {
                 ("created",),
-                ("cta", "activity", "id"),
-                ("cta", "activity", "start"),
-                ("cta", "activity", "end"),
-                ("cta", "product", "id"),
-                ("cta", "product", "creation_time"),
-                ("cta", "context", "application_configuration", "arguments", "activity_id"),
+                ("ctao", "activity", "id"),
+                ("ctao", "activity", "start"),
+                ("ctao", "activity", "end"),
+                ("ctao", "product", "id"),
+                ("ctao", "product", "creation_time"),
+                ("ctao", "context", "application_configuration", "arguments", "activity_id"),
             }
             and item is not None
         ):

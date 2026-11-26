@@ -17,6 +17,7 @@ from simtools.constants import (
     SCHEMA_PATH,
 )
 from simtools.data_model import format_checkers, schema_loader
+from simtools.data_model.metadata_keys import OBSERVATORY_KEY, get_observatory_metadata
 from simtools.io import ascii_handler
 from simtools.runtime import dependencies
 from simtools.utils import names, value_conversion
@@ -191,7 +192,7 @@ def _retrieve_yaml_schema_from_uri(uri):
     return Resource.from_contents(contents)
 
 
-def get_schema_version_from_data(data, observatory="cta"):
+def get_schema_version_from_data(data, observatory=OBSERVATORY_KEY):
     """
     Get schema version from data dictionary.
 
@@ -199,6 +200,9 @@ def get_schema_version_from_data(data, observatory="cta"):
     ----------
     data: dict
         data dictionary.
+    observatory: str
+        Observatory key of the metadata block (default: "ctao", with fallback to the
+        "cta" block of older products).
 
     Returns
     -------
@@ -208,12 +212,19 @@ def get_schema_version_from_data(data, observatory="cta"):
     schema_version = data.get("schema_version") or data.get("SCHEMA_VERSION")
     if schema_version:
         return schema_version
-    reference_version = data.get(observatory.upper(), {}).get("REFERENCE", {}).get(
-        "VERSION"
-    ) or data.get(observatory.lower(), {}).get("reference", {}).get("version")
+    block = _observatory_block(data, observatory)
+    reference = block.get("reference") or block.get("REFERENCE") or {}
+    reference_version = reference.get("version") or reference.get("VERSION")
     if reference_version:
         return reference_version
     return "latest"
+
+
+def _observatory_block(metadata, observatory):
+    """Return the metadata block of an observatory (any key case)."""
+    if observatory.lower() == OBSERVATORY_KEY:
+        return get_observatory_metadata(metadata)
+    return metadata.get(observatory.lower()) or metadata.get(observatory.upper()) or {}
 
 
 def load_schema(schema_file=None, schema_version="latest"):
@@ -412,16 +423,13 @@ def _get_schema_file_name(schema_file=None, file_name=None, data_dict=None):
     return None
 
 
-def _extract_schema_url_from_metadata_dict(metadata, observatory="cta"):
+def _extract_schema_url_from_metadata_dict(metadata, observatory=OBSERVATORY_KEY):
     """Extract schema URL from metadata dictionary."""
-    for key in (observatory, observatory.lower()):
-        url = metadata.get(key, {}).get("product", {}).get("data", {}).get("model", {}).get("url")
-        if url:
-            return url
-    return None
+    block = _observatory_block(metadata, observatory)
+    return block.get("product", {}).get("data", {}).get("model", {}).get("url") or None
 
 
-def get_schema_file_from_file_metadata(file_name, observatory="cta"):
+def get_schema_file_from_file_metadata(file_name, observatory=OBSERVATORY_KEY):
     """
     Extract schema file name from a metadata or data file.
 
@@ -430,7 +438,7 @@ def get_schema_file_from_file_metadata(file_name, observatory="cta"):
     file_name : str or Path
         File name to extract schema information from.
     observatory : str
-        Observatory name (default: "cta").
+        Observatory key of the metadata block (default: "ctao", with fallback to "cta").
 
     Returns
     -------

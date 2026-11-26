@@ -15,7 +15,7 @@ def _write_metadata(directory, filename, product_id):
     """Write minimal product metadata for a test product."""
     metadata_file = directory / f"{filename}.meta.yml"
     metadata_file.write_text(
-        f"cta:\n  product:\n    filename: {filename}\n    id: {product_id}\n",
+        f"ctao:\n  product:\n    filename: {filename}\n    id: {product_id}\n",
         encoding="utf-8",
     )
 
@@ -43,6 +43,7 @@ def test_validates_product_in_declared_model_directory(tmp_path):
     product_directory = output_directory / "pm_photoelectron_spectrum"
     product_directory.mkdir(parents=True)
     (product_directory / "spectrum.ecsv").write_text("data\n", encoding="utf-8")
+    # metadata written before metaschema 3.0.0 uses the cta block key
     (output_directory / "spectrum.meta.yml").write_text(
         "cta:\n"
         "  product:\n"

@@ -12,6 +12,7 @@ from astropy.table import Table
 
 from simtools.constants import SCHEMA_PATH, SCHEMA_URL
 from simtools.data_model import product_checksum, validate_data
+from simtools.data_model.metadata_keys import OBSERVATORY_KEY, normalize_observatory_key
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.job_execution.job import JobSpec
 from simtools.layout.array_layout_utils import resolve_array_layout_name
@@ -168,9 +169,11 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
         for key, value in (metadata or {}).items()
         if not (key in _NOT_APPLICABLE_METADATA_KEYS and value is None)
     }
-    model_metadata = metadata.setdefault("cta", {}).setdefault("product", {}).setdefault("data", {})
+    metadata = normalize_observatory_key(metadata)
+    observatory_meta = metadata.setdefault(OBSERVATORY_KEY, {})
+    model_metadata = observatory_meta.setdefault("product", {}).setdefault("data", {})
     model_metadata.setdefault("model", {})["url"] = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
-    metadata["cta"]["product"][product_checksum.SHA256_KEY] = product_checksum.CHECKSUM_PLACEHOLDER
+    observatory_meta["product"][product_checksum.SHA256_KEY] = product_checksum.CHECKSUM_PLACEHOLDER
     metadata["job_grid_format_version"] = JOB_GRID_SCHEMA.version
     metadata["job_grid_summary"] = build_job_grid_summary(
         job_rows, lookup_configured=bool(metadata.get("corsika_limits"))

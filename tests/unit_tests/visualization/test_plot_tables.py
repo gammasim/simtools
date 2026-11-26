@@ -48,7 +48,7 @@ def test_plot(mock_read_table_data, mock_visualize, run_context):
 @mock.patch("simtools.visualization.plot_tables.read_table_data")
 def test_plot_passes_metadata_to_save_figure(mock_read_table_data, mock_visualize, run_context):
     config = {"tables": []}
-    metadata = {"cta": {"product": {"format": "png"}}}
+    metadata = {"ctao": {"product": {"format": "png"}}}
     mock_read_table_data.return_value = {}
     mock_visualize.plot_1d.return_value = mock.MagicMock()
 

@@ -27,7 +27,7 @@ def calls_fixture(monkeypatch):
             self.args_dict = args_dict
 
         def get_top_level_metadata(self):
-            return {"cta": {"product": {"filename": self.args_dict.get("output_file")}}}
+            return {"ctao": {"product": {"filename": self.args_dict.get("output_file")}}}
 
         def write(self, output_file, add_activity_name=False):
             calls["dump"].append((self.args_dict, output_file, add_activity_name))
@@ -80,7 +80,7 @@ def test_data_file_mode_plots_lowercased_configuration(tmp_test_directory, calls
 
     assert calls["plot"][0]["config"] == {"type": "line"}
     assert calls["plot"][0]["output_file"] == Path("out/figure.pdf")
-    assert calls["plot"][0]["metadata"] == {"cta": {"product": {"filename": "figure.pdf"}}}
+    assert calls["plot"][0]["metadata"] == {"ctao": {"product": {"filename": "figure.pdf"}}}
     assert calls["dump"] == [
         (
             {"plot_config": str(config_file), "output_file": "figure.pdf"},
@@ -102,7 +102,7 @@ def test_model_parameter_mode_plots_every_generated_configuration(calls):
     )
 
     assert [call["config"] for call in calls["plot"]] == [{"id": 1}, {"id": 2}]
-    assert [call["metadata"]["cta"]["product"]["filename"] for call in calls["plot"]] == [
+    assert [call["metadata"]["ctao"]["product"]["filename"] for call in calls["plot"]] == [
         "a.pdf",
         "b.pdf",
     ]

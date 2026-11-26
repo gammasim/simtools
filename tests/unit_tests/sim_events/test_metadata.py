@@ -18,7 +18,7 @@ def test_build_standard_metadata_keeps_required_metadata_fields():
     metadata = build_standard_metadata({}, "reduced_event_data.hdf5")
 
     schema.validate_dict_using_schema(metadata, schema_file=METADATA_JSON_SCHEMA)
-    assert "instrument" in metadata["cta"]
+    assert "instrument" in metadata["ctao"]
 
 
 def test_build_standard_metadata_uses_requested_product_data_name():
@@ -27,7 +27,7 @@ def test_build_standard_metadata_uses_requested_product_data_name():
         {}, "trigger_histograms.hdf5", product_data_name="trigger_histograms"
     )
 
-    assert metadata["cta"]["product"]["data"]["model"]["name"] == "trigger_histograms"
+    assert metadata["ctao"]["product"]["data"]["model"]["name"] == "trigger_histograms"
 
 
 def test_build_standard_metadata_normalizes_instrument_id(mocker):
@@ -36,13 +36,13 @@ def test_build_standard_metadata_normalizes_instrument_id(mocker):
         return_value=type(
             "Collector",
             (),
-            {"get_top_level_metadata": lambda self: {"cta": {"instrument": {"ID": "CTA"}}}},
+            {"get_top_level_metadata": lambda self: {"ctao": {"instrument": {"ID": "CTA"}}}},
         )(),
     )
 
     metadata = build_standard_metadata({}, "output.hdf5")
 
-    assert metadata["cta"]["instrument"] == {"id": "CTA"}
+    assert metadata["ctao"]["instrument"] == {"id": "CTA"}
 
 
 def test_build_simulation_metadata_marks_missing_models_unavailable():

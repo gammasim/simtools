@@ -9,16 +9,17 @@ Follows CTAO top-level data model definition.
 """
 
 import simtools.data_model.schema
+from simtools.data_model.metadata_keys import OBSERVATORY_KEY
 from simtools.utils import value_conversion
 
 
 def get_default_metadata_dict(
-    schema_file=None, observatory="CTA", schema_version="latest", lower_case=True
+    schema_file=None, observatory=OBSERVATORY_KEY, schema_version="latest", lower_case=True
 ):
     """
     Return metadata schema with default values.
 
-    Follows the CTA Top-Level Data Model.
+    Follows the CTAO Top-Level Data Model.
 
     Parameters
     ----------
@@ -45,7 +46,7 @@ def get_default_metadata_dict(
     )
 
 
-def add_required_fields(metadata, observatory="cta", schema_version="latest"):
+def add_required_fields(metadata, observatory=OBSERVATORY_KEY, schema_version="latest"):
     """
     Add the fields required by the metadata schema that are missing from the metadata.
 
@@ -83,7 +84,7 @@ def _add_required_fields(metadata, schema_node):
             _add_required_fields(metadata[key], sub_schema)
 
 
-def _resolve_references(yaml_data, observatory="CTA"):
+def _resolve_references(yaml_data, observatory=OBSERVATORY_KEY):
     """
     Resolve references in yaml data and expand the received dictionary accordingly.
 
@@ -133,7 +134,7 @@ def _resolve_references(yaml_data, observatory="CTA"):
     return _resolve_references_recursive(yaml_data)
 
 
-def _fill_defaults(schema, observatory="CTA"):
+def _fill_defaults(schema, observatory=OBSERVATORY_KEY):
     """
     Fill default values from json schema.
 
@@ -150,7 +151,7 @@ def _fill_defaults(schema, observatory="CTA"):
         Dictionary with default values.
     """
     defaults = {observatory: {}}
-    resolved_schema = _resolve_references(schema[observatory])
+    resolved_schema = _resolve_references(schema[observatory], observatory)
     _fill_defaults_recursive(resolved_schema, defaults[observatory])
     return defaults
 

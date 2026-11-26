@@ -5,6 +5,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.data_model.metadata_keys import LEGACY_OBSERVATORY_KEY, OBSERVATORY_KEY
 from simtools.io import ascii_handler
 from simtools.utils import value_conversion
 
@@ -52,7 +53,7 @@ def build_workflow_activity_metadata(
     metadata_args["instrument"] = workflow_context.get("instrument")
 
     collector = MetadataCollector(metadata_args, clean_meta=False, context=context)
-    activity = collector.get_top_level_metadata().get("cta", {}).get("activity", {})
+    activity = collector.get_top_level_metadata().get(OBSERVATORY_KEY, {}).get("activity", {})
     if runtime_environment is not None:
         activity["runtime_environment"] = deepcopy(runtime_environment)
     return activity
@@ -86,17 +87,19 @@ def update_model_parameter_metadata_file(
 
     metadata = ascii_handler.collect_data_from_file(metadata_path)
     metadata = value_conversion.change_dict_keys_case(metadata, True)
-    cta_meta = metadata.get("cta", {})
-    cta_meta["activity"] = deepcopy(workflow_activity)
+    # files written with metadata schema versions before 3.0.0 keep their block key
+    key = LEGACY_OBSERVATORY_KEY if LEGACY_OBSERVATORY_KEY in metadata else OBSERVATORY_KEY
+    observatory_meta = metadata.get(key, {})
+    observatory_meta["activity"] = deepcopy(workflow_activity)
 
-    context = cta_meta.setdefault("context", {})
+    context = observatory_meta.setdefault("context", {})
     context_associated = context.get("associated_activities") or []
     context["associated_activities"] = _merge_associated_activities(
         context_associated,
         associated_activities or [],
     )
 
-    metadata["cta"] = cta_meta
+    metadata[key] = observatory_meta
     ascii_handler.write_data_to_file(metadata, metadata_path)
     logger.info(f"Updated workflow metadata in {metadata_path}")
 

@@ -30,7 +30,7 @@ def test_main_generates_job_grid(mock_start, mock_metadata_collector, mock_gener
         "run_number_offset": 10,
     }
     mock_start.return_value = SimpleNamespace(args=args, paths=io_handler)
-    metadata = {"cta": {"activity": {"name": "production_generate_grid"}}}
+    metadata = {"ctao": {"activity": {"name": "production_generate_grid"}}}
     mock_metadata_collector.return_value.get_top_level_metadata.return_value = metadata
     app.main()
 

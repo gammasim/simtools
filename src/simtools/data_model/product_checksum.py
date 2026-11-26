@@ -9,7 +9,7 @@ Checksum rule (the same for every format):
   hashing. The checksum therefore does not depend on its own value and can be written into
   the file it describes.
 - Files without an embedded checksum line (json, yml, hdf5, ...) are hashed in full. Their
-  checksum is stored in the sidecar metadata (``cta.product.sha256``).
+  checksum is stored in the sidecar metadata (``ctao.product.sha256``).
 - Plots and markdown reports carry no checksum.
 """
 

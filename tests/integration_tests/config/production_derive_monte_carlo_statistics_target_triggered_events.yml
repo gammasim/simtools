@@ -58,9 +58,9 @@ applications:
               unit: deg
       - type: metadata
         required_keys:
-        - cta.activity
-        - cta.context
-        - cta.product
+        - ctao.activity
+        - ctao.context
+        - ctao.product
         - spectral_index
         - target_triggered_events
   test_name: production_derive_monte_carlo_statistics_events

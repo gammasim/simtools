@@ -219,8 +219,8 @@ def test_expand_job_grid_with_scan_validates_configuration(tmp_test_directory):
             },
         ),
         (
-            {"cta": {"product": {}}, "coordinate_system": None, "some_other_key": 1},
-            {"cta", "coordinate_system"},
+            {"ctao": {"product": {}}, "coordinate_system": None, "some_other_key": 1},
+            {"ctao", "coordinate_system"},
         ),
         ({"some_other_key": "value", "random_key": 456}, set()),
     ],
@@ -414,7 +414,7 @@ def test_expand_job_grid_with_scan_keeps_base_grid_metadata(tmp_test_directory):
     base_metadata = {
         "site": "North",
         "coordinate_system": "ha_dec",
-        "cta": {"product": {"data": {"model": {"url": "https://example.org/schema.yml"}}}},
+        "ctao": {"product": {"data": {"model": {"url": "https://example.org/schema.yml"}}}},
     }
     scan_config_path = Path(tmp_test_directory) / "scan_config.yml"
     scan_config_path.write_text(
@@ -443,8 +443,8 @@ def test_expand_job_grid_with_scan_keeps_base_grid_metadata(tmp_test_directory):
     parameter_scans.expand_job_grid_with_scan(base_grid, scan_config_path, scan_grid)
     scan_meta = Table.read(scan_grid, format="ascii.ecsv").meta
 
-    base_cta = Table.read(base_grid, format="ascii.ecsv").meta["cta"]
-    scan_cta = dict(scan_meta["cta"])
+    base_cta = Table.read(base_grid, format="ascii.ecsv").meta["ctao"]
+    scan_cta = dict(scan_meta["ctao"])
     assert scan_cta["product"].pop("sha256") != base_cta["product"].pop("sha256")
     assert scan_cta == base_cta
     assert product_checksum.verify_sha256(scan_grid)

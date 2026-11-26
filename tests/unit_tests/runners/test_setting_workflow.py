@@ -40,7 +40,7 @@ def setting_writer(mocker):
     collector = mocker.patch.object(setting_workflow, "MetadataCollector").return_value
     collector.get_top_level_metadata.side_effect = lambda: deepcopy(
         {
-            "cta": {
+            "ctao": {
                 "activity": {"id": "generated"},
                 "contact": {"name": "Observer"},
                 "instrument": {"ID": "LSTN-design"},

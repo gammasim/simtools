@@ -10,7 +10,7 @@ from simtools.data_model import workflow_metadata
 
 def test_build_workflow_activity_metadata_uses_uncleaned_metadata(monkeypatch):
     mock_collector = mock.Mock()
-    mock_collector.get_top_level_metadata.return_value = {"cta": {"activity": {"id": "wf-id"}}}
+    mock_collector.get_top_level_metadata.return_value = {"ctao": {"activity": {"id": "wf-id"}}}
     metadata_collector_cls = mock.Mock(return_value=mock_collector)
     monkeypatch.setattr(
         "simtools.data_model.workflow_metadata.MetadataCollector", metadata_collector_cls
@@ -49,7 +49,7 @@ def test_update_model_parameter_metadata_file_fills_associated_activities_from_e
 ):
     metadata_file = tmp_test_directory / "pm.meta.yml"
     metadata_dict = {
-        "cta": {
+        "ctao": {
             "product": {"id": "prod-id"},
             "activity": {"id": "old-id"},
             "context": {},
@@ -64,6 +64,25 @@ def test_update_model_parameter_metadata_file_fills_associated_activities_from_e
     )
 
     updated = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
-    assert updated["cta"]["context"]["associated_activities"] == [
+    assert updated["ctao"]["context"]["associated_activities"] == [
         {"activity_name": "app1", "activity_id": "a1"}
     ]
+
+
+def test_update_model_parameter_metadata_file_keeps_legacy_cta_block(tmp_test_directory):
+    metadata_file = tmp_test_directory / "legacy.meta.yml"
+    metadata_file.write_text(
+        yaml.safe_dump({"cta": {"product": {"id": "prod-id"}, "activity": {"id": "old-id"}}}),
+        encoding="utf-8",
+    )
+
+    workflow_metadata.update_model_parameter_metadata_file(
+        metadata_file=metadata_file,
+        workflow_activity={"id": "workflow-id"},
+        associated_activities=[],
+    )
+
+    updated = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
+    assert set(updated) == {"cta"}
+    assert updated["cta"]["activity"] == {"id": "workflow-id"}
+    assert updated["cta"]["product"] == {"id": "prod-id"}

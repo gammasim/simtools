@@ -68,7 +68,7 @@ def test_main_compares_all_telescopes(tmp_test_directory, mocker):
     assert result[COMPARISONS][TELESCOPE]["changes"][CAM_EFF]["advisory"] is True
     sidecar = yaml.safe_load((root / "science-comparison.meta.yml").read_text(encoding=UTF_8))
     assert product_checksum.verify_sha256(
-        root / RESULT_FILE, expected=sidecar["cta"]["product"]["sha256"]
+        root / RESULT_FILE, expected=sidecar["ctao"]["product"]["sha256"]
     )
     assert result[COMPARISONS][TELESCOPE]["table_diagnostics"] == [
         CANNOT_COMPARE_EFFICIENCY_COMPONENTS_REF,

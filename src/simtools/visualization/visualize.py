@@ -18,6 +18,7 @@ from astropy.table import QTable
 from cycler import cycler
 from PIL import Image, PngImagePlugin
 
+from simtools.data_model.metadata_keys import OBSERVATORY_KEY
 from simtools.utils import value_conversion
 from simtools.visualization import matplotlib_backend
 from simtools.visualization.matplotlib_backend import BACKEND_NAME, lazy_module
@@ -28,7 +29,7 @@ pdf_backend = lazy_module("matplotlib.backends.backend_pdf")
 
 _FIGURE_SUFFIXES = {".eps", ".jpeg", ".jpg", ".pdf", ".png", ".ps", ".svg"}
 # Keys under which a metadata dictionary is embedded as JSON (PNG text chunk, PDF Subject).
-_PNG_METADATA_KEY = "cta"
+_PNG_METADATA_KEY = OBSERVATORY_KEY
 _PDF_METADATA_KEY = "Subject"
 _PLOT_KWARGS = set(
     "color linestyle linewidth marker markersize markerfacecolor markeredgecolor "
@@ -521,7 +522,7 @@ def figure_metadata(metadata, figure_format):
     Parameters
     ----------
     metadata : dict or None
-        Metadata to embed, for example a ``cta`` metadata block.
+        Metadata to embed, for example a ``ctao`` metadata block.
     figure_format : str
         Figure format (``png``, ``pdf``, ...).
 

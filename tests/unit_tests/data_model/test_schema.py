@@ -234,15 +234,15 @@ def test_validate_deprecation_and_version_reports_invalid_constraints(caplog, mo
 
 
 def test_get_schema_file_from_file_metadata(tmp_test_directory):
-    # Create a test file with schema URL (lowercase cta)
     test_file = Path(tmp_test_directory) / "test_with_schema.yml"
-    metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
+    metadata = {"ctao": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
     with open(test_file, "w", encoding="utf-8") as f:
         yaml.dump(metadata, f)
 
     result = schema.get_schema_file_from_file_metadata(test_file)
     assert result == "https://schema.example.com"
 
+    # products written before metaschema 3.0.0 use the "cta" block key
     ecsv_file = Path(tmp_test_directory) / "test_with_schema.ecsv"
     Table(
         rows=[[1]],
@@ -364,10 +364,14 @@ def test_validate_deprecation_and_version_accepts_optional_or_unrelated_constrai
 
 
 def test_extract_schema_url_from_metadata_dict():
-    # Test with cta lowercase (default observatory is "cta")
-    metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
+    metadata = {"ctao": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
     result = schema._extract_schema_url_from_metadata_dict(metadata)
     assert result == "https://schema.example.com"
+
+    # Older products use the "cta" block key
+    metadata = {"cta": {"product": {"data": {"model": {"url": "https://legacy.example.com"}}}}}
+    result = schema._extract_schema_url_from_metadata_dict(metadata)
+    assert result == "https://legacy.example.com"
 
     # Test with CTA uppercase and explicit observatory parameter
     metadata = {"CTA": {"product": {"data": {"model": {"url": "https://schema2.example.com"}}}}}
@@ -382,7 +386,7 @@ def test_extract_schema_url_from_metadata_dict():
     assert result == "https://veritas-schema.example.com"
 
     # Test with no URL
-    metadata = {"cta": {"product": {}}}
+    metadata = {"ctao": {"product": {}}}
     result = schema._extract_schema_url_from_metadata_dict(metadata)
     assert result is None
 
@@ -414,9 +418,10 @@ def test_get_schema_file_name(tmp_test_directory):
     result = schema._get_schema_file_name(data_dict=data_dict)
     assert result == "https://meta-schema.example.com"
 
-    # Test with file_name (lowercase cta)
     test_file = Path(tmp_test_directory) / "test_file.yml"
-    metadata = {"cta": {"product": {"data": {"model": {"url": "https://file-schema.example.com"}}}}}
+    metadata = {
+        "ctao": {"product": {"data": {"model": {"url": "https://file-schema.example.com"}}}}
+    }
     with open(test_file, "w", encoding="utf-8") as f:
         yaml.dump(metadata, f)
 
@@ -439,3 +444,24 @@ def test_validate_meta_schema_url_offline():
     # Test with empty meta_schema_url
     with pytest.raises(ValueError, match=r"unknown url type: ''"):
         schema._validate_meta_schema_url({"meta_schema_url": ""})
+
+
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        ({"ctao": {"reference": {"version": "3.0.0"}}}, "3.0.0"),
+        ({"CTAO": {"REFERENCE": {"VERSION": "3.0.0"}}}, "3.0.0"),
+        ({"cta": {"reference": {"version": "2.1.0"}}}, "2.1.0"),
+        ({"CTA": {"REFERENCE": {"VERSION": "1.0.0"}}}, "1.0.0"),
+        ({"schema_version": "0.2.0", "ctao": {"reference": {"version": "3.0.0"}}}, "0.2.0"),
+        ({"ctao": {}}, "latest"),
+        ({}, "latest"),
+    ],
+)
+def test_get_schema_version_from_data_reads_ctao_and_legacy_cta(data, expected):
+    assert schema.get_schema_version_from_data(data) == expected
+
+
+def test_get_schema_version_from_data_custom_observatory():
+    data = {"veritas": {"reference": {"version": "1.2.3"}}}
+    assert schema.get_schema_version_from_data(data, observatory="veritas") == "1.2.3"

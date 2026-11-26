@@ -2,6 +2,7 @@
 
 from simtools import version
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.data_model.metadata_keys import OBSERVATORY_KEY
 from simtools.io.ascii_handler import to_builtin
 
 SIMULATION_METADATA_SCHEMA_NAME = "simtools.reduced_event_list.simulation_metadata"
@@ -41,7 +42,7 @@ def build_standard_metadata(
     metadata = MetadataCollector(
         args_dict=metadata_args, clean_meta=False, context=context
     ).get_top_level_metadata()
-    instrument = metadata.get("cta", {}).get("instrument", {})
+    instrument = metadata.get(OBSERVATORY_KEY, {}).get("instrument", {})
     if "ID" in instrument:
         instrument["id"] = instrument.pop("ID")
     return metadata

@@ -10,6 +10,7 @@ import simtools.utils.general as gen
 from simtools.data_model import product_checksum, schema, validate_data
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.data_model.metadata_keys import OBSERVATORY_KEY
 from simtools.io import ascii_handler
 from simtools.io.output_paths import OutputPaths
 from simtools.runtime.context import RunContext
@@ -207,7 +208,9 @@ class ModelDataWriter:
             model_parameter_name=parameter_name,
             context=context,
         )
-        unique_id = metadata.get_top_level_metadata().get("cta", {}).get("product", {}).get("id")
+        unique_id = (
+            metadata.get_top_level_metadata().get(OBSERVATORY_KEY, {}).get("product", {}).get("id")
+        )
 
         _json_dict = writer.get_validated_parameter_dict(
             parameter_name,

@@ -100,7 +100,7 @@ def test_serialize_job_grid_embeds_verifiable_checksum(tmp_test_directory):
     assert stored is not None
     assert stored != product_checksum.CHECKSUM_PLACEHOLDER
     assert product_checksum.verify_sha256(output_file, expected=stored)
-    assert Table.read(output_file, format="ascii.ecsv").meta["cta"]["product"]["sha256"] == stored
+    assert Table.read(output_file, format="ascii.ecsv").meta["ctao"]["product"]["sha256"] == stored
 
 
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
@@ -432,7 +432,7 @@ def test_serialize_job_grid_links_schema_pinned_to_release(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid_schema_url.ecsv"
 
     jobs_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
-    url = Table.read(output_file, format="ascii.ecsv").meta["cta"]["product"]["data"]["model"][
+    url = Table.read(output_file, format="ascii.ecsv").meta["ctao"]["product"]["data"]["model"][
         "url"
     ]
 

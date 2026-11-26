@@ -664,7 +664,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(
             ],
         ],
     )
-    metadata_document = {"cta": {"product": {"id": "metadata-id"}}}
+    metadata_document = {"ctao": {"product": {"id": "metadata-id"}}}
     mock_metadata = mocker.patch(
         "simtools.production_configuration.trigger_histograms.build_standard_metadata",
         return_value=metadata_document,

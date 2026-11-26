@@ -9,6 +9,7 @@ import yaml
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.data_model.metadata_keys import get_observatory_metadata
 from simtools.io import ascii_handler
 from simtools.model_repository.git_backend import run_git, split_nul
 
@@ -73,10 +74,12 @@ def _file_digest(file_path):
 def _metadata_product(metadata_file, relative_metadata):
     """Read the product section from one metadata file."""
     try:
-        product = ascii_handler.collect_data_from_file(metadata_file)["cta"]["product"]
+        product = get_observatory_metadata(ascii_handler.collect_data_from_file(metadata_file))[
+            "product"
+        ]
         filename = product["filename"]
     except (OSError, TypeError, KeyError, ValueError, yaml.YAMLError) as exc:
-        return None, None, f"{relative_metadata}: cannot read cta.product.filename: {exc}"
+        return None, None, f"{relative_metadata}: cannot read ctao.product.filename: {exc}"
     return product, filename, None
 
 

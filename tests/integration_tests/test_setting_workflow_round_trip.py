@@ -71,10 +71,10 @@ def test_setting_workflow_round_trip(
     schema.validate_dict_using_schema(
         output_metadata, schema_file=METADATA_JSON_SCHEMA, offline=True
     )
-    assert output_metadata["cta"]["activity"]["id"] == config_file.parent.name
+    assert output_metadata["ctao"]["activity"]["id"] == config_file.parent.name
     assert (
         "https://example.org/measurement"
-        in output_metadata["cta"]["context"]["associated_data"][0]["description"]
+        in output_metadata["ctao"]["context"]["associated_data"][0]["description"]
     )
     original_output = json.loads(parameter_file.read_text(encoding="utf-8"))
     subprocess.run([*command, "--run"], capture_output=True, text=True, check=True)

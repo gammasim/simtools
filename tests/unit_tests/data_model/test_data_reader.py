@@ -23,9 +23,9 @@ def test_read_table_from_file_and_validate(tmp_test_directory, args_dict_site):
     schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
 
     metadata = MetadataCollector(args_dict=args_dict_site, clean_meta=False).top_level_meta
-    metadata["cta"]["instrument"].pop("ID", None)
-    metadata["cta"]["instrument"]["id"] = "MSTS-07"
-    metadata["cta"]["product"]["data"]["model"]["url"] = str(schema_file)
+    metadata["ctao"]["instrument"].pop("ID", None)
+    metadata["ctao"]["instrument"]["id"] = "MSTS-07"
+    metadata["ctao"]["product"]["data"]["model"]["url"] = str(schema_file)
     metadata_file = tmp_test_directory / "mirror_measurement.json"
     metadata_file.write_text(json.dumps(metadata), encoding="utf-8")
     assert isinstance(

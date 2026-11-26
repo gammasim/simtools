@@ -193,7 +193,7 @@ def _write_trigger_histogram_file(output_file, topology_reference_id="reference_
         [metadata, bins, topology, subset],
         output_file,
         file_type="HDF5",
-        metadata_documents={"METADATA": {"cta": {}}},
+        metadata_documents={"METADATA": {"ctao": {}}},
     )
     import h5py
 
@@ -349,7 +349,7 @@ def test_validate_trigger_histogram_file_rejects_missing_table_column(tmp_test_d
         tables,
         output_file,
         file_type="HDF5",
-        metadata_documents={"METADATA": {"cta": {}}},
+        metadata_documents={"METADATA": {"ctao": {}}},
     )
     mocker.patch("simtools.sim_events.hdf5_output_validation.schema.validate_dict_using_schema")
 

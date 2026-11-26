@@ -19,7 +19,7 @@ def test_main_passes_top_level_metadata_to_estimator(
 ):
     args = {"output_file": "mc_statistics.ecsv"}
     mock_start.return_value = SimpleNamespace(args=args, paths=Mock())
-    metadata = {"cta": {"activity": {"name": "production_derive_monte_carlo_statistics"}}}
+    metadata = {"ctao": {"activity": {"name": "production_derive_monte_carlo_statistics"}}}
     mock_metadata_collector.return_value.get_top_level_metadata.return_value = metadata
 
     production_derive_monte_carlo_statistics.main()

@@ -15,6 +15,7 @@ from astropy.table import Table
 import simtools.data_model.metadata_collector as metadata_collector
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
 from simtools.data_model import product_checksum, schema
+from simtools.io import ascii_handler
 from simtools.sim_events import metadata_reader as event_metadata_reader
 from simtools.simtel import metadata_reader as simtel_metadata_reader
 
@@ -23,12 +24,12 @@ logger = logging.getLogger()
 
 def test_associated_data_keeps_required_data_description(mocker):
     collector = metadata_collector.MetadataCollector.__new__(metadata_collector.MetadataCollector)
-    collector.observatory = "cta"
+    collector.observatory = "ctao"
     collector.args_dict = {}
     collector._logger = logger
     data = {"category": "SIM", "level": "R1", "model": {"name": "setting", "version": "1.0.0"}}
     collector.input_metadata = [
-        {"cta": {"product": {"id": "input-id", "format": "yaml", "data": data}}}
+        {"ctao": {"product": {"id": "input-id", "format": "yaml", "data": data}}}
     ]
     mocker.patch.object(collector, "_append_context_note_from_value_table")
     mocker.patch.object(collector, "_fill_application_configuration")
@@ -78,9 +79,9 @@ def test_get_site(args_dict_site, tmp_test_directory):
             args_dict=args_dict_site, clean_meta=False
         ).top_level_meta
     )
-    input_metadata["cta"]["instrument"]["site"] = "North"
-    input_metadata["cta"]["instrument"].pop("ID", None)
-    input_metadata["cta"]["instrument"]["id"] = "MSTS-07"
+    input_metadata["ctao"]["instrument"]["site"] = "North"
+    input_metadata["ctao"]["instrument"].pop("ID", None)
+    input_metadata["ctao"]["instrument"]["id"] = "MSTS-07"
     metadata_file = Path(tmp_test_directory) / "north_metadata.json"
     metadata_file.write_text(json.dumps(input_metadata), encoding="utf-8")
     _collector_2 = metadata_collector.MetadataCollector(
@@ -109,15 +110,15 @@ def test_read_input_metadata_from_file(
     source_metadata = metadata_collector.MetadataCollector(
         args_dict=args_dict_site, clean_meta=False
     ).top_level_meta
-    source_metadata["cta"]["instrument"].pop("ID", None)
-    source_metadata["cta"]["instrument"]["id"] = "MSTS-07"
+    source_metadata["ctao"]["instrument"].pop("ID", None)
+    source_metadata["ctao"]["instrument"]["id"] = "MSTS-07"
     local_metadata_file.write_text(json.dumps(source_metadata), encoding="utf-8")
     metadata_1.args_dict["input_meta"] = local_metadata_file
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     test_dict = {
-        "metadata": {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
-        "METADATA": {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
+        "metadata": {"ctao": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
+        "METADATA": {"ctao": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
     }
     with open(tmp_test_directory / "test_read_input_metadata_file.json", "w") as f:
         json.dump(test_dict, f)
@@ -127,7 +128,7 @@ def test_read_input_metadata_from_file(
 
     table = Table(
         {"value": [1]},
-        meta={"CTA": source_metadata["cta"]},
+        meta={"CTAO": source_metadata["ctao"]},
     )
     local_ecsv_file = Path(tmp_test_directory) / "input_metadata.ecsv"
     table.write(local_ecsv_file, format="ascii.ecsv", overwrite=True)
@@ -174,16 +175,16 @@ def test_read_input_metadata_from_file(
         ),
         mocker.call({"optics_config_variant": "MSTS-01"}),
     ]
-    assert simtel_metadata["cta"]["product"]["filename"] == str(simtel_file)
-    assert simtel_metadata["cta"]["product"]["format"] == "simtel"
-    assert simtel_metadata["cta"]["instrument"]["site"] == "South"
-    assert simtel_metadata["cta"]["instrument"]["id"] == "CTAO-South-Alpha"
-    assert simtel_metadata["cta"]["product"]["data"]["model"]["version"] is None
+    assert simtel_metadata["ctao"]["product"]["filename"] == str(simtel_file)
+    assert simtel_metadata["ctao"]["product"]["format"] == "simtel"
+    assert simtel_metadata["ctao"]["instrument"]["site"] == "South"
+    assert simtel_metadata["ctao"]["instrument"]["id"] == "CTAO-South-Alpha"
+    assert simtel_metadata["ctao"]["product"]["data"]["model"]["version"] is None
     assert (
         '"simtools_model_production_version": "6.0.2"'
-        in simtel_metadata["cta"]["context"]["notes"][0]["text"]
+        in simtel_metadata["ctao"]["context"]["notes"][0]["text"]
     )
-    assert simtel_metadata["cta"]["context"]["associated_elements"][0]["id"] == "MSTS-01"
+    assert simtel_metadata["ctao"]["context"]["associated_elements"][0]["id"] == "MSTS-01"
 
     corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
     corsika_file.write_bytes(b"")
@@ -197,13 +198,13 @@ def test_read_input_metadata_from_file(
     )
     metadata_1.args_dict["input_meta"] = corsika_file
     corsika_metadata = metadata_1._read_input_metadata_from_file()[0]
-    assert corsika_metadata["cta"]["product"]["filename"] == str(corsika_file)
-    assert corsika_metadata["cta"]["product"]["format"] == "corsika"
-    assert corsika_metadata["cta"]["activity"]["software"] == {
+    assert corsika_metadata["ctao"]["product"]["filename"] == str(corsika_file)
+    assert corsika_metadata["ctao"]["product"]["format"] == "corsika"
+    assert corsika_metadata["ctao"]["activity"]["software"] == {
         "name": "corsika",
         "version": "7.8010",
     }
-    assert '"run_number": 42' in corsika_metadata["cta"]["context"]["notes"][0]["text"]
+    assert '"run_number": 42' in corsika_metadata["ctao"]["context"]["notes"][0]["text"]
 
     metadata_1.args_dict["input_meta"] = simple_test_file
     with pytest.raises(ValueError, match=r"^Unknown metadata file format:"):
@@ -216,6 +217,42 @@ def test_read_input_metadata_from_ecsv(args_dict_site, caplog):
         with pytest.raises(FileNotFoundError):
             metadata_1._read_input_metadata_from_ecsv("file_not_there.ecsv")
     assert "Failed reading metadata for" in caplog.text
+
+
+def test_read_input_metadata_from_ecsv_without_metadata_block(args_dict_site, tmp_test_directory):
+    ecsv_file = Path(tmp_test_directory) / "no_block.ecsv"
+    Table({"value": [1]}, meta={"site": "North"}).write(ecsv_file, format="ascii.ecsv")
+
+    with pytest.raises(KeyError, match="No ctao metadata block"):
+        metadata_collector.MetadataCollector(
+            args_dict=args_dict_site
+        )._read_input_metadata_from_ecsv(ecsv_file)
+
+
+@pytest.mark.parametrize("suffix", [".yml", ".ecsv"])
+def test_read_input_metadata_from_legacy_cta_product(args_dict_site, tmp_test_directory, suffix):
+    """Products written with metaschema 2.1.0 use the cta key and are read as ctao."""
+    legacy = metadata_collector.MetadataCollector(args_dict=args_dict_site).get_top_level_metadata()
+    block = legacy.pop("ctao")
+    block["reference"]["version"] = "2.1.0"
+    block["instrument"]["id"] = "MSTS-07"
+    input_file = Path(tmp_test_directory) / f"legacy_input{suffix}"
+    if suffix == ".yml":
+        ascii_handler.write_data_to_file({"cta": block}, input_file)
+    else:
+        Table({"value": [1]}, meta={"cta": block}).write(input_file, format="ascii.ecsv")
+
+    collector = metadata_collector.MetadataCollector(
+        args_dict={**args_dict_site, "input_meta": input_file}
+    )
+
+    assert set(collector.input_metadata[0]) == {"ctao"}
+    assert collector.input_metadata[0]["ctao"]["reference"]["version"] == "2.1.0"
+    assert collector.get_data_model_schema_file_name() == block["product"]["data"]["model"].get(
+        "url"
+    )
+    associated = collector.top_level_meta["ctao"]["context"]["associated_data"]
+    assert associated[0]["id"] == block["product"]["id"]
 
 
 def test_merge_config_dicts(args_dict_site):
@@ -262,10 +299,10 @@ def test_merge_config_dicts(args_dict_site):
 
 def test_fill_activity_meta(args_dict_site):
     file_writer_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    file_writer_1._fill_activity_meta(file_writer_1.top_level_meta["cta"]["activity"])
+    file_writer_1._fill_activity_meta(file_writer_1.top_level_meta["ctao"]["activity"])
 
     # this is set by args_dict_site in conf.py  (although this is a unit test)
-    assert file_writer_1.top_level_meta["cta"]["activity"]["name"] == "integration_test"
+    assert file_writer_1.top_level_meta["ctao"]["activity"]["name"] == "integration_test"
 
 
 def get_generic_input_meta():
@@ -395,7 +432,7 @@ def test_get_data_model_schema_file_name():
     assert schema_file == args_dict["schema_file"]
 
     # from metadata
-    _collector.top_level_meta["cta"]["product"]["data"]["model"]["url"] = str(
+    _collector.top_level_meta["ctao"]["product"]["data"]["model"]["url"] = str(
         SCHEMA_PATH / "top_level_meta.schema.yml"
     )
     schema_file = _collector.get_data_model_schema_file_name()
@@ -405,7 +442,7 @@ def test_get_data_model_schema_file_name():
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == str(SCHEMA_PATH / "top_level_meta.schema.yml")
 
-    _collector.top_level_meta["cta"]["product"]["data"]["model"].pop("url")
+    _collector.top_level_meta["ctao"]["product"]["data"]["model"].pop("url")
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file is None
 
@@ -418,7 +455,7 @@ def test_get_data_model_schema_file_name():
 
     # from input metadata
     _collector.input_metadata = [
-        {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
+        {"ctao": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
     ]
     _collector.model_parameter_name = None
     schema_file = _collector.get_data_model_schema_file_name()
@@ -437,18 +474,18 @@ def test_get_top_level_metadata(args_dict_site, mocker):
     )
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     assert (
-        collector.top_level_meta["cta"]["activity"]["end"]
-        == collector.top_level_meta["cta"]["activity"]["start"]
+        collector.top_level_meta["ctao"]["activity"]["end"]
+        == collector.top_level_meta["ctao"]["activity"]["start"]
     )
 
     # no update when activity cannot be found in the metadata
     collector.observatory = "not_cta"
     top_level_meta = collector.get_top_level_metadata()
-    assert top_level_meta["cta"]["activity"]["end"] == top_level_meta["cta"]["activity"]["start"]
+    assert top_level_meta["ctao"]["activity"]["end"] == top_level_meta["ctao"]["activity"]["start"]
 
-    collector.observatory = "cta"  # back to default
+    collector.observatory = "ctao"  # back to default
     top_level_meta = collector.get_top_level_metadata()
-    assert top_level_meta["cta"]["activity"]["end"] > top_level_meta["cta"]["activity"]["start"]
+    assert top_level_meta["ctao"]["activity"]["end"] > top_level_meta["ctao"]["activity"]["start"]
 
 
 def test_read_input_metadata_from_yml_or_json_no_file():
@@ -480,14 +517,14 @@ def test_read_input_metadata_from_yml_or_json_no_file():
 )
 def test_fill_instrument_meta(args, expected):
     collector = metadata_collector.MetadataCollector(args_dict={"label": "test", **args})
-    instrument = collector.top_level_meta["cta"]["instrument"]
+    instrument = collector.top_level_meta["ctao"]["instrument"]
     assert {key: value for key, value in instrument.items() if value is not None} == expected
     assert instrument.keys() == {"class", "id", "site", "type"}
 
 
 def test_fill_instrument_meta_is_complete_for_site_only():
     collector = metadata_collector.MetadataCollector(args_dict={"label": "test", "site": "North"})
-    instrument = collector.top_level_meta["cta"]["instrument"]
+    instrument = collector.top_level_meta["ctao"]["instrument"]
     assert {"class", "type", "id", "site"} <= instrument.keys()
     assert "ID" not in instrument
 
@@ -496,7 +533,7 @@ def test_fill_product_meta_without_data_model_has_no_placeholders():
     collector = metadata_collector.MetadataCollector(
         args_dict={"label": "test", "output_file": None}
     )
-    product = collector.top_level_meta["cta"]["product"]
+    product = collector.top_level_meta["ctao"]["product"]
     assert "filename" not in product
     assert product["format"] is None
     assert product["data"]["model"] == {"name": None, "version": None}
@@ -508,7 +545,7 @@ def test_fill_product_meta_from_model_parameter_schema():
         args_dict={"label": "test", "output_file": "altitude-1.0.0.json"},
         model_parameter_name="altitude",
     )
-    product = collector.get_top_level_metadata()["cta"]["product"]
+    product = collector.get_top_level_metadata()["ctao"]["product"]
     assert product["data"]["model"]["name"] == "altitude"
     assert product["data"]["model"]["version"] == "0.1.0"
     assert product["data"]["model"]["url"].startswith("https://")
@@ -522,7 +559,7 @@ def test_fill_product_meta_writes_file_name_without_directory():
     collector = metadata_collector.MetadataCollector(
         args_dict={"label": "test", "output_file": "/abs/output/table.ecsv"}
     )
-    product = collector.top_level_meta["cta"]["product"]
+    product = collector.top_level_meta["ctao"]["product"]
     assert product["filename"] == "table.ecsv"
     assert product["format"] == "ecsv"
 
@@ -533,15 +570,15 @@ def test_output_metadata_has_no_local_schema_path(tmp_test_directory):
     collector = metadata_collector.MetadataCollector(
         args_dict={"label": "test", "schema_file": str(local_schema)}
     )
-    assert collector.get_top_level_metadata()["cta"]["product"]["data"]["model"]["name"] == "local"
-    assert "url" not in collector.get_top_level_metadata()["cta"]["product"]["data"]["model"]
+    assert collector.get_top_level_metadata()["ctao"]["product"]["data"]["model"]["name"] == "local"
+    assert "url" not in collector.get_top_level_metadata()["ctao"]["product"]["data"]["model"]
     assert collector.get_data_model_schema_file_name() == str(local_schema)
 
 
 def test_fill_activity_meta_defaults_to_context_activity_id(args_dict_site):
     args = {key: value for key, value in args_dict_site.items() if key != "activity_id"}
     collector = metadata_collector.MetadataCollector(args_dict=args)
-    activity = collector.top_level_meta["cta"]["activity"]
+    activity = collector.top_level_meta["ctao"]["activity"]
     assert activity["id"] == collector.context.activity.activity_id
     assert activity["id"] != "UNDEFINED_ACTIVITY_ID"
 
@@ -553,7 +590,9 @@ def test_application_configuration_omits_local_paths(args_dict_site):
         "user_name": "Jane Doe",
     }
     collector = metadata_collector.MetadataCollector(args_dict=args)
-    arguments = collector.top_level_meta["cta"]["context"]["application_configuration"]["arguments"]
+    arguments = collector.top_level_meta["ctao"]["context"]["application_configuration"][
+        "arguments"
+    ]
     assert "output_path" not in arguments
     assert "simulation_models_path" not in arguments
     assert arguments["user_name"] == "Jane Doe"
@@ -574,8 +613,8 @@ def test_fill_instrument_meta_for_special_names(instrument, expected_class):
     collector = metadata_collector.MetadataCollector(
         args_dict={"label": "test", "instrument": instrument}
     )
-    assert collector.top_level_meta["cta"]["instrument"]["class"] == expected_class
-    assert collector.top_level_meta["cta"]["instrument"]["id"] == instrument
+    assert collector.top_level_meta["ctao"]["instrument"]["class"] == expected_class
+    assert collector.top_level_meta["ctao"]["instrument"]["id"] == instrument
 
 
 def test_data_model_url_for_remote_and_packaged_schema():
@@ -596,7 +635,7 @@ def test_written_metadata_without_site_is_valid_input(tmp_test_directory):
     reread = metadata_collector.MetadataCollector(
         args_dict={"label": "test"}, metadata_file_name=metadata_file
     )
-    assert reread.input_metadata[0]["cta"]["instrument"]["site"] is None
+    assert reread.input_metadata[0]["ctao"]["instrument"]["site"] is None
 
 
 def test_fill_product_meta_description_prefers_application_description():
@@ -608,7 +647,7 @@ def test_fill_product_meta_description_prefers_application_description():
         },
         model_parameter_name="altitude",
     )
-    assert collector.top_level_meta["cta"]["product"]["description"] == (
+    assert collector.top_level_meta["ctao"]["product"]["description"] == (
         "Submit a model parameter."
     )
 
@@ -618,13 +657,13 @@ def test_fill_product_meta_description_falls_back_to_schema_description():
         args_dict={"label": "test", "output_file": "altitude-1.0.0.json"},
         model_parameter_name="altitude",
     )
-    description = collector.top_level_meta["cta"]["product"]["description"]
+    description = collector.top_level_meta["ctao"]["product"]["description"]
     assert description.startswith("Altitude above sea level of site centre. Telescope")
 
 
 def test_fill_product_meta_description_is_none_without_any_source():
     collector = metadata_collector.MetadataCollector(args_dict={"label": "test"})
-    assert "description" not in collector.top_level_meta["cta"]["product"]
+    assert "description" not in collector.top_level_meta["ctao"]["product"]
 
 
 def test_write_sidecar_metadata_writes_checksum_and_cta_block(tmp_test_directory):
@@ -636,7 +675,7 @@ def test_write_sidecar_metadata_writes_checksum_and_cta_block(tmp_test_directory
 
     assert Path(sidecar).name == "summary.meta.yml"
 
-    metadata = yaml.safe_load(Path(sidecar).read_text(encoding="utf-8"))["cta"]
+    metadata = yaml.safe_load(Path(sidecar).read_text(encoding="utf-8"))["ctao"]
     assert metadata["product"]["filename"] == "summary.yml"
     assert metadata["product"]["format"] == "yml"
     assert metadata["product"]["description"] == "Summarize a test."

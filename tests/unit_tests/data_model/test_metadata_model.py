@@ -28,12 +28,12 @@ def test_resolve_references():
 
 def test_fill_defaults():
     schema = {
-        "CTA": {
+        "ctao": {
             "properties": {
                 "CONTACT": {
                     "type": "object",
                     "properties": {
-                        "organization": {"type": "string", "default": "CTA"},
+                        "organization": {"type": "string", "default": "CTAO"},
                         "number": {"type": "integer", "default": 30},
                     },
                 },
@@ -70,8 +70,8 @@ def test_fill_defaults():
         }
     }
     expected_result = {
-        "CTA": {
-            "CONTACT": {"organization": "CTA", "number": 30},
+        "ctao": {
+            "CONTACT": {"organization": "CTAO", "number": 30},
             "DOCUMENTS": [{"name": "a_document", "id": 55}],
             "NO_DEFAULT": {},
             "NO_DEFAULT_LIST": [{}],
@@ -81,11 +81,11 @@ def test_fill_defaults():
     assert metadata_model._fill_defaults(schema) == expected_result
 
     schema = {
-        "CTA": {
+        "ctao": {
             "CONTACT": {
                 "type": "object",
                 "no_properties": {
-                    "organization": {"type": "string", "default": "CTA"},
+                    "organization": {"type": "string", "default": "CTAO"},
                     "number": {"type": "integer", "default": 30},
                 },
             },
@@ -97,9 +97,19 @@ def test_fill_defaults():
 
 
 def test_add_required_fields():
-    metadata = metadata_model.add_required_fields({"cta": {"product": {"format": "json"}}})
+    metadata = metadata_model.add_required_fields({"ctao": {"product": {"format": "json"}}})
 
-    assert metadata["cta"]["product"]["format"] == "json"
-    assert metadata["cta"]["product"]["data"]["model"] == {"name": None, "version": None}
-    assert metadata["cta"]["instrument"] == {"class": None, "id": None, "site": None, "type": None}
-    assert metadata["cta"]["contact"] == {"name": None}
+    assert metadata["ctao"]["product"]["format"] == "json"
+    assert metadata["ctao"]["product"]["data"]["model"] == {"name": None, "version": None}
+    assert metadata["ctao"]["instrument"] == {"class": None, "id": None, "site": None, "type": None}
+    assert metadata["ctao"]["contact"] == {"name": None}
+
+
+def test_get_default_metadata_dict_uses_ctao_block():
+    metadata = metadata_model.get_default_metadata_dict()
+
+    assert set(metadata) == {"ctao"}
+    assert metadata["ctao"]["reference"]["version"] == "3.0.0"
+    assert metadata["ctao"]["contact"]["organization"] == "CTAO"
+    # references to '#/definitions/ctao/...' are resolved
+    assert "$ref" not in str(metadata)

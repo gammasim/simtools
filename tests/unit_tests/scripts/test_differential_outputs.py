@@ -32,7 +32,7 @@ def test_normalize_generated_metadata_preserves_scientific_changes():
         return {
             "created": activity,
             "energy": energy,
-            "cta": {
+            "ctao": {
                 "activity": {"id": activity, "start": activity, "end": activity},
                 "product": {"id": activity, "creation_time": activity},
                 "context": {
@@ -72,7 +72,7 @@ def test_compare_resource_checkout_paths(tmp_test_directory, suffix):
     base, head = root / f"base{suffix}", root / f"head{suffix}"
     for path, checkout in ((base, "base-simtools-tests"), (head, "simtools-tests")):
         resource = f"/workspace/{checkout}/simtools-tests/v0.40.0/integration_tests/input.ecsv"
-        metadata = {"cta": {"arguments": {"input": resource}}, "corsika_limits": resource}
+        metadata = {"ctao": {"arguments": {"input": resource}}, "corsika_limits": resource}
         if suffix == ".ecsv":
             Table({"value": [1]}, meta=metadata).write(path)
         elif suffix == ".yml":
@@ -162,7 +162,7 @@ def test_report_identifies_nested_metadata_differences(tmp_test_directory):
     base.mkdir()
     head.mkdir()
     for directory, source in ((base, "base-resources"), (head, "head-resources")):
-        metadata = {"cta": {"inputs": [source], "password": source}}
+        metadata = {"ctao": {"inputs": [source], "password": source}}
         Table({"value": [1]}, meta=metadata).write(directory / "result.ecsv")
         (directory / "result.yml").write_text(json.dumps(metadata), encoding="utf-8")
         with h5py.File(directory / "result.hdf5", "w") as output:
@@ -171,7 +171,7 @@ def test_report_identifies_nested_metadata_differences(tmp_test_directory):
     report = root / "report.md"
     assert DIFFERENTIAL_OUTPUTS.compare_trees(base, head, report) == 1
     text = report.read_text(encoding="utf-8")
-    assert text.count("['cta']['inputs'][0]") == 3
+    assert text.count("['ctao']['inputs'][0]") == 3
     assert "'base-resources' != 'head-resources'" in text
     assert "['password']: values differ (redacted)" in text
 
@@ -276,4 +276,13 @@ def test_run_integration_rejects_empty_selection(tmp_test_directory):
             tmp_test_directory, Path(tmp_test_directory) / "outputs", "7.0.0"
         )
         == 2
+    )
+
+
+def test_normalize_value_maps_legacy_cta_block_to_ctao():
+    legacy = {"cta": {"product": {"id": "a"}}, "site": "North"}
+    current = {"ctao": {"product": {"id": "b"}}, "site": "North"}
+
+    assert DIFFERENTIAL_OUTPUTS.normalize_value(legacy) == DIFFERENTIAL_OUTPUTS.normalize_value(
+        current
     )

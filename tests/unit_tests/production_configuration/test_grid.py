@@ -318,7 +318,7 @@ def test_build_job_grid_metadata_raises_for_hadec_without_site():
 def test_generate_job_grid_adds_default_metadata_to_ecsv_header(
     mock_build_simulation_jobs, mock_serialize_job_grid
 ):
-    default_metadata = {"cta": {"activity": {"name": "production_generate_grid"}}}
+    default_metadata = {"ctao": {"activity": {"name": "production_generate_grid"}}}
     args = {
         "site": "North",
         "simulation_software": ["corsika", "sim_telarray"],

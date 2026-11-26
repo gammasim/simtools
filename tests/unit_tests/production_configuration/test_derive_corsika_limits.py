@@ -79,7 +79,7 @@ def _pool_result(
 def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory, run_context):
     tmp_test_directory = Path(tmp_test_directory)
     run_context.paths.output_path["default"] = tmp_test_directory
-    metadata = {"cta": {"activity": {"name": "production_derive_corsika_limits"}}}
+    metadata = {"ctao": {"activity": {"name": "production_derive_corsika_limits"}}}
     mock_metadata_collector = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.MetadataCollector"
     )
@@ -91,7 +91,7 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory,
 
     output_file = tmp_test_directory / "corsika_limits.ecsv"
     output_table = Table.read(output_file, format="ascii.ecsv")
-    assert output_table.meta["cta"] == metadata["cta"]
+    assert output_table.meta["ctao"] == metadata["ctao"]
     assert not output_file.with_suffix(".meta.yml").exists()
     mock_metadata_collector.assert_called_once_with(mock_args_dict, context=run_context)
 

@@ -177,7 +177,7 @@ def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_f
     assert "Exporting summary results" in caplog.text
 
     results_file = camera_efficiency_lst._file["results"]
-    assert "cta" in Table.read(results_file, format="ascii.ecsv").meta
+    assert "ctao" in Table.read(results_file, format="ascii.ecsv").meta
     assert product_checksum.verify_sha256(results_file)
     summary_file = Path(str(results_file).replace(".ecsv", "_summary.yml"))
     assert summary_file.with_name(summary_file.stem + ".meta.yml").exists()

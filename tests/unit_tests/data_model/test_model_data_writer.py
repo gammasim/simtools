@@ -72,7 +72,7 @@ def test_write(tmp_test_directory, args_dict_site):
     # check that table and metadata is good
     table = Table.read(w_1.output_file, format=ascii_format)
     assert "pixel" in table.colnames
-    assert "cta" in table.meta.keys()
+    assert "ctao" in table.meta.keys()
 
     w_1.output_file_format = "not_an_astropy_format"
     with pytest.raises(IORegistryError):
@@ -414,7 +414,7 @@ def test_write_model_parameter_metadata_describes_parameter_schema(tmp_test_dire
         check_for_existing_parameter=False,
     )
     metadata_file = next(Path(tmp_test_directory).glob("altitude-9.9.9*.meta.yml"))
-    product = ascii_handler.collect_data_from_file(metadata_file)["cta"]["product"]
+    product = ascii_handler.collect_data_from_file(metadata_file)["ctao"]["product"]
     assert product["data"]["model"]["name"] == "altitude"
     assert product["data"]["model"]["version"] == "0.1.0"
     assert product["filename"] == "altitude-9.9.9.json"
@@ -426,7 +426,7 @@ def test_write_data_ecsv_without_metadata_embeds_cta_block_and_checksum(tmp_test
     model_writer.write_data(product_data=Table({"pixel": [25, 30, 28]}))
 
     table = Table.read(model_writer.output_file, format=ascii_format)
-    product = table.meta["cta"]["product"]
+    product = table.meta["ctao"]["product"]
     assert product["format"] == "ecsv"
     assert product["sha256"] == embedded_sha256(model_writer.output_file)
     assert verify_sha256(model_writer.output_file)
@@ -439,7 +439,7 @@ def test_write_data_json_without_metadata_writes_sidecar_with_checksum(tmp_test_
     model_writer.write_data(product_data={"value": 5.5})
 
     sidecar = next(Path(tmp_test_directory).glob("dict_no_meta*.meta.yml"))
-    product = ascii_handler.collect_data_from_file(sidecar)["cta"]["product"]
+    product = ascii_handler.collect_data_from_file(sidecar)["ctao"]["product"]
     assert product["sha256"] == sha256_of_file(model_writer.output_file)
     assert verify_sha256(model_writer.output_file, expected=product["sha256"])
 
@@ -455,7 +455,7 @@ def test_write_model_parameter_without_metadata_writes_cta_sidecar(tmp_test_dire
         check_for_existing_parameter=False,
     )
     sidecar = next(Path(tmp_test_directory).glob("num_gains*.meta.yml"))
-    cta = ascii_handler.collect_data_from_file(sidecar)["cta"]
+    cta = ascii_handler.collect_data_from_file(sidecar)["ctao"]
     assert cta["product"]["id"] is not None
     assert cta["product"]["sha256"] == sha256_of_file(Path(tmp_test_directory) / "num_gains.json")
     assert cta["instrument"]["id"] == "LSTN-01"

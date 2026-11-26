@@ -21,6 +21,7 @@ from astropy.table import Table
 
 from simtools.data_model import product_checksum, schema
 from simtools.data_model.metadata_collector import MetadataCollector, write_sidecar_metadata
+from simtools.data_model.metadata_keys import LEGACY_OBSERVATORY_KEY, OBSERVATORY_KEY
 from simtools.io import ascii_handler
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.telescope_model import TelescopeModel, trigger_threshold_parameter
@@ -32,7 +33,8 @@ _ECSV_FORMAT = "ascii.ecsv"
 # Metadata keys of the scan grid: the job-grid metadata of the base grid plus the parameter sets.
 _KEPT_METADATA = (
     "model_parameter_sets",
-    "cta",
+    OBSERVATORY_KEY,
+    LEGACY_OBSERVATORY_KEY,
     "site",
     "simulation_software",
     "coordinate_system",

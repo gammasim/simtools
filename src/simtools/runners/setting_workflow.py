@@ -8,6 +8,7 @@ import yaml
 from simtools.constants import METADATA_JSON_SCHEMA, RUN_TIME_ENVIRONMENT_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.data_model.metadata_keys import OBSERVATORY_KEY, get_observatory_metadata
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler
 from simtools.model_repository import dependency_versions
@@ -72,7 +73,7 @@ def create_setting_workflow(args, model_reader=None, context=None):
         args["parameter"], args["instrument"], args["parameter_version"]
     )
     activity_id = args["activity_id"]
-    metadata["cta"]["activity"]["id"] = activity_id
+    metadata[OBSERVATORY_KEY]["activity"]["id"] = activity_id
     config_file = directory / activity_id / "config.yml"
     config_file.parent.mkdir(parents=True, exist_ok=False)
     ascii_handler.write_data_to_file(config, config_file, sort_keys=False)
@@ -212,10 +213,10 @@ def _input_metadata(args, context):
         }
     )
     metadata = MetadataCollector(metadata_args, context=context).get_top_level_metadata()
-    metadata["cta"]["product"]["description"] = args["description"].strip()
+    metadata[OBSERVATORY_KEY]["product"]["description"] = args["description"].strip()
     if args.get("source_url"):
-        metadata["cta"]["product"]["description"] += f" Source: {args['source_url']}"
-    metadata["cta"]["product"]["data"]["model"].update(
+        metadata[OBSERVATORY_KEY]["product"]["description"] += f" Source: {args['source_url']}"
+    metadata[OBSERVATORY_KEY]["product"]["data"]["model"].update(
         {"name": args["parameter"], "version": args["parameter_version"]}
     )
     metadata = ascii_handler.to_builtin(value_conversion.change_dict_keys_case(metadata, True))
@@ -250,10 +251,10 @@ def _check_matching_inputs(config_file, config, metadata, runtime, writer, param
     previous_parameter = _validated_parameter(writer, previous)
     previous["value"] = previous_parameter["value"]
     comparison["applications"][0]["configuration"]["value"] = parameter["value"]
-    existing_metadata = ascii_handler.collect_data_from_file(
-        config_file.with_name("input.meta.yml")
-    )["cta"]
-    expected = metadata["cta"]
+    existing_metadata = get_observatory_metadata(
+        ascii_handler.collect_data_from_file(config_file.with_name("input.meta.yml"))
+    )
+    expected = metadata[OBSERVATORY_KEY]
     same_metadata = _setting_metadata(existing_metadata) == _setting_metadata(expected)
     runtime_file = config_file.with_name(_RUNTIME_FILE)
     same_runtime = (

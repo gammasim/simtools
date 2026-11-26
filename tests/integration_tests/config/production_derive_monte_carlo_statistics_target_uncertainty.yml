@@ -59,9 +59,9 @@ applications:
               unit: deg
       - type: metadata
         required_keys:
-        - cta.activity
-        - cta.context
-        - cta.product
+        - ctao.activity
+        - ctao.context
+        - ctao.product
         - spectral_index
         - target_relative_uncertainty
   differential_test: true

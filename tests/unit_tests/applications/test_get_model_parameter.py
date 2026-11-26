@@ -179,5 +179,5 @@ def test_run_writes_parameter_file_with_sidecar_metadata(tmp_test_directory):
         (output_path / "scalar_parameter-1.0.0.meta.yml").read_text(encoding="utf-8")
     )
     assert product_checksum.verify_sha256(
-        parameter_file, expected=sidecar["cta"]["product"]["sha256"]
+        parameter_file, expected=sidecar["ctao"]["product"]["sha256"]
     )
