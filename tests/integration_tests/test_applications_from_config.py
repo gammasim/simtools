@@ -184,6 +184,19 @@ def _prepare_model_parameter_inputs(
     config.update(configuration.resolve_prepared_resource_paths(config, prepared_resources_path))
 
 
+def _is_model_version_independent(config):
+    """Return whether a workflow runs the same commands for every requested model version.
+
+    The requested model version replaces only ``model_version`` entries of the
+    application and preparation configurations, so workflows without such an entry
+    are identical across model versions unless ``run_for_all_model_versions`` is set.
+    """
+    if config.get("run_for_all_model_versions"):
+        return False
+    steps = [config, *config.get("preparation", [])]
+    return not any("model_version" in (step.get("configuration") or {}) for step in steps)
+
+
 def pytest_generate_tests(metafunc):
     """Parametrize application tests using the configured test-resources path."""
     if "config" not in metafunc.fixturenames:
@@ -213,6 +226,8 @@ def pytest_generate_tests(metafunc):
             marks.append(pytest.mark.verifies_usecase(config["test_use_case"]))
         if config.get("xfail"):
             marks.append(pytest.mark.xfail(reason=config["xfail"]))
+        if _is_model_version_independent(config):
+            marks.append(pytest.mark.model_version_independent)
         test_parameters.append(pytest.param(config, id=test_id, marks=marks))
 
     metafunc.parametrize("config", test_parameters)
@@ -543,3 +558,26 @@ def test_prepare_model_parameter_inputs_rejects_escaping_output_file(
         output_file = str((Path(tmp_test_directory) / "outside.json").resolve())
     with pytest.raises(ValueError, match="must stay within"):
         _validate_preparation_output_file(output_file)
+
+
+@pytest.mark.parametrize(
+    ("workflow", "expected"),
+    [
+        ({"application": "simtools-validate-file-using-schema"}, True),
+        ({"application": "simtools-plot-camera", "configuration": None}, True),
+        ({"configuration": {"file_name": "input.json"}}, True),
+        ({"configuration": {"model_version": "6.0.2"}}, False),
+        ({"configuration": {"model_version": {"by_version": {">=7.0.0": "x"}}}}, False),
+        (
+            {
+                "configuration": {"array_layout_parameter_file": "layouts.json"},
+                "preparation": [{"configuration": {"model_version": "6.0.2"}}],
+            },
+            False,
+        ),
+        ({"configuration": {}, "run_for_all_model_versions": True}, False),
+    ],
+)
+def test_is_model_version_independent(workflow, expected):
+    """Identify workflows whose commands do not depend on the requested model version."""
+    assert _is_model_version_independent(workflow) is expected

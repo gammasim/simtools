@@ -111,6 +111,11 @@ definitions:
             "Skip test if model version is changed via command line.
             Important e.g., for cases where the model repository is incomplete for some
             model versions."
+        run_for_all_model_versions:
+          type: boolean
+          description: |
+            "Run test for every requested model version, even if its configuration
+            has no model_version entry."
         differential_test:
           type: boolean
           description: "Include this integration case in differential output checks."
@@ -598,6 +603,11 @@ definitions:
             "Skip test if model version is changed via command line.
             Important e.g., for cases where the model repository is incomplete for some
             model versions."
+        run_for_all_model_versions:
+          type: boolean
+          description: |
+            "Run test for every requested model version, even if its configuration
+            has no model_version entry."
         differential_test:
           type: boolean
           description: "Include this integration case in differential output checks."
@@ -1079,6 +1089,11 @@ definitions:
             "Skip test if model version is changed via command line.
             Important e.g., for cases where the model repository is incomplete for some
             model versions."
+        run_for_all_model_versions:
+          type: boolean
+          description: |
+            "Run test for every requested model version, even if its configuration
+            has no model_version entry."
         differential_test:
           type: boolean
           description: "Include this integration case in differential output checks."

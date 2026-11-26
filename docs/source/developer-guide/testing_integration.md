@@ -63,6 +63,12 @@ pytest -v --model_version 6.0.2 -k "<test_name>" \
   tests/integration_tests/test_applications_from_config.py
 ```
 
+Workflows without a `model_version` entry in their application or preparation
+configuration run the same commands for every model version and are marked
+`model_version_independent`. `--skip_model_version_independent` deselects them; CI passes
+this option for all matrix model versions except the first one. Set
+`run_for_all_model_versions: true` on a workflow to keep it in every model-version run.
+
 ### Run with simulation models from Git
 
 To run the integration tests with a local Git repository and revision:
